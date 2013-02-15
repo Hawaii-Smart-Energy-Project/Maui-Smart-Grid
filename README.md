@@ -36,6 +36,12 @@ The software is configured through a text configuration file contained in the us
     db_port=5432
     db_username=username
 
+## Database Configuration
+
+The database schema can be installed using the following command form where `$DATABASE_NAME` is a valid database.
+
+    $ psql $DATABASE_NAME < meco-data-schema.sql
+
 ## Software Operation
 
 ### Inserting Data from Source XML
