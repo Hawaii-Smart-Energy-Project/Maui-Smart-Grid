@@ -52,8 +52,15 @@ The database schema can be installed using the following command form where `$DA
 
 ### Inserting Data from Source XML
 
-Data insertion is performed by running
+The XML data contains the energy data. Insertion to the database is performed by running
 
     .\insertData.py
+    
+### Inserting Location and Meter Records
+
+Location and meter records are stored in separate tab-separated files and are inserted using separate scripts.
+
+1. insertLocationRecords.py
+1. insertMeterRecords.py 
 
 
