@@ -4,11 +4,17 @@ Daniel Zhang, Software Developer
 
 ## Overview
 
-Provides data operations for the Maui Smart Grid energy sustainability project. Source data is downloaded in multiple formats including XML, tab-separated values, and comma-separated values.
+Provides data operations for the [Maui Smart Grid](http://www.mauismartgrid.com) energy sustainability project for the [Hawaii Natural Energy Institute](http://www.hnei.hawaii.edu). Source data is downloaded in multiple formats including XML, tab-separated values, and comma-separated values.
+
 
 ### Software Features
 * Parsing of source data.
 * Insertion of data to a data store (PostgreSQL 9.1).
+
+### Open Source Status
+
+This software is being held in a private repository until it is approved for open source release at which time it will be made available under a BSD license.
+
 
 ## Implementation
 
@@ -49,6 +55,5 @@ The database schema can be installed using the following command form where `$DA
 Data insertion is performed by running
 
     .\insertData.py
-
 
 
