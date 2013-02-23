@@ -29,6 +29,13 @@ Data processing involves inserting nested sets of data linked by the primary key
 ### Database Schema
 A SQL dump, produced by pg_dump, of the database schema is provided for reference only.
 
+The schema consists of the following components.
+
+1. Energy data
+2. Location Records
+3. Meter Records
+4. Weather Data (Kahalui Station)
+
 ## Configuration
 
 The software is configured through a text configuration file contained in the user's home directory. The file is named `~/meco-data-operations.cfg`. It is read by the ConfigParser module.
@@ -52,15 +59,25 @@ The database schema can be installed using the following command form where `$DA
 
 ### Inserting Data from Source XML
 
-The XML data contains the energy data. Insertion to the database is performed by running
+The exported XML data files contain the energy data. Insertion to the database is performed by running
 
     .\insertData.py
+    
+in the directory the data files are contained.
     
 ### Inserting Location and Meter Records
 
 Location and meter records are stored in separate tab-separated files and are inserted using separate scripts.
 
-1. insertLocationRecords.py
-1. insertMeterRecords.py 
+    insertLocationRecords.py $FILENAME
 
+    insertMeterRecords.py $FILENAME
 
+### Inserting Weather Data (Kahalui Station)
+
+    insertWeatherData.py $FILENAME
+
+### Utility Scripts
+
+`grantAllPermissionsToDatabase.sh $DATABASE`
+: Set appropriate permissions to databases.
