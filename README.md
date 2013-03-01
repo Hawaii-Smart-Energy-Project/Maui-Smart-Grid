@@ -36,6 +36,10 @@ The schema consists of the following components.
 3. Meter Records
 4. Weather Data (Kahalui Station)
 
+A helpful diagram is provided in the repository and a version is displayed here.
+
+![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/maui-smart-grid/master/diagrams/meco-direct-derived-schema.png)
+
 ## Configuration
 
 The software is configured through a text configuration file contained in the user's home directory. The file is named `~/meco-data-operations.cfg`. It is read by the ConfigParser module.
