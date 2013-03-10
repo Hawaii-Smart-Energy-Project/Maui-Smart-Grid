@@ -38,7 +38,7 @@ foreach my $line (@data) {
 close(FILE);
 
 ###
-# @param capture group string
+# @param string containing capture group
 # @param replacement string
 # @return new string
 ##
