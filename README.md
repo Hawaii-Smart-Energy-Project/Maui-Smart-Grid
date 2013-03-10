@@ -11,11 +11,6 @@ Provides data operations for the [Maui Smart Grid](http://www.mauismartgrid.com)
 * Parsing of source data.
 * Insertion of data to a data store (PostgreSQL 9.1).
 
-### Open Source Status
-
-This software is being held in a private repository until it is approved for open source release at which time it will be made available under a BSD license.
-
-
 ## Implementation
 
 Code is written using Python 2.7. It has a testing suite implemented through unittest.
