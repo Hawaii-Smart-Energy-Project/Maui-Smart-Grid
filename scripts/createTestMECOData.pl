@@ -19,7 +19,6 @@ my @data = <FILE>;
 
 foreach my $line (@data) {
     my $rand     = rand(5000);
-    my $origLine = $line;
 
     if ( $line =~ /Summation=\"(.*)\"\s+/i ) {
         $line = replaceCaptureGroup( $line, $rand );
