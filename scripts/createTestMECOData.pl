@@ -27,7 +27,7 @@ foreach my $line (@data) {
         $line = replaceCaptureGroup( $line, $rand );
     }
     if ( $line =~ /RawValue=\"(.*)\"\s+/i ) {
-        $line = replaceCaptureGroup( $line, $rand );
+        $line = replaceCaptureGroup( $line, int($rand) );
     }
     if ( $line =~ /CumulativeDemand=\"(.*)\"\s+/i ) {
         $line = replaceCaptureGroup( $line, $rand );
