@@ -24,8 +24,8 @@ CREATE TABLE "Reading" (
     block_end_value real,
     channel smallint NOT NULL,
     raw_value smallint NOT NULL,
-    uom character varying NOT NULL,
-    value real NOT NULL
+    uom character varying,
+    value real
 );
 
 
