@@ -24,6 +24,6 @@ data.sort()
 for f in data :
     if re.search('.*log\.xml', f) is None :
         i.parser.filename = f
-        i.parser.parseXML()
+        i.parser.parseXML(True)
 
 

@@ -13,8 +13,7 @@ from mecodbconnect import MECODBConnector
 from meco_fk import MECOFKDeterminer
 import sys
 
-INSERT_DATA = 0
-DEBUG = 1
+DEBUG = 0 # print debugging info if 1
 
 class MECOXMLParser(object) :
     """Parses XML for MECO data.
@@ -35,12 +34,15 @@ class MECOXMLParser(object) :
         self.filename=None
         self.elementCount = 0
         self.inserter = MECODBInserter()
+        self.insertDataIntoDatabase = False
 
         # count how many times sections in source data are encountered
         self.tableNameCount = {'SSNExportDocument' : 0, 'MeterData' : 0, 'RegisterData' : 0,
                                'RegisterRead' : 0, 'Tier' : 0, 'Register' : 0,
                                'IntervalReadData' : 0, 'Interval' : 0, 'Reading' : 0,
                                'IntervalStatus' : 0, 'ChannelStatus' : 0}
+
+        # @todo channel status and interval status need special handling
 
         self.insertTables = self.mecoConfig.insertTables
 
@@ -49,10 +51,14 @@ class MECOXMLParser(object) :
         self.lastTable = None
         self.fkDeterminer = MECOFKDeterminer()
 
-    def parseXML(self) :
+    def parseXML(self, insert = False) :
         """Parse an XML file.
+        :param insert True to insert to the database
         """
 
+        print "parseXML:"
+
+        self.insertDataIntoDatabase = insert
         print "parsing xml in", self.filename
         tree = ET.parse(self.filename)
         root = tree.getroot()
@@ -79,7 +85,7 @@ class MECOXMLParser(object) :
                 columnsAndValues[item[0]] = item[1]
 
             if tableName in self.insertTables :
-                if DEBUG :
+                if DEBUG:
                     print
                     print "processing table %s" % tableName
                     print "--------------------------------"
@@ -95,7 +101,7 @@ class MECOXMLParser(object) :
                 except :
                     pass
 
-                if DEBUG :
+                if DEBUG:
                     print "foreign key col (fkey) = %s" % fkeyCol
                     print "primary key col (pkey) = %s" % pkeyCol
                     print columnsAndValues
@@ -104,7 +110,7 @@ class MECOXMLParser(object) :
                 if fkeyCol is not None :
                     fKeyValue = self.fkDeterminer.pkValforCol[fkeyCol]
 
-                if DEBUG :
+                if DEBUG:
                     print "fKeyValue = %s" % fKeyValue
 
                 cur = self.inserter.insertData(self.conn, tableName, columnsAndValues, fKeyValue, 1)
@@ -114,7 +120,7 @@ class MECOXMLParser(object) :
                 # store pk
                 self.fkDeterminer.pkValforCol[pkeyCol] = self.lastSeqVal
 
-                if DEBUG :
+                if DEBUG:
                     print "lastSeqVal = ", self.lastSeqVal
 
             if self.elementCount % 10000 == 0:

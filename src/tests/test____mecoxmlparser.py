@@ -6,9 +6,6 @@ __author__ = 'Daniel Zhang (張道博)'
 import unittest
 from mecoxmlparser import MECOXMLParser
 
-"""@todo: this test needs static test data.
-"""
-
 class TestMECOXMLParser(unittest.TestCase) :
     """Unit tests for MECO XML Parser.
     """
@@ -20,13 +17,21 @@ class TestMECOXMLParser(unittest.TestCase) :
         self.assertIsNotNone(self.p)
 
     def testEveryElementIsVisited(self) :
-        expectedCount = 100000;
-        self.p.parseXML()
+        self.p.filename = "../../test-data/meco-energy-test-data.xml"
+        expectedCount = 11721
+        self.p.parseXML(False)
+        print "element count = %s" % self.p.elementCount
         self.assertEqual(self.p.elementCount, expectedCount)
 
     def testAllTableNamesArePresent(self) :
-        self.p.parseXML()
+        self.p.filename = "../../test-data/meco-energy-test-data.xml"
+        self.p.parseXML(False)
         fail = 0
+
+        for key in self.p.tableNameCount.keys():
+            print key + ": ",
+            print self.p.tableNameCount[key]
+
         for c in self.p.tableNameCount.values() :
             if c < 1 :
                 fail = 1
