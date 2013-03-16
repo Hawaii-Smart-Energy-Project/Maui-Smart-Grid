@@ -31,7 +31,7 @@ class MECOXMLParser(object) :
         self.connector = MECODBConnector()
         self.conn = self.connector.connectDB()
 
-        self.filename=None
+        self.filename = None
         self.elementCount = 0
         self.inserter = MECODBInserter()
         self.insertDataIntoDatabase = False
@@ -39,10 +39,9 @@ class MECOXMLParser(object) :
         # count how many times sections in source data are encountered
         self.tableNameCount = {'SSNExportDocument' : 0, 'MeterData' : 0, 'RegisterData' : 0,
                                'RegisterRead' : 0, 'Tier' : 0, 'Register' : 0,
-                               'IntervalReadData' : 0, 'Interval' : 0, 'Reading' : 0,
-                               'IntervalStatus' : 0, 'ChannelStatus' : 0}
+                               'IntervalReadData' : 0, 'Interval' : 0, 'Reading' : 0}
 
-        # @todo channel status and interval status need special handling
+        # Excluding tables for IntervalStatus, ChannelStatus because they are not used for data that is stored.
 
         self.insertTables = self.mecoConfig.insertTables
 
@@ -53,7 +52,7 @@ class MECOXMLParser(object) :
 
     def parseXML(self, insert = False) :
         """Parse an XML file.
-        :param insert True to insert to the database
+        :param insert - True to insert to the database | False to perform no inserts
         """
 
         print "parseXML:"
@@ -113,7 +112,9 @@ class MECOXMLParser(object) :
                 if DEBUG:
                     print "fKeyValue = %s" % fKeyValue
 
-                cur = self.inserter.insertData(self.conn, tableName, columnsAndValues, fKeyValue, 1)
+                if self.insertDataIntoDatabase == True:
+                    cur = self.inserter.insertData(self.conn, tableName,
+                                                   columnsAndValues, fKeyValue, 1) # last 1 indicates don't commit
 
                 self.lastSeqVal = self.util.getLastSequenceID(self.conn, tableName,
                                                               pkeyCol)
@@ -126,4 +127,5 @@ class MECOXMLParser(object) :
             if self.elementCount % 10000 == 0:
                 sys.stdout.write('.')
                 self.conn.commit()
+        self.conn.commit()
         print
