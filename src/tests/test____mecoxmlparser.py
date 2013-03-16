@@ -18,14 +18,14 @@ class TestMECOXMLParser(unittest.TestCase) :
 
     def testEveryElementIsVisited(self) :
         self.p.filename = "../../test-data/meco-energy-test-data.xml"
-        expectedCount = 11721
-        self.p.parseXML(False)
+        expectedCount = 656
+        self.p.parseXML(True)
         print "element count = %s" % self.p.elementCount
         self.assertEqual(self.p.elementCount, expectedCount)
 
     def testAllTableNamesArePresent(self) :
         self.p.filename = "../../test-data/meco-energy-test-data.xml"
-        self.p.parseXML(False)
+        self.p.parseXML(True)
         fail = 0
 
         for key in self.p.tableNameCount.keys():
