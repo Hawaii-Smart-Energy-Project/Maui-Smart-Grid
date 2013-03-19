@@ -4,6 +4,7 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 from mecomapper import MECOMapper
+from mecodupecheck import MECODupeChecker
 
 VISUALIZE_DATA = 0
 DEBUG = 0
@@ -17,6 +18,7 @@ class MECODBInserter(object) :
         """
 
         self.mapper = MECOMapper()
+        self.dupeChecker = MECODupeChecker()
 
     def __call__(self, param) :
         print "CallableClass.__call__(%s)" % param
@@ -25,7 +27,7 @@ class MECODBInserter(object) :
         """Given a table name and a dictionary of column names and values, insert them to the db.
         :param conn: database connection
         :param tableName: name of db table
-        :param columnsAndValues: columns and values to be inserted to db
+        :param columnsAndValues dictionary: columns and values to be inserted to the db
         :returns: database cursor
         """
 
@@ -40,12 +42,16 @@ class MECODBInserter(object) :
             print columnsAndValues
 
         for col in columnDict.keys() :
+            # use default as the value for the primary key
+            # so that the private key is obtained from the predefined
+            # sequence.
             if col == '_pkey' :
                 if VISUALIZE_DATA :
                     print columnDict[col], # db col name
                     print 'DEFAULT'
                 dbColsAndVals[columnDict[col]] = 'DEFAULT'
 
+            # for the foreign key, set the value from the given parameter.
             elif col == '_fkey' :
                 if VISUALIZE_DATA :
                     print columnDict[col], # db col name
@@ -56,6 +62,8 @@ class MECODBInserter(object) :
                 if VISUALIZE_DATA :
                     print columnDict[col], # db col name
 
+                # the register and reading tables need to handle NULL
+                # values as a special case.
                 if tableName == 'Register' or tableName == 'Reading' :
                     try :
                         if VISUALIZE_DATA :
@@ -65,6 +73,8 @@ class MECODBInserter(object) :
                         if VISUALIZE_DATA :
                             print 'NULL'
                         dbColsAndVals[columnDict[col]] = 'NULL'
+
+                # for all other cases, simply pass the value.
                 else :
                     if VISUALIZE_DATA :
                         print columnsAndValues[col] # data source value
@@ -101,7 +111,7 @@ class MECODBInserter(object) :
                 conn.commit()
                 pass
             except :
-                print "commit failed"
+                print "ERROR: Commit failed."
 
         return cur
 
