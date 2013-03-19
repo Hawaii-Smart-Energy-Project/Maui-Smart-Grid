@@ -12,8 +12,9 @@ from mecomapper import MECOMapper
 from mecodbconnect import MECODBConnector
 from meco_fk import MECOFKDeterminer
 import sys
+from itertools import tee, islice, izip_longest
 
-DEBUG = 0 # print debugging info if 1
+DEBUG = 1 # print debugging info if 1
 
 class MECOXMLParser(object) :
     """Parses XML for MECO data.
@@ -69,12 +70,19 @@ class MECOXMLParser(object) :
         """
 
         walker = root.iter()
-        for element in walker :
+
+        for element, nextElement in self.getNext(walker):
             self.elementCount += 1
 
-            tableName = re.search('\{.*\}(.*)', element.tag).group(1) # current table name
+            currentTableName = re.search('\{.*\}(.*)', element.tag).group(1) # current table name
+            try:
+                nextTableName = re.search('\{.*\}(.*)', nextElement.tag).group(1) # next table name
+            except:
+                if DEBUG:
+                    print "EXCEPTION: nextElement = %s" % nextElement
+                nextTableName = None
 
-            self.tableNameCount[tableName] += 1
+            self.tableNameCount[currentTableName] += 1
 
             columnsAndValues = {}
             it = iter(sorted(element.attrib.iteritems()))
@@ -83,19 +91,19 @@ class MECOXMLParser(object) :
                 # Create a dictionary of column names and values.
                 columnsAndValues[item[0]] = item[1]
 
-            if tableName in self.insertTables :
+            if currentTableName in self.insertTables :
                 if DEBUG:
                     print
-                    print "processing table %s" % tableName
+                    print "processing table %s, next is %s" % (currentTableName, nextTableName)
                     print "--------------------------------"
 
-                pkeyCol = self.mapper.dbColumnsForTable(tableName)[
+                pkeyCol = self.mapper.dbColumnsForTable(currentTableName)[
                           '_pkey'] # get the col name for the pkey
                 fkeyCol = None
                 fKeyValue = None
 
                 try :
-                    fkeyCol = self.mapper.dbColumnsForTable(tableName)[
+                    fkeyCol = self.mapper.dbColumnsForTable(currentTableName)[
                               '_fkey'] # get the col name for the fkey
                 except :
                     pass
@@ -113,10 +121,10 @@ class MECOXMLParser(object) :
                     print "fKeyValue = %s" % fKeyValue
 
                 if self.insertDataIntoDatabase == True:
-                    cur = self.inserter.insertData(self.conn, tableName,
+                    cur = self.inserter.insertData(self.conn, currentTableName,
                                                    columnsAndValues, fKeyValue, 1) # last 1 indicates don't commit
 
-                self.lastSeqVal = self.util.getLastSequenceID(self.conn, tableName,
+                self.lastSeqVal = self.util.getLastSequenceID(self.conn, currentTableName,
                                                               pkeyCol)
                 # store pk
                 self.fkDeterminer.pkValforCol[pkeyCol] = self.lastSeqVal
@@ -124,8 +132,42 @@ class MECOXMLParser(object) :
                 if DEBUG:
                     print "lastSeqVal = ", self.lastSeqVal
 
+
+                if self.lastReading(currentTableName, nextTableName):
+                    print "----- last reading found -----"
+                if self.lastRegister(currentTableName, nextTableName):
+                    print "----- last register found -----"
+
             if self.elementCount % 10000 == 0:
                 sys.stdout.write('.')
                 self.conn.commit()
         self.conn.commit()
         print
+
+    def lastReading(self, currentTable, nextTable):
+        """
+        :return True if last object in Reading table was read, otherwise return False.
+        """
+        if currentTable == "Reading" and currentTable != nextTable:
+            return True
+        return False
+
+    def lastRegister(self, currentTable, nextTable):
+        """
+        :return True if last object in Register table was read, otherwise return False.
+        """
+        if currentTable == "Register" and currentTable != nextTable:
+            return True
+        return False
+
+    def getNext(self, somethingIterable, window=1):
+        """
+        :param somethingIterable something that has an iterator
+        :param window
+        :return value and next value
+        """
+        items, nexts = tee(somethingIterable, 2)
+        nexts = islice(nexts, window, None)
+        return izip_longest(items, nexts)
+
+
