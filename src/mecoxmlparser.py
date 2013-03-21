@@ -136,12 +136,14 @@ class MECOXMLParser(object) :
 
                 if self.lastReading(currentTableName, nextTableName):
                     print "----- last reading found -----"
+                    sys.stdout.write('.')
+                    self.conn.commit()
+                    if DEBUG:
+                        sys.stdout.write("(%s)" % self.elementCount)
+
                 if self.lastRegister(currentTableName, nextTableName):
                     print "----- last register found -----"
 
-            if self.elementCount % 10000 == 0:
-                sys.stdout.write('.')
-                self.conn.commit()
         self.conn.commit()
         print
 
