@@ -149,7 +149,8 @@ class MECOXMLParser(object) :
         """Determine if the last reading is being visited.
         :return True if last object in Reading table was read, otherwise return False.
         """
-        if currentTable == "Reading" and currentTable != nextTable:
+        if currentTable == "Reading" and (
+                nextTable == "MeterData" or nextTable == None) :
             return True
         return False
 
@@ -157,7 +158,8 @@ class MECOXMLParser(object) :
         """Determine if the last register is being visited.
         :return True if last object in Register table was read, otherwise return False.
         """
-        if currentTable == "Register" and currentTable != nextTable:
+        if currentTable == "Register" and (
+                nextTable == "MeterData" or nextTable == None) :
             return True
         return False
 
