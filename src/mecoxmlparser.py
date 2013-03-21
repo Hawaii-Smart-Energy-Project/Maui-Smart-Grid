@@ -40,9 +40,10 @@ class MECOXMLParser(object) :
         # count how many times sections in source data are encountered
         self.tableNameCount = {'SSNExportDocument' : 0, 'MeterData' : 0, 'RegisterData' : 0,
                                'RegisterRead' : 0, 'Tier' : 0, 'Register' : 0,
-                               'IntervalReadData' : 0, 'Interval' : 0, 'Reading' : 0}
+                               'IntervalReadData' : 0, 'Interval' : 0, 'Reading' : 0,
+                               'IntervalStatus' : 0, 'ChannelStatus' : 0}
 
-        # Excluding tables for IntervalStatus, ChannelStatus because they are not used for data that is stored.
+        # @todo adjust test to handle interval status and channel status
 
         self.insertTables = self.mecoConfig.insertTables
 
@@ -145,7 +146,7 @@ class MECOXMLParser(object) :
         print
 
     def lastReading(self, currentTable, nextTable):
-        """
+        """Determine if the last reading is being visited.
         :return True if last object in Reading table was read, otherwise return False.
         """
         if currentTable == "Reading" and currentTable != nextTable:
@@ -153,7 +154,7 @@ class MECOXMLParser(object) :
         return False
 
     def lastRegister(self, currentTable, nextTable):
-        """
+        """Determine if the last register is being visited.
         :return True if last object in Register table was read, otherwise return False.
         """
         if currentTable == "Register" and currentTable != nextTable:
@@ -161,7 +162,7 @@ class MECOXMLParser(object) :
         return False
 
     def getNext(self, somethingIterable, window=1):
-        """
+        """Return the current item and next item in an iterable data structure.
         :param somethingIterable something that has an iterator
         :param window
         :return value and next value
