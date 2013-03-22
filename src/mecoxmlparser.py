@@ -136,9 +136,11 @@ class MECOXMLParser(object) :
                             columnsAndValues['EndTime']) == True
                     ) :
                         self.dupesExist = True
-                        print "dupe check = True"
+                        if DEBUG:
+                            print "dupe check = True"
                     else :
-                        print "dupe check = False"
+                        if DEBUG:
+                            print "dupe check = False"
 
                 if self.insertDataIntoDatabase == True :
                     cur = self.inserter.insertData(self.conn, currentTableName,
@@ -155,22 +157,24 @@ class MECOXMLParser(object) :
 
 
                 if self.lastReading(currentTableName, nextTableName):
-                    print "----- last reading found -----"
+                    if DEBUG:
+                        print "----- last reading found -----"
 
                     sys.stdout.write('.')
-                    if DEBUG:
-                        sys.stdout.write("(%s)" % self.elementCount)
+                    sys.stdout.write("(%s)" % self.elementCount)
 
                     # before committing, are there any duplicates?
                     if self.dupesExist :
                         self.conn.rollback()
-                        print "(dupe(s) found... performing rollback...)"
+                        if DEBUG:
+                            print "(dupe(s) found... performing rollback...)"
                         self.dupesExist = False
                     else :
                         self.conn.commit()
 
                 if self.lastRegister(currentTableName, nextTableName):
-                    print "----- last register found -----"
+                    if DEBUG:
+                        print "----- last register found -----"
 
         self.conn.commit()
         print
