@@ -14,12 +14,19 @@ class TestMECODupeChecker(unittest.TestCase) :
         self.p = MECOXMLParser()
         self.dupeChecker = MECODupeChecker()
 
-        # insert test data to test db
+        # @todo insert test data to test db
 
+    def findIndividualDupe(self):
+        """Find a duplicate record when only one exists.
+        """
 
-    def findDupe(self):
+        # @todo write test
         self.assertTrue(self.dupeChecker.meterIDAndEndTimeExists('100000','2012-08-08 14:00'),
                                                                  "Record should already exist")
 
+    def testLoadOnTop(self):
+        """If the same data set is loaded in succession, all values will be duplicated.
+        Verify that this is true.
+        """
 
-
+        # @todo write test

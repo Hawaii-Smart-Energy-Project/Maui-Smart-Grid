@@ -13,6 +13,7 @@ from mecodbconnect import MECODBConnector
 from meco_fk import MECOFKDeterminer
 import sys
 from itertools import tee, islice, izip_longest
+from mecodupecheck import MECODupeChecker
 
 DEBUG = 1 # print debugging info if 1
 
@@ -51,6 +52,8 @@ class MECOXMLParser(object) :
         self.fKeyVal = None
         self.lastTable = None
         self.fkDeterminer = MECOFKDeterminer()
+        self.dupeChecker = MECODupeChecker()
+        self.currentMeterName = None
 
     def parseXML(self, insert = False) :
         """Parse an XML file.
@@ -121,9 +124,18 @@ class MECOXMLParser(object) :
                 if DEBUG:
                     print "fKeyValue = %s" % fKeyValue
 
-                if self.insertDataIntoDatabase == True:
+                if currentTableName == "MeterData":
+                    self.currentMeterName = columnsAndValues['MeterName']
+
+                if currentTableName == "Interval" :
+                    print "end time value = %s" % columnsAndValues['EndTime']
+                    print "dupe check = %s" % self.dupeChecker.meterIDAndEndTimeExists(
+                        self.currentMeterName, columnsAndValues['EndTime'])
+
+                if self.insertDataIntoDatabase == True :
                     cur = self.inserter.insertData(self.conn, currentTableName,
-                                                   columnsAndValues, fKeyValue, 1) # last 1 indicates don't commit
+                                                   columnsAndValues, fKeyValue,
+                                                   1) # last 1 indicates don't commit
 
                 self.lastSeqVal = self.util.getLastSequenceID(self.conn, currentTableName,
                                                               pkeyCol)
@@ -136,6 +148,9 @@ class MECOXMLParser(object) :
 
                 if self.lastReading(currentTableName, nextTableName):
                     print "----- last reading found -----"
+
+                    # before committing, are there any duplicates?
+
                     sys.stdout.write('.')
                     self.conn.commit()
                     if DEBUG:
@@ -174,5 +189,3 @@ class MECOXMLParser(object) :
         items, nexts = tee(somethingIterable, 2)
         nexts = islice(nexts, window, None)
         return izip_longest(items, nexts)
-
-

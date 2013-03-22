@@ -16,9 +16,9 @@ class MECODupeChecker(object) :
         self.conn = self.connector.connectDB()
         self.cur = self.conn.cursor()
 
-    def meterIDAndEndTimeExists(self, meterID, endTime):
+    def meterIDAndEndTimeExists(self, meterName, endTime):
         """Check if the meterID and endTime combination exists in the database.
-        :param meterID: Meter ID in MeterData table
+        :param meterID: Meter name in MeterData table
         :param endTime: End time in Interval table
         :return True if combo exists, False if not.
         """
@@ -28,7 +28,7 @@ class MECODupeChecker(object) :
                  FROM "MeterData"
                  INNER JOIN "IntervalReadData" ON "MeterData".meter_data_id = "IntervalReadData".meter_data_id
                  INNER JOIN "Interval" ON "IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id
-                 WHERE "Interval".end_time = '%s' and meter_name = '%s'""" % (endTime, meterID)
+                 WHERE "Interval".end_time = '%s' and meter_name = '%s'""" % (endTime, meterName)
 
         result = None
         try :
@@ -45,5 +45,3 @@ class MECODupeChecker(object) :
             return True
         else:
             return False
-
-
