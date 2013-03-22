@@ -16,7 +16,7 @@ class MECODupeChecker(object) :
         self.conn = self.connector.connectDB()
         self.cur = self.conn.cursor()
 
-    def meterIDAndEndTimeExists(self, meterName, endTime):
+    def meterNameAndEndTimeExists(self, meterName, endTime):
         """Check if the meterID and endTime combination exists in the database.
         :param meterID: Meter name in MeterData table
         :param endTime: End time in Interval table

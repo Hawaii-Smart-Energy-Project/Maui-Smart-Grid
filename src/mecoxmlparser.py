@@ -54,6 +54,7 @@ class MECOXMLParser(object) :
         self.fkDeterminer = MECOFKDeterminer()
         self.dupeChecker = MECODupeChecker()
         self.currentMeterName = None
+        self.dupesExist = False
 
     def parseXML(self, insert = False) :
         """Parse an XML file.
@@ -127,10 +128,17 @@ class MECOXMLParser(object) :
                 if currentTableName == "MeterData":
                     self.currentMeterName = columnsAndValues['MeterName']
 
+                # perform a dupe check for the reading branch
                 if currentTableName == "Interval" :
                     print "end time value = %s" % columnsAndValues['EndTime']
-                    print "dupe check = %s" % self.dupeChecker.meterIDAndEndTimeExists(
-                        self.currentMeterName, columnsAndValues['EndTime'])
+                    if (self.dupeChecker.meterNameAndEndTimeExists(
+                            self.currentMeterName,
+                            columnsAndValues['EndTime']) == True
+                    ) :
+                        self.dupesExist = True
+                        print "dupe check = True"
+                    else :
+                        print "dupe check = False"
 
                 if self.insertDataIntoDatabase == True :
                     cur = self.inserter.insertData(self.conn, currentTableName,
@@ -149,12 +157,17 @@ class MECOXMLParser(object) :
                 if self.lastReading(currentTableName, nextTableName):
                     print "----- last reading found -----"
 
-                    # before committing, are there any duplicates?
-
                     sys.stdout.write('.')
-                    self.conn.commit()
                     if DEBUG:
                         sys.stdout.write("(%s)" % self.elementCount)
+
+                    # before committing, are there any duplicates?
+                    if self.dupesExist :
+                        self.conn.rollback()
+                        print "(dupe(s) found... performing rollback...)"
+                        self.dupesExist = False
+                    else :
+                        self.conn.commit()
 
                 if self.lastRegister(currentTableName, nextTableName):
                     print "----- last register found -----"
