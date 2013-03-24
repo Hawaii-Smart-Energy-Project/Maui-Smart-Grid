@@ -38,13 +38,23 @@ class MECOXMLParser(object) :
         self.inserter = MECODBInserter()
         self.insertDataIntoDatabase = False
 
-        # count how many times sections in source data are encountered
-        self.tableNameCount = {'SSNExportDocument' : 0, 'MeterData' : 0, 'RegisterData' : 0,
-                               'RegisterRead' : 0, 'Tier' : 0, 'Register' : 0,
-                               'IntervalReadData' : 0, 'Interval' : 0, 'Reading' : 0,
-                               'IntervalStatus' : 0, 'ChannelStatus' : 0}
+        # count how many times sections in source data are encountered.
+        self.tableNameCount = {'SSNExportDocument' : 0, 'MeterData' : 0,
+                               'RegisterData' : 0, 'RegisterRead' : 0,
+                               'Tier' : 0, 'Register' : 0,
+                               'IntervalReadData' : 0, 'Interval' : 0,
+                               'Reading' : 0, 'IntervalStatus' : 0,
+                               'ChannelStatus' : 0, 'EventData': 0,
+                               'Event' : 0}
 
-        # @todo adjust test to handle interval status and channel status
+        # @todo adjust unit test to handle interval status and channel status
+
+        # use this dictionary to track which channels were processed when
+        # readings are being processed. this is to prevent duplicate channel
+        # data from being inserted.
+        self.channelProcessed = {}
+        self.initChannelProcessed()
+        self.processingReadingsNow = False
 
         self.insertTables = self.mecoConfig.insertTables
 
@@ -54,7 +64,10 @@ class MECOXMLParser(object) :
         self.fkDeterminer = MECOFKDeterminer()
         self.dupeChecker = MECODupeChecker()
         self.currentMeterName = None
+        self.currentIntervalEndTime = None
         self.dupesExist = False
+        self.channelDupeExists = False
+
 
     def parseXML(self, insert = False) :
         """Parse an XML file.
@@ -68,6 +81,7 @@ class MECOXMLParser(object) :
         tree = ET.parse(self.filename)
         root = tree.getroot()
         self.walkTheTreeFromRoot(root)
+
 
     def walkTheTreeFromRoot(self, root) :
         """Walk an XML tree from its root node.
@@ -130,10 +144,12 @@ class MECOXMLParser(object) :
 
                 # perform a dupe check for the reading branch
                 if currentTableName == "Interval" :
-                    print "end time value = %s" % columnsAndValues['EndTime']
-                    if (self.dupeChecker.meterNameAndEndTimeExists(
+                    self.currentIntervalEndTime = columnsAndValues['EndTime']
+                    print "end time value = %s" % self.currentIntervalEndTime
+                    if (self.dupeChecker.readingBranchDupeExists(
+                            self.conn,
                             self.currentMeterName,
-                            columnsAndValues['EndTime']) == True
+                            self.currentIntervalEndTime) == True
                     ) :
                         self.dupesExist = True
                         if DEBUG:
@@ -142,10 +158,41 @@ class MECOXMLParser(object) :
                         if DEBUG:
                             print "dupe check = False"
 
+
+
+                if currentTableName == "Reading":
+                    self.processingReadingsNow = True
+                    print "Channel = %s" % columnsAndValues['Channel']
+                    if self.channelProcessed[columnsAndValues['Channel']] == True:
+                        print "ERROR: duplicate channel data found"
+                        assert self.channelProcessed[columnsAndValues['Channel']] == False
+                    else:
+                        self.channelProcessed[columnsAndValues['Channel']] = True
+
+                if currentTableName != "Reading" and self.processingReadingsNow:
+                    self.processingReadingsNow = False
+                    self.initChannelProcessed()
+
+
+
                 if self.insertDataIntoDatabase == True :
-                    cur = self.inserter.insertData(self.conn, currentTableName,
-                                                   columnsAndValues, fKeyValue,
-                                                   1) # last 1 indicates don't commit
+                    # handle a special case for duplicate reading data
+                    if currentTableName == "Reading":
+                        self.channelDupeExists \
+                            = self.dupeChecker.readingBranchDupeExists(
+                                self.conn,
+                                self.currentMeterName,
+                                self.currentIntervalEndTime,
+                                columnsAndValues['Channel']
+                        )
+                    if self.channelDupeExists == False:
+                        cur = self.inserter.insertData(self.conn, currentTableName,
+                                                       columnsAndValues, fKeyValue,
+                                                       1) # last 1 indicates don't commit
+                    else: # don't insert into Reading table
+                        print "Duplicate meter-endtime-channel exists."
+                        self.channelDupeExists = False
+
 
                 self.lastSeqVal = self.util.getLastSequenceID(self.conn, currentTableName,
                                                               pkeyCol)
@@ -176,8 +223,13 @@ class MECOXMLParser(object) :
                     if DEBUG:
                         print "----- last register found -----"
 
-        self.conn.commit()
+        if self.dupesExist == False:
+            self.conn.commit()
+        else:
+            self.dupesExist = False
+            self.conn.rollback()
         print
+
 
     def lastReading(self, currentTable, nextTable):
         """Determine if the last reading is being visited.
@@ -188,6 +240,7 @@ class MECOXMLParser(object) :
             return True
         return False
 
+
     def lastRegister(self, currentTable, nextTable):
         """Determine if the last register is being visited.
         :return True if last object in Register table was read, otherwise return False.
@@ -196,6 +249,7 @@ class MECOXMLParser(object) :
                 nextTable == "MeterData" or nextTable == None) :
             return True
         return False
+
 
     def getNext(self, somethingIterable, window=1):
         """Return the current item and next item in an iterable data structure.
@@ -206,3 +260,11 @@ class MECOXMLParser(object) :
         items, nexts = tee(somethingIterable, 2)
         nexts = islice(nexts, window, None)
         return izip_longest(items, nexts)
+
+
+    def initChannelProcessed(self):
+        """Init the dictionary.
+        """
+
+        self.channelProcessed = {'1' : False, '2' : False, '3' : False,
+         '4' : False}
