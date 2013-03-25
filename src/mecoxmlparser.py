@@ -67,6 +67,8 @@ class MECOXMLParser(object) :
         self.currentIntervalEndTime = None
         self.dupesExist = False
         self.channelDupeExists = False
+        self.commitCount = 0
+        self.dupeOnInsertCount = 0
 
 
     def parseXML(self, insert = False) :
@@ -76,8 +78,9 @@ class MECOXMLParser(object) :
 
         print "parseXML:"
 
+        self.commitCount = 0
         self.insertDataIntoDatabase = insert
-        print "parsing xml in", self.filename
+        sys.stderr.write("\nparsing xml in %s\n" % self.filename)
         tree = ET.parse(self.filename)
         root = tree.getroot()
         self.walkTheTreeFromRoot(root)
@@ -152,12 +155,12 @@ class MECOXMLParser(object) :
                             self.currentIntervalEndTime) == True
                     ) :
                         self.dupesExist = True
+
                         if DEBUG:
                             print "dupe check = True"
                     else :
                         if DEBUG:
                             print "dupe check = False"
-
 
 
                 if currentTableName == "Reading":
@@ -189,8 +192,19 @@ class MECOXMLParser(object) :
                         cur = self.inserter.insertData(self.conn, currentTableName,
                                                        columnsAndValues, fKeyValue,
                                                        1) # last 1 indicates don't commit
-                    else: # don't insert into Reading table
+                    else: # Don't insert into Reading table
                         print "Duplicate meter-endtime-channel exists."
+                        self.dupeOnInsertCount += 1
+                        if self.dupeOnInsertCount > 0 and self.dupeOnInsertCount < 2:
+                            sys.stderr.write("(dupe on insert)")
+
+                        # also verify the data is equivalent to the existing record
+                        print "columnsAndValues = ",
+                        print columnsAndValues
+
+                        if self.dupeChecker.readingValuesAreInTheDatabase(self.conn, columnsAndValues):
+                            print "Verified reading values are in the database"
+
                         self.channelDupeExists = False
 
 
@@ -202,22 +216,22 @@ class MECOXMLParser(object) :
                 if DEBUG:
                     print "lastSeqVal = ", self.lastSeqVal
 
-
                 if self.lastReading(currentTableName, nextTableName):
                     if DEBUG:
                         print "----- last reading found -----"
 
-                    sys.stdout.write('.')
-                    sys.stdout.write("(%s)" % self.elementCount)
+                    sys.stderr.write("[%s]" % self.commitCount)
+                    sys.stderr.write("(%s)" % self.elementCount)
 
                     # before committing, are there any duplicates?
                     if self.dupesExist :
-                        self.conn.rollback()
-                        if DEBUG:
-                            print "(dupe(s) found... performing rollback...)"
+                        # self.conn.rollback()
+                        # sys.stderr.write("(dupe(s) found... performing rollback...)")
                         self.dupesExist = False
                     else :
                         self.conn.commit()
+                        self.commitCount += 1
+                        self.dupeOnInsertCount = 0
 
                 if self.lastRegister(currentTableName, nextTableName):
                     if DEBUG:
@@ -227,7 +241,8 @@ class MECOXMLParser(object) :
             self.conn.commit()
         else:
             self.dupesExist = False
-            self.conn.rollback()
+            # self.conn.rollback()
+            # sys.stderr.write("(dupe(s) found... performing rollback...)")
         print
 
 
@@ -268,3 +283,19 @@ class MECOXMLParser(object) :
 
         self.channelProcessed = {'1' : False, '2' : False, '3' : False,
          '4' : False}
+
+
+    def getLastElement(self, rows):
+        """Get the last element in a collection.
+
+        Example:
+            rows = (element1, element2, element3)
+            getLastElement(rows) # return element3
+
+        :param rows Result froms from a query
+        :return last element in the collection
+        """
+
+        for i, var in enumerate(rows):
+            if i == len(rows) - 1:
+                return var
