@@ -188,6 +188,8 @@ class MECOXMLParser(object) :
                                 self.currentIntervalEndTime,
                                 columnsAndValues['Channel']
                         )
+
+                    # intercept dupe reading data before insert
                     if self.channelDupeExists == False:
                         cur = self.inserter.insertData(self.conn, currentTableName,
                                                        columnsAndValues, fKeyValue,
@@ -196,7 +198,7 @@ class MECOXMLParser(object) :
                         print "Duplicate meter-endtime-channel exists."
                         self.dupeOnInsertCount += 1
                         if self.dupeOnInsertCount > 0 and self.dupeOnInsertCount < 2:
-                            sys.stderr.write("(dupe on insert)")
+                            sys.stderr.write("(---dupe on insert---)")
 
                         # also verify the data is equivalent to the existing record
                         print "columnsAndValues = ",
@@ -224,23 +226,27 @@ class MECOXMLParser(object) :
                     sys.stderr.write("(%s)" % self.elementCount)
 
                     # before committing, are there any duplicates?
-                    if self.dupesExist :
+                    # if self.dupesExist :
                         # self.conn.rollback()
                         # sys.stderr.write("(dupe(s) found... performing rollback...)")
-                        self.dupesExist = False
-                    else :
-                        self.conn.commit()
-                        self.commitCount += 1
-                        self.dupeOnInsertCount = 0
+                        # self.dupesExist = False
+                    # else :
+                    self.conn.commit()
+                    self.commitCount += 1
+                    sys.stderr.write("{%s}" % self.dupeOnInsertCount)
+                    self.dupeOnInsertCount = 0
+                    if DEBUG and self.commitCount > 8 :
+                        self.commitCount = 0
+                        return
 
                 if self.lastRegister(currentTableName, nextTableName):
                     if DEBUG:
                         print "----- last register found -----"
 
-        if self.dupesExist == False:
-            self.conn.commit()
-        else:
-            self.dupesExist = False
+        # if self.dupesExist == False:
+        self.conn.commit()
+        # else:
+        #     self.dupesExist = False
             # self.conn.rollback()
             # sys.stderr.write("(dupe(s) found... performing rollback...)")
         print

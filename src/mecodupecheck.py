@@ -14,8 +14,11 @@ class MECODupeChecker(object) :
 
     def readingBranchDupeExists(self, conn, meterName, endTime, channel=None):
         """
+
         Duplicate cases:
         1. meterID and endTime combination exists in the database.
+            @deprecated in favor of full meterName-endTime-channel query
+
         2. meterID, endTime, channel combination exists in the database.
 
         :param conn: database connection
@@ -136,20 +139,37 @@ class MECODupeChecker(object) :
                 print "index %s: %s" % (index, item)
                 index += 1
 
-            # handle floating point 0 special case
-            if readingDataDict['Value'] == 0 :
-                readingDataDict['Value'] = '0.0'
+            allEqual = True
+            if int(readingDataDict['Channel']) == int(rows[0][1]):
+                print "channel equal,"
+            else:
+                print "channel not equal: %s,%s,%s" % (int(readingDataDict['Channel']), int(rows[0][1]), readingDataDict['Channel'] == rows[0][1])
+                allEqual = False
 
-            if readingDataDict['Channel'] == rows[0][0] and \
-                readingDataDict['RawValue'] == rows[0][1] and \
-                readingDataDict['UOM'] == rows[0][2] and \
-                readingDataDict['Value'] == rows[0][3]:
+            if int(readingDataDict['RawValue']) == int(rows[0][2]):
+                print "raw value equal,"
+            else:
+                print "rawvalue not equal: %s,%s,%s" % (int(readingDataDict['RawValue']), int(rows[0][2]), readingDataDict['RawValue'] == rows[0][2])
+                allEqual = False
 
+            if readingDataDict['UOM'] == rows[0][3]:
+                print "uom equal,"
+            else:
+                print "uom not equal: %s,%s,%s" % (readingDataDict['UOM'], rows[0][3], readingDataDict['UOM'] == rows[0][3])
+                allEqual = False
+
+            if float(readingDataDict['Value']) == float(rows[0][4]):
+                print "value equal"
+            else:
+                print "value not equal: %s,%s,%s" % (float(readingDataDict['Value']), float(rows[0][4]), readingDataDict['Value'] == rows[0][4])
+                allEqual = False
+
+            if allEqual:
                 print "all are equal"
                 return True
             else:
-                print "all are NOT equal!"
-                print rows[0][0], rows[0][1], rows[0][2], rows[0][3]
+                print "NOT all are equal!"
+                print rows[0][1], rows[0][2], rows[0][3], rows[0][4]
                 return False
         else:
             return False
