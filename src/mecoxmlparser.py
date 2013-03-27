@@ -100,7 +100,7 @@ class MECOXMLParser(object) :
             try:
                 nextTableName = re.search('\{.*\}(.*)', nextElement.tag).group(1) # next table name
             except:
-                if DEBUG:
+                if self.configer.configOptionValue("Debugging", 'debug'):
                     print "EXCEPTION: nextElement = %s" % nextElement
                 nextTableName = None
 
@@ -114,23 +114,24 @@ class MECOXMLParser(object) :
                 columnsAndValues[item[0]] = item[1]
 
             if currentTableName in self.insertTables :
-                if DEBUG:
+                if self.configer.configOptionValue("Debugging", 'debug'):
                     print
                     print "processing table %s, next is %s" % (currentTableName, nextTableName)
                     print "--------------------------------"
 
-                pkeyCol = self.mapper.dbColumnsForTable(currentTableName)[
-                          '_pkey'] # get the col name for the pkey
+                # get the col name for the pkey
+                pkeyCol = self.mapper.dbColumnsForTable(currentTableName)['_pkey']
+
                 fkeyCol = None
                 fKeyValue = None
 
                 try :
-                    fkeyCol = self.mapper.dbColumnsForTable(currentTableName)[
-                              '_fkey'] # get the col name for the fkey
+                    # get the col name for the fkey
+                    fkeyCol = self.mapper.dbColumnsForTable(currentTableName)['_fkey']
                 except :
                     pass
 
-                if DEBUG:
+                if self.configer.configOptionValue("Debugging", 'debug'):
                     print "foreign key col (fkey) = %s" % fkeyCol
                     print "primary key col (pkey) = %s" % pkeyCol
                     print columnsAndValues
@@ -139,7 +140,7 @@ class MECOXMLParser(object) :
                 if fkeyCol is not None :
                     fKeyValue = self.fkDeterminer.pkValforCol[fkeyCol]
 
-                if DEBUG:
+                if self.configer.configOptionValue("Debugging", 'debug'):
                     print "fKeyValue = %s" % fKeyValue
 
                 if currentTableName == "MeterData":
@@ -148,40 +149,6 @@ class MECOXMLParser(object) :
                 # perform a dupe check for the reading branch
                 if currentTableName == "Interval" :
                     self.currentIntervalEndTime = columnsAndValues['EndTime']
-
-                    if  self.configer.configOptionValue("Debugging", 'debug') == True:
-                        print "end time value = %s" % self.currentIntervalEndTime
-
-                    if (self.dupeChecker.readingBranchDupeExists(
-                            self.conn,
-                            self.currentMeterName,
-                            self.currentIntervalEndTime) == True
-                    ) :
-                        self.dupesExist = True
-
-                        if self.configer.configOptionValue("Debugging", 'debug') == True:
-                            print "dupe check = True"
-                    else :
-                        if self.configer.configOptionValue("Debugging", 'debug') == True:
-                            print "dupe check = False"
-
-
-                if currentTableName == "Reading":
-                    self.processingReadingsNow = True
-
-                    if self.configer.configOptionValue("Debugging", 'debug') == True:
-                        print "Channel = %s" % columnsAndValues['Channel']
-                    if self.channelProcessed[columnsAndValues['Channel']] == True:
-                        print "ERROR: duplicate channel data found"
-                        assert self.channelProcessed[columnsAndValues['Channel']] == False
-                    else:
-                        self.channelProcessed[columnsAndValues['Channel']] = True
-
-                if currentTableName != "Reading" and self.processingReadingsNow:
-                    self.processingReadingsNow = False
-                    self.initChannelProcessed()
-
-
 
                 if self.insertDataIntoDatabase:
                     # handle a special case for duplicate reading data
@@ -210,6 +177,7 @@ class MECOXMLParser(object) :
                         # also verify the data is equivalent to the existing record
 
                         if self.dupeChecker.readingValuesAreInTheDatabase(self.conn, columnsAndValues):
+
                             print "Verified reading values are in the database"
 
                         self.channelDupeExists = False
@@ -220,22 +188,16 @@ class MECOXMLParser(object) :
                 # store pk
                 self.fkDeterminer.pkValforCol[pkeyCol] = self.lastSeqVal
 
-                if DEBUG:
+                if self.configer.configOptionValue("Debugging", 'debug'):
                     print "lastSeqVal = ", self.lastSeqVal
 
                 if self.lastReading(currentTableName, nextTableName):
-                    if DEBUG:
+                    if self.configer.configOptionValue("Debugging", 'debug'):
                         print "----- last reading found -----"
 
                     sys.stderr.write("[%s]" % self.commitCount)
                     sys.stderr.write("(%s)" % self.elementCount)
 
-                    # before committing, are there any duplicates?
-                    # if self.dupesExist :
-                        # self.conn.rollback()
-                        # sys.stderr.write("(dupe(s) found... performing rollback...)")
-                        # self.dupesExist = False
-                    # else :
                     self.conn.commit()
                     self.commitCount += 1
                     sys.stderr.write("{%s}" % self.dupeOnInsertCount)
@@ -246,15 +208,10 @@ class MECOXMLParser(object) :
                         return
 
                 if self.lastRegister(currentTableName, nextTableName):
-                    if DEBUG:
+                    if self.configer.configOptionValue("Debugging", 'debug'):
                         print "----- last register found -----"
 
-        # if self.dupesExist == False:
         self.conn.commit()
-        # else:
-        #     self.dupesExist = False
-            # self.conn.rollback()
-            # sys.stderr.write("(dupe(s) found... performing rollback...)")
         print
 
 
