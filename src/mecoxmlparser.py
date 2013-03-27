@@ -15,7 +15,7 @@ import sys
 from itertools import tee, islice, izip_longest
 from mecodupecheck import MECODupeChecker
 
-DEBUG = 1 # print debugging info if 1
+DEBUG = 0 # print debugging info if 1
 
 class MECOXMLParser(object) :
     """Parses XML for MECO data.
@@ -27,7 +27,7 @@ class MECOXMLParser(object) :
         """Constructor
         """
 
-        self.mecoConfig = MECOConfiger()
+        self.configer = MECOConfiger()
         self.util = MECODBUtil()
         self.mapper = MECOMapper()
         self.connector = MECODBConnector()
@@ -56,7 +56,7 @@ class MECOXMLParser(object) :
         self.initChannelProcessed()
         self.processingReadingsNow = False
 
-        self.insertTables = self.mecoConfig.insertTables
+        self.insertTables = self.configer.insertTables
 
         self.lastSeqVal = None
         self.fKeyVal = None
@@ -148,7 +148,10 @@ class MECOXMLParser(object) :
                 # perform a dupe check for the reading branch
                 if currentTableName == "Interval" :
                     self.currentIntervalEndTime = columnsAndValues['EndTime']
-                    print "end time value = %s" % self.currentIntervalEndTime
+
+                    if  self.configer.configOptionValue("Debugging", 'debug') == True:
+                        print "end time value = %s" % self.currentIntervalEndTime
+
                     if (self.dupeChecker.readingBranchDupeExists(
                             self.conn,
                             self.currentMeterName,
@@ -156,16 +159,18 @@ class MECOXMLParser(object) :
                     ) :
                         self.dupesExist = True
 
-                        if DEBUG:
+                        if self.configer.configOptionValue("Debugging", 'debug') == True:
                             print "dupe check = True"
                     else :
-                        if DEBUG:
+                        if self.configer.configOptionValue("Debugging", 'debug') == True:
                             print "dupe check = False"
 
 
                 if currentTableName == "Reading":
                     self.processingReadingsNow = True
-                    print "Channel = %s" % columnsAndValues['Channel']
+
+                    if self.configer.configOptionValue("Debugging", 'debug') == True:
+                        print "Channel = %s" % columnsAndValues['Channel']
                     if self.channelProcessed[columnsAndValues['Channel']] == True:
                         print "ERROR: duplicate channel data found"
                         assert self.channelProcessed[columnsAndValues['Channel']] == False
@@ -178,9 +183,11 @@ class MECOXMLParser(object) :
 
 
 
-                if self.insertDataIntoDatabase == True :
+                if self.insertDataIntoDatabase:
                     # handle a special case for duplicate reading data
+                    # intercept dupe reading data before insert
                     if currentTableName == "Reading":
+                        # does a meter-endtime-channel dupe exist?
                         self.channelDupeExists \
                             = self.dupeChecker.readingBranchDupeExists(
                                 self.conn,
@@ -189,20 +196,18 @@ class MECOXMLParser(object) :
                                 columnsAndValues['Channel']
                         )
 
-                    # intercept dupe reading data before insert
+                    # Only insert if there are no duplicate values for the channel.
                     if self.channelDupeExists == False:
                         cur = self.inserter.insertData(self.conn, currentTableName,
                                                        columnsAndValues, fKeyValue,
                                                        1) # last 1 indicates don't commit
-                    else: # Don't insert into Reading table
+                    else: # Don't insert into Reading table if a dupe exists
                         print "Duplicate meter-endtime-channel exists."
                         self.dupeOnInsertCount += 1
                         if self.dupeOnInsertCount > 0 and self.dupeOnInsertCount < 2:
                             sys.stderr.write("(---dupe on insert---)")
 
                         # also verify the data is equivalent to the existing record
-                        print "columnsAndValues = ",
-                        print columnsAndValues
 
                         if self.dupeChecker.readingValuesAreInTheDatabase(self.conn, columnsAndValues):
                             print "Verified reading values are in the database"
@@ -235,7 +240,8 @@ class MECOXMLParser(object) :
                     self.commitCount += 1
                     sys.stderr.write("{%s}" % self.dupeOnInsertCount)
                     self.dupeOnInsertCount = 0
-                    if DEBUG and self.commitCount > 8 :
+
+                    if self.configer.configOptionValue("Debugging", "limit_commits") and self.commitCount > 8 :
                         self.commitCount = 0
                         return
 

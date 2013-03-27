@@ -3,6 +3,8 @@
 
 __author__ = 'Daniel Zhang (張道博)'
 
+from mecoconfig import MECOConfiger
+
 class MECODupeChecker(object) :
     """Check for duplicate data in the database.
     """
@@ -10,6 +12,7 @@ class MECODupeChecker(object) :
     def __init__(self) :
         """Constructor
         """
+        self.mecoConfig = MECOConfiger()
         self.currentReadingID = 0
 
     def readingBranchDupeExists(self, conn, meterName, endTime, channel=None):
@@ -31,7 +34,10 @@ class MECODupeChecker(object) :
         dbCursor = conn.cursor()
 
         if channel != None:
-            print "channel param = %s" % channel
+            if self.mecoConfig.configOptionValue("Debugging", 'debug'):
+                # print "channel param = %s" % channel
+                pass
+
             sql = """SELECT	"Interval".end_time,
                         "MeterData".meter_name,
 	                    "MeterData".meter_data_id,
@@ -42,7 +48,8 @@ class MECODupeChecker(object) :
                  INNER JOIN "Interval" ON "IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id
                  INNER JOIN "Reading" ON "Interval".interval_id = "Reading".interval_id
                  WHERE "Interval".end_time = '%s' and meter_name = '%s' and channel = '%s'""" % (endTime, meterName, channel)
-        else:
+
+        else: # deprecated query
             sql = """SELECT	"Interval".end_time,
                         "MeterData".meter_name,
 	                    "MeterData".meter_data_id
@@ -62,9 +69,9 @@ class MECODupeChecker(object) :
         rows = dbCursor.fetchall()
 
         if len(rows) > 0:
-            assert len(rows) < 2 # dupes are dropped before insert, therefore,
-                                 # there should never be more than two
-            if channel and len(rows) == 1:
+            assert len(rows) < 2, "dupes should be less than 2, found %s: %s" % (len(rows),rows)
+            if channel and len(rows) == 1 and \
+            self.mecoConfig.configOptionValue("Debugging", 'debug'):
                 print "Found %s existing matches in \"Reading\"." % len(rows)
                 print "rows = ",
                 print rows

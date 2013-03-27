@@ -6,6 +6,7 @@ __author__ = 'Daniel Zhang (張道博)'
 from mecoxmlparser import MECOXMLParser
 import glob
 import re
+from mecoconfig import MECOConfiger
 
 class Inserter(object) :
     """Perform insertion of data to the MECO DB.
@@ -14,8 +15,12 @@ class Inserter(object) :
     def __init__(self) :
         """Constructor"""
         self.parser = MECOXMLParser()
+        self.configer = MECOConfiger()
 
 i = Inserter()
+
+if i.configer.configOptionValue("Debugging","debug"):
+    print "Debugging is on"
 
 # process all XML files
 data = glob.glob("./*.xml")

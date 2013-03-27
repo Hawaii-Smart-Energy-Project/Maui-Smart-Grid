@@ -30,7 +30,7 @@ class MECOConfiger(object) :
 
 
     def configOptionValue(self, section, option) :
-        """Get a configuration value.
+        """Get a configuration value from the local configuration file.
         :param section
         :param option
         """
