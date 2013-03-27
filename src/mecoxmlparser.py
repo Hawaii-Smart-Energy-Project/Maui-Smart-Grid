@@ -172,7 +172,7 @@ class MECOXMLParser(object) :
                         print "Duplicate meter-endtime-channel exists."
                         self.dupeOnInsertCount += 1
                         if self.dupeOnInsertCount > 0 and self.dupeOnInsertCount < 2:
-                            sys.stderr.write("(---dupe on insert---)")
+                            sys.stderr.write("{dupe on insert-->}")
 
                         # also verify the data is equivalent to the existing record
 
@@ -195,12 +195,14 @@ class MECOXMLParser(object) :
                     if self.configer.configOptionValue("Debugging", 'debug'):
                         print "----- last reading found -----"
 
+
+                    self.conn.commit()
+
+                    sys.stderr.write("{%s}" % self.dupeOnInsertCount)
                     sys.stderr.write("[%s]" % self.commitCount)
                     sys.stderr.write("(%s)" % self.elementCount)
 
-                    self.conn.commit()
                     self.commitCount += 1
-                    sys.stderr.write("{%s}" % self.dupeOnInsertCount)
                     self.dupeOnInsertCount = 0
 
                     if self.configer.configOptionValue("Debugging", "limit_commits") and self.commitCount > 8 :
