@@ -9,6 +9,9 @@ import mecodbconnect
 
 
 class TestMECODBConnect(unittest.TestCase) :
+    """These tests require a database connection be available.
+    """
+
     def setUp(self) :
         self.conn = None
         self.connector = MECODBConnector()

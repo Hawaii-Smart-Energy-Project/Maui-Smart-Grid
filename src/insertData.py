@@ -1,6 +1,13 @@
 #!/usr/bin/env python -u
 # -*- coding: utf-8 -*-
 
+"""
+Usage:
+
+time python -u ${PATH}/insertData.py > ${LOG_FILE}
+
+"""
+
 __author__ = 'Daniel Zhang (張道博)'
 
 from mecoxmlparser import MECOXMLParser
@@ -27,7 +34,7 @@ data = glob.glob("./*.xml")
 
 data.sort()
 for f in data :
-    if re.search('.*log\.xml', f) is None :
+    if re.search('.*log\.xml', f) is None: # skip *log.xml files
         i.parser.filename = f
         i.parser.parseXML(True)
 

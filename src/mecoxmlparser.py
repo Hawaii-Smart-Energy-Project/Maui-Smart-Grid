@@ -270,3 +270,7 @@ class MECOXMLParser(object) :
         for i, var in enumerate(rows):
             if i == len(rows) - 1:
                 return var
+
+    def addCreationTimestamp(self, columnsAndValuesDict):
+        """
+        """

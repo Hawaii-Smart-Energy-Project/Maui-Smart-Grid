@@ -22,7 +22,7 @@ class TestMECODBInserter(unittest.TestCase) :
         self.reader = MECODBReader()
         self.lastSeqVal = None
         self.conn = self.connector.connectDB()
-        self.sampleTableName = 'TestMeterData'
+        self.sampleTableName = 'testing_MeterData'
         self.sampleDict = {'MeterName' : '100001', 'UtilDeviceID' : '100001',
                            'MacID' : '00:00:00:00:00:00:00:00'}
         self.keyName = 'meter_data_id'
@@ -34,8 +34,6 @@ class TestMECODBInserter(unittest.TestCase) :
     def testInsertionToMeterDataTable(self) :
         """Data can be written to the Meter Data table.
         """
-
-        print "testMECODBInserterCanBeInited:"
 
         # insert some values
         self.i.insertData(self.conn, self.sampleTableName, self.sampleDict)

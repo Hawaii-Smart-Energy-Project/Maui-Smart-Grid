@@ -7,7 +7,7 @@ from mecomapper import MECOMapper
 from mecodupecheck import MECODupeChecker
 
 VISUALIZE_DATA = 0
-DEBUG = 0
+DEBUG = 1
 
 class MECODBInserter(object) :
     """Provide data insertion methods for MECO data.
@@ -33,7 +33,7 @@ class MECODBInserter(object) :
 
         cur = conn.cursor()
         columnDict = self.mapper.getDBColNameDict(
-            tableName) # dict of mapped (from db to source data) column names
+            tableName) # dictionary of mapped (from db to source data) column names
         dbColsAndVals = {}
 
         if VISUALIZE_DATA :
@@ -64,7 +64,7 @@ class MECODBInserter(object) :
 
                 # the register and reading tables need to handle NULL
                 # values as a special case.
-                if tableName == 'Register' or tableName == 'Reading' :
+                if tableName == 'Register' or tableName == 'Reading':
                     try :
                         if VISUALIZE_DATA :
                             print columnsAndValues[col] # data source value
@@ -74,24 +74,27 @@ class MECODBInserter(object) :
                             print 'NULL'
                         dbColsAndVals[columnDict[col]] = 'NULL'
 
+
                 # for all other cases, simply pass the value.
                 else :
                     if VISUALIZE_DATA :
                         print columnsAndValues[col] # data source value
                     dbColsAndVals[columnDict[col]] = columnsAndValues[col]
 
+        # add a creation timestamp to meterdata
+        if tableName == 'MeterData':
+            dbColsAndVals['created'] = 'NOW()'
+
         cols = []
         vals = []
         for col in dbColsAndVals.keys() :
             cols.append(col)
 
-            # DEFAULT and NULL need to appear without quotes.
-            if dbColsAndVals[col] == 'DEFAULT' :
-                vals.append(dbColsAndVals[col])
-            elif dbColsAndVals[col] == 'NULL' :
+            # DEFAULT, NULL and NOW() need to appear without quotes.
+            if dbColsAndVals[col] in {'DEFAULT', 'NULL', 'NOW()'}:
                 vals.append(dbColsAndVals[col])
             else :
-                vals.append("'%s'" % dbColsAndVals[col])
+                vals.append("'%s'" % dbColsAndVals[col]) # surround value with single quotes
 
         sql = 'insert into "' + tableName + '" (' + ','.join(cols) + ')' + ' values (' + ','.join(
             vals) + ')'
