@@ -112,7 +112,6 @@ class MECODBInserter(object) :
         if withoutCommit == 0 :
             try :
                 conn.commit()
-                pass
             except :
                 print "ERROR: Commit failed."
 

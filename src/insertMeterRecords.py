@@ -4,7 +4,7 @@
 """Insert Meter Records into the database from a tab-separated data file.
 
 Usage:
-insertMeterRecords.py $FILENAME
+insertMeterRecords.py ${FILENAME}
 
 """
 
@@ -13,12 +13,14 @@ __author__ = 'Daniel Zhang (張道博)'
 import csv
 import sys
 from mecodbconnect import MECODBConnector
+from mecodbutils import MECODBUtil
 
 filename = sys.argv[1]
 
 connector = MECODBConnector()
 conn = connector.connectDB()
 cur = conn.cursor()
+dbutil = MECODBUtil()
 
 print "Loading data in file %s" % (filename)
 
@@ -76,7 +78,7 @@ with open(filename) as tsv :
             print len(cols)
             print len(data)
 
-            cur.execute(sql)
+            dbutil.executeSQL(cur, sql)
 
         lineCnt += 1
 

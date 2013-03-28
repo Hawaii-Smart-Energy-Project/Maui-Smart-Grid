@@ -36,4 +36,24 @@ class MECODBUtil(object) :
 
         return lastSequenceValue
 
+    def executeSQL(self, cursor, sql):
+        """Execute SQL given a cursor and a SQL statement.
+        :cursor Database cursor
+        :sql SQL statement
+        :return True for success, False for failure
+        """
+
+        success = True
+        try :
+            cursor.execute(sql)
+        except Exception, e :
+            success = False
+            print "execute failed with " + sql
+            print "ERROR: ", e[0]
+            print
+
+        return success
+
+
+
 
