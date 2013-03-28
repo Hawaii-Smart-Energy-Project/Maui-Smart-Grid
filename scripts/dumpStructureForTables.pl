@@ -37,4 +37,9 @@ my @tables = qw(Interval
 foreach my $t (@tables) {
     print "Dumping table $t\n";
     my $result = system("pg_dump -t '\"$t\"' -s $databaseName -h $hostname > $t.sql");
+
+    # remove failed dump
+    if ($result != 0) {
+        my $rmResult = system("rm $t.sql");
+    }
 }
