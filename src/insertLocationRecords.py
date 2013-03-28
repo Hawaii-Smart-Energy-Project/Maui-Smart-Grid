@@ -4,7 +4,7 @@
 """Insert Location Records into the database from a tab-separated data file.
 
 Usage:
-insertLocationRecords.py $FILENAME
+insertLocationRecords.py ${FILENAME}
 
 """
 
@@ -13,12 +13,16 @@ __author__ = 'Daniel Zhang (張道博)'
 import csv
 import sys
 from mecodbconnect import MECODBConnector
+from mecodbutils import MECODBUtil
 
 filename = sys.argv[1]
 
+success = True
+anyFailure = False
 connector = MECODBConnector()
 conn = connector.connectDB()
 cur = conn.cursor()
+dbutil = MECODBUtil()
 
 print "Loading data in file %s" % (filename)
 
@@ -41,18 +45,18 @@ cols = ['load_device_type', 'load_action', 'device_util_id', 'device_serial_no',
 
 lineCnt = 0
 
-with open(filename) as tsv :
-    for line in csv.reader(tsv, delimiter = "\t") :
-        if lineCnt != 0 :
+with open(filename) as tsv:
+    for line in csv.reader(tsv, delimiter = "\t"):
+        if lineCnt != 0:
 
             print line
-            data = line[0 :38]
+            data = line[0:38]
 
             print
-            for i in range(0, 38) :
-                if len(data[i]) == 0 :
+            for i in range(0, 38):
+                if len(data[i]) == 0:
                     data[i] = 'NULL'
-                else :
+                else:
                     data[i] = "'" + data[i] + "'"
             print ','.join(data)
 
@@ -66,8 +70,15 @@ with open(filename) as tsv :
             print len(cols)
             print len(data)
 
-            cur.execute(sql)
+            success = dbutil.executeSQL(cur, sql)
+            if not success:
+                anyFailure = True
 
         lineCnt += 1
 
 conn.commit()
+
+if not anyFailure:
+    print "Finished inserting location records."
+else:
+    print "Location records were NOT successfully loaded."
