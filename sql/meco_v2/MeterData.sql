@@ -22,11 +22,19 @@ CREATE TABLE "MeterData" (
     meter_data_id bigint NOT NULL,
     mac_id character(23) NOT NULL,
     meter_name character(8) NOT NULL,
-    util_device_id character(8) NOT NULL
+    util_device_id character(8) NOT NULL,
+    created timestamp without time zone
 );
 
 
 ALTER TABLE public."MeterData" OWNER TO sepgroup;
+
+--
+-- Name: COLUMN "MeterData".created; Type: COMMENT; Schema: public; Owner: sepgroup
+--
+
+COMMENT ON COLUMN "MeterData".created IS 'timestamp for when data is inserted';
+
 
 --
 -- Name: meterdata_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
