@@ -10,6 +10,7 @@ Provides data operations for the [Maui Smart Grid](http://www.mauismartgrid.com)
 ### Software Features
 * Parsing of source data.
 * Insertion of data to a data store (PostgreSQL 9.1).
+* Provides source files to create data store.
 
 ## Implementation
 
@@ -27,6 +28,7 @@ A SQL dump, produced by pg_dump, of the database schema is provided for referenc
 The schema consists of the following components.
 
 1. Energy data
+    * Event data is not included in the schema
 2. Location Records
 3. Meter Records
 4. Weather Data (Kahalui Station)
