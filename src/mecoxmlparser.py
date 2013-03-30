@@ -14,6 +14,7 @@ from meco_fk import MECOFKDeterminer
 import sys
 from itertools import tee, islice, izip_longest
 from mecodupecheck import MECODupeChecker
+import gzip
 
 DEBUG = 0 # print debugging info if 1
 
@@ -32,8 +33,8 @@ class MECOXMLParser(object) :
         self.mapper = MECOMapper()
         self.connector = MECODBConnector()
         self.conn = self.connector.connectDB()
-
         self.filename = None
+        self.fileObject = None
         self.elementCount = 0
         self.inserter = MECODBInserter()
         self.insertDataIntoDatabase = False
@@ -55,9 +56,7 @@ class MECOXMLParser(object) :
         self.channelProcessed = {}
         self.initChannelProcessed()
         self.processingReadingsNow = False
-
-        self.insertTables = self.configer.insertTables
-
+        self.insertTables = self.configer.insertTables # tables to be inserted to
         self.lastSeqVal = None
         self.fKeyVal = None
         self.lastTable = None
@@ -71,8 +70,9 @@ class MECOXMLParser(object) :
         self.dupeOnInsertCount = 0
 
 
-    def parseXML(self, insert = False) :
+    def parseXML(self, fileObject, insert = False) :
         """Parse an XML file.
+        :param file object
         :param insert - True to insert to the database | False to perform no inserts
         """
 
@@ -81,7 +81,7 @@ class MECOXMLParser(object) :
         self.commitCount = 0
         self.insertDataIntoDatabase = insert
         sys.stderr.write("\nparsing xml in %s\n" % self.filename)
-        tree = ET.parse(self.filename)
+        tree = ET.parse(fileObject)
         root = tree.getroot()
         self.walkTheTreeFromRoot(root)
 
@@ -176,14 +176,16 @@ class MECOXMLParser(object) :
 
                         # also verify the data is equivalent to the existing record
 
-                        if self.dupeChecker.readingValuesAreInTheDatabase(self.conn, columnsAndValues):
+                        if self.dupeChecker.readingValuesAreInTheDatabase(self.conn,
+                                                                          columnsAndValues):
 
                             print "Verified reading values are in the database"
 
                         self.channelDupeExists = False
 
 
-                self.lastSeqVal = self.util.getLastSequenceID(self.conn, currentTableName,
+                self.lastSeqVal = self.util.getLastSequenceID(self.conn,
+                                                              currentTableName,
                                                               pkeyCol)
                 # store pk
                 self.fkDeterminer.pkValforCol[pkeyCol] = self.lastSeqVal
