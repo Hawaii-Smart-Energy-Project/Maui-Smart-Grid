@@ -65,7 +65,21 @@ The exported XML data files contain the energy data. Insertion to the database i
     .\insertData.py
     
 in the directory the data files are contained.
-    
+
+#### Sample Output of Data Insertion
+
+    ~/msg-data/2013_02_25_download$ time python -u ~/dzmbp-maui-smart-grid/src/insertData.py > insert-run.log 
+    Inserting data to database meco_v2.
+    parsing xml in ./20130225-91a9f952-5ef4-46bb-ac33-5fd9f82c3264-1-1.xml.gz
+    {0}[0](6868){0}[1](17380){0}[2](20815){0}[3](24250){0}[4](31286){0}[5](34716){0}[6](38146){dupe on insert-->}{1536}[7](46938){0}[8](50374)
+    parsing xml in ./20130225-91a9f952-5ef4-46bb-ac33-5fd9f82c3264-2-1.xml.gz
+    {0}[0](57257){0}[1](60692){0}[2](67716){0}[3](71151){0}[4](74586){0}[5](78021){0}[6](88336){0}[7](91766){dupe on insert-->}{3136}[8](112881)
+    real    4m16.162s
+    user    0m58.716s
+    sys     0m30.186s
+
+The numbers in brackets correspond to {dropped duplicates (in the reading branch)}, [reading group index], and (element count).
+  
 ### Inserting Location and Meter Records
 
 Location and meter records are stored in separate tab-separated files and are inserted using separate scripts.

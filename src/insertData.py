@@ -15,6 +15,7 @@ import glob
 import re
 from mecoconfig import MECOConfiger
 import gzip
+import sys
 
 class Inserter(object) :
     """Perform insertion of data to the MECO DB.
@@ -29,6 +30,9 @@ i = Inserter()
 
 if i.configer.configOptionValue("Debugging","debug"):
     print "Debugging is on"
+
+sys.stderr.write("Inserting data to database %s." % \
+      i.configer.configOptionValue("Database","db_name"))
 
 path = '.'
 
