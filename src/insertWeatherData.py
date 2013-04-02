@@ -1,7 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""Preprocess weather data from Kahalui weather stations.
+"""Preprocess weather data from Kahalui weather stations and insert to the
+data store.
 """
 
 __author__ = 'Daniel Zhang (張道博)'
@@ -11,9 +12,9 @@ import sys
 import re
 from mecodbconnect import MECODBConnector
 
-try :
+try:
     len(sys.argv[1])
-except :
+except:
     print "Usage: insertWeatherData.py FILENAME"
     sys.exit()
 
@@ -42,48 +43,53 @@ myFile = open(filename, "r")
 reader = csv.reader(myFile)
 rowNum = 0
 lastCol = 0
-for row in reader :
+for row in reader:
     data = []
     newDate = ''
 
     # Handle the header row.
-    if rowNum == 7 :
+    if rowNum == 7:
         colNum = 0
-        for col in row :
+        for col in row:
             colNum += 1
         lastCol = colNum
 
     # Skip 7 lines of header.
-    if rowNum < 8 :
+    if rowNum < 8:
         pass
 
-    else :
+    else:
         colNum = 0
-        for col in row :
-            if colNum == 1 : # date column
+        for col in row:
+
+            if colNum == 1: # date column
                 newDate = '%s' % (
-                    (col[0 :4]) + '-%s' % (col[4 :6]) + '-%s' % (col[6 :8]))
+                    (col[0:4]) + '-%s' % (col[4:6]) + '-%s' % (col[6:8]))
 
-            elif colNum == 2 : # time column
+            elif colNum == 2: # time column
                 time = col.zfill(4)
-                data.append('%s %s:%s' % (newDate, time[0 :2], time[2 :4]))
+                data.append('%s %s:%s' % (newDate, time[0:2], time[2:4]))
                 newDate = ''
-            else :
+            else:
                 data.append('%s' % col)
-
             colNum += 1
 
-        for i in range(0, lastCol - 1) :
+        if colNum == lastCol:
+            for i in range(0, lastCol - 1):
 
-            if len(data[i]) == 0 or len(re.sub("\s+", "", data[i])) == 0 :
-                data[i] = 'NULL'
-            else :
-                data[i] = "'" + data[i] + "'"
+                try:
+                    if len(data[i]) == 0 or len(
+                            re.sub("\s+", "", data[i])) == 0:
+                        data[i] = 'NULL'
+                    else:
+                        data[i] = "'" + data[i] + "'"
+                except IndexError, e:
+                    assert data != [], "data should never be empty"
 
-        sql = """INSERT INTO "WeatherData" (%s) VALUES (%s)""" % (
-            ','.join(cols), ','.join(data[0 :lastCol - 1]))
-        print "sql = %s" % sql
-        cur.execute(sql)
+            sql = """INSERT INTO "WeatherKahaluiAirport" (%s) VALUES (%s)""" % (
+                ','.join(cols), ','.join(data[0:lastCol - 1]))
+            print "sql = %s" % sql
+            cur.execute(sql)
 
     rowNum += 1
 
