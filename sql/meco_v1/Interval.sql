@@ -67,6 +67,13 @@ ALTER TABLE ONLY "Interval"
 
 
 --
+-- Name: Interval_end_time_idx; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE INDEX "Interval_end_time_idx" ON "Interval" USING btree (end_time);
+
+
+--
 -- Name: Interval_interval_id_key; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
 --
 

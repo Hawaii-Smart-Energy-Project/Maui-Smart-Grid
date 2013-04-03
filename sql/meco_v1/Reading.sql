@@ -68,6 +68,13 @@ ALTER TABLE ONLY "Reading"
 
 
 --
+-- Name: Reading_channel_idx; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE INDEX "Reading_channel_idx" ON "Reading" USING btree (channel);
+
+
+--
 -- Name: interval_id_idx; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
 --
 

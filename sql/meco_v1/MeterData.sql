@@ -72,6 +72,13 @@ CREATE UNIQUE INDEX "MeterData_meter_data_id_key" ON "MeterData" USING btree (me
 
 
 --
+-- Name: MeterData_meter_name_idx; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE INDEX "MeterData_meter_name_idx" ON "MeterData" USING btree (meter_name);
+
+
+--
 -- Name: MeterData; Type: ACL; Schema: public; Owner: sepgroup
 --
 
