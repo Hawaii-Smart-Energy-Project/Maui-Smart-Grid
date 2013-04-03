@@ -48,28 +48,36 @@ my @views = qw(Distinct_kWh_3channels_and_location
                viewReadings
                );
 
-my $dumpCommand = "pg_dump -t '\"%s\"' -s -h $hostname $databaseName > %s.sql";
+my $dumpCommand = "pg_dump -t '\"%s\"' -s -h $hostname $databaseName > %s/%s.sql";
+my $dest;
+
+$dest = "tables";
+if(!-d $dest){ mkdir $dest; }
 
 foreach my $t (@tables) {
     print "Dumping table $t\n";
-    my $result = system(sprintf($dumpCommand,$t,$t));
+    my $result = system(sprintf($dumpCommand,$t,$dest,$t));
 
     if ($result != 0) {
-        removeFailedDump($t);
+        removeFailedDump($dest,$t);
     }
 }
 
+$dest = "views";
+if(!-d $dest){ mkdir $dest; }
+
 foreach my $v (@views) {
     print "Dumping view $v\n";
-    my $result = system(sprintf($dumpCommand,$v,$v));
+    my $result = system(sprintf($dumpCommand,$v,$dest,$v));
 
     if ($result != 0) {
-        removeFailedDump($v);
+        removeFailedDump($dest,$v);
     }
 }
 
 sub removeFailedDump
 {
-    my ($file) = @_;
-    my $rmResult = system("rm $file.sql");
+    my ($path, $file) = @_;
+    print "removing failed dump.\n";
+    my $rmResult = system("rm $path/$file.sql");
 }
