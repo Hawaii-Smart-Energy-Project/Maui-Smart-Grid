@@ -48,24 +48,28 @@ my @views = qw(Distinct_kWh_3channels_and_location
                viewReadings
                );
 
-my $dumpCommand = "pg_dump -t '\"$t\"' -s -h $hostname $databaseName > $t.sql";
+my $dumpCommand = "pg_dump -t '\"%s\"' -s -h $hostname $databaseName > %s.sql";
 
 foreach my $t (@tables) {
     print "Dumping table $t\n";
-    my $result = system($dumpCommand);
+    my $result = system(sprintf($dumpCommand,$t,$t));
 
-    # remove failed dump
     if ($result != 0) {
-        my $rmResult = system("rm $t.sql");
+        removeFailedDump($t);
     }
 }
 
 foreach my $v (@views) {
     print "Dumping view $v\n";
-    my $result = system($dumpCommand);
+    my $result = system(sprintf($dumpCommand,$v,$v));
 
-    # remove failed dump
     if ($result != 0) {
-        my $rmResult = system("rm $v.sql");
+        removeFailedDump($v);
     }
+}
+
+sub removeFailedDump
+{
+    my ($file) = @_;
+    my $rmResult = system("rm $file.sql");
 }
