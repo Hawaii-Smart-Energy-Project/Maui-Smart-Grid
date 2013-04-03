@@ -15,16 +15,16 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: WeatherData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+-- Name: WeatherKahaluiAirport; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
-CREATE TABLE "WeatherData" (
+CREATE TABLE "WeatherKahaluiAirport" (
     wban character varying,
     datetime timestamp(6) without time zone,
     station_type smallint,
     sky_condition character varying,
     sky_condition_flag character varying,
-    visibility smallint,
+    visibility character varying,
     visibility_flag character varying,
     weather_type character varying,
     weather_type_flag character varying,
@@ -65,15 +65,15 @@ CREATE TABLE "WeatherData" (
 );
 
 
-ALTER TABLE public."WeatherData" OWNER TO sepgroup;
+ALTER TABLE public."WeatherKahaluiAirport" OWNER TO sepgroup;
 
 --
--- Name: WeatherData; Type: ACL; Schema: public; Owner: sepgroup
+-- Name: WeatherKahaluiAirport; Type: ACL; Schema: public; Owner: sepgroup
 --
 
-REVOKE ALL ON TABLE "WeatherData" FROM PUBLIC;
-REVOKE ALL ON TABLE "WeatherData" FROM sepgroup;
-GRANT ALL ON TABLE "WeatherData" TO sepgroup;
+REVOKE ALL ON TABLE "WeatherKahaluiAirport" FROM PUBLIC;
+REVOKE ALL ON TABLE "WeatherKahaluiAirport" FROM sepgroup;
+GRANT ALL ON TABLE "WeatherKahaluiAirport" TO sepgroup;
 
 
 --
