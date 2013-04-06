@@ -30,7 +30,7 @@ my @tables = qw(Interval
                 Register
                 RegisterData
                 RegisterRead
-                TestMeterData
+                Testing_MeterData
                 Tier
                 WeatherData
                 WeatherKahaluiAirport
