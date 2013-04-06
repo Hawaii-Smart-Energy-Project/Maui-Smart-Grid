@@ -12,13 +12,15 @@ class MECOMapper(object) :
 
     def __init__(self) :
         """Constructor
+
+        The table names correspond directly to the DB table names.
         """
 
         self.dbColsMeterData = {'_pkey' : 'meter_data_id', 'MacID' : 'mac_id',
                                 'MeterName' : 'meter_name',
                                 'UtilDeviceID' : 'util_device_id'}
 
-        self.dbColsTestMeterData = {'_pkey' : 'meter_data_id', 'MacID' : 'mac_id',
+        self.dbColsTesting_MeterData = {'_pkey' : 'meter_data_id', 'MacID' : 'mac_id',
                                     'MeterName' : 'meter_name',
                                     'UtilDeviceID' : 'util_device_id'}
 

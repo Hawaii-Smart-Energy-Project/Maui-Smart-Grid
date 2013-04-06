@@ -20,7 +20,7 @@ class MECOConfiger(object) :
         # Define tables that will have data inserted.
         self.insertTables = (
             'MeterData', 'RegisterData', 'RegisterRead', 'Tier', 'Register', 'IntervalReadData',
-            'Interval', 'Reading')
+            'Interval', 'Reading', 'Testing_MeterData')
 
         try :
             self._config.read(['site.cfg', os.path.expanduser('~/.meco-data-operations.cfg')])
