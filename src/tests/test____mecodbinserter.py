@@ -22,7 +22,7 @@ class TestMECODBInserter(unittest.TestCase) :
         self.reader = MECODBReader()
         self.lastSeqVal = None
         self.conn = self.connector.connectDB()
-        self.sampleTableName = 'testing_MeterData'
+        self.sampleTableName = 'Testing_MeterData'
         self.sampleDict = {'MeterName' : '100001', 'UtilDeviceID' : '100001',
                            'MacID' : '00:00:00:00:00:00:00:00'}
         self.keyName = 'meter_data_id'
