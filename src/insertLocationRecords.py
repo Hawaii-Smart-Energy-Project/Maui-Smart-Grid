@@ -22,7 +22,7 @@ anyFailure = False
 connector = MECODBConnector()
 conn = connector.connectDB()
 cur = conn.cursor()
-dbutil = MECODBUtil()
+dbUtil = MECODBUtil()
 
 print "Loading data in file %s" % (filename)
 
@@ -70,7 +70,7 @@ with open(filename) as tsv:
             print len(cols)
             print len(data)
 
-            success = dbutil.executeSQL(cur, sql)
+            success = dbUtil.executeSQL(cur, sql)
             if not success:
                 anyFailure = True
 

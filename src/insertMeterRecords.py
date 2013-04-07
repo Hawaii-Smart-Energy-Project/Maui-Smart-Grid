@@ -20,7 +20,7 @@ filename = sys.argv[1]
 connector = MECODBConnector()
 conn = connector.connectDB()
 cur = conn.cursor()
-dbutil = MECODBUtil()
+dbUtil = MECODBUtil()
 
 print "Loading data in file %s" % (filename)
 
@@ -78,7 +78,7 @@ with open(filename) as tsv :
             print len(cols)
             print len(data)
 
-            dbutil.executeSQL(cur, sql)
+            dbUtil.executeSQL(cur, sql)
 
         lineCnt += 1
 

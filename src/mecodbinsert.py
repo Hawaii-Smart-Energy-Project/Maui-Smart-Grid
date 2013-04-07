@@ -5,6 +5,7 @@ __author__ = 'Daniel Zhang (張道博)'
 
 from mecomapper import MECOMapper
 from mecodupecheck import MECODupeChecker
+from mecodbutils import MECODBUtil
 
 VISUALIZE_DATA = 1
 DEBUG = 1
@@ -20,6 +21,7 @@ class MECODBInserter(object):
 
         self.mapper = MECOMapper()
         self.dupeChecker = MECODupeChecker()
+        self.dbUtil = MECODBUtil()
 
     def __call__(self, param):
         print "CallableClass.__call__(%s)" % param
@@ -114,12 +116,7 @@ class MECODBInserter(object):
         if DEBUG:
             print "sql=" + sql
 
-        try:
-            cur.execute(sql)
-        except Exception, e:
-            print "execute failed with " + sql
-            print "ERROR: ", e[0]
-            print
+        self.dbUtil.executeSQL(cur, sql)
 
         if withoutCommit == 0:
             try:

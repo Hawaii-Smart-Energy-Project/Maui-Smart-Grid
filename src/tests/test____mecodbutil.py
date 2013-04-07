@@ -15,7 +15,7 @@ class TestMECODBUtil(unittest.TestCase) :
 
     def setUp(self) :
         self.i = MECODBInserter()
-        self.util = MECODBUtil()
+        self.dbUtil = MECODBUtil()
         self.connector = MECODBConnector()
         self.conn = self.connector.connectDB()
         self.lastSeqVal = None
@@ -25,7 +25,7 @@ class TestMECODBUtil(unittest.TestCase) :
         self.columnName = 'meter_data_id'
 
     def testMECODBUtilCanBeInited(self) :
-        self.assertIsNotNone(self.util)
+        self.assertIsNotNone(self.dbUtil)
 
     def testLastSequenceNumberIsCorrect(self) :
         """Test if last sequence ID value is generated correctly. Do this by inserting
@@ -38,12 +38,12 @@ class TestMECODBUtil(unittest.TestCase) :
         self.i.insertData(self.conn, self.tableName, sampleDict)
 
 
-        self.lastSeqVal = self.util.getLastSequenceID(self.conn, self.tableName, self.columnName)
+        self.lastSeqVal = self.dbUtil.getLastSequenceID(self.conn, self.tableName, self.columnName)
         print "lastSeqVal = %s" % self.lastSeqVal
 
         sql = "select * from \"%s\" where %s = %s" % (self.tableName, self.columnName, self.lastSeqVal)
         dictCur = self.connector.dictCur
-        dictCur.execute(sql)
+        self.dbUtil.executeSQL(dictCur, sql)
         row = dictCur.fetchone()
         meterDataID = row[self.columnName]
         self.assertEqual(self.lastSeqVal, meterDataID)

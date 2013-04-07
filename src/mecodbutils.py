@@ -31,7 +31,7 @@ class MECODBUtil(object):
             tableName, columnName)
 
         cur = conn.cursor()
-        cur.execute(sql)
+        self.executeSQL(cur, sql)
         row = cur.fetchone()
         lastSequenceValue = row[0]
 
@@ -43,8 +43,9 @@ class MECODBUtil(object):
 
     def executeSQL(self, cursor, sql):
         """Execute SQL given a cursor and a SQL statement.
-        :cursor Database cursor
-        :sql SQL statement
+
+        :param cursor Database cursor
+        :param sql SQL statement
         :return True for success, False for failure
         """
 

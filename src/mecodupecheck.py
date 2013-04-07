@@ -4,18 +4,21 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 from mecoconfig import MECOConfiger
+from mecodbutils import MECODBUtil
 
-class MECODupeChecker(object) :
+
+class MECODupeChecker(object):
     """Check for duplicate data in the database.
     """
 
-    def __init__(self) :
+    def __init__(self):
         """Constructor
         """
         self.mecoConfig = MECOConfiger()
         self.currentReadingID = 0
+        self.dbUtil = MECODBUtil()
 
-    def readingBranchDupeExists(self, conn, meterName, endTime, channel=None):
+    def readingBranchDupeExists(self, conn, meterName, endTime, channel = None):
         """
 
         Duplicate cases:
@@ -44,34 +47,37 @@ class MECODupeChecker(object) :
 	                    "Reading".channel,
 	                    "Reading".reading_id
                  FROM "MeterData"
-                 INNER JOIN "IntervalReadData" ON "MeterData".meter_data_id = "IntervalReadData".meter_data_id
-                 INNER JOIN "Interval" ON "IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id
-                 INNER JOIN "Reading" ON "Interval".interval_id = "Reading".interval_id
-                 WHERE "Interval".end_time = '%s' and meter_name = '%s' and channel = '%s'""" % (endTime, meterName, channel)
+                 INNER JOIN "IntervalReadData" ON "MeterData".meter_data_id =
+                  "IntervalReadData".meter_data_id
+                 INNER JOIN "Interval" ON "IntervalReadData"
+                 .interval_read_data_id = "Interval".interval_read_data_id
+                 INNER JOIN "Reading" ON "Interval".interval_id = "Reading"
+                 .interval_id
+                 WHERE "Interval".end_time = '%s' and meter_name = '%s' and
+                 channel = '%s'""" % (
+                endTime, meterName, channel)
 
         else: # deprecated query
             sql = """SELECT	"Interval".end_time,
                         "MeterData".meter_name,
 	                    "MeterData".meter_data_id
                  FROM "MeterData"
-                 INNER JOIN "IntervalReadData" ON "MeterData".meter_data_id = "IntervalReadData".meter_data_id
-                 INNER JOIN "Interval" ON "IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id
-                 WHERE "Interval".end_time = '%s' and meter_name = '%s'""" % (endTime, meterName)
+                 INNER JOIN "IntervalReadData" ON "MeterData".meter_data_id =
+                  "IntervalReadData".meter_data_id
+                 INNER JOIN "Interval" ON "IntervalReadData"
+                 .interval_read_data_id = "Interval".interval_read_data_id
+                 WHERE "Interval".end_time = '%s' and meter_name = '%s'""" % (
+                endTime, meterName)
 
-        result = None
-        try :
-            result = dbCursor.execute(sql)
-        except Exception, e :
-            print "Execute failed with " + sql
-            print "ERROR: ", e[0]
-            print
-
+        self.dbUtil.executeSQL(dbCursor, sql)
         rows = dbCursor.fetchall()
 
         if len(rows) > 0:
-            assert len(rows) < 2, "dupes should be less than 2, found %s: %s" % (len(rows),rows)
+            assert len(
+                rows) < 2, "dupes should be less than 2, found %s: %s" % (
+                len(rows), rows)
             if channel and len(rows) == 1 and \
-            self.mecoConfig.configOptionValue("Debugging", 'debug'):
+                    self.mecoConfig.configOptionValue("Debugging", 'debug'):
                 print "Found %s existing matches in \"Reading\"." % len(rows)
                 print "rows = ",
                 print rows
@@ -101,7 +107,8 @@ class MECODupeChecker(object) :
 
 
     def readingValuesAreInTheDatabase(self, conn, readingDataDict):
-        """Given a reading ID, verify that the values associated are present in the database.
+        """Given a reading ID, verify that the values associated are present
+        in the database.
         Values are from the columns:
             1. channel
             2. raw_value
@@ -122,14 +129,7 @@ class MECODupeChecker(object) :
                  FROM "Reading"
                  WHERE "Reading".reading_id = %s""" % (self.currentReadingID)
 
-        result = None
-
-        try :
-            result = dbCursor.execute(sql)
-        except Exception, e :
-            print "Execute failed with " + sql
-            print "ERROR: ", e[0]
-            print
+        self.dbUtil.executeSQL(dbCursor, sql)
         rows = dbCursor.fetchall()
 
         assert len(rows) == 1 or len(rows) == 0
@@ -150,25 +150,33 @@ class MECODupeChecker(object) :
             if int(readingDataDict['Channel']) == int(rows[0][1]):
                 print "channel equal,"
             else:
-                print "channel not equal: %s,%s,%s" % (int(readingDataDict['Channel']), int(rows[0][1]), readingDataDict['Channel'] == rows[0][1])
+                print "channel not equal: %s,%s,%s" % (
+                    int(readingDataDict['Channel']), int(rows[0][1]),
+                    readingDataDict['Channel'] == rows[0][1])
                 allEqual = False
 
             if int(readingDataDict['RawValue']) == int(rows[0][2]):
                 print "raw value equal,"
             else:
-                print "rawvalue not equal: %s,%s,%s" % (int(readingDataDict['RawValue']), int(rows[0][2]), readingDataDict['RawValue'] == rows[0][2])
+                print "rawvalue not equal: %s,%s,%s" % (
+                    int(readingDataDict['RawValue']), int(rows[0][2]),
+                    readingDataDict['RawValue'] == rows[0][2])
                 allEqual = False
 
             if readingDataDict['UOM'] == rows[0][3]:
                 print "uom equal,"
             else:
-                print "uom not equal: %s,%s,%s" % (readingDataDict['UOM'], rows[0][3], readingDataDict['UOM'] == rows[0][3])
+                print "uom not equal: %s,%s,%s" % (
+                    readingDataDict['UOM'], rows[0][3],
+                    readingDataDict['UOM'] == rows[0][3])
                 allEqual = False
 
             if float(readingDataDict['Value']) == float(rows[0][4]):
                 print "value equal"
             else:
-                print "value not equal: %s,%s,%s" % (float(readingDataDict['Value']), float(rows[0][4]), readingDataDict['Value'] == rows[0][4])
+                print "value not equal: %s,%s,%s" % (
+                    float(readingDataDict['Value']), float(rows[0][4]),
+                    readingDataDict['Value'] == rows[0][4])
                 allEqual = False
 
             if allEqual:

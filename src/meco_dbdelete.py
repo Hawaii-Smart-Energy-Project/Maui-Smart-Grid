@@ -3,10 +3,9 @@
 
 __author__ = 'Daniel Zhang (張道博)'
 
-from mecodbconnect import MECODBConnector
 import psycopg2
 import psycopg2.extras
-
+from mecodbutils import MECODBUtil
 
 class MECODBDeleter(object) :
     """Provide delete routines for MECO DB.
@@ -15,6 +14,7 @@ class MECODBDeleter(object) :
     def __init__(self) :
         """Constructor
         """
+        self.dbUtil = MECODBUtil()
 
     def deleteRecord(self, conn, tableName, idText, idValue) :
         """Delete record from DB where record has an int-based serial number.
@@ -24,5 +24,5 @@ class MECODBDeleter(object) :
         """
         sql = "delete from \"%s\" where %s = %s" % (tableName, idText, idValue)
         dictCur = conn.cursor(cursor_factory = psycopg2.extras.DictCursor)
-        dictCur.execute(sql)
+        self.dbUtil.executeSQL(dictCur, sql)
         conn.commit()

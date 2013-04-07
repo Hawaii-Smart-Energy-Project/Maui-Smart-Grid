@@ -11,6 +11,7 @@ import csv
 import sys
 import re
 from mecodbconnect import MECODBConnector
+from mecodbutils import MECODBUtil
 
 try:
     len(sys.argv[1])
@@ -38,6 +39,7 @@ cols = ["wban", "datetime", "station_type", "sky_condition",
 connector = MECODBConnector()
 conn = connector.connectDB()
 cur = conn.cursor()
+dbUtil = MECODBUtil()
 
 myFile = open(filename, "r")
 reader = csv.reader(myFile)
@@ -89,7 +91,7 @@ for row in reader:
             sql = """INSERT INTO "WeatherKahaluiAirport" (%s) VALUES (%s)""" % (
                 ','.join(cols), ','.join(data[0:lastCol - 1]))
             print "sql = %s" % sql
-            cur.execute(sql)
+            dbUtil.executeSQL(cur, sql)
 
     rowNum += 1
 
