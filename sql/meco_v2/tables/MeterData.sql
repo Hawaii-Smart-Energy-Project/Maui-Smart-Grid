@@ -19,7 +19,7 @@ SET default_with_oids = false;
 --
 
 CREATE TABLE "MeterData" (
-    meter_data_id bigint NOT NULL,
+    meter_data_id bigint DEFAULT nextval('testing_meterdata_id_seq'::regclass) NOT NULL,
     mac_id character(23) NOT NULL,
     meter_name character(8) NOT NULL,
     util_device_id character(8) NOT NULL,
@@ -55,13 +55,6 @@ ALTER TABLE public.meterdata_id_seq OWNER TO sepgroup;
 --
 
 ALTER SEQUENCE meterdata_id_seq OWNED BY "MeterData".meter_data_id;
-
-
---
--- Name: meter_data_id; Type: DEFAULT; Schema: public; Owner: sepgroup
---
-
-ALTER TABLE ONLY "MeterData" ALTER COLUMN meter_data_id SET DEFAULT nextval('meterdata_id_seq'::regclass);
 
 
 --
