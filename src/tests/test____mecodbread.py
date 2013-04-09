@@ -10,6 +10,7 @@ from mecodbinsert import MECODBInserter
 from mecodbutils import MECODBUtil
 from meco_dbdelete import MECODBDeleter
 
+
 class TestMECODBRead(unittest.TestCase):
     def setUp(self):
         self.reader = MECODBReader()

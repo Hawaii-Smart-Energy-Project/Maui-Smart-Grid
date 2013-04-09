@@ -7,16 +7,16 @@ import unittest
 from meco_fk import MECOFKDeterminer
 
 
-class TestMECOFKeys(unittest.TestCase) :
+class TestMECOFKeys(unittest.TestCase):
     """Unit tests for MECO DB foreign keys.
     """
 
-    def setUp(self) :
+    def setUp(self):
         self.fkeys = MECOFKDeterminer()
 
-    def test_init(self) :
+    def test_init(self):
         self.assertIsInstance(self.fkeys, MECOFKDeterminer)
 
 
-if __name__ == '__main__' :
+if __name__ == '__main__':
     unittest.main()
