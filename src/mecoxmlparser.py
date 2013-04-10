@@ -24,14 +24,15 @@ class MECOXMLParser(object) :
 
     tableName = ''
 
-    def __init__(self) :
+    def __init__(self, testing=False) :
         """Constructor
+        :param testing: Boolean indicating if testing mode is on.
         """
 
         self.configer = MECOConfiger()
         self.util = MECODBUtil()
         self.mapper = MECOMapper()
-        self.connector = MECODBConnector()
+        self.connector = MECODBConnector(testing)
         self.conn = self.connector.connectDB()
         self.filename = None
         self.fileObject = None
@@ -72,8 +73,8 @@ class MECOXMLParser(object) :
 
     def parseXML(self, fileObject, insert = False) :
         """Parse an XML file.
-        :param file object
-        :param insert - True to insert to the database | False to perform no inserts
+        :param fileObject: a file object referencing an XML file.
+        :param insert: True to insert to the database | False to perform no inserts
         """
 
         print "parseXML:"
@@ -178,16 +179,14 @@ class MECOXMLParser(object) :
 
                         if self.dupeChecker.readingValuesAreInTheDatabase(self.conn,
                                                                           columnsAndValues):
-
                             print "Verified reading values are in the database"
 
                         self.channelDupeExists = False
 
-
                 self.lastSeqVal = self.util.getLastSequenceID(self.conn,
                                                               currentTableName,
                                                               pkeyCol)
-                # store pk
+                # store the primary key
                 self.fkDeterminer.pkValforCol[pkeyCol] = self.lastSeqVal
 
                 if self.configer.configOptionValue("Debugging", 'debug'):
@@ -196,7 +195,6 @@ class MECOXMLParser(object) :
                 if self.lastReading(currentTableName, nextTableName):
                     if self.configer.configOptionValue("Debugging", 'debug'):
                         print "----- last reading found -----"
-
 
                     self.conn.commit()
 
@@ -221,6 +219,8 @@ class MECOXMLParser(object) :
 
     def lastReading(self, currentTable, nextTable):
         """Determine if the last reading is being visited.
+        :param currentTable: current table being processsed.
+        :param nextTable: next table to be processed.
         :return True if last object in Reading table was read, otherwise return False.
         """
         if currentTable == "Reading" and (
@@ -231,6 +231,8 @@ class MECOXMLParser(object) :
 
     def lastRegister(self, currentTable, nextTable):
         """Determine if the last register is being visited.
+        :param currentTable: current table being processsed.
+        :param nextTable: next table to be processed.
         :return True if last object in Register table was read, otherwise return False.
         """
         if currentTable == "Register" and (
@@ -239,10 +241,10 @@ class MECOXMLParser(object) :
         return False
 
 
-    def getNext(self, somethingIterable, window=1):
+    def getNext(self, somethingIterable, window = 1):
         """Return the current item and next item in an iterable data structure.
-        :param somethingIterable something that has an iterator
-        :param window
+        :param somethingIterable: something that has an iterator
+        :param window:
         :return value and next value
         """
         items, nexts = tee(somethingIterable, 2)

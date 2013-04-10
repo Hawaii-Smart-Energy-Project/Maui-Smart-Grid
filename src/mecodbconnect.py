@@ -11,14 +11,21 @@ class MECODBConnector(object) :
     """Connect to the MECO database.
     """
 
-    def __init__(self) :
-        """Constructor"""
+    def __init__(self, testing=False) :
+        """Constructor
+        :param testing: Boolean indicating if testing mode is on.
+        """
 
         self.configer = MECOConfiger()
         self.dbPassword = self.configer.configOptionValue("Database", 'db_password')
         self.dbHost = self.configer.configOptionValue("Database", 'db_host')
         self.dbPort = self.configer.configOptionValue("Database", 'db_port')
-        self.dbName = self.configer.configOptionValue("Database", 'db_name')
+
+        if testing:
+            self.dbName = self.configer.configOptionValue("Database", 'testing_db_name')
+        else:
+            self.dbName = self.configer.configOptionValue("Database", 'db_name')
+
         self.dbUsername = self.configer.configOptionValue("Database", 'db_username')
 
         self.conn = self.connectDB()

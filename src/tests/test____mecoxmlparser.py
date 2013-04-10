@@ -12,21 +12,23 @@ class TestMECOXMLParser(unittest.TestCase):
     """
 
     def setUp(self):
-        self.p = MECOXMLParser()
+        self.p = MECOXMLParser(True) # run in testing mode
 
     def testMECOXMLParserCanBeInited(self):
         self.assertIsNotNone(self.p)
 
     def testEveryElementIsVisited(self):
         self.p.filename = "../../test-data/meco-energy-test-data.xml"
+        fileObject = open(self.p.filename, "rb")
         expectedCount = 656
-        self.p.parseXML(True)
+        self.p.parseXML(fileObject, True)
         print "element count = %s" % self.p.elementCount
         self.assertEqual(self.p.elementCount, expectedCount)
 
     def testAllTableNamesArePresent(self):
         self.p.filename = "../../test-data/meco-energy-test-data.xml"
-        self.p.parseXML(True)
+        fileObject = open(self.p.filename, "rb")
+        self.p.parseXML(fileObject, True)
         fail = 0
 
         for key in self.p.tableNameCount.keys():
