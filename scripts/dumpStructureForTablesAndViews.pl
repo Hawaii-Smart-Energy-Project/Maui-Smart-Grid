@@ -10,6 +10,7 @@
 # @author Daniel Zhang (張道博)
 
 use strict;
+use MECOLib qw(@tables @views);
 
 print "Dumping table structure for MECO database.\n";
 
@@ -21,40 +22,13 @@ if (!$hostname || !$databaseName) {
     exit;
 }
 
-my @tables = qw(Interval
-                IntervalReadData
-                LocationRecords
-                MeterData
-                MeterRecords
-                Reading
-                Register
-                RegisterData
-                RegisterRead
-                Testing_MeterData
-                Tier
-                WeatherData
-                WeatherKahaluiAirport
-                );
-
-my @views = qw(Distinct_kWh_3channels_and_location
-               Distinct_Voltage_and_Location
-               get_kwh_meter_locations
-               get_meter_readings_locations
-               get_voltage_with_interval
-               get_voltage_with_meter_id
-               get_voltages
-               meter_locations
-               meter_V_readings_and_locations
-               viewReadings
-               );
-
 my $dumpCommand = "pg_dump -t '\"%s\"' -s -h $hostname $databaseName > %s/%s.sql";
 my $dest;
 
 $dest = "tables";
 if(!-d $dest){ mkdir $dest; }
 
-foreach my $t (@tables) {
+foreach my $t (@MECOLib::tables) {
     print "Dumping table $t\n";
     my $result = system(sprintf($dumpCommand,$t,$dest,$t));
 
@@ -66,7 +40,7 @@ foreach my $t (@tables) {
 $dest = "views";
 if(!-d $dest){ mkdir $dest; }
 
-foreach my $v (@views) {
+foreach my $v (@MECOLib::views) {
     print "Dumping view $v\n";
     my $result = system(sprintf($dumpCommand,$v,$dest,$v));
 
