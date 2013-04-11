@@ -109,47 +109,11 @@ CREATE TABLE "LocationRecords" (
 ALTER TABLE public."LocationRecords" OWNER TO sepgroup;
 
 --
--- Name: Testing_MeterData; Type: TABLE; Schema: public; Owner: daniel; Tablespace: 
---
-
-CREATE TABLE "Testing_MeterData" (
-    meter_data_id bigint NOT NULL,
-    mac_id character(23) NOT NULL,
-    meter_name character(8) NOT NULL,
-    util_device_id character(8) NOT NULL,
-    created timestamp without time zone
-);
-
-
-ALTER TABLE public."Testing_MeterData" OWNER TO daniel;
-
---
--- Name: testing_meterdata_id_seq; Type: SEQUENCE; Schema: public; Owner: daniel
---
-
-CREATE SEQUENCE testing_meterdata_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.testing_meterdata_id_seq OWNER TO daniel;
-
---
--- Name: testing_meterdata_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: daniel
---
-
-ALTER SEQUENCE testing_meterdata_id_seq OWNED BY "Testing_MeterData".meter_data_id;
-
-
---
 -- Name: MeterData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
 CREATE TABLE "MeterData" (
-    meter_data_id bigint DEFAULT nextval('testing_meterdata_id_seq'::regclass) NOT NULL,
+    meter_data_id bigint NOT NULL,
     mac_id character(23) NOT NULL,
     meter_name character(8) NOT NULL,
     util_device_id character(8) NOT NULL,
@@ -326,6 +290,21 @@ CREATE TABLE "RegisterRead" (
 
 
 ALTER TABLE public."RegisterRead" OWNER TO sepgroup;
+
+--
+-- Name: Testing_MeterData; Type: TABLE; Schema: public; Owner: daniel; Tablespace: 
+--
+
+CREATE TABLE "Testing_MeterData" (
+    meter_data_id bigint NOT NULL,
+    mac_id character(23) NOT NULL,
+    meter_name character(8) NOT NULL,
+    util_device_id character(8) NOT NULL,
+    created timestamp without time zone
+);
+
+
+ALTER TABLE public."Testing_MeterData" OWNER TO daniel;
 
 --
 -- Name: Tier; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
@@ -611,6 +590,27 @@ ALTER SEQUENCE registerread_id_seq OWNED BY "RegisterRead".register_read_id;
 
 
 --
+-- Name: testing_meterdata_id_seq; Type: SEQUENCE; Schema: public; Owner: daniel
+--
+
+CREATE SEQUENCE testing_meterdata_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.testing_meterdata_id_seq OWNER TO daniel;
+
+--
+-- Name: testing_meterdata_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: daniel
+--
+
+ALTER SEQUENCE testing_meterdata_id_seq OWNED BY "Testing_MeterData".meter_data_id;
+
+
+--
 -- Name: tier_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
 --
 
@@ -653,6 +653,13 @@ ALTER TABLE ONLY "Interval" ALTER COLUMN interval_id SET DEFAULT nextval('interv
 --
 
 ALTER TABLE ONLY "IntervalReadData" ALTER COLUMN interval_read_data_id SET DEFAULT nextval('intervalreaddata_id_seq'::regclass);
+
+
+--
+-- Name: meter_data_id; Type: DEFAULT; Schema: public; Owner: sepgroup
+--
+
+ALTER TABLE ONLY "MeterData" ALTER COLUMN meter_data_id SET DEFAULT nextval('meterdata_id_seq'::regclass);
 
 
 --
@@ -1005,26 +1012,6 @@ GRANT ALL ON TABLE "LocationRecords" TO sepgroup;
 
 
 --
--- Name: Testing_MeterData; Type: ACL; Schema: public; Owner: daniel
---
-
-REVOKE ALL ON TABLE "Testing_MeterData" FROM PUBLIC;
-REVOKE ALL ON TABLE "Testing_MeterData" FROM daniel;
-GRANT ALL ON TABLE "Testing_MeterData" TO daniel;
-GRANT ALL ON TABLE "Testing_MeterData" TO sepgroup;
-
-
---
--- Name: testing_meterdata_id_seq; Type: ACL; Schema: public; Owner: daniel
---
-
-REVOKE ALL ON SEQUENCE testing_meterdata_id_seq FROM PUBLIC;
-REVOKE ALL ON SEQUENCE testing_meterdata_id_seq FROM daniel;
-GRANT ALL ON SEQUENCE testing_meterdata_id_seq TO daniel;
-GRANT ALL ON SEQUENCE testing_meterdata_id_seq TO sepgroup;
-
-
---
 -- Name: MeterData; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -1096,6 +1083,16 @@ GRANT ALL ON TABLE "RegisterData" TO sepgroup;
 REVOKE ALL ON TABLE "RegisterRead" FROM PUBLIC;
 REVOKE ALL ON TABLE "RegisterRead" FROM sepgroup;
 GRANT ALL ON TABLE "RegisterRead" TO sepgroup;
+
+
+--
+-- Name: Testing_MeterData; Type: ACL; Schema: public; Owner: daniel
+--
+
+REVOKE ALL ON TABLE "Testing_MeterData" FROM PUBLIC;
+REVOKE ALL ON TABLE "Testing_MeterData" FROM daniel;
+GRANT ALL ON TABLE "Testing_MeterData" TO daniel;
+GRANT ALL ON TABLE "Testing_MeterData" TO sepgroup;
 
 
 --
@@ -1247,6 +1244,16 @@ GRANT ALL ON SEQUENCE registerdata_id_seq TO sepgroup;
 REVOKE ALL ON SEQUENCE registerread_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE registerread_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE registerread_id_seq TO sepgroup;
+
+
+--
+-- Name: testing_meterdata_id_seq; Type: ACL; Schema: public; Owner: daniel
+--
+
+REVOKE ALL ON SEQUENCE testing_meterdata_id_seq FROM PUBLIC;
+REVOKE ALL ON SEQUENCE testing_meterdata_id_seq FROM daniel;
+GRANT ALL ON SEQUENCE testing_meterdata_id_seq TO daniel;
+GRANT ALL ON SEQUENCE testing_meterdata_id_seq TO sepgroup;
 
 
 --
