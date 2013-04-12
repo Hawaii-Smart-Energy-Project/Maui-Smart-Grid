@@ -4,7 +4,9 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 import sys
+
 DEBUG = 1
+
 
 class MECODBUtil(object):
     """Utility methods.
@@ -57,8 +59,30 @@ class MECODBUtil(object):
             print "execute failed with " + sql
             print "ERROR: ", e[0]
             print
+            return False
+
+        print "SQL execute was successful."
 
         return success
+
+    def eraseTestMeco(self, dbCursor):
+        print "Erasing test_meco"
+        sql = ("""delete from "Reading";""",
+               """delete from "Interval";""",
+               """delete from "IntervalReadData";""",
+               """delete from "MeterData";""",
+               """SELECT setval('interval_id_seq', 1);""",
+               """SELECT setval('intervalreaddata_id_seq', 1);""",
+               """SELECT setval('meterdata_id_seq', 1);""",
+               """SELECT setval('reading_id_seq', 1);""",
+               """SELECT setval('register_id_seq', 1);""",
+               """SELECT setval('registerdata_id_seq', 1);""",
+               """SELECT setval('registerread_id_seq', 1);""",
+               """SELECT setval('tier_id_seq', 1);""")
+
+        for statement in sql:
+            print "sql = %s" % statement
+            self.executeSQL(dbCursor, statement)
 
 
 

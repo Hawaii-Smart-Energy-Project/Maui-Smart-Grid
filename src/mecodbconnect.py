@@ -16,6 +16,9 @@ class MECODBConnector(object) :
         :param testing: Boolean indicating if testing mode is on.
         """
 
+        if(testing):
+            print "Testing Mode is ON."
+
         self.configer = MECOConfiger()
         self.dbPassword = self.configer.configOptionValue("Database", 'db_password')
         self.dbHost = self.configer.configOptionValue("Database", 'db_host')
@@ -25,6 +28,8 @@ class MECODBConnector(object) :
             self.dbName = self.configer.configOptionValue("Database", 'testing_db_name')
         else:
             self.dbName = self.configer.configOptionValue("Database", 'db_name')
+
+        print "Using database %s." % self.dbName
 
         self.dbUsername = self.configer.configOptionValue("Database", 'db_username')
 
@@ -41,6 +46,6 @@ class MECODBConnector(object) :
             conn = psycopg2.connect("dbname='%s' user='%s' host='%s' port='%s' password='%s'" % (
                 self.dbName, self.dbUsername, self.dbHost, self.dbPort, self.dbPassword))
         except :
-            print "Failed to connect to DB"
+            print "Failed to connect to the database."
             return None
         return conn

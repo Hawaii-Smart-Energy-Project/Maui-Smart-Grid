@@ -29,6 +29,9 @@ class MECOXMLParser(object) :
         :param testing: Boolean indicating if testing mode is on.
         """
 
+        if(testing):
+            print "Testing Mode is ON"
+
         self.configer = MECOConfiger()
         self.util = MECODBUtil()
         self.mapper = MECOMapper()
@@ -89,7 +92,7 @@ class MECOXMLParser(object) :
 
     def walkTheTreeFromRoot(self, root) :
         """Walk an XML tree from its root node.
-        :param root Root node of an XML tree.
+        :param root: The root node of an XML tree.
         """
 
         walker = root.iter()
@@ -165,7 +168,7 @@ class MECOXMLParser(object) :
                         )
 
                     # Only insert if there are no duplicate values for the channel.
-                    if self.channelDupeExists == False:
+                    if not self.channelDupeExists:
                         cur = self.inserter.insertData(self.conn, currentTableName,
                                                        columnsAndValues, fKeyValue,
                                                        1) # last 1 indicates don't commit
@@ -278,3 +281,6 @@ class MECOXMLParser(object) :
     def addCreationTimestamp(self, columnsAndValuesDict):
         """
         """
+
+    def performRollback(self):
+        self.conn.rollback();
