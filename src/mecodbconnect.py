@@ -49,3 +49,10 @@ class MECODBConnector(object) :
             print "Failed to connect to the database."
             return None
         return conn
+
+    def closeDB(self, conn):
+        """Close a database connection.
+        """
+        print "Closing database %s." % self.dbName
+        conn.close()
+

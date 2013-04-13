@@ -19,9 +19,8 @@ class TestMECOXMLParser(unittest.TestCase):
         self.dbUtil = MECODBUtil()
         self.conn = self.dbConnect.connectDB()
         self.cur = self.conn.cursor()
-        # self.dbUtil.eraseTestMeco(self.cur)
 
-    def _testMECOXMLParserCanBeInited(self):
+    def testMECOXMLParserCanBeInited(self):
         self.assertIsNotNone(self.p)
 
     def testEveryElementIsVisited(self):
@@ -35,24 +34,34 @@ class TestMECOXMLParser(unittest.TestCase):
         self.p.performRollback()
         self.assertEqual(self.p.elementCount, expectedCount)
 
-    def _testAllTableNamesArePresent(self):
+    def testAllTableNamesArePresent(self):
+        self.dbUtil.eraseTestMeco(self.cur)
+        self.conn.commit()
         self.p.filename = "../../test-data/meco-energy-test-data.xml"
         fileObject = open(self.p.filename, "rb")
         self.p.parseXML(fileObject, True)
-        fail = 0
+        fail = False
 
         for key in self.p.tableNameCount.keys():
             print key + ": ",
             print self.p.tableNameCount[key]
 
-        for c in self.p.tableNameCount.values():
-            if c < 1:
-                fail = 1
-        self.assertEqual(fail, 0)
+            # for c in self.p.tableNameCount.values():
+            if self.p.tableNameCount[key] < 1:
+                if key != 'ChannelStatus' and key != 'IntervalStatus' and key \
+                        != 'EventData' and key != 'Event':
+                    print "table = %s" % key
+                    fail = True
+        self.assertFalse(fail,
+                         "At least one table of each type should have been "
+                         "encountered.")
+
+    def disabled_testEraseTestMECO(self):
+        self.dbUtil.eraseTestMeco(self.cur)
+        self.conn.commit()
 
     def tearDown(self):
-        pass
-        # self.dbUtil.eraseTestMeco(self.cur)
+        self.dbConnect.closeDB(self.conn)
 
 
 if __name__ == '__main__':
