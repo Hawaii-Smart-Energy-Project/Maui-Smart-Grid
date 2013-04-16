@@ -1,3 +1,7 @@
+# Sample MECO Data Processing configuration file.
+#
+# Placeholders should be substituted with actual values.
+
 [Debugging]
 debug=0
 limit_commits=FALSE
