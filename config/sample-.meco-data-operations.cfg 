@@ -1,0 +1,12 @@
+[Debugging]
+debug=0
+limit_commits=FALSE
+[Data Paths]
+meco_data_dir=${DATA_PATH}
+[Database]
+db_password=${PASSWORD}
+db_host=${HOSTNAME}
+db_name=${DB_NAME}
+db_port=${DB_PORT}
+db_username=${USERNAME}
+testing_db_name=${TESTING_DB_NAME}
