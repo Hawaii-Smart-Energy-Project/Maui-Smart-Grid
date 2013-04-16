@@ -5,6 +5,9 @@ __author__ = 'Daniel Zhang (張道博)'
 
 import unittest
 from mecodupecheck import MECODupeChecker
+from mecoxmlparser import MECOXMLParser
+from mecodbconnect import MECODBConnector
+from mecodbutils import MECODBUtil
 
 
 class TestMECODupeChecker(unittest.TestCase):
@@ -12,24 +15,35 @@ class TestMECODupeChecker(unittest.TestCase):
     """
 
     def setUp(self):
-        self.p = MECOXMLParser()
         self.dupeChecker = MECODupeChecker()
+        self.p = MECOXMLParser(True) # run in testing mode
+        self.dbConnect = MECODBConnector(True)
+        self.dbUtil = MECODBUtil()
+        self.conn = self.dbConnect.connectDB()
+        self.cur = self.conn.cursor()
 
-        # @todo insert test data to test db
 
-    def findIndividualDupe(self):
+    def testFindIndividualDupe(self):
         """Find a duplicate record when only one exists.
         """
 
-        # @todo write test
-        self.assertTrue(self.dupeChecker.meterIDAndEndTimeExists('100000',
-                                                                 '2012-08-08 '
-                                                                 '14:00'),
-                        "Record should already exist")
+        self.dbUtil.eraseTestMeco(self.cur)
+        self.conn.commit()
+        self.p.filename = "../../test-data/meco-energy-test-data.xml"
+        fileObject = open(self.p.filename, "rb")
+        self.p.parseXML(fileObject, True)
 
-    def testLoadOnTop(self):
-        """If the same data set is loaded in succession, all values will be duplicated.
-        Verify that this is true.
-        """
+        self.assertTrue(
+            self.dupeChecker.readingBranchDupeExists(self.conn, '100000',
+                                                     '2012-08-08 20:30:00',
+                                                     '1'),
+            "Record should already exist")
 
-        # @todo write test
+        def testLoadOnTop(self):
+            """If the same data set is loaded in succession,
+            all values will be duplicated. Verify that this is true.
+
+            This is no longer possible as
+            duplicates are dropped before insertion.
+            """
+            pass
