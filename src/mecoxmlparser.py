@@ -14,7 +14,6 @@ from meco_fk import MECOFKDeterminer
 import sys
 from itertools import tee, islice, izip_longest
 from mecodupecheck import MECODupeChecker
-import gzip
 
 DEBUG = 0 # print debugging info if 1
 

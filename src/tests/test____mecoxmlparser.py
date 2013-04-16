@@ -31,7 +31,6 @@ class TestMECOXMLParser(unittest.TestCase):
         expectedCount = 656
         self.p.parseXML(fileObject, True)
         print "element count = %s" % self.p.elementCount
-        self.p.performRollback()
         self.assertEqual(self.p.elementCount, expectedCount)
 
     def testAllTableNamesArePresent(self):
