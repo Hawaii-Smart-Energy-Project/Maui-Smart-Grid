@@ -23,7 +23,8 @@ class TestMECODupeChecker(unittest.TestCase):
         self.cur = self.conn.cursor()
 
     def testInit(self):
-        self.assertEqual(self.dupeChecker, "Dupe checker has been created.")
+        self.assertEqual(self.dupeChecker.__class__.__name__, "MECODupeChecker",
+                         "Dupe checker has been created.")
 
     def testFindIndividualDupe(self):
         """Find a duplicate record when only one exists.
