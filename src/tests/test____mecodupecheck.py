@@ -22,6 +22,8 @@ class TestMECODupeChecker(unittest.TestCase):
         self.conn = self.dbConnect.connectDB()
         self.cur = self.conn.cursor()
 
+    def testInit(self):
+        self.assertEqual(self.dupeChecker, "Dupe checker has been created.")
 
     def testFindIndividualDupe(self):
         """Find a duplicate record when only one exists.
@@ -39,11 +41,11 @@ class TestMECODupeChecker(unittest.TestCase):
                                                      '1'),
             "Record should already exist")
 
-        def testLoadOnTop(self):
-            """If the same data set is loaded in succession,
-            all values will be duplicated. Verify that this is true.
+    def testLoadOnTop(self):
+        """If the same data set is loaded in succession,
+        all values will be duplicated. Verify that this is true.
 
-            This is no longer possible as
-            duplicates are dropped before insertion.
-            """
-            pass
+        This is no longer possible as
+        duplicates are dropped before insertion.
+        """
+        pass

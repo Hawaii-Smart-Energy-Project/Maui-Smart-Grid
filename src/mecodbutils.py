@@ -66,7 +66,10 @@ class MECODBUtil(object):
         return success
 
     def eraseTestMeco(self, dbCursor):
-        print "Erasing test_meco"
+        sql = self.executeSQL(dbCursor, "select current_database()")
+        row = dbCursor.fetchone()
+
+        print "Erasing testing database %s." % row
         sql = ("""delete from "Reading";""",
                """delete from "Interval";""",
                """delete from "IntervalReadData";""",

@@ -17,6 +17,7 @@ class TestMECOFKeys(unittest.TestCase):
     def test_init(self):
         self.assertIsInstance(self.fkeys, MECOFKDeterminer)
 
+    # @todo write foreign key tests
 
 if __name__ == '__main__':
     unittest.main()

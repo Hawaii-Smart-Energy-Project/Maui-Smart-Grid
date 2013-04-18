@@ -53,7 +53,7 @@ class MECOXMLParser(object) :
 
         # @todo adjust unit test to handle interval status and channel status
 
-        # use this dictionary to track which channels were processed when
+        # Use this dictionary to track which channels were processed when
         # readings are being processed. this is to prevent duplicate channel
         # data from being inserted.
         self.channelProcessed = {}
@@ -103,7 +103,7 @@ class MECOXMLParser(object) :
             try:
                 nextTableName = re.search('\{.*\}(.*)', nextElement.tag).group(1) # next table name
             except:
-                if self.configer.configOptionValue("Debugging", 'debug'):
+                if self.configer.configOptionValue("Debugging", 'debug') == True:
                     print "EXCEPTION: nextElement = %s" % nextElement
                 nextTableName = None
 
@@ -117,7 +117,7 @@ class MECOXMLParser(object) :
                 columnsAndValues[item[0]] = item[1]
 
             if currentTableName in self.insertTables :
-                if self.configer.configOptionValue("Debugging", 'debug'):
+                if self.configer.configOptionValue("Debugging", 'debug') == True:
                     print
                     print "processing table %s, next is %s" % (currentTableName, nextTableName)
                     print "--------------------------------"
@@ -134,7 +134,7 @@ class MECOXMLParser(object) :
                 except :
                     pass
 
-                if self.configer.configOptionValue("Debugging", 'debug'):
+                if self.configer.configOptionValue("Debugging", 'debug') == True:
                     print "foreign key col (fkey) = %s" % fkeyCol
                     print "primary key col (pkey) = %s" % pkeyCol
                     print columnsAndValues
@@ -143,13 +143,13 @@ class MECOXMLParser(object) :
                 if fkeyCol is not None :
                     fKeyValue = self.fkDeterminer.pkValforCol[fkeyCol]
 
-                if self.configer.configOptionValue("Debugging", 'debug'):
+                if self.configer.configOptionValue("Debugging", 'debug') == True:
                     print "fKeyValue = %s" % fKeyValue
 
                 if currentTableName == "MeterData":
                     self.currentMeterName = columnsAndValues['MeterName']
 
-                # perform a dupe check for the reading branch
+                # Perform a dupe check for the reading branch.
                 if currentTableName == "Interval" :
                     self.currentIntervalEndTime = columnsAndValues['EndTime']
 
@@ -166,18 +166,18 @@ class MECOXMLParser(object) :
                                 columnsAndValues['Channel']
                         )
 
-                    # Only insert if there are no duplicate values for the channel.
+                    # Only perform an insert if there are no duplicate values for the channel.
                     if not self.channelDupeExists:
                         cur = self.inserter.insertData(self.conn, currentTableName,
                                                        columnsAndValues, fKeyValue,
                                                        1) # last 1 indicates don't commit
-                    else: # Don't insert into Reading table if a dupe exists
+                    else: # Don't insert into Reading table if a dupe exists.
                         print "Duplicate meter-endtime-channel exists."
                         self.dupeOnInsertCount += 1
                         if self.dupeOnInsertCount > 0 and self.dupeOnInsertCount < 2:
                             sys.stderr.write("{dupe on insert-->}")
 
-                        # also verify the data is equivalent to the existing record
+                        # Also, verify the data is equivalent to the existing record.
 
                         if self.dupeChecker.readingValuesAreInTheDatabase(self.conn,
                                                                           columnsAndValues):
@@ -191,11 +191,11 @@ class MECOXMLParser(object) :
                 # store the primary key
                 self.fkDeterminer.pkValforCol[pkeyCol] = self.lastSeqVal
 
-                if self.configer.configOptionValue("Debugging", 'debug'):
+                if self.configer.configOptionValue("Debugging", 'debug') == True:
                     print "lastSeqVal = ", self.lastSeqVal
 
                 if self.lastReading(currentTableName, nextTableName):
-                    if self.configer.configOptionValue("Debugging", 'debug'):
+                    if self.configer.configOptionValue("Debugging", 'debug') == True:
                         print "----- last reading found -----"
 
                     self.conn.commit()
@@ -212,7 +212,7 @@ class MECOXMLParser(object) :
                         return
 
                 if self.lastRegister(currentTableName, nextTableName):
-                    if self.configer.configOptionValue("Debugging", 'debug'):
+                    if self.configer.configOptionValue("Debugging", 'debug') == True:
                         print "----- last register found -----"
 
         self.conn.commit()

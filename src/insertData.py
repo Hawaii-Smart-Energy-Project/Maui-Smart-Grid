@@ -36,7 +36,7 @@ sys.stderr.write("Inserting data to database %s." % \
 
 path = '.'
 
-# process all XML files
+# Process all of the XML files in the current directory.
 data = glob.glob("%s/*.xml*" % path)
 
 data.sort()
