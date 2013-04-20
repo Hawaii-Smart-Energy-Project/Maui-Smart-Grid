@@ -4,13 +4,14 @@ Daniel Zhang, Software Developer
 
 ## Overview
 
-Provides data operations for the [Maui Smart Grid](http://www.mauismartgrid.com) energy sustainability project for the [Hawaii Natural Energy Institute](http://www.hnei.hawaii.edu). Source data is downloaded in multiple formats including XML, tab-separated values, and comma-separated values.
+Provides data operations for the [Maui Smart Grid](http://www.mauismartgrid.com) energy sustainability project for the [Hawaii Natural Energy Institute](http://www.hnei.hawaii.edu). Source data arrives in multiple formats including XML, tab-separated values, and comma-separated values.
 
 
 ### Software Features
-* Parsing of source data.
-* Insertion of data to a data store (PostgreSQL 9.1).
-* Provides source files to create data store.
+* Parsing of source data is provided for the multiple formats.
+* Insertion of data to a data store (PostgreSQL 9.1) is performed by executing a script from the command-line.
+* Source files to create the data store are available.
+* Unit testing of data processing operations is provided by a test suite implemented through `unittest`.
 
 ## Implementation
 
