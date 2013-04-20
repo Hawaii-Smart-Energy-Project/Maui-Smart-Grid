@@ -4,6 +4,7 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 import sys
+from mecoconfig import MECOConfiger
 
 DEBUG = 1
 
@@ -15,6 +16,7 @@ class MECODBUtil(object):
     def __init__(self):
         """Constructor
         """
+        self.configer = MECOConfiger()
 
     def getLastSequenceID(self, conn, tableName, columnName):
         """Get last sequence ID value for the given sequence and for the
@@ -66,10 +68,13 @@ class MECODBUtil(object):
         return success
 
     def eraseTestMeco(self, dbCursor):
-        sql = self.executeSQL(dbCursor, "select current_database()")
-        row = dbCursor.fetchone()
+        databaseName = self.getDBName(dbCursor)[0]
 
-        print "Erasing testing database %s." % row
+        if (not(self.configer.configOptionValue("Database","testing_db_name") == databaseName)):
+            print "Testing DB name doesn't match %s." % self.configer.configOptionValue("Database","testing_db_name")
+            exit(-1)
+
+        print "Erasing testing database %s." % databaseName
         sql = ("""delete from "Reading";""",
                """delete from "Interval";""",
                """delete from "IntervalReadData";""",
@@ -87,6 +92,9 @@ class MECODBUtil(object):
             print "sql = %s" % statement
             self.executeSQL(dbCursor, statement)
 
+    def getDBName(self, cursor):
 
-
+        self.executeSQL(cursor, "select current_database()")
+        row = cursor.fetchone()
+        return row
 
