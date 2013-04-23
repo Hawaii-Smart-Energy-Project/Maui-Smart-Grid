@@ -73,5 +73,7 @@ class TestMECODBUtil(unittest.TestCase):
             self.deleter.deleteRecord(self.conn, self.tableName,
                                       self.columnName, self.lastSeqVal)
 
-    if __name__ == '__main__':
-        unittest.main()
+        self.connector.closeDB(self.conn)
+
+if __name__ == '__main__':
+    unittest.main()

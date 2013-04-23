@@ -15,6 +15,5 @@ class TestMECOConfig(unittest.TestCase):
         localConfiger = MECOConfiger()
         self.assertIsInstance(self.configer, type(localConfiger))
 
-
 if __name__ == '__main__':
     unittest.main()

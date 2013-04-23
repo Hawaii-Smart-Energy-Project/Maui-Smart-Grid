@@ -13,19 +13,21 @@ class TestMECODBConnect(unittest.TestCase):
     """
 
     def setUp(self):
-        self.conn = None
-        self.connector = MECODBConnector()
+        self.connector = MECODBConnector(True)
+        self.conn = self.connector.connectDB()
 
     def test_init(self):
         self.assertTrue(
-            isinstance(self.connector, mecodbconnect.MECODBConnector))
+            isinstance(self.connector, mecodbconnect.MECODBConnector),
+            "self.connection is an instance of MECODBConnector")
 
     def test_db_connection(self):
         """DB can be connected to.
         """
-        self.conn = self.connector.connectDB()
         self.assertIsNotNone(self.conn)
 
+    def tearDown(self):
+        self.connector.closeDB(self.conn)
 
 if __name__ == '__main__':
     unittest.main()

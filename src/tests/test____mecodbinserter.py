@@ -18,7 +18,7 @@ class TestMECODBInserter(unittest.TestCase):
     def setUp(self):
         self.i = MECODBInserter()
         self.util = MECODBUtil()
-        self.connector = MECODBConnector()
+        self.connector = MECODBConnector(True)
         self.deleter = MECODBDeleter()
         self.reader = MECODBReader()
         self.lastSeqVal = None
@@ -60,6 +60,7 @@ class TestMECODBInserter(unittest.TestCase):
             self.deleter.deleteRecord(self.conn, self.sampleTableName,
                                       self.keyName, self.lastSeqVal)
 
+        self.connector.closeDB(self.conn)
 
 if __name__ == '__main__':
     unittest.main()

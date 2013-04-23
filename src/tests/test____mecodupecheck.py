@@ -50,3 +50,7 @@ class TestMECODupeChecker(unittest.TestCase):
         duplicates are dropped before insertion.
         """
         pass
+
+    def tearDown(self):
+        self.dbConnect.closeDB(self.conn)
+

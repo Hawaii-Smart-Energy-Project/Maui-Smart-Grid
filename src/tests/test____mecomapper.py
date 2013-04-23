@@ -52,6 +52,8 @@ class TestMECOMapper(unittest.TestCase):
         # given labels from the source data, map them to db column names
         srcDataLabels = ('MacID', 'MeterName', 'UtilDeviceID')
 
+    def tearDown(self):
+        pass
 
 if __name__ == '__main__':
     unittest.main()
