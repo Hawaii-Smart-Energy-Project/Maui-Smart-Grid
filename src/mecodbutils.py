@@ -5,6 +5,7 @@ __author__ = 'Daniel Zhang (張道博)'
 
 import sys
 from mecoconfig import MECOConfiger
+from mecodbconnect import MECODBConnector
 
 DEBUG = 1
 
@@ -58,8 +59,8 @@ class MECODBUtil(object):
             cursor.execute(sql)
         except Exception, e:
             success = False
-            print "execute failed with " + sql
-            print "ERROR: ", e[0]
+            print "SQL execute failed using %s." % sql
+            print "The error is: ", e[0]
             print
             return False
 
@@ -67,7 +68,11 @@ class MECODBUtil(object):
 
         return success
 
-    def eraseTestMeco(self, dbCursor):
+    def eraseTestMeco(self):
+        self.dbConnect = MECODBConnector(True)
+        self.conn = self.dbConnect.connectDB()
+        dbCursor = self.conn.cursor()
+
         databaseName = self.getDBName(dbCursor)[0]
 
         if (not(self.configer.configOptionValue("Database","testing_db_name") == databaseName)):
@@ -91,6 +96,9 @@ class MECODBUtil(object):
         for statement in sql:
             print "sql = %s" % statement
             self.executeSQL(dbCursor, statement)
+            self.conn.commit()
+
+        self.dbConnect.closeDB(self.conn)
 
     def getDBName(self, cursor):
 

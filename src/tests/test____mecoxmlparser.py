@@ -24,7 +24,7 @@ class TestMECOXMLParser(unittest.TestCase):
         self.assertIsNotNone(self.p)
 
     def testEveryElementIsVisited(self):
-        self.dbUtil.eraseTestMeco(self.cur)
+        self.dbUtil.eraseTestMeco()
         self.conn.commit()
         self.p.filename = "../../test-data/meco-energy-test-data.xml"
         fileObject = open(self.p.filename, "rb")
@@ -34,7 +34,7 @@ class TestMECOXMLParser(unittest.TestCase):
         self.assertEqual(self.p.elementCount, expectedCount)
 
     def testAllTableNamesArePresent(self):
-        self.dbUtil.eraseTestMeco(self.cur)
+        self.dbUtil.eraseTestMeco()
         self.conn.commit()
         self.p.filename = "../../test-data/meco-energy-test-data.xml"
         fileObject = open(self.p.filename, "rb")
@@ -56,7 +56,7 @@ class TestMECOXMLParser(unittest.TestCase):
                          "encountered.")
 
     def disabled_testEraseTestMECO(self):
-        self.dbUtil.eraseTestMeco(self.cur)
+        self.dbUtil.eraseTestMeco()
         self.conn.commit()
 
     def tearDown(self):

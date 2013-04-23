@@ -30,7 +30,7 @@ class TestMECODupeChecker(unittest.TestCase):
         """Find a duplicate record when only one exists.
         """
 
-        self.dbUtil.eraseTestMeco(self.cur)
+        self.dbUtil.eraseTestMeco()
         self.conn.commit()
         self.p.filename = "../../test-data/meco-energy-test-data.xml"
         fileObject = open(self.p.filename, "rb")

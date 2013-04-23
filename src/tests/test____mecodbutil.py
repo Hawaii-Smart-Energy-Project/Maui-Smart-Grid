@@ -60,7 +60,7 @@ class TestMECODBUtil(unittest.TestCase):
         dbName = self.dbUtil.getDBName(self.dictCur)[0]
         print "dbName = %s" % dbName
         self.assertEqual(dbName, "test_meco", "Testing DB name should be set correctly.")
-        self.dbUtil.eraseTestMeco(self.dictCur)
+        self.dbUtil.eraseTestMeco()
         sql = """select count(*) from "Reading";"""
         self.dbUtil.executeSQL(self.dictCur, sql)
         row = self.dictCur.fetchone()
