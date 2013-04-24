@@ -38,6 +38,16 @@ A helpful diagram is provided in the repository and a version is displayed here.
 
 ![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/maui-smart-grid/master/diagrams/meco-direct-derived-schema-v2.png)
 
+#### Database Version History
+1
+: Initial data insertion from first exports.
+
+2
+: Eliminated duplicates in the Reading branch by searching on meter name, interval end time, and channel.
+
+3
+: Retroactively adding event data. 
+
 ## Configuration
 
 The software is configured through a text configuration file contained in the user's home directory. The file is named `~/meco-data-operations.cfg`. It is read by the ConfigParser module.
