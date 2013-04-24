@@ -3,6 +3,8 @@
 # @author Daniel Zhang (張道博)
 #
 # Using this module may require adding its location to the PERL5LIB env variable.
+#
+# This module contains data structures for tables and views, both past and present.
 
 package MECOLib;
 use strict;
