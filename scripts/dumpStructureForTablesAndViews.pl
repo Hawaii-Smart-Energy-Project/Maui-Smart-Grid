@@ -8,6 +8,10 @@
 #   perl dumpStructureForTables.pl ${HOSTNAME} ${DATABASE_NAME}
 #
 # @author Daniel Zhang (張道博)
+#
+# This was used when the database was being dumped as separate tables and views.
+# There maybe problems with rebuilding a database from separate tables and views.
+# The working approach is to restore the database from a single dump file.
 
 use strict;
 use MECOLib qw(@tables @views);
