@@ -19,7 +19,7 @@ class TestMECODBRead(unittest.TestCase):
         self.inserter = MECODBInserter()
         self.util = MECODBUtil()
         self.lastSeqVal = None
-        self.tableName = 'Testing_MeterData'
+        self.tableName = 'MeterData'
         self.colName = 'meter_data_id'
         self.deleter = MECODBDeleter()
 

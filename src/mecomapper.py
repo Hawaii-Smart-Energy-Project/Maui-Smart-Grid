@@ -20,10 +20,6 @@ class MECOMapper(object) :
                                 'MeterName' : 'meter_name',
                                 'UtilDeviceID' : 'util_device_id'}
 
-        self.dbColsTesting_MeterData = {'_pkey' : 'meter_data_id', 'MacID' : 'mac_id',
-                                    'MeterName' : 'meter_name',
-                                    'UtilDeviceID' : 'util_device_id'}
-
         self.dbColsRegisterData = {'_fkey' : 'meter_data_id', '_pkey' : 'register_data_id',
                                    'EndTime' : 'end_time',
                                    'NumberReads' : 'number_reads', 'StartTime' : 'start_time'}

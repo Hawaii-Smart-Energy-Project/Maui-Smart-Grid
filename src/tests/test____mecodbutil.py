@@ -22,7 +22,7 @@ class TestMECODBUtil(unittest.TestCase):
         self.lastSeqVal = None
         self.dictCur = self.connector.dictCur # does this work? having the dictcur be in another class?
         self.deleter = MECODBDeleter()
-        self.tableName = 'Testing_MeterData'
+        self.tableName = 'MeterData'
         self.columnName = 'meter_data_id'
 
     def testMECODBUtilCanBeInited(self):

@@ -24,7 +24,7 @@ class MECOConfiger(object):
         self.insertTables = (
             'MeterData', 'RegisterData', 'RegisterRead', 'Tier', 'Register',
             'IntervalReadData',
-            'Interval', 'Reading', 'Testing_MeterData')
+            'Interval', 'Reading')
 
         # Check permissions on the config file. Refuse to run if the permissions
         # are not set appropriately.
