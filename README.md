@@ -6,7 +6,6 @@ Daniel Zhang, Software Developer
 
 Provides data operations for the [Maui Smart Grid](http://www.mauismartgrid.com) energy sustainability project for the [Hawaii Natural Energy Institute](http://www.hnei.hawaii.edu). Source data arrives in multiple formats including XML, tab-separated values, and comma-separated values.
 
-
 ### Software Features
 * Parsing of source data is provided for the multiple formats.
 * Insertion of data to a data store (PostgreSQL 9.1) is performed by executing a script from the command-line.
@@ -15,9 +14,9 @@ Provides data operations for the [Maui Smart Grid](http://www.mauismartgrid.com)
 
 ## Implementation
 
-Code is written using Python 2.7. It has a testing suite implemented through unittest.
+Code is written using Python 2.7. It has a testing suite implemented through `unittest`.
 
-The database schema is illustrated in `docs/meco-direct-derived-schema.pdf`.
+The database schema is illustrated in `docs/meco-direct-derived-schema-v3.pdf`.
 
 Data parsing is performed by the ElementTree XML parser. Data store operations are implemented through the psycopg2 PostgreSQL library.
 
@@ -40,7 +39,7 @@ A helpful diagram is provided in the repository and a version is displayed here.
 
 #### Database Version History
 1
-: Initial data insertion from first exports.
+: Initial data insertion from first exports. This version is deprecated.
 
 2
 : Eliminated duplicates in the Reading branch by searching on meter name, interval end time, and channel.
@@ -50,10 +49,17 @@ A helpful diagram is provided in the repository and a version is displayed here.
 
 ## Configuration
 
-The software is configured through a text configuration file contained in the user's home directory. The file is named `~/meco-data-operations.cfg`. It is read by the ConfigParser module.
+The software is configured through a text configuration file contained in the user's home directory. The file is named `~/meco-data-operations.cfg`. Permissions should be limited to owner read/write only. It is read by the ConfigParser module. 
 
-### Example Configuration
+### Example Configuration File Content
 
+    [Debugging]
+    debug=False
+    limit_commits=False
+    
+    [Data Paths]
+    meco_data_dir=${MECO_DATA_DIR}
+    
     [Database]
     db_password=password
     db_host=msg.hawaii.edu
@@ -63,9 +69,9 @@ The software is configured through a text configuration file contained in the us
 
 ## Database Configuration
 
-The database schema can be installed using the following command form where `$DATABASE_NAME` is a valid database.
+The database schema can be installed using the following command form where `${DATABASE_NAME}` is a valid database.
 
-    $ psql $DATABASE_NAME < meco-data-schema.sql
+    $ psql ${DATABASE_NAME} < meco-data-schema.sql
 
 ## Software Operation
 
@@ -95,17 +101,17 @@ The numbers in brackets correspond to {dropped duplicates (in the reading branch
 
 Location and meter records are stored in separate tab-separated files and are inserted using separate scripts.
 
-    insertLocationRecords.py $FILENAME
+    insertLocationRecords.py ${FILENAME}
 
-    insertMeterRecords.py $FILENAME
+    insertMeterRecords.py ${FILENAME}
 
 ### Inserting Weather Data (Kahalui Station)
 
-    insertWeatherData.py $FILENAME
+    insertWeatherData.py ${FILENAME}
 
 ### Utility Scripts
 
-`grantAllPermissionsToDatabase.sh $DATABASE`
+`grantAllPermissionsToDatabase.sh ${DATABASE}`
 : Set appropriate permissions to databases.
 
 ## License
