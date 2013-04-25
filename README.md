@@ -36,7 +36,7 @@ The schema consists of the following components.
 
 A helpful diagram is provided in the repository and a version is displayed here.
 
-![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/maui-smart-grid/master/diagrams/meco-direct-derived-schema-v2.png)
+![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/maui-smart-grid/master/diagrams/meco-direct-derived-schema-v3.png)
 
 #### Database Version History
 1
