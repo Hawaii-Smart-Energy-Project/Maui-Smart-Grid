@@ -181,7 +181,9 @@ ALTER TABLE public."Distinct_kWh_3channels_and_location" OWNER TO eileen;
 CREATE TABLE "Event" (
     event_name character varying,
     event_time timestamp without time zone,
-    event_text character varying
+    event_text character varying,
+    event_data_id bigint,
+    event_id bigint NOT NULL
 );
 
 
@@ -194,7 +196,9 @@ ALTER TABLE public."Event" OWNER TO sepgroup;
 CREATE TABLE "EventData" (
     end_time timestamp without time zone,
     number_events smallint,
-    start_time timestamp without time zone
+    start_time timestamp without time zone,
+    meter_data_id bigint,
+    event_data_id bigint NOT NULL
 );
 
 
@@ -389,6 +393,48 @@ CREATE TABLE "WeatherKahaluiAirport" (
 
 
 ALTER TABLE public."WeatherKahaluiAirport" OWNER TO sepgroup;
+
+--
+-- Name: event_data_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
+--
+
+CREATE SEQUENCE event_data_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.event_data_id_seq OWNER TO sepgroup;
+
+--
+-- Name: event_data_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: sepgroup
+--
+
+ALTER SEQUENCE event_data_id_seq OWNED BY "EventData".event_data_id;
+
+
+--
+-- Name: event_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
+--
+
+CREATE SEQUENCE event_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.event_id_seq OWNER TO sepgroup;
+
+--
+-- Name: event_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: sepgroup
+--
+
+ALTER SEQUENCE event_id_seq OWNED BY "Event".event_id;
+
 
 --
 -- Name: get_kwh_meter_locations; Type: VIEW; Schema: public; Owner: eileen
@@ -639,6 +685,20 @@ CREATE VIEW "viewReadings" AS
 ALTER TABLE public."viewReadings" OWNER TO daniel;
 
 --
+-- Name: event_id; Type: DEFAULT; Schema: public; Owner: sepgroup
+--
+
+ALTER TABLE ONLY "Event" ALTER COLUMN event_id SET DEFAULT nextval('event_id_seq'::regclass);
+
+
+--
+-- Name: event_data_id; Type: DEFAULT; Schema: public; Owner: sepgroup
+--
+
+ALTER TABLE ONLY "EventData" ALTER COLUMN event_data_id SET DEFAULT nextval('event_data_id_seq'::regclass);
+
+
+--
 -- Name: interval_id; Type: DEFAULT; Schema: public; Owner: sepgroup
 --
 
@@ -692,6 +752,22 @@ ALTER TABLE ONLY "RegisterRead" ALTER COLUMN register_read_id SET DEFAULT nextva
 --
 
 ALTER TABLE ONLY "Tier" ALTER COLUMN tier_id SET DEFAULT nextval('tier_id_seq'::regclass);
+
+
+--
+-- Name: EventData_pkey; Type: CONSTRAINT; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+ALTER TABLE ONLY "EventData"
+    ADD CONSTRAINT "EventData_pkey" PRIMARY KEY (event_data_id);
+
+
+--
+-- Name: Event_pkey; Type: CONSTRAINT; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+ALTER TABLE ONLY "Event"
+    ADD CONSTRAINT "Event_pkey" PRIMARY KEY (event_id);
 
 
 --
@@ -772,6 +848,13 @@ ALTER TABLE ONLY "Tier"
 
 ALTER TABLE ONLY "MeterData"
     ADD CONSTRAINT meter_data_pkey PRIMARY KEY (meter_data_id);
+
+
+--
+-- Name: EventData_event_data_id_key; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE UNIQUE INDEX "EventData_event_data_id_key" ON "EventData" USING btree (event_data_id);
 
 
 --
@@ -898,6 +981,22 @@ CREATE INDEX meter_data_id_idx ON "IntervalReadData" USING btree (meter_data_id)
 --
 
 CREATE UNIQUE INDEX reading_id_idx ON "Reading" USING btree (reading_id);
+
+
+--
+-- Name: EventData_meter_data_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: sepgroup
+--
+
+ALTER TABLE ONLY "EventData"
+    ADD CONSTRAINT "EventData_meter_data_id_fkey" FOREIGN KEY (meter_data_id) REFERENCES "MeterData"(meter_data_id);
+
+
+--
+-- Name: Event_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: sepgroup
+--
+
+ALTER TABLE ONLY "Event"
+    ADD CONSTRAINT "Event_event_id_fkey" FOREIGN KEY (event_data_id) REFERENCES "EventData"(event_data_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
