@@ -49,6 +49,7 @@ class TestMECODupeChecker(unittest.TestCase):
         This is no longer possible as
         duplicates are dropped before insertion.
         """
+
         pass
 
     def tearDown(self):

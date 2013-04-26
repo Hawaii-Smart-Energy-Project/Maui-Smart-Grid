@@ -36,10 +36,10 @@ class TestMECODBInserter(unittest.TestCase):
         """Data can be written to the Meter Data table.
         """
 
-        # insert some values
+        # Insert some values.
         self.i.insertData(self.conn, self.sampleTableName, self.sampleDict)
 
-        # retrieve last fetched value
+        # Retrieve the last fetched value.
         self.lastSeqVal = self.util.getLastSequenceID(self.conn,
                                                       self.sampleTableName,
                                                       self.keyName)
@@ -55,7 +55,7 @@ class TestMECODBInserter(unittest.TestCase):
         """
 
     def tearDown(self):
-        # Delete the record that was inserted
+        # Delete the record that was inserted.
         if self.lastSeqVal != None:
             self.deleter.deleteRecord(self.conn, self.sampleTableName,
                                       self.keyName, self.lastSeqVal)

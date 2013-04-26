@@ -14,13 +14,13 @@ class MECODupeChecker(object):
     def __init__(self):
         """Constructor
         """
+
         self.mecoConfig = MECOConfiger()
         self.currentReadingID = 0
         self.dbUtil = MECODBUtil()
 
     def readingBranchDupeExists(self, conn, meterName, endTime, channel = None):
         """
-
         Duplicate cases:
         1. meterID and endTime combination exists in the database.
             @deprecated in favor of full meterName-endTime-channel query
@@ -37,10 +37,6 @@ class MECODupeChecker(object):
         dbCursor = conn.cursor()
 
         if channel != None:
-            if self.mecoConfig.configOptionValue("Debugging", 'debug'):
-                # print "channel param = %s" % channel
-                pass
-
             sql = """SELECT	"Interval".end_time,
                         "MeterData".meter_name,
 	                    "MeterData".meter_data_id,

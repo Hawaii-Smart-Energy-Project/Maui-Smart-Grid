@@ -22,6 +22,7 @@ class MECODBUtil(object):
     def getLastSequenceID(self, conn, tableName, columnName):
         """Get last sequence ID value for the given sequence and for the
         given connection.
+
         :param conn: database connection
         :param tableName: name of the table that the sequence matches
         :param columnName: name of the column to which the sequence is applied

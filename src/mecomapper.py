@@ -54,6 +54,7 @@ class MECOMapper(object) :
 
     def dbColumnsForTable(self, table):
         """Return DB mapping dict for a given table.
+
         :param table DB table name
         :returns: dict
         """
@@ -64,6 +65,7 @@ class MECOMapper(object) :
     def mapColumnsToDB(self, tableName) :
         """
         Return a list of comma-separated DB columns for a given table name.
+
         :param tableName: name in db
         :returns: list of database columns separated by commas
         """
@@ -78,8 +80,9 @@ class MECOMapper(object) :
 
     def getDBColNameDict(self, tableName) :
         """Return a dictionary containing DB col names with keys of source data labels.
+
         :param DB tableName
-        :returns: dictionary keyed with DB column names.
+        :return: dictionary keyed with DB column names.
         """
 
         dictName = 'self.dbCols' + tableName

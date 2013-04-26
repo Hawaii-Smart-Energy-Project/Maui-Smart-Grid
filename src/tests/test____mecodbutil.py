@@ -20,7 +20,7 @@ class TestMECODBUtil(unittest.TestCase):
         self.connector = MECODBConnector(True)
         self.conn = self.connector.connectDB()
         self.lastSeqVal = None
-        self.dictCur = self.connector.dictCur # does this work? having the dictcur be in another class?
+        self.dictCur = self.connector.dictCur # Does this work having the dictCur be in another class?
         self.deleter = MECODBDeleter()
         self.tableName = 'MeterData'
         self.columnName = 'meter_data_id'
@@ -30,11 +30,10 @@ class TestMECODBUtil(unittest.TestCase):
 
     def testLastSequenceNumberIsCorrect(self):
         """Test if last sequence ID value is generated correctly. Do this by
-        inserting
-        and deleting a DB record.
+        inserting and deleting a DB record.
         """
 
-        # insert some values
+        # Insert some values.
         sampleDict = {'MeterName': '100001', 'UtilDeviceID': '100001',
                       'MacID': '00:00:00:00:00:00:00:00'}
         self.i.insertData(self.conn, self.tableName, sampleDict)

@@ -7,7 +7,6 @@ import unittest
 from mecodbconnect import MECODBConnector
 import mecodbconnect
 
-
 class TestMECODBConnect(unittest.TestCase):
     """These tests require a database connection be available.
     """

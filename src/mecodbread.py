@@ -15,12 +15,14 @@ class MECODBReader(object) :
     def __init__(self) :
         """Constructor
         """
+
         self.conn = MECODBConnector().connectDB()
         self.dbUtil = MECODBUtil()
 
     def selectRecord(self, conn, table, keyName, keyValue) :
         """Read a record in the database given a table name, primary
         key name, and value for the key.
+
         :param conn DB connection
         :param table DB table name
         :param keyName DB column name for primary key

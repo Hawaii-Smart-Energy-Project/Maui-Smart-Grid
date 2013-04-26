@@ -31,19 +31,18 @@ class MECODBInserter(object):
         """Given a table name and a dictionary of column names and values,
         insert them to the db.
         :param conn: database connection
-        :param tableName: name of db table
+        :param tableName: name of the db table
         :param columnsAndValues: dictionary of columns and values to be
         inserted to the db
         :param (optional) fKeyVal: an explicit foreign key value
         :param (optional) withoutCommit: a flag indicated that the insert
-        will not be
-        immediately committed
+        will not be immediately committed
         :returns: database cursor
         """
 
         cur = conn.cursor()
 
-        # getdictionary of mapped (from db to source data) column names
+        # Get dictionary of mapped (from DB to source data) column names
         columnDict = self.mapper.getDBColNameDict(tableName)
 
         dbColsAndVals = {}
@@ -54,16 +53,15 @@ class MECODBInserter(object):
             print columnsAndValues
 
         for col in columnDict.keys():
-            # use default as the value for the primary key
-            # so that the private key is obtained from the predefined
-            # sequence.
+            # Use default as the value for the primary key so that the
+            # private key is obtained from the predefined sequence.
             if col == '_pkey':
                 if VISUALIZE_DATA:
                     print columnDict[col], # db col name
                     print 'DEFAULT'
                 dbColsAndVals[columnDict[col]] = 'DEFAULT'
 
-            # for the foreign key, set the value from the given parameter.
+            # For the foreign key, set the value from the given parameter.
             elif col == '_fkey':
                 if VISUALIZE_DATA:
                     print columnDict[col], # db col name
@@ -74,7 +72,7 @@ class MECODBInserter(object):
                 if VISUALIZE_DATA:
                     print columnDict[col], # db col name
 
-                # the register and reading tables need to handle NULL
+                # The Register and Reading tables need to handle NULL
                 # values as a special case.
                 if tableName == 'Register' or tableName == 'Reading':
                     try:
@@ -87,13 +85,13 @@ class MECODBInserter(object):
                         dbColsAndVals[columnDict[col]] = 'NULL'
 
 
-                # for all other cases, simply pass the value.
+                # For all other cases, simply pass the value.
                 else:
                     if VISUALIZE_DATA:
                         print columnsAndValues[col] # data source value
                     dbColsAndVals[columnDict[col]] = columnsAndValues[col]
 
-        # add a creation timestamp to meterdata
+        # Add a creation timestamp to MeterData.
         if tableName == 'MeterData':
             dbColsAndVals['created'] = 'NOW()'
 

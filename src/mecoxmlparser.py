@@ -25,11 +25,12 @@ class MECOXMLParser(object) :
 
     def __init__(self, testing=False) :
         """Constructor
-        :param testing: Boolean indicating if testing mode is on.
+
+        :param testing: Boolean indicating if Testing Mode is on.
         """
 
         if(testing):
-            print "Testing Mode is ON"
+            print "Testing Mode is ON."
 
         self.configer = MECOConfiger()
         self.util = MECODBUtil()
@@ -75,6 +76,7 @@ class MECOXMLParser(object) :
 
     def parseXML(self, fileObject, insert = False) :
         """Parse an XML file.
+
         :param fileObject: a file object referencing an XML file.
         :param insert: True to insert to the database | False to perform no inserts
         """
@@ -91,6 +93,7 @@ class MECOXMLParser(object) :
 
     def walkTheTreeFromRoot(self, root) :
         """Walk an XML tree from its root node.
+
         :param root: The root node of an XML tree.
         """
 
@@ -119,17 +122,17 @@ class MECOXMLParser(object) :
             if currentTableName in self.insertTables :
                 if self.configer.configOptionValue("Debugging", 'debug') == True:
                     print
-                    print "processing table %s, next is %s" % (currentTableName, nextTableName)
+                    print "Processing table %s, next is %s." % (currentTableName, nextTableName)
                     print "--------------------------------"
 
-                # get the col name for the pkey
+                # Get the column name for the pkey.
                 pkeyCol = self.mapper.dbColumnsForTable(currentTableName)['_pkey']
 
                 fkeyCol = None
                 fKeyValue = None
 
                 try :
-                    # get the col name for the fkey
+                    # Get the column name for the fkey.
                     fkeyCol = self.mapper.dbColumnsForTable(currentTableName)['_fkey']
                 except :
                     pass
@@ -139,7 +142,7 @@ class MECOXMLParser(object) :
                     print "primary key col (pkey) = %s" % pkeyCol
                     print columnsAndValues
 
-                # get fk value
+                # Get the fk value.
                 if fkeyCol is not None :
                     fKeyValue = self.fkDeterminer.pkValforCol[fkeyCol]
 
@@ -154,8 +157,8 @@ class MECOXMLParser(object) :
                     self.currentIntervalEndTime = columnsAndValues['EndTime']
 
                 if self.insertDataIntoDatabase:
-                    # handle a special case for duplicate reading data
-                    # intercept dupe reading data before insert
+                    # Handle a special case for duplicate reading data.
+                    # Intercept the duplicate reading data before insert.
                     if currentTableName == "Reading":
                         # does a meter-endtime-channel dupe exist?
                         self.channelDupeExists \
@@ -188,7 +191,7 @@ class MECOXMLParser(object) :
                 self.lastSeqVal = self.util.getLastSequenceID(self.conn,
                                                               currentTableName,
                                                               pkeyCol)
-                # store the primary key
+                # Store the primary key.
                 self.fkDeterminer.pkValforCol[pkeyCol] = self.lastSeqVal
 
                 if self.configer.configOptionValue("Debugging", 'debug') == True:
@@ -221,10 +224,12 @@ class MECOXMLParser(object) :
 
     def lastReading(self, currentTable, nextTable):
         """Determine if the last reading is being visited.
+
         :param currentTable: current table being processsed.
         :param nextTable: next table to be processed.
         :return True if last object in Reading table was read, otherwise return False.
         """
+
         if currentTable == "Reading" and (
                 nextTable == "MeterData" or nextTable == None) :
             return True
@@ -233,10 +238,12 @@ class MECOXMLParser(object) :
 
     def lastRegister(self, currentTable, nextTable):
         """Determine if the last register is being visited.
+
         :param currentTable: current table being processsed.
         :param nextTable: next table to be processed.
         :return True if last object in Register table was read, otherwise return False.
         """
+
         if currentTable == "Register" and (
                 nextTable == "MeterData" or nextTable == None) :
             return True
@@ -245,10 +252,12 @@ class MECOXMLParser(object) :
 
     def getNext(self, somethingIterable, window = 1):
         """Return the current item and next item in an iterable data structure.
+
         :param somethingIterable: something that has an iterator
         :param window:
         :return value and next value
         """
+        
         items, nexts = tee(somethingIterable, 2)
         nexts = islice(nexts, window, None)
         return izip_longest(items, nexts)

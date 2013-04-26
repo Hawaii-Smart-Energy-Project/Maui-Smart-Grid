@@ -13,7 +13,8 @@ class MECODBConnector(object) :
 
     def __init__(self, testing=False) :
         """Constructor
-        :param testing: Boolean indicating if testing mode is on.
+
+        :param testing: Boolean indicating if Testing Mode is on.
         """
 
         if(testing):
@@ -53,6 +54,7 @@ class MECODBConnector(object) :
     def closeDB(self, conn):
         """Close a database connection.
         """
+
         print "Closing database %s." % self.dbName
         conn.close()
 

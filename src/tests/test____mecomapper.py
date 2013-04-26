@@ -40,16 +40,16 @@ class TestMECOMapper(unittest.TestCase):
                 if self.m.dbColumnsForTable(t)['_fkey'] != fkeys[t]:
                     errors += 1
             except:
-                # table doesnt have an fkey
+                # The table doesn't have an fkey.
                 pass
         self.assertLess(errors, 1)
 
-    # @todo finish writing
+    # @todo finish writing this test
     def testMappingIsValidForMeterData(self):
         """Compare columns that are mapped for given data labels.
         """
 
-        # given labels from the source data, map them to db column names
+        # Given labels from the source data, map them to DB column names.
         srcDataLabels = ('MacID', 'MeterName', 'UtilDeviceID')
 
     def tearDown(self):

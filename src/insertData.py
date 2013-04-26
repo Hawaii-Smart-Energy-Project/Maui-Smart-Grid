@@ -22,7 +22,9 @@ class Inserter(object) :
     """
 
     def __init__(self) :
-        """Constructor"""
+        """Constructor
+        """
+
         self.parser = MECOXMLParser()
         self.configer = MECOConfiger()
 
@@ -44,7 +46,7 @@ for f in data :
     print f
     if re.search('.*log\.xml', f) is None: # skip *log.xml files
 
-        # open the file and read it
+        # Open the file and read it.
         if re.search('.*\.xml$', f):
             fileObject = open(f, "rb")
         elif re.search('.*\.xml\.gz$', f):

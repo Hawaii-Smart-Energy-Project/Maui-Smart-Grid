@@ -46,7 +46,7 @@ class TestMECODBRead(unittest.TestCase):
         self.assertEqual(row[self.colName], self.lastSeqVal)
 
     def tearDown(self):
-        # delete the record that was inserted
+        # Delete the record that was inserted.
         if self.lastSeqVal != None:
             self.deleter.deleteRecord(self.conn, self.tableName, self.colName,
                                       self.lastSeqVal)

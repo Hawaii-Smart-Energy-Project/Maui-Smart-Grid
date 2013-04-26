@@ -45,7 +45,6 @@ class TestMECOXMLParser(unittest.TestCase):
             print key + ": ",
             print self.p.tableNameCount[key]
 
-            # for c in self.p.tableNameCount.values():
             if self.p.tableNameCount[key] < 1:
                 if key != 'ChannelStatus' and key != 'IntervalStatus' and key \
                         != 'EventData' and key != 'Event':
