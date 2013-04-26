@@ -20,22 +20,22 @@ class MECOConfiger(object):
 
         self._config = ConfigParser.ConfigParser()
 
-        # Define tables that will have data inserted.
+        # Define tables that will have data inserted. Data will only be inserted
+        # to tables that are defined here.
         self.insertTables = (
             'MeterData', 'RegisterData', 'RegisterRead', 'Tier', 'Register',
-            'IntervalReadData',
-            'Interval', 'Reading')
+            'IntervalReadData', 'Interval', 'Reading', 'EventData', 'Event')
 
         # Check permissions on the config file. Refuse to run if the permissions
         # are not set appropriately.
 
         configFilePath = '~/.meco-data-operations.cfg'
 
-        if self.isMoreThanOwnerReadableAndWritable(os.path.expanduser(configFilePath)):
+        if self.isMoreThanOwnerReadableAndWritable(
+                os.path.expanduser(configFilePath)):
             print "Configuration file permissions are too permissive. " \
                   "Operation will not continue."
             sys.exit()
-
 
         try:
             self._config.read(['site.cfg', os.path.expanduser(configFilePath)])
@@ -60,6 +60,13 @@ class MECOConfiger(object):
 
 
     def isMoreThanOwnerReadableAndWritable(self, filePath):
+        """Determines if a file has greater permissions than owner read/write.
+
+        :param filePath: Path to the file being tested.
+        :return: True if the permissions are greater than owner read/write,
+        otherwise return False.
+        """
+
         st = os.stat(filePath)
 
         # Permissions are too permissive if group or others can read,

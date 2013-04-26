@@ -257,7 +257,7 @@ class MECOXMLParser(object) :
         :param window:
         :return value and next value
         """
-        
+
         items, nexts = tee(somethingIterable, 2)
         nexts = islice(nexts, window, None)
         return izip_longest(items, nexts)

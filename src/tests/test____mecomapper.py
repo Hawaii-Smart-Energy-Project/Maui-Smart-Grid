@@ -32,12 +32,13 @@ class TestMECOMapper(unittest.TestCase):
 
         print "test_fkey_mappings:"
         errors = 0
+        # @todo Add other fkeys here.
         fkeys = {'RegisterData': 'meter_data_id'}
 
-        for t in self.config.insertTables:
+        for table in self.config.insertTables:
             try:
-                print self.m.dbColumnsForTable(t)['_fkey']
-                if self.m.dbColumnsForTable(t)['_fkey'] != fkeys[t]:
+                print self.m.dbColumnsForTable(table)['_fkey']
+                if self.m.dbColumnsForTable(table)['_fkey'] != fkeys[table]:
                     errors += 1
             except:
                 # The table doesn't have an fkey.
