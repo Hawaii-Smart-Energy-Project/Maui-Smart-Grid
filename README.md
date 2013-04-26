@@ -1,34 +1,35 @@
 # Maui Smart Grid Project
 
-Daniel Zhang, Software Developer
+Daniel Zhang (張道博), Software Developer
 
 ## Overview
 
-Provides data operations for the [Maui Smart Grid](http://www.mauismartgrid.com) energy sustainability project for the [Hawaii Natural Energy Institute](http://www.hnei.hawaii.edu). Source data arrives in multiple formats including XML, tab-separated values, and comma-separated values. Issues for this project are tracked at the [Hawaii Smart Energy Project YouTRACK instance](http://smart-energy-project.myjetbrains.com/youtrack/rest/agile/).
+This software provides data operations for the [Maui Smart Grid](http://www.mauismartgrid.com) energy sustainability project for the [Hawaii Natural Energy Institute](http://www.hnei.hawaii.edu). Source data arrives in multiple formats including XML, tab-separated values, and comma-separated values. Issues for this project are tracked at the [Hawaii Smart Energy Project YouTRACK instance](http://smart-energy-project.myjetbrains.com/youtrack/rest/agile/).
 
 ### Software Features
-* Parsing of source data is provided for the multiple formats.
+* Open-source (BSD license) code in Python 2.7x.
+* Parsing of source data is provided for multiple formats.
 * Insertion of data to a data store (PostgreSQL 9.1) is performed by executing a script from the command-line.
-* Source files to create the data store are available.
-* Unit testing of data processing operations is provided by a test suite implemented through `unittest`.
+* Source files to recreate the structure of the data store are available.
+* Unit testing of data processing operations is provided by a test suite implemented through Python's `unittest`.
 
 ## Implementation
 
-Code is written using Python 2.7. It has a testing suite implemented through `unittest`.
+The code is written in Python 2.7x. It has a testing suite implemented through `unittest`.
 
 The database schema is illustrated in `docs/meco-direct-derived-schema-v3.pdf`.
 
-Data parsing is performed by the ElementTree XML parser. Data store operations are implemented through the psycopg2 PostgreSQL library.
+Data parsing is performed by the ElementTree XML parser. Data store operations are implemented through the `psycopg2` PostgreSQL library.
 
-Data processing involves inserting nested sets of data linked by the primary keys, generated as sequential integer values, of the preceding table. Foreign keys are determined by a separate class that holds the last primary key used for each table. The design for this feature is illustrated in `docs/fk-value-determiner.pdf`.
+Data processing involves inserting nested sets of data linked by their primary keys, generated as sequential integer values, of the preceding table. Foreign keys are determined by a separate class that holds the last primary key used for each table. The design for this feature is illustrated in `docs/fk-value-determiner.pdf`.
 
 ### Database Schema
-A SQL dump, produced by pg_dump, of the database schema is provided for reference only.
+A SQL dump, produced by `pg_dump`, of the database schema is provided for reference only.
 
 The schema consists of the following components.
 
 1. Energy data
-    * Event data is not included in the schema
+    * Event data is not included in the schema (Event data is scheduled for inclusion in Version 3)
 2. Location Records
 3. Meter Records
 4. Weather Data (Kahalui Station)
@@ -49,7 +50,7 @@ A helpful diagram is provided in the repository and a version is displayed here.
 
 ## Configuration
 
-The software is configured through a text configuration file contained in the user's home directory. The file is named `~/meco-data-operations.cfg`. Permissions should be limited to owner read/write only. It is read by the ConfigParser module. 
+The software is configured through a text configuration file contained in the user's home directory. The file is named `~/meco-data-operations.cfg`. Permissions should be limited to owner read/write only. It is read by the `ConfigParser` module. 
 
 ### Example Configuration File Content
 
@@ -79,7 +80,7 @@ The database schema can be installed using the following command form where `${D
 
 The exported XML data files contain the energy data. Insertion to the database is performed by running
 
-    .\insertData.py
+    $ .\insertData.py
     
 in the directory the data files are contained.
 
@@ -95,19 +96,19 @@ in the directory the data files are contained.
     user    0m58.716s
     sys     0m30.186s
 
-The numbers in brackets correspond to {dropped duplicates (in the reading branch)}, [reading group index], and (element count).
+The numbers in brackets correspond to {dropped duplicates (in the reading branch)}, [reading group index], and (element count). Dropped duplicates are the duplicate entries---determined by meter name, interval end time, and channel number---that are present in the source data. The reading group indexes is an integer count of the distinct groups of energy readings in the source data. The element count refers to the individual elements within the source data.
   
 ### Inserting Location and Meter Records
 
 Location and meter records are stored in separate tab-separated files and are inserted using separate scripts.
 
-    insertLocationRecords.py ${FILENAME}
+    $ insertLocationRecords.py ${FILENAME}
 
-    insertMeterRecords.py ${FILENAME}
+    $ insertMeterRecords.py ${FILENAME}
 
 ### Inserting Weather Data (Kahalui Station)
 
-    insertWeatherData.py ${FILENAME}
+    $ insertWeatherData.py ${FILENAME}
 
 ### Utility Scripts
 
