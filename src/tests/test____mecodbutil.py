@@ -8,6 +8,7 @@ from mecodbutils import MECODBUtil
 from mecodbinsert import MECODBInserter
 from mecodbconnect import MECODBConnector
 from meco_dbdelete import MECODBDeleter
+from mecoconfig import MECOConfiger
 
 
 class TestMECODBUtil(unittest.TestCase):
@@ -20,10 +21,12 @@ class TestMECODBUtil(unittest.TestCase):
         self.connector = MECODBConnector(True)
         self.conn = self.connector.connectDB()
         self.lastSeqVal = None
-        self.dictCur = self.connector.dictCur # Does this work having the dictCur be in another class?
+        self.dictCur = self.connector.dictCur # Does this work having the
+        # dictCur be in another class?
         self.deleter = MECODBDeleter()
         self.tableName = 'MeterData'
         self.columnName = 'meter_data_id'
+        self.configer = MECOConfiger()
 
     def testMECODBUtilCanBeInited(self):
         self.assertIsNotNone(self.dbUtil)
@@ -44,7 +47,7 @@ class TestMECODBUtil(unittest.TestCase):
         print "lastSeqVal = %s" % self.lastSeqVal
 
         sql = "select * from \"%s\" where %s = %s" % (
-        self.tableName, self.columnName, self.lastSeqVal)
+            self.tableName, self.columnName, self.lastSeqVal)
         dictCur = self.connector.dictCur
         self.dbUtil.executeSQL(dictCur, sql)
         row = dictCur.fetchone()
@@ -53,17 +56,24 @@ class TestMECODBUtil(unittest.TestCase):
 
     def testGetDBName(self):
         print "DB name is %s" % self.dbUtil.getDBName(self.dictCur)[0]
-        self.assertIsNotNone(self.dbUtil.getDBName(self.dictCur), "A DB name should be returned.")
+        self.assertIsNotNone(self.dbUtil.getDBName(self.dictCur),
+                             "A DB name should be returned.")
 
     def testEraseTestingDatabase(self):
         dbName = self.dbUtil.getDBName(self.dictCur)[0]
         print "dbName = %s" % dbName
-        self.assertEqual(dbName, "test_meco", "Testing DB name should be set correctly.")
+        self.assertEqual(dbName, "test_meco",
+                         "Testing DB name should be set correctly.")
         self.dbUtil.eraseTestMeco()
-        sql = """select count(*) from "Reading";"""
-        self.dbUtil.executeSQL(self.dictCur, sql)
-        row = self.dictCur.fetchone()
-        self.assertEqual(row[0], 0, "No records should be present in the database.")
+
+        # Check all of the tables for the presence of records.
+        for table in self.configer.insertTables:
+            sql = """select count(*) from "%s";""" % table
+            self.dbUtil.executeSQL(self.dictCur, sql)
+            row = self.dictCur.fetchone()
+            self.assertEqual(row[0], 0,
+                             "No records should be present in the %s table."
+                             % table)
 
     def tearDown(self):
         """Delete the record that was inserted.
@@ -73,6 +83,7 @@ class TestMECODBUtil(unittest.TestCase):
                                       self.columnName, self.lastSeqVal)
 
         self.connector.closeDB(self.conn)
+
 
 if __name__ == '__main__':
     unittest.main()
