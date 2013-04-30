@@ -25,18 +25,18 @@ class TestMECOXMLParser(unittest.TestCase):
 
     def testEveryElementIsVisited(self):
         self.dbUtil.eraseTestMeco()
-        self.conn.commit()
-        self.p.filename = "../../test-data/meco-energy-test-data.xml"
+
+        self.p.filename = "../../test-data/meco_v3-energy-test-data.xml"
         fileObject = open(self.p.filename, "rb")
-        expectedCount = 656
+        expectedCount = 126
         self.p.parseXML(fileObject, True)
         print "element count = %s" % self.p.elementCount
         self.assertEqual(self.p.elementCount, expectedCount)
 
     def testAllTableNamesArePresent(self):
         self.dbUtil.eraseTestMeco()
-        self.conn.commit()
-        self.p.filename = "../../test-data/meco-energy-test-data.xml"
+
+        self.p.filename = "../../test-data/meco_v3-energy-test-data.xml"
         fileObject = open(self.p.filename, "rb")
         self.p.parseXML(fileObject, True)
         fail = False
