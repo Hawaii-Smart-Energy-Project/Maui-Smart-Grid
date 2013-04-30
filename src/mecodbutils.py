@@ -76,14 +76,20 @@ class MECODBUtil(object):
 
         databaseName = self.getDBName(dbCursor)[0]
 
-        if (not(self.configer.configOptionValue("Database","testing_db_name") == databaseName)):
-            print "Testing DB name doesn't match %s." % self.configer.configOptionValue("Database","testing_db_name")
+        if (not (self.configer.configOptionValue("Database",
+                                                 "testing_db_name") ==
+                     databaseName)):
+            print "Testing DB name doesn't match %s." % self.configer\
+                .configOptionValue(
+                "Database", "testing_db_name")
             exit(-1)
 
         print "Erasing testing database %s." % databaseName
         sql = ("""delete from "Reading";""",
                """delete from "Interval";""",
                """delete from "IntervalReadData";""",
+               """delete from "Event";""",
+               """delete from "EventData";""",
                """delete from "MeterData";""",
                """SELECT setval('interval_id_seq', 1);""",
                """SELECT setval('intervalreaddata_id_seq', 1);""",
@@ -102,7 +108,6 @@ class MECODBUtil(object):
         self.dbConnect.closeDB(self.conn)
 
     def getDBName(self, cursor):
-
         self.executeSQL(cursor, "select current_database()")
         row = cursor.fetchone()
         return row
