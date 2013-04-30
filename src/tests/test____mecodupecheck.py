@@ -32,7 +32,7 @@ class TestMECODupeChecker(unittest.TestCase):
 
         self.dbUtil.eraseTestMeco()
         self.conn.commit()
-        self.p.filename = "../../test-data/meco-energy-test-data.xml"
+        self.p.filename = "../../test-data/meco_v3-energy-test-data.xml"
         fileObject = open(self.p.filename, "rb")
         self.p.parseXML(fileObject, True)
 
