@@ -14,7 +14,8 @@ class MECOMapper(object):
     def __init__(self):
         """Constructor
 
-        The table names correspond directly to the DB table names.
+        This class provides mappings between XML names and database names. The
+        table names correspond directly to the DB table names.
         """
 
         self.dbColsMeterData = {'_pkey': 'meter_data_id', 'MacID': 'mac_id',
@@ -65,11 +66,14 @@ class MECOMapper(object):
         self.dbColsTier = {'_fkey': 'register_read_id', '_pkey': 'tier_id',
                            'Number': 'number'}
 
-        self.dbColsEventData = {'_fkey', '_pkey', 'end_time', 'number_events',
-                                'start_time'}
+        self.dbColsEventData = {'_fkey': 'meter_data_id',
+                                '_pkey': 'event_data_id', 'EndTime': 'end_time',
+                                'NumberEvents': 'number_events',
+                                'StartTime': 'start_time'}
 
-        self.dbColsEvent = {'_fkey', '_pkey', 'event_name', 'event_time',
-                            'event_text'}
+        self.dbColsEvent = {'_fkey': 'event_data_id', '_pkey': 'event_id',
+                            'EventName': 'event_name',
+                            'EventTime': 'event_time'}
 
 
     def dbColumnsForTable(self, table):
