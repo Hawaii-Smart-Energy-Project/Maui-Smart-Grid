@@ -56,7 +56,6 @@ class TestMECOXMLParser(unittest.TestCase):
 
     def disabled_testEraseTestMECO(self):
         self.dbUtil.eraseTestMeco()
-        self.conn.commit()
 
     def tearDown(self):
         self.dbConnect.closeDB(self.conn)
