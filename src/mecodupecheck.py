@@ -19,7 +19,8 @@ class MECODupeChecker(object):
         self.currentReadingID = 0
         self.dbUtil = MECODBUtil()
 
-    def readingBranchDupeExists(self, conn, meterName, endTime, channel = None):
+    def readingBranchDupeExists(self, conn, meterName, endTime, channel = None,
+                                DEBUG = False):
         """
         Duplicate cases:
         1. meterID and endTime combination exists in the database.
@@ -30,11 +31,15 @@ class MECODupeChecker(object):
         :param conn: database connection
         :param meterID: Meter name in MeterData table
         :param endTime: End time in Interval table
-        :param channel: optional parameter
-        :return True if combo exists, False if not.
+        :param channel: Required parameter that was previously optional. An
+        optional channel is now deprecated.
+        :return: True if combo exists, False if not.
         """
 
         dbCursor = conn.cursor()
+
+        if DEBUG:
+            print "readingBranchDupeExists():"
 
         if channel != None:
             sql = """SELECT	"Interval".end_time,
@@ -83,6 +88,7 @@ class MECODupeChecker(object):
 
             return True
         else:
+            print "Found no rows."
             return False
 
 

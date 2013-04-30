@@ -29,17 +29,16 @@ class TestMECODupeChecker(unittest.TestCase):
     def testFindIndividualDupe(self):
         """Find a duplicate record when only one exists.
         """
-
         self.dbUtil.eraseTestMeco()
-        self.conn.commit()
+
         self.p.filename = "../../test-data/meco_v3-energy-test-data.xml"
         fileObject = open(self.p.filename, "rb")
         self.p.parseXML(fileObject, True)
 
         self.assertTrue(
             self.dupeChecker.readingBranchDupeExists(self.conn, '100000',
-                                                     '2012-08-08 20:30:00',
-                                                     '1'),
+                                                     '2013-04-08 00:30:00',
+                                                     '1',True),
             "Record should already exist")
 
     def testLoadOnTop(self):

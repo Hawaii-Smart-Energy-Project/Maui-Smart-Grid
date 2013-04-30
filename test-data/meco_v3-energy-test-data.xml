@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <SSNExportDocument xmlns="urn:com:ssn:schema:export:SSNExportFormat.xsd" Version="0.1" DocumentID="77fdd50d-4768-44fb-b8e1-50d8eafaa114-1" ExportID="77fdd50d-4768-44fb-b8e1-50d8eafaa114" JobID="50831" RunID="4590733" CreationTime="2013-04-15T00:00:00.850-10:00" StartTime="2013-04-08T00:00:00.000-10:00" EndTime="2013-04-15T00:00:00.000-10:00">
-	<MeterData MeterName="115477" UtilDeviceID="115477" MacID="00:13:50:01:01:40:16:21">
+	<MeterData MeterName="100000" UtilDeviceID="100000" MacID="00:00:00:00:00:00:00:00">
 		<RegisterData StartTime="2013-04-08T06:00:08.241-10:00" EndTime="2013-04-14T06:00:08.748-10:00" NumberReads="7">
 			<RegisterRead ReadTime="2013-04-08T06:00:08.241-10:00" GatewayCollectedTime="2013-04-08T06:01:42.952-10:00" RegisterReadSource="REG_SRC_TYPE_TBL23" Season="0">
 				<Tier Number="0">
