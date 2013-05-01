@@ -54,9 +54,6 @@ class TestMECOXMLParser(unittest.TestCase):
                          "At least one table of each type should have been "
                          "encountered.")
 
-    def disabled_testEraseTestMECO(self):
-        self.dbUtil.eraseTestMeco()
-
     def tearDown(self):
         self.dbConnect.closeDB(self.conn)
 
