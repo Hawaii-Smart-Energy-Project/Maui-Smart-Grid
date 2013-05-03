@@ -91,14 +91,17 @@ class MECODBUtil(object):
                """delete from "Event";""",
                """delete from "EventData";""",
                """delete from "MeterData";""",
-               """SELECT setval('interval_id_seq', 1);""",
-               """SELECT setval('intervalreaddata_id_seq', 1);""",
-               """SELECT setval('meterdata_id_seq', 1);""",
-               """SELECT setval('reading_id_seq', 1);""",
-               """SELECT setval('register_id_seq', 1);""",
-               """SELECT setval('registerdata_id_seq', 1);""",
-               """SELECT setval('registerread_id_seq', 1);""",
-               """SELECT setval('tier_id_seq', 1);""")
+               """ALTER SEQUENCE interval_id_seq RESTART WITH 1;""",
+               """ALTER SEQUENCE intervalreaddata_id_seq RESTART WITH 1;""",
+               """ALTER SEQUENCE meterdata_id_seq RESTART WITH 1;""",
+               """ALTER SEQUENCE reading_id_seq RESTART WITH 1;""",
+               """ALTER SEQUENCE register_id_seq RESTART WITH 1;""",
+               """ALTER SEQUENCE registerdata_id_seq RESTART WITH 1;""",
+               """ALTER SEQUENCE registerread_id_seq RESTART WITH 1;""",
+               """ALTER SEQUENCE tier_id_seq RESTART WITH 1;""",
+               """ALTER SEQUENCE event_data_id_seq RESTART WITH 1;""",
+               """ALTER SEQUENCE event_id_seq RESTART WITH 1;"""
+        )
 
         for statement in sql:
             print "sql = %s" % statement
