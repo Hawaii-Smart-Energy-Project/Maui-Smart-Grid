@@ -17,19 +17,20 @@ from mecodupecheck import MECODupeChecker
 
 DEBUG = 0 # print debugging info if 1
 
-class MECOXMLParser(object) :
+
+class MECOXMLParser(object):
     """Parses XML for MECO data.
     """
 
     tableName = ''
 
-    def __init__(self, testing=False) :
+    def __init__(self, testing = False):
         """Constructor
 
         :param testing: Boolean indicating if Testing Mode is on.
         """
 
-        if(testing):
+        if (testing):
             print "Testing Mode is ON."
 
         self.configer = MECOConfiger()
@@ -43,14 +44,14 @@ class MECOXMLParser(object) :
         self.inserter = MECODBInserter()
         self.insertDataIntoDatabase = False
 
-        # count how many times sections in source data are encountered.
-        self.tableNameCount = {'SSNExportDocument' : 0, 'MeterData' : 0,
-                               'RegisterData' : 0, 'RegisterRead' : 0,
-                               'Tier' : 0, 'Register' : 0,
-                               'IntervalReadData' : 0, 'Interval' : 0,
-                               'Reading' : 0, 'IntervalStatus' : 0,
-                               'ChannelStatus' : 0, 'EventData': 0,
-                               'Event' : 0}
+        # Count number of times sections in source data are encountered.
+        self.tableNameCount = {'SSNExportDocument': 0, 'MeterData': 0,
+                               'RegisterData': 0, 'RegisterRead': 0,
+                               'Tier': 0, 'Register': 0,
+                               'IntervalReadData': 0, 'Interval': 0,
+                               'Reading': 0, 'IntervalStatus': 0,
+                               'ChannelStatus': 0, 'EventData': 0,
+                               'Event': 0}
 
         # @todo adjust unit test to handle interval status and channel status
 
@@ -74,11 +75,12 @@ class MECOXMLParser(object) :
         self.dupeOnInsertCount = 0
 
 
-    def parseXML(self, fileObject, insert = False) :
+    def parseXML(self, fileObject, insert = False):
         """Parse an XML file.
 
         :param fileObject: a file object referencing an XML file.
-        :param insert: True to insert to the database | False to perform no inserts
+        :param insert: True to insert to the database | False to perform no
+        inserts.
         """
 
         print "parseXML:"
@@ -91,7 +93,7 @@ class MECOXMLParser(object) :
         self.walkTheTreeFromRoot(root)
 
 
-    def walkTheTreeFromRoot(self, root) :
+    def walkTheTreeFromRoot(self, root):
         """Walk an XML tree from its root node.
 
         :param root: The root node of an XML tree.
@@ -102,11 +104,14 @@ class MECOXMLParser(object) :
         for element, nextElement in self.getNext(walker):
             self.elementCount += 1
 
-            currentTableName = re.search('\{.*\}(.*)', element.tag).group(1) # current table name
+            currentTableName = re.search('\{.*\}(.*)', element.tag).group(
+                1) # current table name
             try:
-                nextTableName = re.search('\{.*\}(.*)', nextElement.tag).group(1) # next table name
+                nextTableName = re.search('\{.*\}(.*)', nextElement.tag).group(
+                    1) # next table name
             except:
-                if self.configer.configOptionValue("Debugging", 'debug') == True:
+                if self.configer.configOptionValue("Debugging",
+                                                   'debug') == True:
                     print "EXCEPTION: nextElement = %s" % nextElement
                 nextTableName = None
 
@@ -115,46 +120,62 @@ class MECOXMLParser(object) :
             columnsAndValues = {}
             it = iter(sorted(element.attrib.iteritems()))
 
-            for item in list(it) :
+            for item in list(it):
                 # Create a dictionary of column names and values.
                 columnsAndValues[item[0]] = item[1]
 
-            if currentTableName in self.insertTables :
-                if self.configer.configOptionValue("Debugging", 'debug') == True:
+
+            if currentTableName in self.insertTables:
+                # Check if the current table is one of the tables to be inserted to.
+
+                if self.configer.configOptionValue("Debugging",
+                                                   'debug') == True:
                     print
-                    print "Processing table %s, next is %s." % (currentTableName, nextTableName)
+                    print "Processing table %s, next is %s." % (
+                    currentTableName, nextTableName)
                     print "--------------------------------"
 
-                # Get the column name for the pkey.
-                pkeyCol = self.mapper.dbColumnsForTable(currentTableName)['_pkey']
+                # Get the column name for the primary key.
+                pkeyCol = self.mapper.dbColumnsForTable(currentTableName)[
+                    '_pkey']
 
                 fkeyCol = None
                 fKeyValue = None
 
-                try :
-                    # Get the column name for the fkey.
-                    fkeyCol = self.mapper.dbColumnsForTable(currentTableName)['_fkey']
-                except :
+                try:
+                    # Get the column name for the foreign key.
+                    fkeyCol = self.mapper.dbColumnsForTable(currentTableName)[
+                        '_fkey']
+                except:
                     pass
 
-                if self.configer.configOptionValue("Debugging", 'debug') == True:
+                if self.configer.configOptionValue("Debugging",
+                                                   'debug') == True:
                     print "foreign key col (fkey) = %s" % fkeyCol
                     print "primary key col (pkey) = %s" % pkeyCol
                     print columnsAndValues
 
-                # Get the fk value.
-                if fkeyCol is not None :
+                if fkeyCol is not None:
+                    # Get the foreign key value.
                     fKeyValue = self.fkDeterminer.pkValforCol[fkeyCol]
 
-                if self.configer.configOptionValue("Debugging", 'debug') == True:
+                if self.configer.configOptionValue("Debugging",
+                                                   'debug') == True:
                     print "fKeyValue = %s" % fKeyValue
 
                 if currentTableName == "MeterData":
                     self.currentMeterName = columnsAndValues['MeterName']
 
-                # Perform a dupe check for the reading branch.
-                if currentTableName == "Interval" :
+                # Perform a dupe check for the Reading branch.
+                if currentTableName == "Interval":
                     self.currentIntervalEndTime = columnsAndValues['EndTime']
+
+                if currentTableName == "Event":
+                    print "columns and values:"
+                    print columnsAndValues
+                    print "element:"
+                    print element
+
 
                 if self.insertDataIntoDatabase:
                     # Handle a special case for duplicate reading data.
@@ -163,27 +184,33 @@ class MECOXMLParser(object) :
                         # does a meter-endtime-channel dupe exist?
                         self.channelDupeExists \
                             = self.dupeChecker.readingBranchDupeExists(
-                                self.conn,
-                                self.currentMeterName,
-                                self.currentIntervalEndTime,
-                                columnsAndValues['Channel']
+                            self.conn,
+                            self.currentMeterName,
+                            self.currentIntervalEndTime,
+                            columnsAndValues['Channel']
                         )
 
-                    # Only perform an insert if there are no duplicate values for the channel.
+                    # Only perform an insert if there are no duplicate values
+                    # for the channel.
                     if not self.channelDupeExists:
-                        cur = self.inserter.insertData(self.conn, currentTableName,
-                                                       columnsAndValues, fKeyValue,
+                        cur = self.inserter.insertData(self.conn,
+                                                       currentTableName,
+                                                       columnsAndValues,
+                                                       fKeyValue,
                                                        1) # last 1 indicates don't commit
                     else: # Don't insert into Reading table if a dupe exists.
                         print "Duplicate meter-endtime-channel exists."
                         self.dupeOnInsertCount += 1
-                        if self.dupeOnInsertCount > 0 and self.dupeOnInsertCount < 2:
+                        if self.dupeOnInsertCount > 0 and self\
+                            .dupeOnInsertCount < 2:
                             sys.stderr.write("{dupe on insert-->}")
 
-                        # Also, verify the data is equivalent to the existing record.
+                        # Also, verify the data is equivalent to the existing
+                        #  record.
 
-                        if self.dupeChecker.readingValuesAreInTheDatabase(self.conn,
-                                                                          columnsAndValues):
+                        if self.dupeChecker.readingValuesAreInTheDatabase(
+                                self.conn,
+                                columnsAndValues):
                             print "Verified reading values are in the database"
 
                         self.channelDupeExists = False
@@ -194,11 +221,13 @@ class MECOXMLParser(object) :
                 # Store the primary key.
                 self.fkDeterminer.pkValforCol[pkeyCol] = self.lastSeqVal
 
-                if self.configer.configOptionValue("Debugging", 'debug') == True:
+                if self.configer.configOptionValue("Debugging",
+                                                   'debug') == True:
                     print "lastSeqVal = ", self.lastSeqVal
 
                 if self.lastReading(currentTableName, nextTableName):
-                    if self.configer.configOptionValue("Debugging", 'debug') == True:
+                    if self.configer.configOptionValue("Debugging",
+                                                       'debug') == True:
                         print "----- last reading found -----"
 
                     self.conn.commit()
@@ -210,12 +239,15 @@ class MECOXMLParser(object) :
                     self.commitCount += 1
                     self.dupeOnInsertCount = 0
 
-                    if self.configer.configOptionValue("Debugging", "limit_commits") and self.commitCount > 8 :
+                    if self.configer.configOptionValue("Debugging",
+                                                       "limit_commits") and \
+                                    self.commitCount > 8:
                         self.commitCount = 0
                         return
 
                 if self.lastRegister(currentTableName, nextTableName):
-                    if self.configer.configOptionValue("Debugging", 'debug') == True:
+                    if self.configer.configOptionValue("Debugging",
+                                                       'debug') == True:
                         print "----- last register found -----"
 
         self.conn.commit()
@@ -227,11 +259,12 @@ class MECOXMLParser(object) :
 
         :param currentTable: current table being processsed.
         :param nextTable: next table to be processed.
-        :return True if last object in Reading table was read, otherwise return False.
+        :return True if last object in Reading table was read,
+        otherwise return False.
         """
 
         if currentTable == "Reading" and (
-                nextTable == "MeterData" or nextTable == None) :
+                    nextTable == "MeterData" or nextTable == None):
             return True
         return False
 
@@ -241,11 +274,12 @@ class MECOXMLParser(object) :
 
         :param currentTable: current table being processsed.
         :param nextTable: next table to be processed.
-        :return True if last object in Register table was read, otherwise return False.
+        :return True if last object in Register table was read,
+        otherwise return False.
         """
 
         if currentTable == "Register" and (
-                nextTable == "MeterData" or nextTable == None) :
+                    nextTable == "MeterData" or nextTable == None):
             return True
         return False
 
@@ -267,8 +301,8 @@ class MECOXMLParser(object) :
         """Init the dictionary.
         """
 
-        self.channelProcessed = {'1' : False, '2' : False, '3' : False,
-         '4' : False}
+        self.channelProcessed = {'1': False, '2': False, '3': False,
+                                 '4': False}
 
 
     def getLastElement(self, rows):
@@ -291,4 +325,4 @@ class MECOXMLParser(object) :
         """
 
     def performRollback(self):
-        self.conn.rollback();
+        self.conn.rollback()
