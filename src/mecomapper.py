@@ -16,6 +16,14 @@ class MECOMapper(object):
 
         This class provides mappings between XML names and database names. The
         table names correspond directly to the DB table names.
+
+        It is used by the columns and values dictionary in the parser class to
+        map the tags in the source XML to the correct database column names.
+
+        The following are special mapping cases:
+        _fkey
+        _pkey
+        Event_Content
         """
 
         self.dbColsMeterData = {'_pkey': 'meter_data_id', 'MacID': 'mac_id',
@@ -73,7 +81,7 @@ class MECOMapper(object):
 
         self.dbColsEvent = {'_fkey': 'event_data_id', '_pkey': 'event_id',
                             'EventName': 'event_name',
-                            'EventTime': 'event_time'}
+                            'EventTime': 'event_time', 'Event_Content':'event_text'}
 
 
     def dbColumnsForTable(self, table):

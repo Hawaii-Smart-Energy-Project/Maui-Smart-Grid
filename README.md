@@ -1,6 +1,6 @@
 # Maui Smart Grid Project
 
-Daniel Zhang (張道博), Software Developer
+[Daniel Zhang (張道博)](http://www.github.com/dz1111), Software Developer
 
 ## Overview
 

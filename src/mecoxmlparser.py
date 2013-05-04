@@ -171,13 +171,10 @@ class MECOXMLParser(object):
                     self.currentIntervalEndTime = columnsAndValues['EndTime']
 
                 if currentTableName == "Event":
-                    print "columns and values:"
-                    print columnsAndValues
-                    print "element:"
-                    print element
-
+                    columnsAndValues['Event_Content'] = element.text;
 
                 if self.insertDataIntoDatabase:
+
                     # Handle a special case for duplicate reading data.
                     # Intercept the duplicate reading data before insert.
                     if currentTableName == "Reading":
