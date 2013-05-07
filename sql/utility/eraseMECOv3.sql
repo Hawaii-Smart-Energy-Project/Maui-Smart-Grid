@@ -1,12 +1,9 @@
 -- Erase everything in a MECO database using the cascading rules.
 --
+-- this script corresponds to the method MECODBUtil.eraseTestMeco.
+--
 -- @author Daniel Zhang (張道博) 
 
-delete from "Reading";
-delete from "Interval";
-delete from "IntervalReadData";
-delete from "Event";
-delete from "EventData";
 delete from "MeterData";
 ALTER SEQUENCE interval_id_seq RESTART WITH 1;
 ALTER SEQUENCE intervalreaddata_id_seq RESTART WITH 1;

@@ -98,12 +98,7 @@ class MECODBUtil(object):
             exit(-1)
 
         print "Erasing testing database %s." % databaseName
-        sql = ("""delete from "Reading";""",
-               """delete from "Interval";""",
-               """delete from "IntervalReadData";""",
-               """delete from "Event";""",
-               """delete from "EventData";""",
-               """delete from "MeterData";""",
+        sql = ("""delete from "MeterData";""",
                """ALTER SEQUENCE interval_id_seq RESTART WITH 1;""",
                """ALTER SEQUENCE intervalreaddata_id_seq RESTART WITH 1;""",
                """ALTER SEQUENCE meterdata_id_seq RESTART WITH 1;""",
