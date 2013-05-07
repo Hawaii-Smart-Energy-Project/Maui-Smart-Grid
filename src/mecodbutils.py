@@ -6,6 +6,7 @@ __author__ = 'Daniel Zhang (張道博)'
 import sys
 from mecoconfig import MECOConfiger
 from mecodbconnect import MECODBConnector
+import psycopg2
 
 DEBUG = 1
 
@@ -38,7 +39,12 @@ class MECODBUtil(object):
 
         cur = conn.cursor()
         self.executeSQL(cur, sql)
-        row = cur.fetchone()
+
+        try:
+            row = cur.fetchone()
+        except psycopg2.ProgrammingError, e:
+            print "Exception is %s" % e
+
         lastSequenceValue = row[0]
 
         if lastSequenceValue is None:
@@ -52,7 +58,7 @@ class MECODBUtil(object):
 
         :param cursor Database cursor
         :param sql SQL statement
-        :return True for success, False for failure
+        :returns: True for success, False for failure
         """
 
         success = True
@@ -70,6 +76,13 @@ class MECODBUtil(object):
         return success
 
     def eraseTestMeco(self):
+        """
+        Erase the testing database. The name of the testing database is
+        determined from the configuration file and must be set correctly.
+
+        All sequences are reset to start with the value of one (1).
+        """
+
         self.dbConnect = MECODBConnector(True)
         self.conn = self.dbConnect.connectDB()
         dbCursor = self.conn.cursor()
@@ -111,6 +124,10 @@ class MECODBUtil(object):
         self.dbConnect.closeDB(self.conn)
 
     def getDBName(self, cursor):
+        """
+        :returns: Name of the current database.
+        """
+
         self.executeSQL(cursor, "select current_database()")
         row = cursor.fetchone()
         return row
