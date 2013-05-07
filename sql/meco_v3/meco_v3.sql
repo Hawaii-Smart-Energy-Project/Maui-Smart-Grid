@@ -988,7 +988,7 @@ CREATE UNIQUE INDEX reading_id_idx ON "Reading" USING btree (reading_id);
 --
 
 ALTER TABLE ONLY "EventData"
-    ADD CONSTRAINT "EventData_meter_data_id_fkey" FOREIGN KEY (meter_data_id) REFERENCES "MeterData"(meter_data_id);
+    ADD CONSTRAINT "EventData_meter_data_id_fkey" FOREIGN KEY (meter_data_id) REFERENCES "MeterData"(meter_data_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -1012,7 +1012,7 @@ ALTER TABLE ONLY "IntervalReadData"
 --
 
 ALTER TABLE ONLY "Interval"
-    ADD CONSTRAINT "Interval_interval_read_data_id_fkey" FOREIGN KEY (interval_read_data_id) REFERENCES "IntervalReadData"(interval_read_data_id);
+    ADD CONSTRAINT "Interval_interval_read_data_id_fkey" FOREIGN KEY (interval_read_data_id) REFERENCES "IntervalReadData"(interval_read_data_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -1020,7 +1020,7 @@ ALTER TABLE ONLY "Interval"
 --
 
 ALTER TABLE ONLY "Reading"
-    ADD CONSTRAINT "Reading_interval_id_fkey" FOREIGN KEY (interval_id) REFERENCES "Interval"(interval_id);
+    ADD CONSTRAINT "Reading_interval_id_fkey" FOREIGN KEY (interval_id) REFERENCES "Interval"(interval_id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
