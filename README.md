@@ -13,6 +13,9 @@ This software provides data operations for the [Maui Smart Grid](http://www.maui
 * Source files to recreate the structure of the data store are available.
 * Unit testing of data processing operations is provided by a test suite implemented through Python's `unittest`.
 
+### Project Documentation
+Documentation is maintained as docstrings within the source code files with the intention of conforming to the reStructuredText format. There is also a [GitHub-based wiki](https://github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/wiki).
+
 ## Implementation
 
 The code is written in Python 2.7x. It has a testing suite implemented through `unittest`.
