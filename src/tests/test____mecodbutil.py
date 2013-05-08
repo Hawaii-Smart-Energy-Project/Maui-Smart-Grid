@@ -21,8 +21,10 @@ class TestMECODBUtil(unittest.TestCase):
         self.connector = MECODBConnector(True)
         self.conn = self.connector.connectDB()
         self.lastSeqVal = None
-        self.dictCur = self.connector.dictCur # Does this work having the
-        # dictCur be in another class?
+
+        # Does this work having the dictCur be in another class?
+        self.dictCur = self.connector.dictCur
+
         self.deleter = MECODBDeleter()
         self.tableName = 'MeterData'
         self.columnName = 'meter_data_id'

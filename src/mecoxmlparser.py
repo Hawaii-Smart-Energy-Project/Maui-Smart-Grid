@@ -79,7 +79,7 @@ class MECOXMLParser(object):
         """Parse an XML file.
 
         :param fileObject: a file object referencing an XML file.
-        :param insert: True to insert to the database | False to perform no
+        :param insert: (optional) True to insert to the database | False to perform no
         inserts.
         """
 

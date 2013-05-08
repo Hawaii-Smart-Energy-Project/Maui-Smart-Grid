@@ -83,9 +83,9 @@ The database schema can be installed using the following command form where `${D
 
 The exported XML data files contain the energy data. Insertion to the database is performed by running
 
-    $ .\insertData.py
+    $ time python -u ${PATH_TO_SCRIPT}/insertData.py
     
-in the directory the data files are contained.
+in the directory where the data files are contained. The use of `time` is for informational purposes only and is not necessary.
 
 #### Sample Output of Data Insertion
 
