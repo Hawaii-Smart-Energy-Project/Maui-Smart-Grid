@@ -37,7 +37,7 @@ The schema consists of the following components.
 3. Meter Records
 4. Weather Data (Kahalui Station)
 
-A helpful diagram is provided in the repository and a version is displayed here.
+A [helpful schema diagram](https://github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/raw/master/diagrams/meco-direct-derived-schema-v3.pdf) is provided in the repository and a version is displayed here.
 
 ![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/maui-smart-grid/master/diagrams/meco-direct-derived-schema-v3.png)
 
