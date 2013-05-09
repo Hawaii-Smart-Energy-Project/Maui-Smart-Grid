@@ -23,7 +23,7 @@ from subprocess import call
 xmlGzCount = 0
 xmlCount = 0
 
-print "Recursivly inserting data."
+print "Recursively inserting data."
 
 startingDirectory = os.getcwd()
 print "Starting in %s" % startingDirectory
