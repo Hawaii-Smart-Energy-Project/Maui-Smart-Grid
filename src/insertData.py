@@ -5,7 +5,6 @@
 Usage:
 
 time python -u ${PATH}/insertData.py ${FILENAME} > ${LOG_FILE}
-
 """
 
 __author__ = 'Daniel Zhang (張道博)'
@@ -48,7 +47,7 @@ args = parser.parse_args()
 if (args.filepath):
     print "Processing %s." % args.filepath
 else:
-    print "Usage: insertData ${FILEPATH}"
+    print "Usage: insertData --filepath ${FILEPATH}"
     sys.exit(-1)
 
 filepath = args.filepath
@@ -58,22 +57,13 @@ i = Inserter()
 if i.configer.configOptionValue("Debugging", "debug"):
     print "Debugging is on"
 
-sys.stderr.write("Inserting data to database %s." % \
+sys.stderr.write("Inserting data to database %s.\n" % \
                  i.configer.configOptionValue("Database", "db_name"))
-
-# path = '.'
-
-# Process all of the XML files in the current directory.
-# data = glob.glob("%s/*.xml*" % path)
-
-# data.sort()
-# for f in data:
-#     print f
-#     if re.search('.*log\.xml', f) is None: # skip *log.xml files
 
 filename = os.path.basename(filepath)
 fileObject = None
-# Open the file and read it.
+
+# Open the file and process it.
 if re.search('.*\.xml$', filepath):
     fileObject = open(filepath, "rb")
 elif re.search('.*\.xml\.gz$', filepath):
