@@ -40,10 +40,13 @@ class MECODBUtil(object):
         cur = conn.cursor()
         self.executeSQL(cur, sql)
 
+        row = None
         try:
             row = cur.fetchone()
         except psycopg2.ProgrammingError, e:
+            print "Failed to retrieve the last sequence value."
             print "Exception is %s" % e
+            sys.exit(-1)
 
         lastSequenceValue = row[0]
 
