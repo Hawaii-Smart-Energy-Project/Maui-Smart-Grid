@@ -11,6 +11,7 @@ insert all data that is found.
 
 This script makes use of insertData.py.
 
+This script only supports processing of *.xml.gz files.
 """
 
 __author__ = 'Daniel Zhang (張道博)'
@@ -19,9 +20,13 @@ import os
 import fnmatch
 import sys
 from subprocess import call
+from mecoconfig import MECOConfiger
 
 xmlGzCount = 0
 xmlCount = 0
+configer = MECOConfiger()
+binPath = MECOConfiger.configOptionValue(configer, "Executable Paths",
+                                         "bin_path")
 
 print "Recursively inserting data."
 
@@ -31,7 +36,7 @@ print "Starting in %s" % startingDirectory
 for root, dirnames, filenames in os.walk('.'):
 
     for filename in fnmatch.filter(filenames, '*.xml'):
-        fullPath=os.path.join(root, filename)
+        fullPath = os.path.join(root, filename)
         print fullPath
         xmlCount += 1
 
@@ -39,13 +44,15 @@ if xmlCount != 0:
     print "Found XML files that are not gzip compressed.\nUnable to proceed."
     sys.exit(-1)
 
+insertScript = "%s/insertData.py" % binPath
+
 for root, dirnames, filenames in os.walk('.'):
     for filename in fnmatch.filter(filenames, '*.xml.gz'):
-        fullPath=os.path.join(root, filename)
+        fullPath = os.path.join(root, filename)
         print fullPath
         xmlGzCount += 1
 
         # Execute the insert data script for the file.
-        # call(["insertData.py"])
+        call([insertScript, "--filepath", fullPath])
 
 print "%s files were processed." % xmlGzCount
