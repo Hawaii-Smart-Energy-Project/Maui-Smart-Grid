@@ -21,6 +21,7 @@ import fnmatch
 import sys
 from subprocess import call
 from mecoconfig import MECOConfiger
+import re
 
 xmlGzCount = 0
 xmlCount = 0
@@ -48,11 +49,13 @@ insertScript = "%s/insertData.py" % binPath
 
 for root, dirnames, filenames in os.walk('.'):
     for filename in fnmatch.filter(filenames, '*.xml.gz'):
-        fullPath = os.path.join(root, filename)
-        print fullPath
-        xmlGzCount += 1
+        if re.search('.*log\.xml', filename) is None: # skip *log.xml files
 
-        # Execute the insert data script for the file.
-        call([insertScript, "--filepath", fullPath])
+            fullPath = os.path.join(root, filename)
+            print fullPath
+            xmlGzCount += 1
+
+            # Execute the insert data script for the file.
+            call([insertScript, "--filepath", fullPath])
 
 print "%s files were processed." % xmlGzCount
