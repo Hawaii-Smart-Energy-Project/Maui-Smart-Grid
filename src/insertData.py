@@ -10,7 +10,6 @@ time python -u ${PATH}/insertData.py ${FILENAME} > ${LOG_FILE}
 __author__ = 'Daniel Zhang (張道博)'
 
 from mecoxmlparser import MECOXMLParser
-import glob
 import re
 from mecoconfig import MECOConfiger
 import gzip

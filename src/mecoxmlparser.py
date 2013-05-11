@@ -84,7 +84,8 @@ class MECOXMLParser(object):
         Parse an XML file.
 
         :param fileObject: a file object referencing an XML file.
-        :param insert: (optional) True to insert to the database | False to perform no
+        :param insert: (optional) True to insert to the database | False to
+        perform no
         inserts.
         """
 
@@ -111,10 +112,10 @@ class MECOXMLParser(object):
             self.elementCount += 1
 
             currentTableName = re.search('\{.*\}(.*)', element.tag).group(
-                1) # current table name
+                1)
             try:
                 nextTableName = re.search('\{.*\}(.*)', nextElement.tag).group(
-                    1) # next table name
+                    1)
             except:
                 if self.configer.configOptionValue("Debugging",
                                                    'debug') == True:
@@ -130,15 +131,15 @@ class MECOXMLParser(object):
                 # Create a dictionary of column names and values.
                 columnsAndValues[item[0]] = item[1]
 
-
             if currentTableName in self.insertTables:
-                # Check if the current table is one of the tables to be inserted to.
+                # Check if the current table is one of the tables to be
+                # inserted to.
 
                 if self.configer.configOptionValue("Debugging",
                                                    'debug') == True:
                     print
                     print "Processing table %s, next is %s." % (
-                    currentTableName, nextTableName)
+                        currentTableName, nextTableName)
                     print "--------------------------------"
 
                 # Get the column name for the primary key.
@@ -200,17 +201,18 @@ class MECOXMLParser(object):
                                                        currentTableName,
                                                        columnsAndValues,
                                                        fKeyValue,
-                                                       1) # last 1 indicates don't commit
+                                                       1)
+                    # The last 1 indicates don't commit.
+
                     else: # Don't insert into Reading table if a dupe exists.
                         print "Duplicate meter-endtime-channel exists."
                         self.dupeOnInsertCount += 1
-                        if self.dupeOnInsertCount > 0 and self\
+                        if self.dupeOnInsertCount > 0 and self \
                             .dupeOnInsertCount < 2:
                             sys.stderr.write("{dupe on insert-->}")
 
                         # Also, verify the data is equivalent to the existing
-                        #  record.
-
+                        # record.
                         if self.dupeChecker.readingValuesAreInTheDatabase(
                                 self.conn,
                                 columnsAndValues):
@@ -263,7 +265,7 @@ class MECOXMLParser(object):
 
         :param currentTable: current table being processsed.
         :param nextTable: next table to be processed.
-        :return True if last object in Reading table was read,
+        :returns: True if last object in Reading table was read,
         otherwise return False.
         """
 
@@ -278,7 +280,7 @@ class MECOXMLParser(object):
 
         :param currentTable: current table being processsed.
         :param nextTable: next table to be processed.
-        :return True if last object in Register table was read,
+        :returns: True if last object in Register table was read,
         otherwise return False.
         """
 
