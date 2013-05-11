@@ -25,9 +25,10 @@ class MECOXMLParser(object):
     tableName = ''
 
     def __init__(self, testing = False):
-        """Constructor
+        """
+        Constructor.
 
-        :param testing: Boolean indicating if Testing Mode is on.
+        :param testing: (optional) Boolean indicating if Testing Mode is on.
         """
 
         if (testing):
@@ -59,9 +60,13 @@ class MECOXMLParser(object):
         # readings are being processed. this is to prevent duplicate channel
         # data from being inserted.
         self.channelProcessed = {}
+
         self.initChannelProcessed()
         self.processingReadingsNow = False
-        self.insertTables = self.configer.insertTables # tables to be inserted to
+
+        # Tables to be inserted to.
+        self.insertTables = self.configer.insertTables
+
         self.lastSeqVal = None
         self.fKeyVal = None
         self.lastTable = None
@@ -74,9 +79,9 @@ class MECOXMLParser(object):
         self.commitCount = 0
         self.dupeOnInsertCount = 0
 
-
     def parseXML(self, fileObject, insert = False):
-        """Parse an XML file.
+        """
+        Parse an XML file.
 
         :param fileObject: a file object referencing an XML file.
         :param insert: (optional) True to insert to the database | False to perform no
@@ -94,7 +99,8 @@ class MECOXMLParser(object):
 
 
     def walkTheTreeFromRoot(self, root):
-        """Walk an XML tree from its root node.
+        """
+        Walk an XML tree from its root node.
 
         :param root: The root node of an XML tree.
         """
@@ -252,7 +258,8 @@ class MECOXMLParser(object):
 
 
     def lastReading(self, currentTable, nextTable):
-        """Determine if the last reading is being visited.
+        """
+        Determine if the last reading is being visited.
 
         :param currentTable: current table being processsed.
         :param nextTable: next table to be processed.
@@ -282,11 +289,12 @@ class MECOXMLParser(object):
 
 
     def getNext(self, somethingIterable, window = 1):
-        """Return the current item and next item in an iterable data structure.
+        """
+        Return the current item and next item in an iterable data structure.
 
-        :param somethingIterable: something that has an iterator
-        :param window:
-        :return value and next value
+        :param somethingIterable: Something that has an iterator.
+        :param window: How far to look ahead in the collection.
+        :returns: The current iterable value and the next iterable value.
         """
 
         items, nexts = tee(somethingIterable, 2)
@@ -295,7 +303,8 @@ class MECOXMLParser(object):
 
 
     def initChannelProcessed(self):
-        """Init the dictionary.
+        """
+        Initialize the dictionary for channel processing.
         """
 
         self.channelProcessed = {'1': False, '2': False, '3': False,
@@ -303,23 +312,21 @@ class MECOXMLParser(object):
 
 
     def getLastElement(self, rows):
-        """Get the last element in a collection.
+        """
+        Get the last element in a collection.
 
         Example:
             rows = (element1, element2, element3)
             getLastElement(rows) # return element3
 
-        :param rows Result froms from a query
-        :return last element in the collection
+        :param rows: Result rows from a query.
+        :returns: The last element in the collection.
         """
 
         for i, var in enumerate(rows):
             if i == len(rows) - 1:
                 return var
 
-    def addCreationTimestamp(self, columnsAndValuesDict):
-        """
-        """
 
     def performRollback(self):
         self.conn.rollback()

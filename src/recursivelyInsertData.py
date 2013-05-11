@@ -32,7 +32,7 @@ binPath = MECOConfiger.configOptionValue(configer, "Executable Paths",
 print "Recursively inserting data."
 
 startingDirectory = os.getcwd()
-print "Starting in %s" % startingDirectory
+print "Starting in %s." % startingDirectory
 
 for root, dirnames, filenames in os.walk('.'):
 

@@ -12,7 +12,8 @@ DEBUG = 1
 
 
 class MECODBInserter(object):
-    """Provide data insertion methods for MECO data.
+    """
+    This provides methods that perform insertion of MECO data.
     """
 
     def __init__(self):
@@ -37,12 +38,12 @@ class MECODBInserter(object):
         :param (optional) fKeyVal: an explicit foreign key value
         :param (optional) withoutCommit: a flag indicated that the insert
         will not be immediately committed
-        :returns: database cursor
+        :returns: A database cursor.
         """
 
         cur = conn.cursor()
 
-        # Get dictionary of mapped (from DB to source data) column names
+        # Get a dictionary of mapped (from DB to source data) column names.
         columnDict = self.mapper.getDBColNameDict(tableName)
 
         dbColsAndVals = {}
@@ -83,7 +84,6 @@ class MECODBInserter(object):
                         if VISUALIZE_DATA:
                             print 'NULL'
                         dbColsAndVals[columnDict[col]] = 'NULL'
-
 
                 # For all other cases, simply pass the value.
                 else:
