@@ -46,6 +46,13 @@ if xmlCount != 0:
     sys.exit(-1)
 
 insertScript = "%s/insertData.py" % binPath
+print "insertScript = %s" % insertScript
+
+try:
+    with open(insertScript):
+        pass
+except IOError:
+    print "Insert script %s not found." % insertScript
 
 for root, dirnames, filenames in os.walk('.'):
     for filename in fnmatch.filter(filenames, '*.xml.gz'):
