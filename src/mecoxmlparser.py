@@ -209,7 +209,7 @@ class MECOXMLParser(object):
                         self.dupeOnInsertCount += 1
                         if self.dupeOnInsertCount > 0 and self \
                             .dupeOnInsertCount < 2:
-                            sys.stderr.write("{dupe on insert-->}")
+                            sys.stderr.write("{dupe on insert==>}")
 
                         # Also, verify the data is equivalent to the existing
                         # record.
