@@ -12,16 +12,20 @@ DEBUG = 1
 
 
 class MECODBUtil(object):
-    """Utility methods.
+    """
+    Utility methods.
     """
 
     def __init__(self):
-        """Constructor
         """
+        Constructor.
+        """
+
         self.configer = MECOConfiger()
 
     def getLastSequenceID(self, conn, tableName, columnName):
-        """Get last sequence ID value for the given sequence and for the
+        """
+        Get last sequence ID value for the given sequence and for the
         given connection.
 
         :param conn: database connection
@@ -57,11 +61,12 @@ class MECODBUtil(object):
         return lastSequenceValue
 
     def executeSQL(self, cursor, sql):
-        """Execute SQL given a cursor and a SQL statement.
+        """
+        Execute SQL given a cursor and a SQL statement.
 
-        :param cursor Database cursor
-        :param sql SQL statement
-        :returns: True for success, False for failure
+        :param cursor: A database cursor.
+        :param sql: A SQL statement.
+        :returns: True for success, False for failure.
         """
 
         success = True
