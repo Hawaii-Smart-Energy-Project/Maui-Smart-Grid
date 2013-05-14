@@ -1,4 +1,5 @@
 -- Erase everything in a MECO database using the cascading rules.
+--
 -- @DEPRECATED
 -- This script has been deprecated in favor of eraseMECOv3.sql.
 --

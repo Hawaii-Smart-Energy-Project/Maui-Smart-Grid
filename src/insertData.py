@@ -5,6 +5,8 @@
 Usage:
 
 time python -u ${PATH}/insertData.py ${FILENAME} > ${LOG_FILE}
+
+This script is used by recursivelyInsertData.py.
 """
 
 __author__ = 'Daniel Zhang (張道博)'
