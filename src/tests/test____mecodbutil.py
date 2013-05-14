@@ -12,7 +12,8 @@ from mecoconfig import MECOConfiger
 
 
 class TestMECODBUtil(unittest.TestCase):
-    """Unit tests for MECO DB Utils.
+    """
+    Unit tests for MECO DB Utils.
     """
 
     def setUp(self):
