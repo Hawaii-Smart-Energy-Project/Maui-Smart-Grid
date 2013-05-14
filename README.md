@@ -57,20 +57,23 @@ The software is configured through a text configuration file contained in the us
 
 ### Example Configuration File Content
 
+The reference template can be found in `config/sample-dot-meco-data-operations.cfg.`
+
     [Debugging]
     debug=False
     limit_commits=False
     
-    [Data Paths]
-    meco_data_dir=${MECO_DATA_DIR}
+    [Executable Paths]
+    bin_path=${MECO_BIN_DIR}
     
     [Database]
-    db_password=password
-    db_host=msg.hawaii.edu
-    db_name=msg
-    db_port=5432
-    db_username=username
-
+    db_password=${PASSWORD}
+    db_host=${IP_ADDRESS_OR_HOSTNAME}
+    db_name=${DB_NAME}
+    db_port=${DB_PORT}
+    db_username=${DB_USERNAME}
+    testing_db_name=${TESTING_DB_NAME}
+    
 ## Database Configuration
 
 The database schema can be installed using the following command form where `${DATABASE_NAME}` is a valid database.
