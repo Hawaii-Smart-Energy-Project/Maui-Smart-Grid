@@ -58,7 +58,7 @@ i = Inserter()
 if i.configer.configOptionValue("Debugging", "debug"):
     print "Debugging is on"
 
-sys.stderr.write("Inserting data to database %s.\n" % \
+sys.stderr.write("\nInserting data to database %s.\n" % \
                  i.configer.configOptionValue("Database", "db_name"))
 
 filename = os.path.basename(filepath)

@@ -17,7 +17,8 @@ class MECODBInserter(object):
     """
 
     def __init__(self):
-        """Constructor
+        """
+        Constructor.
         """
 
         self.mapper = MECOMapper()
@@ -29,8 +30,10 @@ class MECODBInserter(object):
 
     def insertData(self, conn, tableName, columnsAndValues, fKeyVal = None,
                    withoutCommit = 0):
-        """Given a table name and a dictionary of column names and values,
+        """
+        Given a table name and a dictionary of column names and values,
         insert them to the db.
+
         :param conn: database connection
         :param tableName: name of the db table
         :param columnsAndValues: dictionary of columns and values to be
@@ -54,6 +57,7 @@ class MECODBInserter(object):
             print columnsAndValues
 
         for col in columnDict.keys():
+
             # Use default as the value for the primary key so that the
             # private key is obtained from the predefined sequence.
             if col == '_pkey':
