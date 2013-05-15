@@ -1,6 +1,6 @@
 -- Erase everything in a MECO database using the cascading rules.
 --
--- this script corresponds to the method MECODBUtil.eraseTestMeco.
+-- This script corresponds to the method MECODBUtil.eraseTestMeco.
 --
 -- @author Daniel Zhang (張道博) 
 

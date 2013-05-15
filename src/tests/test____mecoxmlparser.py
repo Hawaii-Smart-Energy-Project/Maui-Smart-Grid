@@ -10,7 +10,8 @@ from mecodbutils import MECODBUtil
 
 
 class TestMECOXMLParser(unittest.TestCase):
-    """Unit tests for MECO XML Parser.
+    """
+    Unit tests for MECO XML Parser.
     """
 
     def setUp(self):

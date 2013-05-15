@@ -19,7 +19,8 @@ DEBUG = 0 # print debugging info if 1
 
 
 class MECOXMLParser(object):
-    """Parses XML for MECO data.
+    """
+    Parses XML for MECO data.
     """
 
     tableName = ''
@@ -276,7 +277,8 @@ class MECOXMLParser(object):
 
 
     def lastRegister(self, currentTable, nextTable):
-        """Determine if the last register is being visited.
+        """
+        Determine if the last register is being visited.
 
         :param currentTable: current table being processsed.
         :param nextTable: next table to be processed.

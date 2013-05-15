@@ -56,8 +56,8 @@ class MECONotifier(object):
                     "%s\r\nX-Mailer: " \
                     "My-Mail\r\n\r\n" % (
                         senddate, fromaddr, toaddr, subject)
-        msgBody += '\n\nThis is email account is not monitored so don\'t send' \
-                   ' messages to it with the expectation of a reply.'
+        msgBody += '\n\nThis email account is not monitored so don\'t send ' \
+                   'messages to it with the expectation of a reply.'
 
         try:
             server.sendmail(fromaddr, toaddr, msgHeader + msgBody)

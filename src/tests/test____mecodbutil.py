@@ -35,7 +35,8 @@ class TestMECODBUtil(unittest.TestCase):
         self.assertIsNotNone(self.dbUtil)
 
     def testLastSequenceNumberIsCorrect(self):
-        """Test if last sequence ID value is generated correctly. Do this by
+        """
+        Test if last sequence ID value is generated correctly. Do this by
         inserting and deleting a DB record.
         """
 
@@ -79,7 +80,8 @@ class TestMECODBUtil(unittest.TestCase):
                              % table)
 
     def tearDown(self):
-        """Delete the record that was inserted.
+        """
+        Delete the record that was inserted.
         """
         if self.lastSeqVal != None:
             self.deleter.deleteRecord(self.conn, self.tableName,
