@@ -10,12 +10,14 @@ import sys
 
 
 class MECOConfiger(object):
-    """Supports system-specific configuration for MECO data processing.
+    """
+    Supports system-specific configuration for MECO data processing.
     The site configuration file is located in ~/.meco-data-operations.cfg.
     """
 
     def __init__(self):
-        """Constructor
+        """
+        Constructor.
         """
 
         self._config = ConfigParser.ConfigParser()
@@ -45,7 +47,8 @@ class MECOConfiger(object):
 
 
     def configOptionValue(self, section, option):
-        """Get a configuration value from the local configuration file.
+        """
+        Get a configuration value from the local configuration file.
 
         :param section
         :param option
@@ -60,10 +63,11 @@ class MECOConfiger(object):
 
 
     def isMoreThanOwnerReadableAndWritable(self, filePath):
-        """Determines if a file has greater permissions than owner read/write.
+        """
+        Determines if a file has greater permissions than owner read/write.
 
         :param filePath: Path to the file being tested.
-        :return: True if the permissions are greater than owner read/write,
+        :returns: True if the permissions are greater than owner read/write,
         otherwise return False.
         """
 
@@ -80,5 +84,3 @@ class MECOConfiger(object):
             return True
         else:
             return False
-
-
