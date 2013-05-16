@@ -77,7 +77,8 @@ class MECODBUtil(object):
             print "SQL execute failed using %s." % sql
             print "The error is: ", e[0]
             print
-            return False
+            sys.exit(-1)
+            # return False
 
         print "SQL execute was successful."
 
