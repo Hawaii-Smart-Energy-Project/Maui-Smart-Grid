@@ -60,6 +60,7 @@ class MECONotifier(object):
                    'messages to it with the expectation of a reply.'
 
         try:
+            print "Sending email notifications."
             server.sendmail(fromaddr, toaddr, msgHeader + msgBody)
             server.quit()
         except smtplib.SMTPException, e:
