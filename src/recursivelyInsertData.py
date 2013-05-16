@@ -22,47 +22,68 @@ import sys
 from subprocess import call
 from mecoconfig import MECOConfiger
 import re
+from meconotifier import MECONotifier
 
 xmlGzCount = 0
 xmlCount = 0
 configer = MECOConfiger()
 binPath = MECOConfiger.configOptionValue(configer, "Executable Paths",
                                          "bin_path")
+msgBody = ''
+notifier = MECONotifier()
 
-print "Recursively inserting data."
+msg = "Recursively inserting data."
+print msg
+msgBody += msg + "\n"
 
 startingDirectory = os.getcwd()
-print "Starting in %s." % startingDirectory
+msg = "Starting in %s." % startingDirectory
+print msg
+msgBody += msg + "\n"
 
 for root, dirnames, filenames in os.walk('.'):
 
     for filename in fnmatch.filter(filenames, '*.xml'):
         fullPath = os.path.join(root, filename)
-        print fullPath
+        msg = fullPath
+        print msg
+        msgBody += msg + "\n"
         xmlCount += 1
 
 if xmlCount != 0:
-    print "Found XML files that are not gzip compressed.\nUnable to proceed."
+    msg = "Found XML files that are not gzip compressed.\nUnable to proceed."
+    print msg
+    msgBody += msg + "\n"
+    notifier.sendNotificationEmail(msgBody)
     sys.exit(-1)
 
 insertScript = "%s/insertData.py" % binPath
-print "insertScript = %s" % insertScript
+msg = "insertScript = %s" % insertScript
+print msg
+msgBody += msg + "\n"
 
 try:
     with open(insertScript):
         pass
 except IOError:
-    print "Insert script %s not found." % insertScript
+    msg = "Insert script %s not found." % insertScript
+    print msg
+    msgBody += msg + "\n"
 
 for root, dirnames, filenames in os.walk('.'):
     for filename in fnmatch.filter(filenames, '*.xml.gz'):
         if re.search('.*log\.xml', filename) is None: # skip *log.xml files
 
             fullPath = os.path.join(root, filename)
-            print fullPath
+            msg = fullPath
+            print msg
+            msgBody += msg + "\n"
             xmlGzCount += 1
 
             # Execute the insert data script for the file.
             call([insertScript, "--filepath", fullPath])
 
-print "%s files were processed." % xmlGzCount
+msg = "%s files were processed." % xmlGzCount
+print msg
+msgBody += msg + "\n"
+notifier.sendNotificationEmail(msgBody)
