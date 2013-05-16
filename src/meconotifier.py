@@ -6,6 +6,7 @@ __author__ = 'Daniel Zhang (張道博)'
 import smtplib
 from datetime import datetime
 from mecoconfig import MECOConfiger
+import sys
 
 
 class MECONotifier(object):
@@ -59,8 +60,12 @@ class MECONotifier(object):
         msgBody += '\n\nThis email account is not monitored so don\'t send ' \
                    'messages to it with the expectation of a reply.'
 
+        msgBody += '\n\nYou are receiving this message because you are on the' \
+                   ' recipient list for notifications for the Hawaii Smart ' \
+                   'Energy Project.'
+
         try:
-            print "Sending email notifications."
+            sys.stderr.write("Sending email notifications.\n")
             server.sendmail(fromaddr, toaddr, msgHeader + msgBody)
             server.quit()
         except smtplib.SMTPException, e:

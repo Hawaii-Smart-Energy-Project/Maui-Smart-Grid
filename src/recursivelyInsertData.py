@@ -32,7 +32,10 @@ binPath = MECOConfiger.configOptionValue(configer, "Executable Paths",
 msgBody = ''
 notifier = MECONotifier()
 
-msg = "Recursively inserting data."
+msg = "Recursively inserting data to the database named %s." % configer\
+    .configOptionValue(
+    "Database", "db_name")
+
 print msg
 msgBody += msg + "\n"
 
