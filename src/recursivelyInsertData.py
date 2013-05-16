@@ -23,6 +23,7 @@ from subprocess import call
 from mecoconfig import MECOConfiger
 import re
 from meconotifier import MECONotifier
+import argparse
 
 xmlGzCount = 0
 xmlCount = 0
@@ -32,9 +33,16 @@ binPath = MECOConfiger.configOptionValue(configer, "Executable Paths",
 msgBody = ''
 notifier = MECONotifier()
 
-msg = "Recursively inserting data to the database named %s." % configer\
-    .configOptionValue(
-    "Database", "db_name")
+parser = argparse.ArgumentParser(
+    description = 'Perform recursive insertion of data contained in the '
+                  'current directory to the MECO database specified in the '
+                  'configuration file.')
+parser.add_argument('--email', action='store_true',
+                    help = 'Send email notification if this flag is specified.')
+args = parser.parse_args()
+
+msg = "Recursively inserting data to the database named %s." % configer \
+    .configOptionValue("Database", "db_name")
 
 print msg
 msgBody += msg + "\n"
@@ -89,4 +97,5 @@ for root, dirnames, filenames in os.walk('.'):
 msg = "%s files were processed." % xmlGzCount
 print msg
 msgBody += msg + "\n"
-notifier.sendNotificationEmail(msgBody)
+if args.email:
+    notifier.sendNotificationEmail(msgBody)

@@ -51,7 +51,7 @@ class MECONotifier(object):
             print "Exception = %s" % e
 
         senddate = datetime.strftime(datetime.now(), '%Y-%m-%d')
-        subject = "Email Test Send"
+        subject = "HISEP Notification"
 
         msgHeader = "Date: %s\r\nFrom: %s\r\nTo: %s\r\nSubject: " \
                     "%s\r\nX-Mailer: " \
