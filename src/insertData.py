@@ -4,7 +4,8 @@
 """
 Usage:
 
-time python -u ${PATH}/insertData.py --filepath ${FILEPATH} [--testing] > ${LOG_FILE}
+time python -u ${PATH}/insertData.py --filepath ${FILEPATH} [--testing]
+    > ${LOG_FILE}
 
 This script is used by recursivelyInsertData.py.
 """
@@ -26,7 +27,7 @@ class Inserter(object):
     specified in the configuration file.
     """
 
-    def __init__(self, testing=False):
+    def __init__(self, testing = False):
         """
         Constructor.
 
@@ -37,34 +38,41 @@ class Inserter(object):
         self.configer = MECOConfiger()
 
 
-parser = argparse.ArgumentParser(
-    description = 'Perform insertion of data contained in a single file to '
-                  'the MECO database specified in the configuration file.')
+def processCommandLineArguments():
+    global parser, commandLineArgs
+    parser = argparse.ArgumentParser(
+        description = 'Perform insertion of data contained in a single file to '
+                      'the MECO database specified in the configuration file.')
+    parser.add_argument('--filepath',
+                        help = 'A filepath, including the filename, '
+                               'for a file containing data to be inserted.')
+    parser.add_argument('--testing', action = 'store_true',
+                        help = 'Insert data to the testing database as '
+                               'specified in the local configuration file.')
+    commandLineArgs = parser.parse_args()
 
-parser.add_argument('--filepath',
-                    help = 'A filepath, including the filename, '
-                           'for a file containing data to be inserted.')
-parser.add_argument('--testing', action = 'store_true',
-                    help = 'Insert data to the testing database as specified '
-                           'in the local configuration file.')
 
-args = parser.parse_args()
+processCommandLineArguments()
 
-if (args.filepath):
-    print "Processing %s." % args.filepath
+if (commandLineArgs.filepath):
+    print "Processing %s." % commandLineArgs.filepath
 else:
     print "Usage: insertData --filepath ${FILEPATH} [--testing]"
     sys.exit(-1)
 
-filepath = args.filepath
+filepath = commandLineArgs.filepath
 
-i = Inserter(args.testing)
+i = Inserter(commandLineArgs.testing)
 
 if i.configer.configOptionValue("Debugging", "debug"):
     print "Debugging is on"
 
-sys.stderr.write("\nInserting data to database %s.\n" % \
-                 i.configer.configOptionValue("Database", "db_name"))
+if commandLineArgs.testing:
+    sys.stderr.write("\nInserting data to database %s.\n" % \
+                     i.configer.configOptionValue("Database", "testing_db_name"))
+else:
+    sys.stderr.write("\nInserting data to database %s.\n" % \
+                     i.configer.configOptionValue("Database", "db_name"))
 
 filename = os.path.basename(filepath)
 fileObject = None
@@ -76,6 +84,6 @@ elif re.search('.*\.xml\.gz$', filepath):
     fileObject = gzip.open(filepath, "rb")
 else:
     print "Error: %s is not an XML file." % filepath
-i.parser.filename = args.filepath
+i.parser.filename = commandLineArgs.filepath
 i.parser.parseXML(fileObject, True)
 fileObject.close()

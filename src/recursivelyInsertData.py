@@ -35,25 +35,35 @@ notifier = MECONotifier()
 
 
 def processCommandLineArguments():
-    global parser, args
+    global parser, commandLineArgs
     parser = argparse.ArgumentParser(
         description = 'Perform recursive insertion of data contained in the '
                       'current directory to the MECO database specified in the '
                       'configuration file.')
-    parser.add_argument('--email',  action = 'store_true', default=False,
+    parser.add_argument('--email', action = 'store_true', default = False,
                         help = 'Send email notification if this flag is '
                                'specified.')
-    parser.add_argument('--testing', action = 'store_true', default=False,
+    parser.add_argument('--testing', action = 'store_true', default = False,
                         help = 'If this flag is on, '
                                'insert data to the testing database as '
                                'specified in the local configuration file.')
-    args = parser.parse_args()
+    commandLineArgs = parser.parse_args()
 
 
 processCommandLineArguments()
 
-msg = "Recursively inserting data to the database named %s." % configer \
-    .configOptionValue("Database", "db_name")
+if commandLineArgs.testing:
+    sys.stderr.write("Testing mode is ON.\n")
+if commandLineArgs.email:
+    sys.stderr.write("Email will be sent.\n")
+
+msg = ''
+if commandLineArgs.testing:
+    msg = "Recursively inserting data to the database named %s." % configer \
+        .configOptionValue("Database", "testing_db_name")
+else:
+    msg = "Recursively inserting data to the database named %s." % configer \
+        .configOptionValue("Database", "db_name")
 
 print msg
 msgBody += msg + "\n"
@@ -103,10 +113,14 @@ for root, dirnames, filenames in os.walk('.'):
             xmlGzCount += 1
 
             # Execute the insert data script for the file.
-            call([insertScript, "--filepath", fullPath, args.testing])
+            if commandLineArgs.testing:
+                call([insertScript, "--testing", "--filepath", fullPath])
+            else:
+                call([insertScript, "--filepath", fullPath])
 
 msg = "%s files were processed." % xmlGzCount
 print msg
 msgBody += msg + "\n"
-if args.email:
+
+if commandLineArgs.email:
     notifier.sendNotificationEmail(msgBody)
