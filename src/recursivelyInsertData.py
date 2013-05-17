@@ -33,13 +33,24 @@ binPath = MECOConfiger.configOptionValue(configer, "Executable Paths",
 msgBody = ''
 notifier = MECONotifier()
 
-parser = argparse.ArgumentParser(
-    description = 'Perform recursive insertion of data contained in the '
-                  'current directory to the MECO database specified in the '
-                  'configuration file.')
-parser.add_argument('--email', action='store_true',
-                    help = 'Send email notification if this flag is specified.')
-args = parser.parse_args()
+
+def processCommandLineArguments():
+    global parser, args
+    parser = argparse.ArgumentParser(
+        description = 'Perform recursive insertion of data contained in the '
+                      'current directory to the MECO database specified in the '
+                      'configuration file.')
+    parser.add_argument('--email',  action = 'store_true', default=False,
+                        help = 'Send email notification if this flag is '
+                               'specified.')
+    parser.add_argument('--testing', action = 'store_true', default=False,
+                        help = 'If this flag is on, '
+                               'insert data to the testing database as '
+                               'specified in the local configuration file.')
+    args = parser.parse_args()
+
+
+processCommandLineArguments()
 
 msg = "Recursively inserting data to the database named %s." % configer \
     .configOptionValue("Database", "db_name")
@@ -92,7 +103,7 @@ for root, dirnames, filenames in os.walk('.'):
             xmlGzCount += 1
 
             # Execute the insert data script for the file.
-            call([insertScript, "--filepath", fullPath])
+            call([insertScript, "--filepath", fullPath, args.testing])
 
 msg = "%s files were processed." % xmlGzCount
 print msg

@@ -4,7 +4,7 @@
 """
 Usage:
 
-time python -u ${PATH}/insertData.py ${FILENAME} > ${LOG_FILE}
+time python -u ${PATH}/insertData.py --filepath ${FILEPATH} [--testing] > ${LOG_FILE}
 
 This script is used by recursivelyInsertData.py.
 """
@@ -26,12 +26,14 @@ class Inserter(object):
     specified in the configuration file.
     """
 
-    def __init__(self):
+    def __init__(self, testing=False):
         """
         Constructor.
+
+        :param testing: Flag indicating if testing mode is on.
         """
 
-        self.parser = MECOXMLParser()
+        self.parser = MECOXMLParser(testing)
         self.configer = MECOConfiger()
 
 
@@ -42,18 +44,21 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--filepath',
                     help = 'A filepath, including the filename, '
                            'for a file containing data to be inserted.')
+parser.add_argument('--testing', action = 'store_true',
+                    help = 'Insert data to the testing database as specified '
+                           'in the local configuration file.')
 
 args = parser.parse_args()
 
 if (args.filepath):
     print "Processing %s." % args.filepath
 else:
-    print "Usage: insertData --filepath ${FILEPATH}"
+    print "Usage: insertData --filepath ${FILEPATH} [--testing]"
     sys.exit(-1)
 
 filepath = args.filepath
 
-i = Inserter()
+i = Inserter(args.testing)
 
 if i.configer.configOptionValue("Debugging", "debug"):
     print "Debugging is on"
