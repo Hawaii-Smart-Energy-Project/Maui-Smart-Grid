@@ -57,7 +57,11 @@ class MECONotifier(object):
                     "%s\r\nX-Mailer: " \
                     "My-Mail\r\n\r\n" % (
                         senddate, fromaddr, toaddr, subject)
-        msgBody += '\n\nThis email account is not monitored so don\'t send ' \
+
+        msgBody = "This is a message from the Hawaii Smart Energy Project " \
+                   "MECO Project notification system.\n\n" + msgBody
+
+        msgBody += '\nThis email account is not monitored so don\'t send ' \
                    'messages to it with the expectation of a reply.'
 
         msgBody += '\n\nYou are receiving this message because you are on the' \
