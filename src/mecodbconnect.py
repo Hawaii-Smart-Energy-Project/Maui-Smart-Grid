@@ -6,13 +6,16 @@ __author__ = 'Daniel Zhang (張道博)'
 import psycopg2
 import psycopg2.extras
 from mecoconfig import MECOConfiger
+import sys
 
 class MECODBConnector(object) :
-    """Connect to the MECO database.
+    """
+    Manage a connection to a MECO database.
     """
 
     def __init__(self, testing=False) :
-        """Constructor
+        """
+        Constructor.
 
         :param testing: Boolean indicating if Testing Mode is on.
         """
@@ -38,7 +41,8 @@ class MECODBConnector(object) :
         self.dictCur = self.conn.cursor(cursor_factory = psycopg2.extras.DictCursor)
 
     def connectDB(self) :
-        """Make the DB connection.
+        """
+        Make the DB connection.
         """
 
         conn = None
@@ -52,9 +56,20 @@ class MECODBConnector(object) :
         return conn
 
     def closeDB(self, conn):
-        """Close a database connection.
+        """
+        Close a database connection.
         """
 
         print "Closing database %s." % self.dbName
         conn.close()
+
+    def __del__(self):
+        """
+        Destructor.
+
+        Close the database connection.
+        """
+
+        sys.stderr.write("\nClosing the DB connection to %s.\n" % self.dbName)
+        self.conn.close()
 
