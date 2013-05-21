@@ -186,7 +186,7 @@ class MECOXMLParser(object):
                     # Handle a special case for duplicate reading data.
                     # Intercept the duplicate reading data before insert.
                     if currentTableName == "Reading":
-                        # does a meter-endtime-channel dupe exist?
+                        # Does a meter-endtime-channel tuple duplicate exist?
                         self.channelDupeExists \
                             = self.dupeChecker.readingBranchDupeExists(
                             self.conn,
@@ -245,17 +245,12 @@ class MECOXMLParser(object):
                     self.commitCount += 1
                     self.dupeOnInsertCount = 0
 
-                    if self.configer.configOptionValue("Debugging",
-                                                       "limit_commits") and \
-                                    self.commitCount > 8:
-                        self.commitCount = 0
-                        return
-
                 if self.lastRegister(currentTableName, nextTableName):
                     if self.configer.configOptionValue("Debugging",
                                                        'debug') == True:
                         print "----- last register found -----"
 
+        sys.stderr.write("*commit*")
         self.conn.commit()
         print
 
@@ -333,4 +328,7 @@ class MECOXMLParser(object):
 
 
     def performRollback(self):
+        """
+        This is not used.
+        """
         self.conn.rollback()
