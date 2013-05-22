@@ -55,7 +55,13 @@ class MECOConfiger(object):
         """
 
         try:
-            return self._config.get(section, option)
+            configValue = self._config.get(section, option)
+            if configValue == "True":
+                return True
+            elif configValue == "False":
+                return False
+            else:
+                return configValue
         except:
             print "Failed when getting _config option %s in section %s" % (
                 option, section)
