@@ -361,6 +361,44 @@ CREATE TABLE "WeatherKahaluiAirport" (
 ALTER TABLE public."WeatherKahaluiAirport" OWNER TO sepgroup;
 
 --
+-- Name: view_readings; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW view_readings AS
+    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
+
+
+ALTER TABLE public.view_readings OWNER TO postgres;
+
+--
+-- Name: VIEW view_readings; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW view_readings IS 'View readings along with their end times.
+
+@author Daniel Zhang (張道博)';
+
+
+--
+-- Name: count_of_readings_and_meters_by_day; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW count_of_readings_and_meters_by_day AS
+    SELECT date_trunc('day'::text, view_readings.end_time) AS "Day", count(view_readings.value) AS "Reading Count", count(DISTINCT view_readings.meter_name) AS "Meter Count" FROM view_readings WHERE (view_readings.channel = 1) GROUP BY date_trunc('day'::text, view_readings.end_time) ORDER BY date_trunc('day'::text, view_readings.end_time);
+
+
+ALTER TABLE public.count_of_readings_and_meters_by_day OWNER TO postgres;
+
+--
+-- Name: VIEW count_of_readings_and_meters_by_day; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW count_of_readings_and_meters_by_day IS 'Get counts of readings and meters per day.
+
+@author Daniel Zhang (張道博)';
+
+
+--
 -- Name: get_kwh_meter_locations; Type: VIEW; Schema: public; Owner: eileen
 --
 
@@ -628,16 +666,6 @@ ALTER TABLE public.tier_id_seq OWNER TO sepgroup;
 
 ALTER SEQUENCE tier_id_seq OWNED BY "Tier".tier_id;
 
-
---
--- Name: viewReadings; Type: VIEW; Schema: public; Owner: daniel
---
-
-CREATE VIEW "viewReadings" AS
-    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
-
-
-ALTER TABLE public."viewReadings" OWNER TO daniel;
 
 --
 -- Name: voltage_locations_highlow_events; Type: VIEW; Schema: public; Owner: eileen
@@ -1102,6 +1130,26 @@ GRANT ALL ON TABLE "WeatherKahaluiAirport" TO sepgroup;
 
 
 --
+-- Name: view_readings; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE view_readings FROM PUBLIC;
+REVOKE ALL ON TABLE view_readings FROM postgres;
+GRANT ALL ON TABLE view_readings TO postgres;
+GRANT ALL ON TABLE view_readings TO sepgroup;
+
+
+--
+-- Name: count_of_readings_and_meters_by_day; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE count_of_readings_and_meters_by_day FROM PUBLIC;
+REVOKE ALL ON TABLE count_of_readings_and_meters_by_day FROM postgres;
+GRANT ALL ON TABLE count_of_readings_and_meters_by_day TO postgres;
+GRANT ALL ON TABLE count_of_readings_and_meters_by_day TO sepgroup;
+
+
+--
 -- Name: get_kwh_meter_locations; Type: ACL; Schema: public; Owner: eileen
 --
 
@@ -1261,16 +1309,6 @@ GRANT ALL ON SEQUENCE testing_meterdata_id_seq TO sepgroup;
 REVOKE ALL ON SEQUENCE tier_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE tier_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE tier_id_seq TO sepgroup;
-
-
---
--- Name: viewReadings; Type: ACL; Schema: public; Owner: daniel
---
-
-REVOKE ALL ON TABLE "viewReadings" FROM PUBLIC;
-REVOKE ALL ON TABLE "viewReadings" FROM daniel;
-GRANT ALL ON TABLE "viewReadings" TO daniel;
-GRANT ALL ON TABLE "viewReadings" TO sepgroup;
 
 
 --
