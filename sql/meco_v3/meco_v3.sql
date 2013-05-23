@@ -395,6 +395,44 @@ CREATE TABLE "WeatherKahaluiAirport" (
 ALTER TABLE public."WeatherKahaluiAirport" OWNER TO sepgroup;
 
 --
+-- Name: view_readings; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW view_readings AS
+    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
+
+
+ALTER TABLE public.view_readings OWNER TO postgres;
+
+--
+-- Name: VIEW view_readings; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW view_readings IS 'View readings along with their end times.
+
+@author Daniel Zhang (張道博)';
+
+
+--
+-- Name: count_of_readings_and_meters_by_day; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW count_of_readings_and_meters_by_day AS
+    SELECT to_char(date_trunc('day'::text, view_readings.end_time), 'YYYY-MM-DD'::text) AS "Day", count(view_readings.value) AS "Reading Count", count(DISTINCT view_readings.meter_name) AS "Meter Count" FROM view_readings WHERE (view_readings.channel = 1) GROUP BY date_trunc('day'::text, view_readings.end_time) ORDER BY date_trunc('day'::text, view_readings.end_time);
+
+
+ALTER TABLE public.count_of_readings_and_meters_by_day OWNER TO postgres;
+
+--
+-- Name: VIEW count_of_readings_and_meters_by_day; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW count_of_readings_and_meters_by_day IS 'Get counts of readings and meters per day.
+
+@author Daniel Zhang (張道博)';
+
+
+--
 -- Name: event_data_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
 --
 
