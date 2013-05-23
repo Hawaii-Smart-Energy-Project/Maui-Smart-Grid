@@ -4,9 +4,12 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 from mecodbread import MECODBReader
+import matplotlib
+matplotlib.use('Agg')
 import pylab
 import matplotlib.pyplot as plt
 import matplotlib.dates
+from mecoconfig import MECOConfiger
 
 
 class MECOPlotting(object):
@@ -19,8 +22,13 @@ class MECOPlotting(object):
         """
 
         self.reader = MECODBReader()
+        self.configer = MECOConfiger()
+
 
     def plotReadingAndMeterCounts(self):
+        matplotlib.pyplot.ioff()
+
+
         dates, readingCounts, meterCounts = self.reader.readingAndMeterCounts()
 
         newDates = matplotlib.dates.date2num(dates)
@@ -39,11 +47,12 @@ class MECOPlotting(object):
         fig = matplotlib.pyplot.gcf()
         fig.set_size_inches(18.5, 10.5)
 
-        pylab.savefig('ReadingAndMeterCounts.png', dpi = 150)
+        plotPath = self.configer.configOptionValue("Data Paths", "plot_path")
+        pylab.savefig('%s/ReadingAndMeterCounts.png' % plotPath, dpi = 150)
 
 
-plotter = MECOPlotting()
-plotter.plotReadingAndMeterCounts()
+# plotter = MECOPlotting()
+# plotter.plotReadingAndMeterCounts()
 
 
 

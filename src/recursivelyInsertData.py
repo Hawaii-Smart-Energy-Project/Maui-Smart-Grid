@@ -24,6 +24,7 @@ from mecoconfig import MECOConfiger
 import re
 from meconotifier import MECONotifier
 import argparse
+from mecoplotting import MECOPlotting
 
 xmlGzCount = 0
 xmlCount = 0
@@ -122,5 +123,11 @@ msg = "%s files were processed." % xmlGzCount
 print msg
 msgBody += msg + "\n"
 
+plotter = MECOPlotting()
+plotter.plotReadingAndMeterCounts()
+
 if commandLineArgs.email:
-    notifier.sendNotificationEmail(msgBody)
+    # notifier.sendNotificationEmail(msgBody)
+    plotPath = configer.configOptionValue("Data Paths", "plot_path")
+    notifier.sendMailWithAttachments(msgBody,
+                                     "%s/ReadingAndMeterCounts.png" % plotPath)

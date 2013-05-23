@@ -111,7 +111,7 @@ class MECONotifier(object):
         msg['From'] = send_from
         msg['To'] = send_to
         msg['Date'] = formatdate(localtime = True)
-        msg['Subject'] = "Test Subject"
+        msg['Subject'] = "HISEP Notification"
 
         msg.attach(MIMEText(msgBody))
 
