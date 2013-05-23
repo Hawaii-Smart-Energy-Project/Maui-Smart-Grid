@@ -1241,6 +1241,44 @@ GRANT ALL ON TABLE "WeatherKahaluiAirport" TO sepgroup;
 
 
 --
+-- Name: view_readings; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE view_readings FROM PUBLIC;
+REVOKE ALL ON TABLE view_readings FROM postgres;
+GRANT ALL ON TABLE view_readings TO postgres;
+GRANT ALL ON TABLE view_readings TO sepgroup;
+
+
+--
+-- Name: count_of_readings_and_meters_by_day; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE count_of_readings_and_meters_by_day FROM PUBLIC;
+REVOKE ALL ON TABLE count_of_readings_and_meters_by_day FROM postgres;
+GRANT ALL ON TABLE count_of_readings_and_meters_by_day TO postgres;
+GRANT ALL ON TABLE count_of_readings_and_meters_by_day TO sepgroup;
+
+
+--
+-- Name: event_data_id_seq; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON SEQUENCE event_data_id_seq FROM PUBLIC;
+REVOKE ALL ON SEQUENCE event_data_id_seq FROM sepgroup;
+GRANT ALL ON SEQUENCE event_data_id_seq TO sepgroup;
+
+
+--
+-- Name: event_id_seq; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON SEQUENCE event_id_seq FROM PUBLIC;
+REVOKE ALL ON SEQUENCE event_id_seq FROM sepgroup;
+GRANT ALL ON SEQUENCE event_id_seq TO sepgroup;
+
+
+--
 -- Name: get_kwh_meter_locations; Type: ACL; Schema: public; Owner: eileen
 --
 
