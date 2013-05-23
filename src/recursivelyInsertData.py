@@ -130,4 +130,4 @@ if commandLineArgs.email:
     # notifier.sendNotificationEmail(msgBody)
     plotPath = configer.configOptionValue("Data Paths", "plot_path")
     notifier.sendMailWithAttachments(msgBody,
-                                     "%s/ReadingAndMeterCounts.png" % plotPath)
+                                     ["%s/ReadingAndMeterCounts.png" % plotPath])
