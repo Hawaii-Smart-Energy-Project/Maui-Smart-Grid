@@ -8,18 +8,21 @@ from mecodbutils import MECODBUtil
 import psycopg2
 import psycopg2.extras
 
-class MECODBReader(object) :
-    """Read records from a database.
+
+class MECODBReader(object):
+    """
+    Read records from a database.
     """
 
-    def __init__(self) :
-        """Constructor
+    def __init__(self):
+        """
+        Constructor.
         """
 
         self.conn = MECODBConnector().connectDB()
         self.dbUtil = MECODBUtil()
 
-    def selectRecord(self, conn, table, keyName, keyValue) :
+    def selectRecord(self, conn, table, keyName, keyValue):
         """Read a record in the database given a table name, primary
         key name, and value for the key.
 
@@ -36,5 +39,20 @@ class MECODBReader(object) :
         row = dcur.fetchone()
         return row
 
+    def readingAndMeterCounts(self):
+        sql = """select "Day", "Reading Count",
+        "Meter Count" from count_of_readings_and_meters_by_day"""
+        dcur = self.conn.cursor(cursor_factory = psycopg2.extras.DictCursor)
+        self.dbUtil.executeSQL(dcur, sql)
+        rows = dcur.fetchall()
 
+        dates = []
+        meterCounts = []
+        readingCounts = []
 
+        for row in rows:
+            dates.append(row[0])
+            readingCounts.append(row[1] / row[2])
+            meterCounts.append(row[2])
+
+        return dates, readingCounts, meterCounts
