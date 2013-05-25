@@ -36,6 +36,36 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
+-- Name: Event; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "Event" (
+    event_name character varying,
+    event_time timestamp without time zone,
+    event_text character varying,
+    event_data_id bigint,
+    event_id bigint NOT NULL
+);
+
+
+ALTER TABLE public."Event" OWNER TO sepgroup;
+
+--
+-- Name: EventData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "EventData" (
+    end_time timestamp without time zone,
+    number_events smallint,
+    start_time timestamp without time zone,
+    meter_data_id bigint,
+    event_data_id bigint NOT NULL
+);
+
+
+ALTER TABLE public."EventData" OWNER TO sepgroup;
+
+--
 -- Name: Interval; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -138,73 +168,6 @@ COMMENT ON COLUMN "MeterData".created IS 'timestamp for when data is inserted';
 
 
 --
--- Name: Reading; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
---
-
-CREATE TABLE "Reading" (
-    interval_id bigint NOT NULL,
-    reading_id bigint NOT NULL,
-    block_end_value real,
-    channel smallint NOT NULL,
-    raw_value smallint NOT NULL,
-    uom character varying,
-    value real
-);
-
-
-ALTER TABLE public."Reading" OWNER TO sepgroup;
-
---
--- Name: Distinct_Voltage_and_Location; Type: VIEW; Schema: public; Owner: eileen
---
-
-CREATE VIEW "Distinct_Voltage_and_Location" AS
-    SELECT DISTINCT "Interval".end_time, "Reading".channel, "MeterData".meter_name, "Reading".value, "Reading".uom, "LocationRecords".service_pt_latitude, "LocationRecords".service_pt_longitude FROM (((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) JOIN "LocationRecords" ON (("MeterData".util_device_id = ("LocationRecords".device_util_id)::bpchar))) WHERE ("Reading".channel = 4) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
-
-
-ALTER TABLE public."Distinct_Voltage_and_Location" OWNER TO eileen;
-
---
--- Name: Distinct_kWh_3channels_and_location; Type: VIEW; Schema: public; Owner: eileen
---
-
-CREATE VIEW "Distinct_kWh_3channels_and_location" AS
-    SELECT DISTINCT "Interval".end_time, "Reading".channel, "MeterData".meter_name, "Reading".value, "Reading".uom, "LocationRecords".service_pt_latitude, "LocationRecords".service_pt_longitude FROM (((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) JOIN "LocationRecords" ON (("MeterData".util_device_id = ("LocationRecords".device_util_id)::bpchar))) WHERE ("Reading".channel < 4) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
-
-
-ALTER TABLE public."Distinct_kWh_3channels_and_location" OWNER TO eileen;
-
---
--- Name: Event; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
---
-
-CREATE TABLE "Event" (
-    event_name character varying,
-    event_time timestamp without time zone,
-    event_text character varying,
-    event_data_id bigint,
-    event_id bigint NOT NULL
-);
-
-
-ALTER TABLE public."Event" OWNER TO sepgroup;
-
---
--- Name: EventData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
---
-
-CREATE TABLE "EventData" (
-    end_time timestamp without time zone,
-    number_events smallint,
-    start_time timestamp without time zone,
-    meter_data_id bigint,
-    event_data_id bigint NOT NULL
-);
-
-
-ALTER TABLE public."EventData" OWNER TO sepgroup;
-
---
 -- Name: MeterRecords; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -279,6 +242,23 @@ CREATE TABLE "MeterRecords" (
 
 
 ALTER TABLE public."MeterRecords" OWNER TO sepgroup;
+
+--
+-- Name: Reading; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "Reading" (
+    interval_id bigint NOT NULL,
+    reading_id bigint NOT NULL,
+    block_end_value real,
+    channel smallint NOT NULL,
+    raw_value smallint NOT NULL,
+    uom character varying,
+    value real
+);
+
+
+ALTER TABLE public."Reading" OWNER TO sepgroup;
 
 --
 -- Name: Register; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
@@ -418,7 +398,7 @@ COMMENT ON VIEW view_readings IS 'View readings along with their end times.
 --
 
 CREATE VIEW count_of_readings_and_meters_by_day AS
-    SELECT to_char(date_trunc('day'::text, view_readings.end_time), 'YYYY-MM-DD'::text) AS "Day", count(view_readings.value) AS "Reading Count", count(DISTINCT view_readings.meter_name) AS "Meter Count" FROM view_readings WHERE (view_readings.channel = 1) GROUP BY date_trunc('day'::text, view_readings.end_time) ORDER BY date_trunc('day'::text, view_readings.end_time);
+    SELECT date_trunc('day'::text, view_readings.end_time) AS "Day", count(view_readings.value) AS "Reading Count", count(DISTINCT view_readings.meter_name) AS "Meter Count" FROM view_readings WHERE (view_readings.channel = 1) GROUP BY date_trunc('day'::text, view_readings.end_time) ORDER BY date_trunc('day'::text, view_readings.end_time);
 
 
 ALTER TABLE public.count_of_readings_and_meters_by_day OWNER TO postgres;
@@ -475,54 +455,54 @@ ALTER SEQUENCE event_id_seq OWNED BY "Event".event_id;
 
 
 --
--- Name: get_kwh_meter_locations; Type: VIEW; Schema: public; Owner: eileen
+-- Name: get_kwh_meter_locations; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW get_kwh_meter_locations AS
     SELECT "MeterData".meter_name, "MeterData".util_device_id, "MeterData".mac_id, "MeterData".meter_data_id, "Reading".value, "Reading".uom, "Reading".channel, "IntervalReadData".start_time, "IntervalReadData".end_time, "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_latitude, "LocationRecords".service_pt_height, "LocationRecords".device_status FROM (((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) JOIN "LocationRecords" ON ((("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id))) WHERE ("Reading".channel < 4);
 
 
-ALTER TABLE public.get_kwh_meter_locations OWNER TO eileen;
+ALTER TABLE public.get_kwh_meter_locations OWNER TO postgres;
 
 --
--- Name: get_meter_readings_locations; Type: VIEW; Schema: public; Owner: eileen
+-- Name: get_meter_readings_locations; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW get_meter_readings_locations AS
     SELECT "MeterData".meter_name, "MeterData".util_device_id, "MeterData".mac_id, "MeterData".meter_data_id, "Reading".value, "Reading".uom, "Reading".channel, "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_latitude, "Interval".end_time FROM (((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) JOIN "LocationRecords" ON (((("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id) AND (("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id)))) WHERE ("Reading".channel < 4);
 
 
-ALTER TABLE public.get_meter_readings_locations OWNER TO eileen;
+ALTER TABLE public.get_meter_readings_locations OWNER TO postgres;
 
 --
--- Name: get_voltages; Type: VIEW; Schema: public; Owner: eileen
+-- Name: get_voltages; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW get_voltages AS
     SELECT "Reading".channel, "Reading".value, "Reading".interval_id, "Reading".reading_id FROM "Reading" WHERE ("Reading".channel = 4);
 
 
-ALTER TABLE public.get_voltages OWNER TO eileen;
+ALTER TABLE public.get_voltages OWNER TO postgres;
 
 --
--- Name: get_voltage_with_interval; Type: VIEW; Schema: public; Owner: eileen
+-- Name: get_voltage_with_interval; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW get_voltage_with_interval AS
     SELECT get_voltages.channel, get_voltages.value, get_voltages.interval_id, get_voltages.reading_id, "Interval".end_time, "Interval".interval_read_data_id FROM (get_voltages JOIN "Interval" ON (("Interval".interval_id = get_voltages.interval_id)));
 
 
-ALTER TABLE public.get_voltage_with_interval OWNER TO eileen;
+ALTER TABLE public.get_voltage_with_interval OWNER TO postgres;
 
 --
--- Name: get_voltage_with_meter_id; Type: VIEW; Schema: public; Owner: eileen
+-- Name: get_voltage_with_meter_id; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW get_voltage_with_meter_id AS
     SELECT get_voltage_with_interval.channel, get_voltage_with_interval.value, get_voltage_with_interval.end_time, "IntervalReadData".start_time, "MeterData".meter_data_id, "MeterData".meter_name, "MeterData".util_device_id, "MeterData".mac_id FROM ((get_voltage_with_interval JOIN "IntervalReadData" ON ((get_voltage_with_interval.interval_read_data_id = "IntervalReadData".interval_read_data_id))) JOIN "MeterData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id)));
 
 
-ALTER TABLE public.get_voltage_with_meter_id OWNER TO eileen;
+ALTER TABLE public.get_voltage_with_meter_id OWNER TO postgres;
 
 --
 -- Name: interval_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
@@ -567,26 +547,6 @@ ALTER SEQUENCE intervalreaddata_id_seq OWNED BY "IntervalReadData".interval_read
 
 
 --
--- Name: meter_V_readings_and_locations; Type: VIEW; Schema: public; Owner: eileen
---
-
-CREATE VIEW "meter_V_readings_and_locations" AS
-    SELECT "LocationRecords".service_pt_latitude, "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_height, "LocationRecords".device_util_id, "LocationRecords".device_serial_no, "LocationRecords".device_status, "MeterData".util_device_id, "MeterData".meter_name, "IntervalReadData".start_time, "IntervalReadData".end_time, "Reading".channel, "Reading".uom, "Reading".value FROM (((("LocationRecords" JOIN "MeterData" ON (((("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id) AND (("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id)))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) WHERE ("Reading".channel = 4);
-
-
-ALTER TABLE public."meter_V_readings_and_locations" OWNER TO eileen;
-
---
--- Name: meter_locations; Type: VIEW; Schema: public; Owner: eileen
---
-
-CREATE VIEW meter_locations AS
-    SELECT "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_latitude, "LocationRecords".device_util_id, "LocationRecords".device_serial_no, "LocationRecords".device_status, "LocationRecords".load_device_type FROM "LocationRecords";
-
-
-ALTER TABLE public.meter_locations OWNER TO eileen;
-
---
 -- Name: meterdata_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
 --
 
@@ -606,6 +566,26 @@ ALTER TABLE public.meterdata_id_seq OWNER TO sepgroup;
 
 ALTER SEQUENCE meterdata_id_seq OWNED BY "MeterData".meter_data_id;
 
+
+--
+-- Name: new_energy_readings_with_location_address; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW new_energy_readings_with_location_address AS
+    SELECT "LocationRecords".service_pt_latitude, "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_height, "LocationRecords".device_util_id, "LocationRecords".device_serial_no, "LocationRecords".device_status, "MeterData".util_device_id, "MeterData".meter_name, "IntervalReadData".end_time, "Reading".channel, "Reading".uom, "Reading".value, "LocationRecords".address1 FROM (((("LocationRecords" JOIN "MeterData" ON (((("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id) AND (("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id)))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) WHERE ("Reading".channel < 4);
+
+
+ALTER TABLE public.new_energy_readings_with_location_address OWNER TO postgres;
+
+--
+-- Name: raw_meter_readings; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW raw_meter_readings AS
+    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "MeterData".util_device_id FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
+
+
+ALTER TABLE public.raw_meter_readings OWNER TO postgres;
 
 --
 -- Name: reading_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
@@ -692,6 +672,16 @@ ALTER SEQUENCE registerread_id_seq OWNED BY "RegisterRead".register_read_id;
 
 
 --
+-- Name: testCastChannel; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW "testCastChannel" AS
+    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, (CASE WHEN ("Reading".channel = (1)::smallint) THEN "Reading".value ELSE NULL::real END)::numeric AS energy_out, (CASE WHEN ("Reading".channel = (2)::smallint) THEN "Reading".value ELSE NULL::real END)::numeric AS energy_from, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
+
+
+ALTER TABLE public."testCastChannel" OWNER TO postgres;
+
+--
 -- Name: tier_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
 --
 
@@ -713,14 +703,14 @@ ALTER SEQUENCE tier_id_seq OWNED BY "Tier".tier_id;
 
 
 --
--- Name: viewReadings; Type: VIEW; Schema: public; Owner: daniel
+-- Name: voltage_locations_highlow_events; Type: VIEW; Schema: public; Owner: postgres
 --
 
-CREATE VIEW "viewReadings" AS
-    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
+CREATE VIEW voltage_locations_highlow_events AS
+    SELECT "LocationRecords".service_pt_latitude, "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_height, "LocationRecords".device_serial_no, "LocationRecords".device_status, "MeterData".util_device_id, "MeterData".meter_name, "Reading".channel, "Reading".uom, "Reading".value AS voltage, "LocationRecords".address1, CASE WHEN ("Reading".value > (252)::double precision) THEN 1 ELSE 0 END AS high_event, CASE WHEN ("Reading".value < (228)::double precision) THEN 1 ELSE 0 END AS low_event, "LocationRecords".service_point_util_id, "Interval".end_time FROM (((("LocationRecords" JOIN "MeterData" ON (((("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id) AND (("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id)))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) WHERE (("Reading".channel = 4) AND ("Reading".value > (0)::double precision));
 
 
-ALTER TABLE public."viewReadings" OWNER TO daniel;
+ALTER TABLE public.voltage_locations_highlow_events OWNER TO postgres;
 
 --
 -- Name: event_id; Type: DEFAULT; Schema: public; Owner: sepgroup
@@ -1104,6 +1094,24 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
 --
+-- Name: Event; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE "Event" FROM PUBLIC;
+REVOKE ALL ON TABLE "Event" FROM sepgroup;
+GRANT ALL ON TABLE "Event" TO sepgroup;
+
+
+--
+-- Name: EventData; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE "EventData" FROM PUBLIC;
+REVOKE ALL ON TABLE "EventData" FROM sepgroup;
+GRANT ALL ON TABLE "EventData" TO sepgroup;
+
+
+--
 -- Name: Interval; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -1140,59 +1148,21 @@ GRANT ALL ON TABLE "MeterData" TO sepgroup;
 
 
 --
--- Name: Reading; Type: ACL; Schema: public; Owner: sepgroup
---
-
-REVOKE ALL ON TABLE "Reading" FROM PUBLIC;
-REVOKE ALL ON TABLE "Reading" FROM sepgroup;
-GRANT ALL ON TABLE "Reading" TO sepgroup;
-
-
---
--- Name: Distinct_Voltage_and_Location; Type: ACL; Schema: public; Owner: eileen
---
-
-REVOKE ALL ON TABLE "Distinct_Voltage_and_Location" FROM PUBLIC;
-REVOKE ALL ON TABLE "Distinct_Voltage_and_Location" FROM eileen;
-GRANT ALL ON TABLE "Distinct_Voltage_and_Location" TO eileen;
-GRANT ALL ON TABLE "Distinct_Voltage_and_Location" TO sepgroup;
-
-
---
--- Name: Distinct_kWh_3channels_and_location; Type: ACL; Schema: public; Owner: eileen
---
-
-REVOKE ALL ON TABLE "Distinct_kWh_3channels_and_location" FROM PUBLIC;
-REVOKE ALL ON TABLE "Distinct_kWh_3channels_and_location" FROM eileen;
-GRANT ALL ON TABLE "Distinct_kWh_3channels_and_location" TO eileen;
-GRANT ALL ON TABLE "Distinct_kWh_3channels_and_location" TO sepgroup;
-
-
---
--- Name: Event; Type: ACL; Schema: public; Owner: sepgroup
---
-
-REVOKE ALL ON TABLE "Event" FROM PUBLIC;
-REVOKE ALL ON TABLE "Event" FROM sepgroup;
-GRANT ALL ON TABLE "Event" TO sepgroup;
-
-
---
--- Name: EventData; Type: ACL; Schema: public; Owner: sepgroup
---
-
-REVOKE ALL ON TABLE "EventData" FROM PUBLIC;
-REVOKE ALL ON TABLE "EventData" FROM sepgroup;
-GRANT ALL ON TABLE "EventData" TO sepgroup;
-
-
---
 -- Name: MeterRecords; Type: ACL; Schema: public; Owner: sepgroup
 --
 
 REVOKE ALL ON TABLE "MeterRecords" FROM PUBLIC;
 REVOKE ALL ON TABLE "MeterRecords" FROM sepgroup;
 GRANT ALL ON TABLE "MeterRecords" TO sepgroup;
+
+
+--
+-- Name: Reading; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE "Reading" FROM PUBLIC;
+REVOKE ALL ON TABLE "Reading" FROM sepgroup;
+GRANT ALL ON TABLE "Reading" TO sepgroup;
 
 
 --
@@ -1279,52 +1249,52 @@ GRANT ALL ON SEQUENCE event_id_seq TO sepgroup;
 
 
 --
--- Name: get_kwh_meter_locations; Type: ACL; Schema: public; Owner: eileen
+-- Name: get_kwh_meter_locations; Type: ACL; Schema: public; Owner: postgres
 --
 
 REVOKE ALL ON TABLE get_kwh_meter_locations FROM PUBLIC;
-REVOKE ALL ON TABLE get_kwh_meter_locations FROM eileen;
-GRANT ALL ON TABLE get_kwh_meter_locations TO eileen;
+REVOKE ALL ON TABLE get_kwh_meter_locations FROM postgres;
+GRANT ALL ON TABLE get_kwh_meter_locations TO postgres;
 GRANT ALL ON TABLE get_kwh_meter_locations TO sepgroup;
 
 
 --
--- Name: get_meter_readings_locations; Type: ACL; Schema: public; Owner: eileen
+-- Name: get_meter_readings_locations; Type: ACL; Schema: public; Owner: postgres
 --
 
 REVOKE ALL ON TABLE get_meter_readings_locations FROM PUBLIC;
-REVOKE ALL ON TABLE get_meter_readings_locations FROM eileen;
-GRANT ALL ON TABLE get_meter_readings_locations TO eileen;
+REVOKE ALL ON TABLE get_meter_readings_locations FROM postgres;
+GRANT ALL ON TABLE get_meter_readings_locations TO postgres;
 GRANT ALL ON TABLE get_meter_readings_locations TO sepgroup;
 
 
 --
--- Name: get_voltages; Type: ACL; Schema: public; Owner: eileen
+-- Name: get_voltages; Type: ACL; Schema: public; Owner: postgres
 --
 
 REVOKE ALL ON TABLE get_voltages FROM PUBLIC;
-REVOKE ALL ON TABLE get_voltages FROM eileen;
-GRANT ALL ON TABLE get_voltages TO eileen;
+REVOKE ALL ON TABLE get_voltages FROM postgres;
+GRANT ALL ON TABLE get_voltages TO postgres;
 GRANT ALL ON TABLE get_voltages TO sepgroup;
 
 
 --
--- Name: get_voltage_with_interval; Type: ACL; Schema: public; Owner: eileen
+-- Name: get_voltage_with_interval; Type: ACL; Schema: public; Owner: postgres
 --
 
 REVOKE ALL ON TABLE get_voltage_with_interval FROM PUBLIC;
-REVOKE ALL ON TABLE get_voltage_with_interval FROM eileen;
-GRANT ALL ON TABLE get_voltage_with_interval TO eileen;
+REVOKE ALL ON TABLE get_voltage_with_interval FROM postgres;
+GRANT ALL ON TABLE get_voltage_with_interval TO postgres;
 GRANT ALL ON TABLE get_voltage_with_interval TO sepgroup;
 
 
 --
--- Name: get_voltage_with_meter_id; Type: ACL; Schema: public; Owner: eileen
+-- Name: get_voltage_with_meter_id; Type: ACL; Schema: public; Owner: postgres
 --
 
 REVOKE ALL ON TABLE get_voltage_with_meter_id FROM PUBLIC;
-REVOKE ALL ON TABLE get_voltage_with_meter_id FROM eileen;
-GRANT ALL ON TABLE get_voltage_with_meter_id TO eileen;
+REVOKE ALL ON TABLE get_voltage_with_meter_id FROM postgres;
+GRANT ALL ON TABLE get_voltage_with_meter_id TO postgres;
 GRANT ALL ON TABLE get_voltage_with_meter_id TO sepgroup;
 
 
@@ -1347,32 +1317,32 @@ GRANT ALL ON SEQUENCE intervalreaddata_id_seq TO sepgroup;
 
 
 --
--- Name: meter_V_readings_and_locations; Type: ACL; Schema: public; Owner: eileen
---
-
-REVOKE ALL ON TABLE "meter_V_readings_and_locations" FROM PUBLIC;
-REVOKE ALL ON TABLE "meter_V_readings_and_locations" FROM eileen;
-GRANT ALL ON TABLE "meter_V_readings_and_locations" TO eileen;
-GRANT ALL ON TABLE "meter_V_readings_and_locations" TO sepgroup;
-
-
---
--- Name: meter_locations; Type: ACL; Schema: public; Owner: eileen
---
-
-REVOKE ALL ON TABLE meter_locations FROM PUBLIC;
-REVOKE ALL ON TABLE meter_locations FROM eileen;
-GRANT ALL ON TABLE meter_locations TO eileen;
-GRANT ALL ON TABLE meter_locations TO sepgroup;
-
-
---
 -- Name: meterdata_id_seq; Type: ACL; Schema: public; Owner: sepgroup
 --
 
 REVOKE ALL ON SEQUENCE meterdata_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE meterdata_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE meterdata_id_seq TO sepgroup;
+
+
+--
+-- Name: new_energy_readings_with_location_address; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE new_energy_readings_with_location_address FROM PUBLIC;
+REVOKE ALL ON TABLE new_energy_readings_with_location_address FROM postgres;
+GRANT ALL ON TABLE new_energy_readings_with_location_address TO postgres;
+GRANT ALL ON TABLE new_energy_readings_with_location_address TO sepgroup;
+
+
+--
+-- Name: raw_meter_readings; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE raw_meter_readings FROM PUBLIC;
+REVOKE ALL ON TABLE raw_meter_readings FROM postgres;
+GRANT ALL ON TABLE raw_meter_readings TO postgres;
+GRANT ALL ON TABLE raw_meter_readings TO sepgroup;
 
 
 --
@@ -1412,6 +1382,16 @@ GRANT ALL ON SEQUENCE registerread_id_seq TO sepgroup;
 
 
 --
+-- Name: testCastChannel; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE "testCastChannel" FROM PUBLIC;
+REVOKE ALL ON TABLE "testCastChannel" FROM postgres;
+GRANT ALL ON TABLE "testCastChannel" TO postgres;
+GRANT ALL ON TABLE "testCastChannel" TO sepgroup;
+
+
+--
 -- Name: tier_id_seq; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -1421,13 +1401,13 @@ GRANT ALL ON SEQUENCE tier_id_seq TO sepgroup;
 
 
 --
--- Name: viewReadings; Type: ACL; Schema: public; Owner: daniel
+-- Name: voltage_locations_highlow_events; Type: ACL; Schema: public; Owner: postgres
 --
 
-REVOKE ALL ON TABLE "viewReadings" FROM PUBLIC;
-REVOKE ALL ON TABLE "viewReadings" FROM daniel;
-GRANT ALL ON TABLE "viewReadings" TO daniel;
-GRANT ALL ON TABLE "viewReadings" TO sepgroup;
+REVOKE ALL ON TABLE voltage_locations_highlow_events FROM PUBLIC;
+REVOKE ALL ON TABLE voltage_locations_highlow_events FROM postgres;
+GRANT ALL ON TABLE voltage_locations_highlow_events TO postgres;
+GRANT ALL ON TABLE voltage_locations_highlow_events TO sepgroup;
 
 
 --
