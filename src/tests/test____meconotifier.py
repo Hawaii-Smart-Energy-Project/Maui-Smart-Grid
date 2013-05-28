@@ -61,7 +61,7 @@ class TestMECONotifier(unittest.TestCase):
     def testSendEmailAttachment(self):
         if SEND_EMAIL:
             body = "Test message"
-            file = "../../test-data/meco_v3-energy-test-data.xml"
+            file = "../../test-data/graph.png"
             success = self.notifier.sendMailWithAttachments(body, [file])
             success = (success != True)
             self.assertTrue(success,
