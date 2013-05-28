@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Insert Location Records into the database from a tab-separated data file.
+"""
+Insert Location Records into the database from a tab-separated data file.
 
 Usage:
 insertLocationRecords.py ${FILENAME}

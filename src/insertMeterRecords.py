@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Insert Meter Records into the database from a tab-separated data file.
+"""
+Insert Meter Records into the database from a tab-separated data file.
 
 Usage:
 insertMeterRecords.py ${FILENAME}
