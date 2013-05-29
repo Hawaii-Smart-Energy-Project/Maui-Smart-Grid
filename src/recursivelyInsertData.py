@@ -133,7 +133,7 @@ for root, dirnames, filenames in os.walk('.'):
                 parseLog = inserter.insertData(fullPath, commandLineArgs.testing)
                 msgBody += parseLog + "\n"
 
-msg = "%s files were processed." % xmlGzCount
+msg = "\n%s files were processed." % xmlGzCount
 print msg
 msgBody += msg + "\n"
 
