@@ -117,6 +117,7 @@ class MECOXMLParser(object):
         """
 
         parseLog = ''
+        parseMsg = ''
         walker = root.iter()
 
         for element, nextElement in self.getNext(walker):
@@ -248,6 +249,9 @@ class MECOXMLParser(object):
                                                        'debug') == True:
                         print "----- last reading found -----"
 
+                    parseMsg = "*commit*"
+                    sys.stderr.write(parseMsg)
+                    parseLog += parseMsg
                     self.conn.commit()
 
                     parseMsg =  "{%s}" % self.dupeOnInsertCount
@@ -263,6 +267,15 @@ class MECOXMLParser(object):
                     if self.configer.configOptionValue("Debugging",
                                                        'debug') == True:
                         print "----- last register found -----"
+
+
+        if self.commitCount == 0:
+            parseMsg =  "{%s}" % self.dupeOnInsertCount
+            parseMsg += "[%s]" % self.commitCount
+            parseMsg += "(%s)" % self.elementCount
+            sys.stderr.write(parseMsg)
+            parseLog += parseMsg
+
 
         parseMsg = "*commit*"
         sys.stderr.write(parseMsg)
