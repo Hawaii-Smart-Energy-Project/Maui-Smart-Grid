@@ -88,16 +88,24 @@ class MECOXMLParser(object):
         :param insert: (optional) True to insert to the database | False to
         perform no
         inserts.
+        :returns: String containing a concise log of parsing.
         """
 
         print "parseXML:"
 
         self.commitCount = 0
         self.insertDataIntoDatabase = insert
-        sys.stderr.write("\nparsing xml in %s\n" % self.filename)
+
+        parseMsg = "\nParsing XML in %s.\n" % self.filename
+        sys.stderr.write(parseMsg)
+        parseLog = parseMsg
+
         tree = ET.parse(fileObject)
         root = tree.getroot()
-        self.walkTheTreeFromRoot(root)
+
+        parseLog += self.walkTheTreeFromRoot(root)
+
+        return parseLog
 
 
     def walkTheTreeFromRoot(self, root):
@@ -105,8 +113,10 @@ class MECOXMLParser(object):
         Walk an XML tree from its root node.
 
         :param root: The root node of an XML tree.
+        :returns: String containing a concise log of parsing activity.
         """
 
+        parseLog = ''
         walker = root.iter()
 
         for element, nextElement in self.getNext(walker):
@@ -179,7 +189,7 @@ class MECOXMLParser(object):
                     self.currentIntervalEndTime = columnsAndValues['EndTime']
 
                 if currentTableName == "Event":
-                    columnsAndValues['Event_Content'] = element.text;
+                    columnsAndValues['Event_Content'] = element.text
 
                 if self.insertDataIntoDatabase:
 
@@ -210,7 +220,9 @@ class MECOXMLParser(object):
                         self.dupeOnInsertCount += 1
                         if self.dupeOnInsertCount > 0 and self \
                             .dupeOnInsertCount < 2:
-                            sys.stderr.write("{dupe on insert==>}")
+                            parseMsg = "{dupe on insert==>}"
+                            sys.stderr.write(parseMsg)
+                            parseLog += parseMsg
 
                         # Also, verify the data is equivalent to the existing
                         # record.
@@ -238,9 +250,11 @@ class MECOXMLParser(object):
 
                     self.conn.commit()
 
-                    sys.stderr.write("{%s}" % self.dupeOnInsertCount)
-                    sys.stderr.write("[%s]" % self.commitCount)
-                    sys.stderr.write("(%s)" % self.elementCount)
+                    parseMsg =  "{%s}" % self.dupeOnInsertCount
+                    parseMsg += "[%s]" % self.commitCount
+                    parseMsg += "(%s)" % self.elementCount
+                    sys.stderr.write(parseMsg)
+                    parseLog += parseMsg
 
                     self.commitCount += 1
                     self.dupeOnInsertCount = 0
@@ -250,9 +264,13 @@ class MECOXMLParser(object):
                                                        'debug') == True:
                         print "----- last register found -----"
 
-        sys.stderr.write("*commit*")
+        parseMsg = "*commit*"
+        sys.stderr.write(parseMsg)
+        parseLog += parseMsg
         self.conn.commit()
         print
+
+        return parseLog
 
 
     def lastReading(self, currentTable, nextTable):
