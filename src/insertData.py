@@ -37,6 +37,55 @@ class Inserter(object):
         self.parser = MECOXMLParser(testing)
         self.configer = MECOConfiger()
 
+    def insertData(self, filePath, testing = False):
+        """
+        Insert data from a single file to the database.
+
+        :param filePath: Full path of a data file.
+        :param testing: Boolean flag indicating if the testing database
+        should be used.
+        :returns: String containing concise log of activity.
+        """
+
+        parseMsg = ''
+        parseLog = ''
+
+        print "Processing file %s." % filePath
+        i = Inserter(testing)
+        if i.configer.configOptionValue("Debugging", "debug"):
+            print "Debugging is on"
+
+        if commandLineArgs.testing:
+            parseMsg = "\nInserting data to database %s.\n" % i.configer\
+                .configOptionValue(
+                "Database", "testing_db_name")
+            sys.stderr.write(parseMsg)
+            parseLog += parseMsg
+        else:
+            parseMsg += "\nInserting data to database %s.\n" % i.configer \
+                .configOptionValue(
+                "Database", "db_name")
+            sys.stderr.write(parseMsg)
+            parseLog += parseMsg
+
+        filename = os.path.basename(filePath)
+        fileObject = None
+
+        # Open the file and process it.
+        if re.search('.*\.xml$', filePath):
+            fileObject = open(filePath, "rb")
+        elif re.search('.*\.xml\.gz$', filePath):
+            fileObject = gzip.open(filePath, "rb")
+        else:
+            print "Error: %s is not an XML file." % filePath
+        i.parser.filename = filePath
+
+        # Obtain the log of the parsing.
+        parseLog += i.parser.parseXML(fileObject, True)
+
+        fileObject.close()
+        return parseLog
+
 
 def processCommandLineArguments():
     global parser, commandLineArgs
@@ -51,6 +100,11 @@ def processCommandLineArguments():
                                'specified in the local configuration file.')
     commandLineArgs = parser.parse_args()
 
+# @deprecated
+# The following script is deprecated in favor of the object-based method
+# insertData.
+# It should be rewritten to use that method for single-file data insert
+# processing.
 
 processCommandLineArguments()
 
@@ -69,7 +123,8 @@ if i.configer.configOptionValue("Debugging", "debug"):
 
 if commandLineArgs.testing:
     sys.stderr.write("\nInserting data to database %s.\n" % \
-                     i.configer.configOptionValue("Database", "testing_db_name"))
+                     i.configer.configOptionValue("Database",
+                                                  "testing_db_name"))
 else:
     sys.stderr.write("\nInserting data to database %s.\n" % \
                      i.configer.configOptionValue("Database", "db_name"))
@@ -85,5 +140,8 @@ elif re.search('.*\.xml\.gz$', filepath):
 else:
     print "Error: %s is not an XML file." % filepath
 i.parser.filename = commandLineArgs.filepath
-i.parser.parseXML(fileObject, True)
+
+# Obtain the log of the parsing.
+parseLog = i.parser.parseXML(fileObject, True)
+
 fileObject.close()
