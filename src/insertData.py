@@ -20,6 +20,8 @@ import sys
 import argparse
 import os
 
+USE_SCRIPT_METHOD = False
+
 
 class Inserter(object):
     """
@@ -55,7 +57,7 @@ class Inserter(object):
         if i.configer.configOptionValue("Debugging", "debug"):
             print "Debugging is on"
 
-        if commandLineArgs.testing:
+        if testing:
             parseMsg = "\nInserting data to database %s.\n" % i.configer\
                 .configOptionValue(
                 "Database", "testing_db_name")
@@ -86,7 +88,6 @@ class Inserter(object):
         fileObject.close()
         return parseLog
 
-
 def processCommandLineArguments():
     global parser, commandLineArgs
     parser = argparse.ArgumentParser(
@@ -106,42 +107,44 @@ def processCommandLineArguments():
 # It should be rewritten to use that method for single-file data insert
 # processing.
 
-processCommandLineArguments()
+if USE_SCRIPT_METHOD:
 
-if (commandLineArgs.filepath):
-    print "Processing %s." % commandLineArgs.filepath
-else:
-    print "Usage: insertData --filepath ${FILEPATH} [--testing]"
-    sys.exit(-1)
+    processCommandLineArguments()
 
-filepath = commandLineArgs.filepath
+    if (commandLineArgs.filepath):
+        print "Processing %s." % commandLineArgs.filepath
+    else:
+        print "Usage: insertData --filepath ${FILEPATH} [--testing]"
+        sys.exit(-1)
 
-i = Inserter(commandLineArgs.testing)
+    filepath = commandLineArgs.filepath
 
-if i.configer.configOptionValue("Debugging", "debug"):
-    print "Debugging is on"
+    i = Inserter(commandLineArgs.testing)
 
-if commandLineArgs.testing:
-    sys.stderr.write("\nInserting data to database %s.\n" % \
-                     i.configer.configOptionValue("Database",
-                                                  "testing_db_name"))
-else:
-    sys.stderr.write("\nInserting data to database %s.\n" % \
-                     i.configer.configOptionValue("Database", "db_name"))
+    if i.configer.configOptionValue("Debugging", "debug"):
+        print "Debugging is on"
 
-filename = os.path.basename(filepath)
-fileObject = None
+    if commandLineArgs.testing:
+        sys.stderr.write("\nInserting data to database %s.\n" % \
+                         i.configer.configOptionValue("Database",
+                                                      "testing_db_name"))
+    else:
+        sys.stderr.write("\nInserting data to database %s.\n" % \
+                         i.configer.configOptionValue("Database", "db_name"))
 
-# Open the file and process it.
-if re.search('.*\.xml$', filepath):
-    fileObject = open(filepath, "rb")
-elif re.search('.*\.xml\.gz$', filepath):
-    fileObject = gzip.open(filepath, "rb")
-else:
-    print "Error: %s is not an XML file." % filepath
-i.parser.filename = commandLineArgs.filepath
+    filename = os.path.basename(filepath)
+    fileObject = None
 
-# Obtain the log of the parsing.
-parseLog = i.parser.parseXML(fileObject, True)
+    # Open the file and process it.
+    if re.search('.*\.xml$', filepath):
+        fileObject = open(filepath, "rb")
+    elif re.search('.*\.xml\.gz$', filepath):
+        fileObject = gzip.open(filepath, "rb")
+    else:
+        print "Error: %s is not an XML file." % filepath
+    i.parser.filename = commandLineArgs.filepath
 
-fileObject.close()
+    # Obtain the log of the parsing.
+    parseLog = i.parser.parseXML(fileObject, True)
+
+    fileObject.close()
