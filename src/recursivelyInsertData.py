@@ -25,14 +25,18 @@ import re
 from meconotifier import MECONotifier
 import argparse
 from mecoplotting import MECOPlotting
+from insertData import Inserter
 
 xmlGzCount = 0
 xmlCount = 0
 configer = MECOConfiger()
 binPath = MECOConfiger.configOptionValue(configer, "Executable Paths",
                                          "bin_path")
+commandLineArgs = None
 msgBody = ''
 notifier = MECONotifier()
+
+USE_SCRIPT_METHOD = False
 
 
 def processCommandLineArguments():
@@ -52,6 +56,8 @@ def processCommandLineArguments():
 
 
 processCommandLineArguments()
+
+inserter = Inserter()
 
 if commandLineArgs.testing:
     sys.stderr.write("Testing mode is ON.\n")
@@ -95,6 +101,8 @@ msg = "insertScript = %s" % insertScript
 print msg
 msgBody += msg + "\n"
 
+parseLog = ''
+
 try:
     with open(insertScript):
         pass
@@ -114,10 +122,16 @@ for root, dirnames, filenames in os.walk('.'):
             xmlGzCount += 1
 
             # Execute the insert data script for the file.
-            if commandLineArgs.testing:
-                call([insertScript, "--testing", "--filepath", fullPath])
+
+            if USE_SCRIPT_METHOD:
+                if commandLineArgs.testing:
+                    call([insertScript, "--testing", "--filepath", fullPath])
+                else:
+                    call([insertScript, "--filepath", fullPath])
             else:
-                call([insertScript, "--filepath", fullPath])
+                # Object method is preferred.
+                parseLog = inserter.insertData(fullPath, commandLineArgs.testing)
+                msgBody += parseLog + "\n"
 
 msg = "%s files were processed." % xmlGzCount
 print msg
