@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates
 from mecoconfig import MECOConfiger
 
+# Set TEST_SCRIPT to True to run plotting as a script.
 TEST_SCRIPT = False
 
 class MECOPlotting(object):
@@ -28,6 +29,11 @@ class MECOPlotting(object):
 
 
     def plotReadingAndMeterCounts(self):
+        """
+        Create a plot of reading and meter counts.
+        Save the plot to local storage.
+        """
+
         matplotlib.pyplot.ioff()
 
         dates, readingCounts, meterCounts = self.reader.readingAndMeterCounts()
@@ -48,6 +54,10 @@ class MECOPlotting(object):
         fig = matplotlib.pyplot.gcf()
         fig.set_size_inches(18.5, 11.5)
 
+        ax = fig.add_subplot(1,1,1)
+        ax.set_axisbelow(True)
+        ax.grid(b=True, which='major', color='#dddddd', linestyle='-')
+
         plotPath = self.configer.configOptionValue("Data Paths", "plot_path")
         pylab.savefig('%s/ReadingAndMeterCounts.png' % plotPath, dpi = 150)
 
@@ -55,6 +65,4 @@ class MECOPlotting(object):
 if TEST_SCRIPT:
     plotter = MECOPlotting()
     plotter.plotReadingAndMeterCounts()
-
-
 
