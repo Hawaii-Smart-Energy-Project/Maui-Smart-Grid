@@ -29,7 +29,8 @@ class MECONotifier(object):
 
     def sendNotificationEmail(self, msgBody, testing = False):
         """
-        This method is an alternative to the multipart method in sendMailWithAttachments.
+        This method is an alternative to the multipart method in
+        sendMailWithAttachments.
 
         :param msgBody: The body of the message to be sent.
         :param testing: True if running in testing mode.
