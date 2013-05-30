@@ -27,12 +27,12 @@ class MECONotifier(object):
 
         self.config = MECOConfiger()
 
-    def sendNotificationEmail(self, msgBody):
+    def sendNotificationEmail(self, msgBody, testing = False):
         """
-        @deprecated
-        This method is deprecated in favor of sendMailWithAttachments.
+        This method is an alternative to the multipart method in sendMailWithAttachments.
 
         :param msgBody: The body of the message to be sent.
+        :param testing: True if running in testing mode.
         :returns: True for success, False for an error.
         """
 
@@ -42,8 +42,13 @@ class MECONotifier(object):
                                                  'email_password')
         fromaddr = self.config.configOptionValue('Notifications',
                                                  'email_fromaddr')
-        toaddr = self.config.configOptionValue('Notifications',
-                                               'email_recipients')
+
+        if testing:
+            toaddr = self.config.configOptionValue('Notifications',
+                                                   'testing_email_recipients')
+        else:
+            toaddr = self.config.configOptionValue('Notifications',
+                                                   'email_recipients')
         server = smtplib.SMTP(
             self.config.configOptionValue('Notifications', 'email_smtp_server'))
 
