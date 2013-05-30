@@ -87,13 +87,14 @@ class MECONotifier(object):
 
         return errorOccurred != True
 
-    def sendMailWithAttachments(self, msgBody, files = []):
+    def sendMailWithAttachments(self, msgBody, files = [], testing = False):
         """
         Send email along with attachments.
 
         :param msgBody: String containing the body of the messsage to send.
         :param files: List of file paths. This is a mutable argument that
         should be handled carefully as the default is defined only once.
+        :param testing: True if running in testing mode.
         :returns: True if no exceptions are raised.
         """
 
@@ -106,8 +107,12 @@ class MECONotifier(object):
         password = self.config.configOptionValue('Notifications',
                                                  'email_password')
 
-        send_to = self.config.configOptionValue('Notifications',
-                                                'email_recipients')
+        if testing:
+            send_to = self.config.configOptionValue('Notifications',
+                                                    'testing_email_recipients')
+        else:
+            send_to = self.config.configOptionValue('Notifications',
+                                                    'email_recipients')
         send_from = self.config.configOptionValue('Notifications',
                                                   'email_fromaddr')
 
