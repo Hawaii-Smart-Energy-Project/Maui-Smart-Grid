@@ -67,9 +67,20 @@ The reference template can be found in `config/sample-dot-meco-data-operations.c
     debug=False
     limit_commits=False
     
+    [Data Paths]
+    plot_path=${MECO_PLOT_PATH}
+    
     [Executable Paths]
     bin_path=${MECO_BIN_DIR}
     
+    [Notifications]
+    email_fromaddr=${EMAIL_FROM_ADDRESS}
+    email_username=${SMTP_USERNAME}
+    email_password=${EMAIL_SEND_PASSWORD}
+    email_recipients=${LIST_OF_EMAIL_RECIPIENTS}
+    testing_email_recipients=${LIST_OF_TESTING_EMAIL_RECIPIENTS}
+    email_smtp_server=${SMTP_SERVER_ADDRESS}
+
     [Database]
     db_password=${PASSWORD}
     db_host=${IP_ADDRESS_OR_HOSTNAME}
