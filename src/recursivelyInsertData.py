@@ -93,7 +93,7 @@ if xmlCount != 0:
     msg = "Found XML files that are not gzip compressed.\nUnable to proceed."
     print msg
     msgBody += msg + "\n"
-    notifier.sendNotificationEmail(msgBody)
+    notifier.sendNotificationEmail(msgBody, commandLineArgs.testing)
     sys.exit(-1)
 
 insertScript = "%s/insertData.py" % binPath
@@ -130,7 +130,8 @@ for root, dirnames, filenames in os.walk('.'):
                     call([insertScript, "--filepath", fullPath])
             else:
                 # Object method is preferred.
-                parseLog = inserter.insertData(fullPath, commandLineArgs.testing)
+                parseLog = inserter.insertData(fullPath,
+                                               commandLineArgs.testing)
                 msgBody += parseLog + "\n"
 
 msg = "\n%s files were processed." % xmlGzCount
@@ -143,5 +144,5 @@ plotter.plotReadingAndMeterCounts()
 if commandLineArgs.email:
     # notifier.sendNotificationEmail(msgBody)
     plotPath = configer.configOptionValue("Data Paths", "plot_path")
-    notifier.sendMailWithAttachments(msgBody,
-                                     ["%s/ReadingAndMeterCounts.png" % plotPath])
+    notifier.sendMailWithAttachments(msgBody, [
+        "%s/ReadingAndMeterCounts.png" % plotPath], commandLineArgs.testing)
