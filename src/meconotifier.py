@@ -8,10 +8,10 @@ from datetime import datetime
 from mecoconfig import MECOConfiger
 import sys
 import os
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEBase import MIMEBase
-from email.MIMEText import MIMEText
-from email.Utils import formatdate
+from email import MIMEMultipart
+from email import MIMEBase
+from email import MIMEText
+from email.utils import formatdate
 from email import Encoders
 
 
@@ -29,6 +29,9 @@ class MECONotifier(object):
 
     def sendNotificationEmail(self, msgBody):
         """
+        @deprecated
+        This method is deprecated in favor of sendMailWithAttachments.
+
         :param msgBody: The body of the message to be sent.
         :returns: True for success, False for an error.
         """
@@ -88,8 +91,9 @@ class MECONotifier(object):
         """
         Send email along with attachments.
 
-        :param msgBody
-        :param files: List of file paths.
+        :param msgBody: String containing the body of the messsage to send.
+        :param files: List of file paths. This is a mutable argument that
+        should be handled carefully as the default is defined only once.
         :returns: True if no exceptions are raised.
         """
 
