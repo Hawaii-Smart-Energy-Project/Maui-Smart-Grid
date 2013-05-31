@@ -8,10 +8,10 @@ from datetime import datetime
 from mecoconfig import MECOConfiger
 import sys
 import os
-from email import MIMEMultipart
-from email import MIMEBase
-from email import MIMEText
-from email.utils import formatdate
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEBase import MIMEBase
+from email.MIMEText import MIMEText
+from email.Utils import formatdate
 from email import Encoders
 
 
@@ -105,6 +105,8 @@ class MECONotifier(object):
         """
 
         sys.stderr.write("Sending multipart email.\n")
+        if testing:
+            sys.stderr.write("Notification testing mode is ON.\n")
 
         errorOccurred = False
         assert type(files) == list
