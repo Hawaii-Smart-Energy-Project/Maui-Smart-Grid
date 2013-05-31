@@ -26,6 +26,7 @@ from meconotifier import MECONotifier
 import argparse
 from mecoplotting import MECOPlotting
 from insertData import Inserter
+import time
 
 xmlGzCount = 0
 xmlCount = 0
@@ -111,6 +112,8 @@ except IOError:
     print msg
     msgBody += msg + "\n"
 
+startTime = 0
+
 for root, dirnames, filenames in os.walk('.'):
     for filename in fnmatch.filter(filenames, '*.xml.gz'):
         if re.search('.*log\.xml', filename) is None: # skip *log.xml files
@@ -129,12 +132,16 @@ for root, dirnames, filenames in os.walk('.'):
                 else:
                     call([insertScript, "--filepath", fullPath])
             else:
-                # Object method is preferred.
+                # The object method is preferred.
+                startTime = time.time()
                 parseLog = inserter.insertData(fullPath,
                                                commandLineArgs.testing)
                 msgBody += parseLog + "\n"
+                msgBody += "\nWall time = {:.2f} seconds.\n".format(
+                    time.time() - startTime)
 
-msg = "\n%s files were processed." % xmlGzCount
+msg = "\nProcessed file count is %s.\n" % xmlGzCount
+
 print msg
 msgBody += msg + "\n"
 
@@ -142,7 +149,11 @@ plotter = MECOPlotting()
 plotter.plotReadingAndMeterCounts()
 
 if commandLineArgs.email:
-    # notifier.sendNotificationEmail(msgBody)
     plotPath = configer.configOptionValue("Data Paths", "plot_path")
-    notifier.sendMailWithAttachments(msgBody, [
-        "%s/ReadingAndMeterCounts.png" % plotPath], commandLineArgs.testing)
+    sys.stderr.write("plotPath = %s\n" % plotPath)
+    attachments = ["%s/ReadingAndMeterCounts.png" % plotPath]
+    for a in attachments:
+        sys.stderr.write("attachment = %s\n" % a)
+
+    notifier.sendMailWithAttachments(msgBody, attachments,
+                                     commandLineArgs.testing)
