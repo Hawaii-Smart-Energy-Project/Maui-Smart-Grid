@@ -21,7 +21,8 @@ class TestMECODBConnect(unittest.TestCase):
             "self.connection is an instance of MECODBConnector")
 
     def test_db_connection(self):
-        """DB can be connected to.
+        """
+        DB can be connected to.
         """
         self.assertIsNotNone(self.conn)
 
