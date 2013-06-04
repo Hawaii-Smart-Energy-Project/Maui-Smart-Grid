@@ -118,6 +118,8 @@ in the directory where the data files are contained. The use of `time` is for in
     sys     0m30.186s
 
 The numbers in brackets correspond to {dropped duplicates (in the reading branch)}, [reading group index], and (element count). Dropped duplicates are the duplicate entries---determined by meter name, interval end time, and channel number---that are present in the source data. The reading group indexes is an integer count of the distinct groups of energy readings in the source data. The element count refers to the individual elements within the source data.
+
+Parallel data loading is supported since loading is performed atomically, database commits are made after data verification including taking duplicate records into account.
   
 ### Inserting Location and Meter Records
 
