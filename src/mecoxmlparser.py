@@ -206,6 +206,8 @@ class MECOXMLParser(object):
                             columnsAndValues['Channel']
                         )
 
+
+
                     # Only perform an insert if there are no duplicate values
                     # for the channel.
                     if not self.channelDupeExists:
@@ -214,7 +216,17 @@ class MECOXMLParser(object):
                                                        columnsAndValues,
                                                        fKeyValue,
                                                        1)
-                    # The last 1 indicates don't commit.
+                        # The last 1 indicates don't commit.
+
+                        # If no insertion took place,
+                        # don't attempt to get the last sequence value.
+                        self.lastSeqVal \
+                            = self.util.getLastSequenceID(self.conn,
+                                                          currentTableName,
+                                                          pkeyCol)
+                        # Store the primary key.
+                        self.fkDeterminer.pkValforCol[pkeyCol] = self.lastSeqVal
+
 
                     else: # Don't insert into Reading table if a dupe exists.
                         print "Duplicate meter-endtime-channel exists."
@@ -230,15 +242,9 @@ class MECOXMLParser(object):
                         if self.dupeChecker.readingValuesAreInTheDatabase(
                                 self.conn,
                                 columnsAndValues):
-                            print "Verified reading values are in the database"
+                            print "Verified reading values are in the database."
 
                         self.channelDupeExists = False
-
-                self.lastSeqVal = self.util.getLastSequenceID(self.conn,
-                                                              currentTableName,
-                                                              pkeyCol)
-                # Store the primary key.
-                self.fkDeterminer.pkValforCol[pkeyCol] = self.lastSeqVal
 
                 if self.configer.configOptionValue("Debugging",
                                                    'debug') == True:
@@ -254,7 +260,7 @@ class MECOXMLParser(object):
                     parseLog += parseMsg
                     self.conn.commit()
 
-                    parseMsg =  "{%s}" % self.dupeOnInsertCount
+                    parseMsg = "{%s}" % self.dupeOnInsertCount
                     parseMsg += "[%s]" % self.commitCount
                     parseMsg += "(%s)" % self.elementCount
                     sys.stderr.write(parseMsg)
@@ -268,14 +274,12 @@ class MECOXMLParser(object):
                                                        'debug') == True:
                         print "----- last register found -----"
 
-
         if self.commitCount == 0:
-            parseMsg =  "{%s}" % self.dupeOnInsertCount
+            parseMsg = "{%s}" % self.dupeOnInsertCount
             parseMsg += "[%s]" % self.commitCount
             parseMsg += "(%s)" % self.elementCount
             sys.stderr.write(parseMsg)
             parseLog += parseMsg
-
 
         parseMsg = "*commit*"
         sys.stderr.write(parseMsg)

@@ -45,6 +45,7 @@ class MECODBUtil(object):
         self.executeSQL(cur, sql)
 
         row = None
+
         try:
             row = cur.fetchone()
         except psycopg2.ProgrammingError, e:
@@ -56,7 +57,7 @@ class MECODBUtil(object):
 
         if lastSequenceValue is None:
             print"Critical error. Last sequence value could not be retrieved."
-            sys.exit()
+            sys.exit(-1)
 
         return lastSequenceValue
 
