@@ -48,9 +48,11 @@ v1
 v2
 : Eliminated duplicates in the Reading branch by searching on meter name, interval end time, and channel.
 
-v3
-: Retroactively adding event data. 
+v3 (Production)
+: Retroactively adding event data. Duplicates may exist in the Event branch and the Register branch.
 
+v4 (Development)
+: Will eliminate duplicates in the Event branch and the Register branch.
 
 ![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/diagrams/2013-05-29_ReadingAndMeterCounts.png)
 Plot of readings per meter counts and meter counts per day loaded to meco_v3.
