@@ -547,6 +547,16 @@ ALTER SEQUENCE intervalreaddata_id_seq OWNED BY "IntervalReadData".interval_read
 
 
 --
+-- Name: meter_read_dates; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW meter_read_dates AS
+    SELECT "MeterData".util_device_id, min("Interval".end_time) AS earliest_date, max("IntervalReadData".end_time) AS latest_date FROM (("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) GROUP BY "MeterData".util_device_id;
+
+
+ALTER TABLE public.meter_read_dates OWNER TO eileen;
+
+--
 -- Name: meterdata_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
 --
 
@@ -680,6 +690,16 @@ CREATE VIEW "testCastChannel" AS
 
 
 ALTER TABLE public."testCastChannel" OWNER TO postgres;
+
+--
+-- Name: test_cast_channel; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW test_cast_channel AS
+    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, (CASE WHEN ("Reading".channel = (1)::smallint) THEN "Reading".value ELSE NULL::real END)::numeric AS energy_out, (CASE WHEN ("Reading".channel = (2)::smallint) THEN "Reading".value ELSE NULL::real END)::numeric AS energy_from, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
+
+
+ALTER TABLE public.test_cast_channel OWNER TO postgres;
 
 --
 -- Name: tier_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
@@ -1317,6 +1337,16 @@ GRANT ALL ON SEQUENCE intervalreaddata_id_seq TO sepgroup;
 
 
 --
+-- Name: meter_read_dates; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE meter_read_dates FROM PUBLIC;
+REVOKE ALL ON TABLE meter_read_dates FROM eileen;
+GRANT ALL ON TABLE meter_read_dates TO eileen;
+GRANT ALL ON TABLE meter_read_dates TO sepgroup;
+
+
+--
 -- Name: meterdata_id_seq; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -1389,6 +1419,16 @@ REVOKE ALL ON TABLE "testCastChannel" FROM PUBLIC;
 REVOKE ALL ON TABLE "testCastChannel" FROM postgres;
 GRANT ALL ON TABLE "testCastChannel" TO postgres;
 GRANT ALL ON TABLE "testCastChannel" TO sepgroup;
+
+
+--
+-- Name: test_cast_channel; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE test_cast_channel FROM PUBLIC;
+REVOKE ALL ON TABLE test_cast_channel FROM postgres;
+GRANT ALL ON TABLE test_cast_channel TO postgres;
+GRANT ALL ON TABLE test_cast_channel TO sepgroup;
 
 
 --
