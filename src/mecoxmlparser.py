@@ -127,6 +127,60 @@ class MECOXMLParser(object):
         return name
 
 
+    def processDataToBeInserted(self, columnsAndValues, currentTableName,
+                                fKeyValue, parseLog, pkeyCol):
+        # Handle a special case for duplicate reading data.
+        # Intercept the duplicate reading data before insert.
+        if currentTableName == "Reading":
+            # Does a meter-endtime-channel tuple duplicate exist?
+            self.channelDupeExists \
+                = self.dupeChecker.readingBranchDupeExists(
+                self.conn,
+                self.currentMeterName,
+                self.currentIntervalEndTime,
+                columnsAndValues['Channel']
+            )
+
+
+        # Only perform an insert if there are no duplicate values
+        # for the channel.
+        if not self.channelDupeExists:
+            cur = self.inserter.insertData(self.conn,
+                                           currentTableName,
+                                           columnsAndValues,
+                                           fKeyValue,
+                                           1)
+            # The last 1 indicates don't commit.
+
+            # If no insertion took place,
+            # don't attempt to get the last sequence value.
+            self.lastSeqVal \
+                = self.util.getLastSequenceID(self.conn,
+                                              currentTableName,
+                                              pkeyCol)
+            # Store the primary key.
+            self.fkDeterminer.pkValforCol[pkeyCol] = self.lastSeqVal
+
+
+        else: # Don't insert into Reading table if a dupe exists.
+            print "Duplicate meter-endtime-channel exists."
+            self.dupeOnInsertCount += 1
+            if self.dupeOnInsertCount > 0 and self \
+                .dupeOnInsertCount < 2:
+                parseMsg = "{dupe on insert==>}"
+                sys.stderr.write(parseMsg)
+                parseLog += parseMsg
+
+            # Also, verify the data is equivalent to the existing
+            # record.
+            if self.dupeChecker.readingValuesAreInTheDatabase(
+                    self.conn,
+                    columnsAndValues):
+                print "Verified reading values are in the database."
+
+            self.channelDupeExists = False
+        return parseLog
+
     def walkTheTreeFromRoot(self, root):
         """
         Walk an XML tree from its root node.
@@ -207,57 +261,12 @@ class MECOXMLParser(object):
                     columnsAndValues['Event_Content'] = element.text
 
                 if self.insertDataIntoDatabase:
+                    # Data is intended to be inserted into the database.
 
-                    # Handle a special case for duplicate reading data.
-                    # Intercept the duplicate reading data before insert.
-                    if currentTableName == "Reading":
-                        # Does a meter-endtime-channel tuple duplicate exist?
-                        self.channelDupeExists \
-                            = self.dupeChecker.readingBranchDupeExists(
-                            self.conn,
-                            self.currentMeterName,
-                            self.currentIntervalEndTime,
-                            columnsAndValues['Channel']
-                        )
-
-
-                    # Only perform an insert if there are no duplicate values
-                    # for the channel.
-                    if not self.channelDupeExists:
-                        cur = self.inserter.insertData(self.conn,
-                                                       currentTableName,
-                                                       columnsAndValues,
-                                                       fKeyValue,
-                                                       1)
-                        # The last 1 indicates don't commit.
-
-                        # If no insertion took place,
-                        # don't attempt to get the last sequence value.
-                        self.lastSeqVal \
-                            = self.util.getLastSequenceID(self.conn,
-                                                          currentTableName,
-                                                          pkeyCol)
-                        # Store the primary key.
-                        self.fkDeterminer.pkValforCol[pkeyCol] = self.lastSeqVal
-
-
-                    else: # Don't insert into Reading table if a dupe exists.
-                        print "Duplicate meter-endtime-channel exists."
-                        self.dupeOnInsertCount += 1
-                        if self.dupeOnInsertCount > 0 and self \
-                            .dupeOnInsertCount < 2:
-                            parseMsg = "{dupe on insert==>}"
-                            sys.stderr.write(parseMsg)
-                            parseLog += parseMsg
-
-                        # Also, verify the data is equivalent to the existing
-                        # record.
-                        if self.dupeChecker.readingValuesAreInTheDatabase(
-                                self.conn,
-                                columnsAndValues):
-                            print "Verified reading values are in the database."
-
-                        self.channelDupeExists = False
+                    parseLog = self.processDataToBeInserted(columnsAndValues,
+                                                            currentTableName,
+                                                            fKeyValue, parseLog,
+                                                            pkeyCol)
 
                 if self.configer.configOptionValue("Debugging",
                                                    'debug') == True:
@@ -268,7 +277,7 @@ class MECOXMLParser(object):
                                                        'debug') == True:
                         print "----- last reading found -----"
 
-                    parseMsg = "*commit*"
+                    parseMsg = "*"
                     sys.stderr.write(parseMsg)
                     parseLog += parseMsg
                     self.conn.commit()
