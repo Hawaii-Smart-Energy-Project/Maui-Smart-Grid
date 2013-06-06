@@ -56,6 +56,20 @@ def processCommandLineArguments():
     commandLineArgs = parser.parse_args()
 
 
+def makePlotAttachments():
+    plotPath = configer.configOptionValue("Data Paths", "plot_path")
+    sys.stderr.write("plotPath = %s\n" % plotPath)
+
+    # if plot doesn't exist
+    if not os.path.isdir(plotPath):
+        return []
+
+    attachments = ["%s/ReadingAndMeterCounts.png" % plotPath]
+    for a in attachments:
+        sys.stderr.write("attachment = %s\n" % a)
+    return attachments
+
+
 processCommandLineArguments()
 
 inserter = Inserter()
@@ -146,14 +160,16 @@ print msg
 msgBody += msg + "\n"
 
 plotter = MECOPlotting()
-plotter.plotReadingAndMeterCounts()
+
+try:
+    plotter.plotReadingAndMeterCounts()
+    msg = "\nPlot is attached.\n"
+except:
+    msg = "\nFailed to generate plot.\n"
+
+msgBody += msg
 
 if commandLineArgs.email:
-    plotPath = configer.configOptionValue("Data Paths", "plot_path")
-    sys.stderr.write("plotPath = %s\n" % plotPath)
-    attachments = ["%s/ReadingAndMeterCounts.png" % plotPath]
-    for a in attachments:
-        sys.stderr.write("attachment = %s\n" % a)
-
-    notifier.sendMailWithAttachments(msgBody, attachments,
+    notifier.sendMailWithAttachments(msgBody, makePlotAttachments(),
                                      commandLineArgs.testing)
+
