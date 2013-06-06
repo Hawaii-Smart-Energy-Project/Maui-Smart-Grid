@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
+Static Meter Record Loading.
+
 Insert Meter Records into the database from a tab-separated data file.
 
 Usage:
@@ -15,15 +17,25 @@ import csv
 import sys
 from mecodbconnect import MECODBConnector
 from mecodbutils import MECODBUtil
+from meconotifier import MECONotifier
+from mecoconfig import MECOConfiger
 
 filename = sys.argv[1]
 
+configer = MECOConfiger()
 connector = MECODBConnector()
 conn = connector.connectDB()
 cur = conn.cursor()
 dbUtil = MECODBUtil()
+notifier = MECONotifier()
+msgBody = ''
+msg = ''
 
-print "Loading data in file %s" % (filename)
+
+dbName = configer.configOptionValue("Database", "db_name")
+msg = ("Loading static meter record data in file %s to database %s.\n" % (filename, dbName))
+sys.stderr.write(msgBody)
+msgBody += msg
 
 f = open(filename, "r")
 reader = csv.reader(f)
@@ -84,3 +96,9 @@ with open(filename) as tsv :
         lineCnt += 1
 
 conn.commit()
+
+msg = ("Processed %s lines.", lineCnt)
+sys.stderr.write(msgBody)
+msgBody += msg
+
+notifier.sendNotificationEmail(msgBody)
