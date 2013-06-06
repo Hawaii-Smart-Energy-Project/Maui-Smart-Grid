@@ -15,6 +15,7 @@ import csv
 import sys
 from mecodbconnect import MECODBConnector
 from mecodbutils import MECODBUtil
+from meconotifier import MECONotifier
 
 filename = sys.argv[1]
 
@@ -24,8 +25,15 @@ connector = MECODBConnector()
 conn = connector.connectDB()
 cur = conn.cursor()
 dbUtil = MECODBUtil()
+notifier = MECONotifier()
+msg=''
+msgBody=''
 
-print "Loading data in file %s" % (filename)
+dbName = configer.configOptionValue("Database", "db_name")
+
+msg = ("Loading static location record data in file %s to database %s.\n" % (filename, dbName))
+sys.stderr.write(msg)
+msgBody += msg
 
 f = open(filename, "r")
 reader = csv.reader(f)
@@ -79,7 +87,18 @@ with open(filename) as tsv:
 
 conn.commit()
 
+msg = ("Processed %s lines.\n", lineCnt)
+sys.stderr.write(msg)
+msgBody += msg
+
+
 if not anyFailure:
-    print "Finished inserting location records."
+    msg= "Finished inserting location records.\n"
+    sys.stderr.write(msg)
+    msgBody += msg
 else:
-    print "Location records were NOT successfully loaded."
+    msg= "Location records were NOT successfully loaded.\n"
+    sys.stderr.write(msg)
+    msgBody += msg
+
+notifier.sendNotificationEmail(msgBody)

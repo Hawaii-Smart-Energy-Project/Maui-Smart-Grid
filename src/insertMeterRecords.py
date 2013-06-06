@@ -33,8 +33,9 @@ msg = ''
 
 
 dbName = configer.configOptionValue("Database", "db_name")
+
 msg = ("Loading static meter record data in file %s to database %s.\n" % (filename, dbName))
-sys.stderr.write(msgBody)
+sys.stderr.write(msg)
 msgBody += msg
 
 f = open(filename, "r")
@@ -98,7 +99,7 @@ with open(filename) as tsv :
 conn.commit()
 
 msg = ("Processed %s lines.", lineCnt)
-sys.stderr.write(msgBody)
+sys.stderr.write(msg)
 msgBody += msg
 
 notifier.sendNotificationEmail(msgBody)
