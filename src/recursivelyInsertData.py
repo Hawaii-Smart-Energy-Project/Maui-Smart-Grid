@@ -69,6 +69,9 @@ def makePlotAttachments():
         sys.stderr.write("attachment = %s\n" % a)
     return attachments
 
+def logLegend():
+    legend = "{} = dupes, [] = element group, () = elements, * = commit";
+    return legend
 
 processCommandLineArguments()
 
@@ -153,6 +156,8 @@ for root, dirnames, filenames in os.walk('.'):
                 msgBody += parseLog + "\n"
                 msgBody += "\nWall time = {:.2f} seconds.\n".format(
                     time.time() - startTime)
+
+msgBody += "\n" + logLegend() + "\n"
 
 msg = "\nProcessed file count is %s.\n" % xmlGzCount
 
