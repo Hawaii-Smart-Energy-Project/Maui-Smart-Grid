@@ -108,6 +108,25 @@ class MECOXMLParser(object):
         return parseLog
 
 
+    def tableNameForAnElement(self, element):
+        """
+        Get the tablename for an element.
+
+        :param element: Element tree element.
+        :returns: table name
+        """
+
+        name = ''
+        try:
+            name = re.search('\{.*\}(.*)', element.tag).group(1)
+        except:
+            if self.configer.configOptionValue("Debugging",
+                                               'debug') == True:
+                sys.stderr.write("(EXCEPTION: nextElement = %s)" % nextElement)
+            name = None
+        return name
+
+
     def walkTheTreeFromRoot(self, root):
         """
         Walk an XML tree from its root node.
@@ -121,18 +140,13 @@ class MECOXMLParser(object):
         walker = root.iter()
 
         for element, nextElement in self.getNext(walker):
+            # Process every element in the tree while reading ahead to get the next element.
+
             self.elementCount += 1
 
-            currentTableName = re.search('\{.*\}(.*)', element.tag).group(
-                1)
-            try:
-                nextTableName = re.search('\{.*\}(.*)', nextElement.tag).group(
-                    1)
-            except:
-                if self.configer.configOptionValue("Debugging",
-                                                   'debug') == True:
-                    print "EXCEPTION: nextElement = %s" % nextElement
-                nextTableName = None
+            currentTableName = self.tableNameForAnElement(element)
+            nextTableName = self.tableNameForAnElement(nextElement)
+            assert(currentTableName is not None)
 
             self.tableNameCount[currentTableName] += 1
 
@@ -205,7 +219,6 @@ class MECOXMLParser(object):
                             self.currentIntervalEndTime,
                             columnsAndValues['Channel']
                         )
-
 
 
                     # Only perform an insert if there are no duplicate values
@@ -281,7 +294,7 @@ class MECOXMLParser(object):
             sys.stderr.write(parseMsg)
             parseLog += parseMsg
 
-        parseMsg = "*commit*"
+        parseMsg = "*"
         sys.stderr.write(parseMsg)
         parseLog += parseMsg
         self.conn.commit()
