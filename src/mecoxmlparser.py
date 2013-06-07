@@ -120,9 +120,6 @@ class MECOXMLParser(object):
         try:
             name = re.search('\{.*\}(.*)', element.tag).group(1)
         except:
-            if self.configer.configOptionValue("Debugging",
-                                               'debug') == True:
-                sys.stderr.write("(EXCEPTION: nextElement = %s)" % nextElement)
             name = None
         return name
 
