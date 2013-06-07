@@ -682,16 +682,6 @@ ALTER SEQUENCE registerread_id_seq OWNED BY "RegisterRead".register_read_id;
 
 
 --
--- Name: testCastChannel; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW "testCastChannel" AS
-    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, (CASE WHEN ("Reading".channel = (1)::smallint) THEN "Reading".value ELSE NULL::real END)::numeric AS energy_out, (CASE WHEN ("Reading".channel = (2)::smallint) THEN "Reading".value ELSE NULL::real END)::numeric AS energy_from, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
-
-
-ALTER TABLE public."testCastChannel" OWNER TO postgres;
-
---
 -- Name: test_cast_channel; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -1409,16 +1399,6 @@ GRANT ALL ON SEQUENCE registerdata_id_seq TO sepgroup;
 REVOKE ALL ON SEQUENCE registerread_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE registerread_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE registerread_id_seq TO sepgroup;
-
-
---
--- Name: testCastChannel; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE "testCastChannel" FROM PUBLIC;
-REVOKE ALL ON TABLE "testCastChannel" FROM postgres;
-GRANT ALL ON TABLE "testCastChannel" TO postgres;
-GRANT ALL ON TABLE "testCastChannel" TO sepgroup;
 
 
 --
