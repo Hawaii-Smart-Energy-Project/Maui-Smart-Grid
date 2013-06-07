@@ -12,6 +12,8 @@ import sys
 import re
 from mecodbconnect import MECODBConnector
 from mecodbutils import MECODBUtil
+from meconotifier import MECONotifier
+from mecoconfig import MECOConfiger
 
 try:
     len(sys.argv[1])
@@ -20,6 +22,22 @@ except:
     sys.exit()
 
 filename = sys.argv[1]
+msgBody = ''
+
+connector = MECODBConnector()
+conn = connector.connectDB()
+cur = conn.cursor()
+dbUtil = MECODBUtil()
+notifier = MECONotifier()
+sqlSuccess = False
+configer = MECOConfiger()
+
+dbName = configer.configOptionValue("Database", "db_name")
+
+msg = ("Loading weather data in file %s to database %s.\n" % (
+    filename, dbName))
+sys.stderr.write(msg)
+msgBody += msg
 
 cols = ["wban", "datetime", "station_type", "sky_condition",
         "sky_condition_flag", "visibility", "visibility_flag", "weather_type",
@@ -35,11 +53,6 @@ cols = ["wban", "datetime", "station_type", "sky_condition",
         "pressure_change", "pressure_change_flag", "sea_level_pressure",
         "sea_level_pressure_flag", "record_type", "record_type_flag",
         "hourly_precip", "hourly_precip_flag", "altimeter", "altimeter_flag"]
-
-connector = MECODBConnector()
-conn = connector.connectDB()
-cur = conn.cursor()
-dbUtil = MECODBUtil()
 
 myFile = open(filename, "r")
 reader = csv.reader(myFile)
@@ -86,14 +99,25 @@ for row in reader:
                     else:
                         data[i] = "'" + data[i] + "'"
                 except IndexError, e:
-                    assert data != [], "data should never be empty"
+                    assert data != [], "Data should never be empty."
 
             sql = """INSERT INTO "WeatherKahaluiAirport" (%s) VALUES (%s)""" % (
                 ','.join(cols), ','.join(data[0:lastCol - 1]))
             print "sql = %s" % sql
-            dbUtil.executeSQL(cur, sql)
+            sqlSuccess = dbUtil.executeSQL(cur, sql)
 
     rowNum += 1
 
 myFile.close()
 conn.commit()
+
+if sqlSuccess:
+    msg = "SQL operation was successful.\n"
+    sys.stderr.write(msg)
+    msgBody += msg
+else:
+    msg = "SQL operation was NOT successful.\n"
+    sys.stderr.write(msg)
+    msgBody += msg
+
+notifier.sendNotificationEmail(msgBody)
