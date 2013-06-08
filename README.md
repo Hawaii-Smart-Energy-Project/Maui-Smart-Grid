@@ -12,6 +12,7 @@ This software provides data operations for the [Maui Smart Grid](http://www.maui
 * Insertion of data to a data store (PostgreSQL 9.1) is performed by executing a script from the command-line.
 * Source files to recreate the structure of the data store are available.
 * Unit testing of data processing operations is provided by a test suite implemented through Python's `unittest`.
+* Data operations are reported using email notifications including plots as graphic summaries.
 
 ### Project Documentation
 Documentation is maintained as docstrings within the source code files with the intention of conforming to the reStructuredText format. There is also a [GitHub-based wiki](https://github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/wiki).
@@ -52,7 +53,7 @@ v3 (Production)
 : Retroactively adding event data. Duplicates may exist in the Event branch and the Register branch.
 
 v4 (Development)
-: Will eliminate duplicates in the Event branch and the Register branch.
+: Will address duplicates in the Event branch and the Register branch.
 
 ![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/diagrams/2013-05-29_ReadingAndMeterCounts.png)
 Plot of readings per meter counts and meter counts per day loaded to meco_v3.
@@ -139,6 +140,21 @@ Location and meter records are stored in separate tab-separated files and are in
 
 `grantAllPermissionsToDatabase.sh ${DATABASE}`
 : Set appropriate permissions to databases.
+
+## Software Dependencies
+### Python Modules
+* ConfigParser
+* argparse
+* csv
+* datetime
+* email
+* fnmatch
+* gzip
+* matplotlib
+* psycopg2
+* pylab
+* smtplib
+* xml.etree.ElementTree
 
 ## License
 
