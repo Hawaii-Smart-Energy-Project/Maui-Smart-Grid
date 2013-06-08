@@ -35,6 +35,11 @@ class MECOXMLParser(object):
         if (testing):
             print "Testing Mode is ON."
 
+        self.debug = False
+        if self.configer.configOptionValue("Debugging",
+                                           'debug') == True:
+            self.debug = True
+
         self.configer = MECOConfiger()
         self.util = MECODBUtil()
         self.mapper = MECOMapper()
@@ -126,6 +131,17 @@ class MECOXMLParser(object):
 
     def processDataToBeInserted(self, columnsAndValues, currentTableName,
                                 fKeyValue, parseLog, pkeyCol):
+        """
+        :param columnsAndValues: A dictionary containing columns and their
+        values.
+        :param currentTableName: The name of the current table.
+        :param fKeyValue: The value of the foreign key.
+        :param parseLog: String containing a concise log of operations.
+        :param pkeyCol: Column name for the primary key.
+        :returns: A string containing the parse log.
+        """
+
+
         # Handle a special case for duplicate reading data.
         # Intercept the duplicate reading data before insert.
         if currentTableName == "Reading":
@@ -142,6 +158,9 @@ class MECOXMLParser(object):
         # Only perform an insert if there are no duplicate values
         # for the channel.
         if not self.channelDupeExists:
+            # ***********************
+            # ***** INSERT DATA *****
+            # ***********************
             cur = self.inserter.insertData(self.conn,
                                            currentTableName,
                                            columnsAndValues,
@@ -191,14 +210,16 @@ class MECOXMLParser(object):
         walker = root.iter()
 
         for element, nextElement in self.getNext(walker):
-            # Process every element in the tree while reading ahead to get the next element.
+            # Process every element in the tree while reading ahead to get
+            # the next element.
 
             self.elementCount += 1
 
             currentTableName = self.tableNameForAnElement(element)
             nextTableName = self.tableNameForAnElement(nextElement)
-            assert(currentTableName is not None)
+            assert (currentTableName is not None)
 
+            # Maintain a count of tables encountered.
             self.tableNameCount[currentTableName] += 1
 
             columnsAndValues = {}
@@ -209,11 +230,10 @@ class MECOXMLParser(object):
                 columnsAndValues[item[0]] = item[1]
 
             if currentTableName in self.insertTables:
-                # Check if the current table is one of the tables to be
-                # inserted to.
+                # Check if the current table is one of the tables to have data
+                # inserted.
 
-                if self.configer.configOptionValue("Debugging",
-                                                   'debug') == True:
+                if self.debug:
                     print
                     print "Processing table %s, next is %s." % (
                         currentTableName, nextTableName)
@@ -233,8 +253,7 @@ class MECOXMLParser(object):
                 except:
                     pass
 
-                if self.configer.configOptionValue("Debugging",
-                                                   'debug') == True:
+                if self.debug:
                     print "foreign key col (fkey) = %s" % fkeyCol
                     print "primary key col (pkey) = %s" % pkeyCol
                     print columnsAndValues
@@ -243,10 +262,10 @@ class MECOXMLParser(object):
                     # Get the foreign key value.
                     fKeyValue = self.fkDeterminer.pkValforCol[fkeyCol]
 
-                if self.configer.configOptionValue("Debugging",
-                                                   'debug') == True:
+                if self.debug:
                     print "fKeyValue = %s" % fKeyValue
 
+                # Perform table based operations.
                 if currentTableName == "MeterData":
                     self.currentMeterName = columnsAndValues['MeterName']
 
@@ -265,13 +284,13 @@ class MECOXMLParser(object):
                                                             fKeyValue, parseLog,
                                                             pkeyCol)
 
-                if self.configer.configOptionValue("Debugging",
-                                                   'debug') == True:
+                if self.debug:
                     print "lastSeqVal = ", self.lastSeqVal
 
                 if self.lastReading(currentTableName, nextTableName):
-                    if self.configer.configOptionValue("Debugging",
-                                                       'debug') == True:
+                    # The last reading set has been reached.
+
+                    if self.debug:
                         print "----- last reading found -----"
 
                     parseMsg = "*"
@@ -289,8 +308,9 @@ class MECOXMLParser(object):
                     self.dupeOnInsertCount = 0
 
                 if self.lastRegister(currentTableName, nextTableName):
-                    if self.configer.configOptionValue("Debugging",
-                                                       'debug') == True:
+                    # The last register set has been reached.
+
+                    if self.debug:
                         print "----- last register found -----"
 
         if self.commitCount == 0:
