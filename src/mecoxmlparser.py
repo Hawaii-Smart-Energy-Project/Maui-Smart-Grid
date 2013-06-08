@@ -14,6 +14,7 @@ from meco_fk import MECOFKDeterminer
 import sys
 from itertools import tee, islice, izip_longest
 from mecodupecheck import MECODupeChecker
+from mecologger import MECOLogger
 
 DEBUG = 0 # print debugging info if 1
 
@@ -36,11 +37,11 @@ class MECOXMLParser(object):
             print "Testing Mode is ON."
 
         self.debug = False
+        self.configer = MECOConfiger()
         if self.configer.configOptionValue("Debugging",
                                            'debug') == True:
             self.debug = True
-
-        self.configer = MECOConfiger()
+        self.logger = MECOLogger()
         self.util = MECODBUtil()
         self.mapper = MECOMapper()
         self.connector = MECODBConnector(testing)
@@ -132,6 +133,9 @@ class MECOXMLParser(object):
     def processDataToBeInserted(self, columnsAndValues, currentTableName,
                                 fKeyValue, parseLog, pkeyCol):
         """
+        This is the method that performs insertion of parsed data to the
+        database.
+
         :param columnsAndValues: A dictionary containing columns and their
         values.
         :param currentTableName: The name of the current table.
@@ -140,7 +144,6 @@ class MECOXMLParser(object):
         :param pkeyCol: Column name for the primary key.
         :returns: A string containing the parse log.
         """
-
 
         # Handle a special case for duplicate reading data.
         # Intercept the duplicate reading data before insert.
@@ -183,9 +186,7 @@ class MECOXMLParser(object):
             self.dupeOnInsertCount += 1
             if self.dupeOnInsertCount > 0 and self \
                 .dupeOnInsertCount < 2:
-                parseMsg = "{dupe on insert==>}"
-                sys.stderr.write(parseMsg)
-                parseLog += parseMsg
+                parseLog += self.logger.logAndWrite("{dupe on insert==>}")
 
             # Also, verify the data is equivalent to the existing
             # record.
@@ -269,7 +270,6 @@ class MECOXMLParser(object):
                 if currentTableName == "MeterData":
                     self.currentMeterName = columnsAndValues['MeterName']
 
-                # Perform a dupe check for the Reading branch.
                 if currentTableName == "Interval":
                     self.currentIntervalEndTime = columnsAndValues['EndTime']
 
@@ -293,16 +293,15 @@ class MECOXMLParser(object):
                     if self.debug:
                         print "----- last reading found -----"
 
-                    parseMsg = "*"
-                    sys.stderr.write(parseMsg)
-                    parseLog += parseMsg
+                    parseLog += self.logger.logAndWrite("*")
                     self.conn.commit()
 
-                    parseMsg = "{%s}" % self.dupeOnInsertCount
-                    parseMsg += "[%s]" % self.commitCount
-                    parseMsg += "(%s)" % self.elementCount
-                    sys.stderr.write(parseMsg)
-                    parseLog += parseMsg
+                    parseLog += self.logger.logAndWrite(
+                        "{%s}" % self.dupeOnInsertCount)
+                    parseLog += self.logger.logAndWrite(
+                        "[%s]" % self.commitCount)
+                    parseLog += self.logger.logAndWrite(
+                        "[%s]" % self.elementCount)
 
                     self.commitCount += 1
                     self.dupeOnInsertCount = 0
@@ -314,15 +313,11 @@ class MECOXMLParser(object):
                         print "----- last register found -----"
 
         if self.commitCount == 0:
-            parseMsg = "{%s}" % self.dupeOnInsertCount
-            parseMsg += "[%s]" % self.commitCount
-            parseMsg += "(%s)" % self.elementCount
-            sys.stderr.write(parseMsg)
-            parseLog += parseMsg
+            parseLog += self.logger.logAndWrite("{%s}" % self.dupeOnInsertCount)
+            parseLog += self.logger.logAndWrite("[%s]" % self.commitCount)
+            parseLog += self.logger.logAndWrite("[%s]" % self.elementCount)
 
-        parseMsg = "*"
-        sys.stderr.write(parseMsg)
-        parseLog += parseMsg
+        parseLog += self.logger.logAndWrite("*")
         self.conn.commit()
         print
 
