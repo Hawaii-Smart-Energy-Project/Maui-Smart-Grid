@@ -69,9 +69,12 @@ def makePlotAttachments():
         sys.stderr.write("attachment = %s\n" % a)
     return attachments
 
+
 def logLegend():
-    legend = "{} = dupes, [] = element group, () = elements, * = commit";
+    legend = "Log Legend: {} = dupes, [] = element group, " \
+             "() = cumulative elements, * = commit";
     return legend
+
 
 processCommandLineArguments()
 
