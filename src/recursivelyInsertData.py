@@ -139,7 +139,10 @@ for root, dirnames, filenames in os.walk('.'):
         if re.search('.*log\.xml', filename) is None: # skip *log.xml files
 
             fullPath = os.path.join(root, filename)
-            msg = fullPath
+            msg = ""
+            if xmlGzCount > 0:
+                msg += "\n"
+            msg += fullPath
             print msg
             msgBody += msg + "\n"
             xmlGzCount += 1
