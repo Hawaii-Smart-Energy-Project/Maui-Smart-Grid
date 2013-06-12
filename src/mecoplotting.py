@@ -31,7 +31,7 @@ class MECOPlotting(object):
         self.configer = MECOConfiger()
 
 
-    def plotReadingAndMeterCounts(self):
+    def plotReadingAndMeterCounts(self, databaseName = None):
         """
         Create a plot of reading and meter counts.
         Save the plot to local storage.
@@ -53,9 +53,15 @@ class MECOPlotting(object):
 
         plt.legend(loc = 'best')
         localtime = time.asctime(time.localtime(time.time()))
+
+        databaseMsg = ''
+        if databaseName:
+            databaseMsg = " for Database %s" % databaseName
+
         plt.title(
-            'Readings/Meter, and Meter, Count per Day\nCreated on %s' %
-            localtime)
+            'Readings/Meter, and Meter, Count per Day%s'
+            '%s\nCreated on %s' %
+            (databaseMsg, localtime))
 
         fig = matplotlib.pyplot.gcf()
         fig.set_size_inches(18.5, 11.5)

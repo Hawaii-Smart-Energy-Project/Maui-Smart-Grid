@@ -86,13 +86,14 @@ if commandLineArgs.email:
     sys.stderr.write("Email will be sent.\n")
 
 msg = ''
-if commandLineArgs.testing:
-    msg = "Recursively inserting data to the database named %s." % configer \
-        .configOptionValue("Database", "testing_db_name")
-else:
-    msg = "Recursively inserting data to the database named %s." % configer \
-        .configOptionValue("Database", "db_name")
+databaseName = ''
 
+if commandLineArgs.testing:
+    databaseName = configer.configOptionValue("Database", "testing_db_name")
+else:
+    databaseName = configer.configOptionValue("Database", "db_name")
+
+msg = "Recursively inserting data to the database named %s." % databaseName
 print msg
 msgBody += msg + "\n"
 
@@ -171,7 +172,7 @@ msgBody += msg + "\n"
 plotter = MECOPlotting()
 
 try:
-    plotter.plotReadingAndMeterCounts()
+    plotter.plotReadingAndMeterCounts(databaseName)
     msg = "\nPlot is attached.\n"
 except:
     msg = "\nFailed to generate plot.\n"
