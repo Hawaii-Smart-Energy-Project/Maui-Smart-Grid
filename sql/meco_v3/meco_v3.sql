@@ -146,6 +146,113 @@ CREATE TABLE "LocationRecords" (
 ALTER TABLE public."LocationRecords" OWNER TO sepgroup;
 
 --
+-- Name: MSG_PV_Data; Type: TABLE; Schema: public; Owner: eileen; Tablespace: 
+--
+
+CREATE TABLE "MSG_PV_Data" (
+    util_device_id character varying(64) NOT NULL,
+    map integer,
+    no integer,
+    pv_mod_size_kw double precision,
+    inverter_model character varying(40),
+    inverter_size_kw real,
+    system_cap_kw real,
+    add_cap_kw real,
+    upg_date real,
+    battery character varying(10),
+    substation character varying(20),
+    circuit real,
+    upload_date timestamp without time zone
+);
+
+
+ALTER TABLE public."MSG_PV_Data" OWNER TO eileen;
+
+--
+-- Name: COLUMN "MSG_PV_Data".util_device_id; Type: COMMENT; Schema: public; Owner: eileen
+--
+
+COMMENT ON COLUMN "MSG_PV_Data".util_device_id IS 'meter id number';
+
+
+--
+-- Name: COLUMN "MSG_PV_Data".map; Type: COMMENT; Schema: public; Owner: eileen
+--
+
+COMMENT ON COLUMN "MSG_PV_Data".map IS 'referencing map from Mel Gehrs';
+
+
+--
+-- Name: COLUMN "MSG_PV_Data".no; Type: COMMENT; Schema: public; Owner: eileen
+--
+
+COMMENT ON COLUMN "MSG_PV_Data".no IS 'net energy metering number from MECO';
+
+
+--
+-- Name: COLUMN "MSG_PV_Data".pv_mod_size_kw; Type: COMMENT; Schema: public; Owner: eileen
+--
+
+COMMENT ON COLUMN "MSG_PV_Data".pv_mod_size_kw IS 'total capacity of all the modules (panels)';
+
+
+--
+-- Name: COLUMN "MSG_PV_Data".inverter_model; Type: COMMENT; Schema: public; Owner: eileen
+--
+
+COMMENT ON COLUMN "MSG_PV_Data".inverter_model IS 'Inverter make and model number';
+
+
+--
+-- Name: COLUMN "MSG_PV_Data".inverter_size_kw; Type: COMMENT; Schema: public; Owner: eileen
+--
+
+COMMENT ON COLUMN "MSG_PV_Data".inverter_size_kw IS 'total inverter capacity';
+
+
+--
+-- Name: COLUMN "MSG_PV_Data".system_cap_kw; Type: COMMENT; Schema: public; Owner: eileen
+--
+
+COMMENT ON COLUMN "MSG_PV_Data".system_cap_kw IS 'System capacity: smaller of the two - either module size or inverter size';
+
+
+--
+-- Name: COLUMN "MSG_PV_Data".add_cap_kw; Type: COMMENT; Schema: public; Owner: eileen
+--
+
+COMMENT ON COLUMN "MSG_PV_Data".add_cap_kw IS 'can extra capacity be added? Installation with microinverters can easily add capacity';
+
+
+--
+-- Name: COLUMN "MSG_PV_Data".upg_date; Type: COMMENT; Schema: public; Owner: eileen
+--
+
+COMMENT ON COLUMN "MSG_PV_Data".upg_date IS 'last date of an upgrade of system capacity';
+
+
+--
+-- Name: COLUMN "MSG_PV_Data".battery; Type: COMMENT; Schema: public; Owner: eileen
+--
+
+COMMENT ON COLUMN "MSG_PV_Data".battery IS 'if there is a battery (none in Maui Meadows in 2013)';
+
+
+--
+-- Name: COLUMN "MSG_PV_Data".substation; Type: COMMENT; Schema: public; Owner: eileen
+--
+
+COMMENT ON COLUMN "MSG_PV_Data".substation IS 'substation ID';
+
+
+--
+-- Name: COLUMN "MSG_PV_Data".circuit; Type: COMMENT; Schema: public; Owner: eileen
+--
+
+COMMENT ON COLUMN "MSG_PV_Data".circuit IS 'circuit ID number';
+
+
+--
 -- Name: MeterData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -375,6 +482,36 @@ CREATE TABLE "WeatherKahaluiAirport" (
 ALTER TABLE public."WeatherKahaluiAirport" OWNER TO sepgroup;
 
 --
+-- Name: YU_energy_to_houses_without_PV; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW "YU_energy_to_houses_without_PV" AS
+    SELECT "LocationRecords".device_util_id, "LocationRecords".service_point_util_id, "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_latitude, "LocationRecords".address1, "LocationRecords".premise_util_id, "Interval".end_time, "Reading".value AS "energy to house kWh" FROM (("LocationRecords" LEFT JOIN "MSG_PV_Data" ON ((("LocationRecords".device_util_id)::text = ("MSG_PV_Data".util_device_id)::text))) JOIN "MeterData" ON ((("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id))), "Interval", "Reading" WHERE (("MSG_PV_Data".util_device_id IS NULL) AND ("Reading".channel = 1));
+
+
+ALTER TABLE public."YU_energy_to_houses_without_PV" OWNER TO eileen;
+
+--
+-- Name: YU_voltages_for_houses_without_PV; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW "YU_voltages_for_houses_without_PV" AS
+    SELECT "LocationRecords".device_util_id, "LocationRecords".service_point_util_id, "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_latitude, "LocationRecords".address1, "LocationRecords".premise_util_id, "Interval".end_time, "Reading".value AS voltage FROM (("LocationRecords" LEFT JOIN "MSG_PV_Data" ON ((("LocationRecords".device_util_id)::text = ("MSG_PV_Data".util_device_id)::text))) JOIN "MeterData" ON ((("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id))), "Interval", "Reading" WHERE (("MSG_PV_Data".util_device_id IS NULL) AND ("Reading".channel = 4));
+
+
+ALTER TABLE public."YU_voltages_for_houses_without_PV" OWNER TO eileen;
+
+--
+-- Name: YU_energy_voltages_for_houses_without_PV; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW "YU_energy_voltages_for_houses_without_PV" AS
+    SELECT "YU_energy_to_houses_without_PV".device_util_id, "YU_energy_to_houses_without_PV".service_point_util_id, "YU_energy_to_houses_without_PV".service_pt_longitude, "YU_energy_to_houses_without_PV".service_pt_latitude, "YU_energy_to_houses_without_PV".address1, "YU_energy_to_houses_without_PV".premise_util_id, "YU_energy_to_houses_without_PV".end_time, "YU_energy_to_houses_without_PV"."energy to house kWh", "YU_voltages_for_houses_without_PV".voltage FROM ("YU_energy_to_houses_without_PV" JOIN "YU_voltages_for_houses_without_PV" ON ((("YU_energy_to_houses_without_PV".device_util_id)::text = ("YU_voltages_for_houses_without_PV".device_util_id)::text)));
+
+
+ALTER TABLE public."YU_energy_voltages_for_houses_without_PV" OWNER TO eileen;
+
+--
 -- Name: view_readings; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -547,6 +684,25 @@ ALTER SEQUENCE intervalreaddata_id_seq OWNED BY "IntervalReadData".interval_read
 
 
 --
+-- Name: meter_ids_for_houses_without_pv; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW meter_ids_for_houses_without_pv AS
+    SELECT "LocationRecords".device_util_id FROM ("LocationRecords" LEFT JOIN "MSG_PV_Data" ON ((("LocationRecords".device_util_id)::text = ("MSG_PV_Data".util_device_id)::text))) WHERE ("MSG_PV_Data".util_device_id IS NULL);
+
+
+ALTER TABLE public.meter_ids_for_houses_without_pv OWNER TO postgres;
+
+--
+-- Name: VIEW meter_ids_for_houses_without_pv; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW meter_ids_for_houses_without_pv IS 'Retrieve meter IDs for houses that do not have PV.
+
+@author Daniel Zhang (張道博)';
+
+
+--
 -- Name: meter_read_dates; Type: VIEW; Schema: public; Owner: eileen
 --
 
@@ -616,6 +772,44 @@ ALTER TABLE public.reading_id_seq OWNER TO sepgroup;
 --
 
 ALTER SEQUENCE reading_id_seq OWNED BY "Reading".reading_id;
+
+
+--
+-- Name: view_readings_with_meter_id; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW view_readings_with_meter_id AS
+    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time, "MeterData".meter_data_id FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
+
+
+ALTER TABLE public.view_readings_with_meter_id OWNER TO postgres;
+
+--
+-- Name: VIEW view_readings_with_meter_id; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW view_readings_with_meter_id IS 'View readings along with their end times. Retrieve the meter name along with the readings.
+
+@author Daniel Zhang (張道博)';
+
+
+--
+-- Name: readings_for_houses_without_pv; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW readings_for_houses_without_pv AS
+    SELECT meter_ids_for_houses_without_pv.device_util_id, view_readings_with_meter_id.end_time, view_readings_with_meter_id.meter_name, view_readings_with_meter_id.channel, view_readings_with_meter_id.raw_value, view_readings_with_meter_id.value, view_readings_with_meter_id.uom, view_readings_with_meter_id.start_time, view_readings_with_meter_id.ird_end_time FROM (meter_ids_for_houses_without_pv JOIN view_readings_with_meter_id ON (((meter_ids_for_houses_without_pv.device_util_id)::integer = (view_readings_with_meter_id.meter_name)::integer)));
+
+
+ALTER TABLE public.readings_for_houses_without_pv OWNER TO postgres;
+
+--
+-- Name: VIEW readings_for_houses_without_pv; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW readings_for_houses_without_pv IS 'Retrieve readings for houses that do not have PV.
+
+@author Daniel Zhang (張道博)';
 
 
 --
@@ -1149,6 +1343,16 @@ GRANT ALL ON TABLE "LocationRecords" TO sepgroup;
 
 
 --
+-- Name: MSG_PV_Data; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE "MSG_PV_Data" FROM PUBLIC;
+REVOKE ALL ON TABLE "MSG_PV_Data" FROM eileen;
+GRANT ALL ON TABLE "MSG_PV_Data" TO eileen;
+GRANT ALL ON TABLE "MSG_PV_Data" TO sepgroup;
+
+
+--
 -- Name: MeterData; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -1218,6 +1422,36 @@ GRANT ALL ON TABLE "Tier" TO sepgroup;
 REVOKE ALL ON TABLE "WeatherKahaluiAirport" FROM PUBLIC;
 REVOKE ALL ON TABLE "WeatherKahaluiAirport" FROM sepgroup;
 GRANT ALL ON TABLE "WeatherKahaluiAirport" TO sepgroup;
+
+
+--
+-- Name: YU_energy_to_houses_without_PV; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE "YU_energy_to_houses_without_PV" FROM PUBLIC;
+REVOKE ALL ON TABLE "YU_energy_to_houses_without_PV" FROM eileen;
+GRANT ALL ON TABLE "YU_energy_to_houses_without_PV" TO eileen;
+GRANT ALL ON TABLE "YU_energy_to_houses_without_PV" TO sepgroup;
+
+
+--
+-- Name: YU_voltages_for_houses_without_PV; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE "YU_voltages_for_houses_without_PV" FROM PUBLIC;
+REVOKE ALL ON TABLE "YU_voltages_for_houses_without_PV" FROM eileen;
+GRANT ALL ON TABLE "YU_voltages_for_houses_without_PV" TO eileen;
+GRANT ALL ON TABLE "YU_voltages_for_houses_without_PV" TO sepgroup;
+
+
+--
+-- Name: YU_energy_voltages_for_houses_without_PV; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE "YU_energy_voltages_for_houses_without_PV" FROM PUBLIC;
+REVOKE ALL ON TABLE "YU_energy_voltages_for_houses_without_PV" FROM eileen;
+GRANT ALL ON TABLE "YU_energy_voltages_for_houses_without_PV" TO eileen;
+GRANT ALL ON TABLE "YU_energy_voltages_for_houses_without_PV" TO sepgroup;
 
 
 --
@@ -1327,6 +1561,16 @@ GRANT ALL ON SEQUENCE intervalreaddata_id_seq TO sepgroup;
 
 
 --
+-- Name: meter_ids_for_houses_without_pv; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE meter_ids_for_houses_without_pv FROM PUBLIC;
+REVOKE ALL ON TABLE meter_ids_for_houses_without_pv FROM postgres;
+GRANT ALL ON TABLE meter_ids_for_houses_without_pv TO postgres;
+GRANT ALL ON TABLE meter_ids_for_houses_without_pv TO sepgroup;
+
+
+--
 -- Name: meter_read_dates; Type: ACL; Schema: public; Owner: eileen
 --
 
@@ -1372,6 +1616,26 @@ GRANT ALL ON TABLE raw_meter_readings TO sepgroup;
 REVOKE ALL ON SEQUENCE reading_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE reading_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE reading_id_seq TO sepgroup;
+
+
+--
+-- Name: view_readings_with_meter_id; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE view_readings_with_meter_id FROM PUBLIC;
+REVOKE ALL ON TABLE view_readings_with_meter_id FROM postgres;
+GRANT ALL ON TABLE view_readings_with_meter_id TO postgres;
+GRANT ALL ON TABLE view_readings_with_meter_id TO sepgroup;
+
+
+--
+-- Name: readings_for_houses_without_pv; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE readings_for_houses_without_pv FROM PUBLIC;
+REVOKE ALL ON TABLE readings_for_houses_without_pv FROM postgres;
+GRANT ALL ON TABLE readings_for_houses_without_pv TO postgres;
+GRANT ALL ON TABLE readings_for_houses_without_pv TO sepgroup;
 
 
 --
