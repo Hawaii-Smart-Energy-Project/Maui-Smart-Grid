@@ -60,7 +60,7 @@ class MECOPlotting(object):
 
         plt.title(
             'Readings/Meter, and Meter, Count per Day%s'
-            '%s\nCreated on %s' %
+            '\nCreated on %s' %
             (databaseMsg, localtime))
 
         fig = matplotlib.pyplot.gcf()
