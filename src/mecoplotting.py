@@ -11,6 +11,7 @@ import pylab
 import matplotlib.pyplot as plt
 import matplotlib.dates
 from mecoconfig import MECOConfiger
+import time
 
 # Set TEST_SCRIPT to True to run plotting as a script.
 TEST_SCRIPT = False
@@ -51,7 +52,10 @@ class MECOPlotting(object):
         plt.plot_date(newDates, meterCounts, 'ro:', aa = True, label = 'Meters')
 
         plt.legend(loc = 'best')
-        plt.title('Readings/Meter, and Meter, Count per Day')
+        localtime = time.asctime(time.localtime(time.time()))
+        plt.title(
+            'Readings/Meter, and Meter, Count per Day\nCreated on %s' %
+            localtime)
 
         fig = matplotlib.pyplot.gcf()
         fig.set_size_inches(18.5, 11.5)
