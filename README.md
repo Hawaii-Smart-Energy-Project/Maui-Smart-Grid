@@ -96,7 +96,7 @@ The reference template can be found in `config/sample-dot-meco-data-operations.c
 
 The database schema can be installed using the following command form where `${DATABASE_NAME}` is a valid database.
 
-    $ psql ${DATABASE_NAME} < meco-data-schema.sql
+    $ psql ${DATABASE_NAME} < ${DATABASE_STRUCTURE}.sql
 
 ## Software Operation
 
