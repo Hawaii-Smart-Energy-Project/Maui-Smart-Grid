@@ -135,5 +135,5 @@ class MECODBUtil(object):
 
         self.executeSQL(cursor, "select current_database()")
         row = cursor.fetchone()
-        return row
+        return row[0]
 

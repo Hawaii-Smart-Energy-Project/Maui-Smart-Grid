@@ -17,10 +17,14 @@ class MECODBReader(object):
     def __init__(self, testing = False):
         """
         Constructor.
+
+        :param testing: True if in testing mode.
         """
 
+        self.connector = MECODBConnector()
         self.conn = MECODBConnector(testing).connectDB()
         self.dbUtil = MECODBUtil()
+        self.dbName = self.dbUtil.getDBName(self.connector.dictCur)
 
     def selectRecord(self, conn, table, keyName, keyValue):
         """

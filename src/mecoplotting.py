@@ -59,7 +59,7 @@ class MECOPlotting(object):
             databaseMsg = " for Database %s" % databaseName
 
         plt.title(
-            'Readings/Meter, and Meter, Count per Day%s'
+            'Reading Count per Meter and Meter Count by Day%s'
             '\nCreated on %s' %
             (databaseMsg, localtime))
 
@@ -76,5 +76,5 @@ class MECOPlotting(object):
 
 if TEST_SCRIPT:
     plotter = MECOPlotting()
-    plotter.plotReadingAndMeterCounts()
+    plotter.plotReadingAndMeterCounts(plotter.reader.dbName)
 
