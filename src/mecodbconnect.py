@@ -8,49 +8,56 @@ import psycopg2.extras
 from mecoconfig import MECOConfiger
 import sys
 
-class MECODBConnector(object) :
+
+class MECODBConnector(object):
     """
     Manage a connection to a MECO database.
     """
 
-    def __init__(self, testing=False) :
+    def __init__(self, testing = False):
         """
         Constructor.
 
         :param testing: Boolean indicating if Testing Mode is on.
         """
 
-        if(testing):
+        if (testing):
             print "Testing Mode is ON."
 
         self.configer = MECOConfiger()
-        self.dbPassword = self.configer.configOptionValue("Database", 'db_password')
+        self.dbPassword = self.configer.configOptionValue("Database",
+                                                          'db_password')
         self.dbHost = self.configer.configOptionValue("Database", 'db_host')
         self.dbPort = self.configer.configOptionValue("Database", 'db_port')
 
         if testing:
-            self.dbName = self.configer.configOptionValue("Database", 'testing_db_name')
+            self.dbName = self.configer.configOptionValue("Database",
+                                                          'testing_db_name')
         else:
             self.dbName = self.configer.configOptionValue("Database", 'db_name')
 
         print "Using database %s." % self.dbName
 
-        self.dbUsername = self.configer.configOptionValue("Database", 'db_username')
+        self.dbUsername = self.configer.configOptionValue("Database",
+                                                          'db_username')
 
         self.conn = self.connectDB()
-        self.dictCur = self.conn.cursor(cursor_factory = psycopg2.extras.DictCursor)
+        self.dictCur = self.conn.cursor(
+            cursor_factory = psycopg2.extras.DictCursor)
 
-    def connectDB(self) :
+    def connectDB(self):
         """
         Make the DB connection.
         """
 
         conn = None
 
-        try :
-            conn = psycopg2.connect("dbname='%s' user='%s' host='%s' port='%s' password='%s'" % (
-                self.dbName, self.dbUsername, self.dbHost, self.dbPort, self.dbPassword))
-        except :
+        try:
+            conn = psycopg2.connect(
+                "dbname='%s' user='%s' host='%s' port='%s' password='%s'" % (
+                    self.dbName, self.dbUsername, self.dbHost, self.dbPort,
+                    self.dbPassword))
+        except:
             print "Failed to connect to the database."
             return None
         return conn

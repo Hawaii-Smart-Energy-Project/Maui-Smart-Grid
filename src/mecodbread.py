@@ -14,22 +14,24 @@ class MECODBReader(object):
     Read records from a database.
     """
 
-    def __init__(self):
+    def __init__(self, testing = False):
         """
         Constructor.
         """
 
-        self.conn = MECODBConnector().connectDB()
+        self.conn = MECODBConnector(testing).connectDB()
         self.dbUtil = MECODBUtil()
 
     def selectRecord(self, conn, table, keyName, keyValue):
-        """Read a record in the database given a table name, primary
-        key name, and value for the key.
+        """
+        Read a record in the database given a table name, primary key name,
+        and value for the key.
 
         :param conn DB connection
         :param table DB table name
         :param keyName DB column name for primary key
         :param keyValue Value to be matched
+        :returns: Row containing record data.
         """
 
         print "selectRecord:"
@@ -40,6 +42,12 @@ class MECODBReader(object):
         return row
 
     def readingAndMeterCounts(self):
+        """
+        Retrieve the reading and meter counts.
+
+        :returns: Multiple lists containing the retrieved data.
+        """
+
         sql = """select "Day", "Reading Count",
         "Meter Count" from count_of_readings_and_meters_by_day"""
         dcur = self.conn.cursor(cursor_factory = psycopg2.extras.DictCursor)

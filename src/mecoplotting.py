@@ -22,12 +22,12 @@ class MECOPlotting(object):
     Provides plotting services to MECO data processing.
     """
 
-    def __init__(self):
+    def __init__(self, testing = False):
         """
         Constructor.
         """
 
-        self.reader = MECODBReader()
+        self.reader = MECODBReader(testing)
         self.configer = MECOConfiger()
 
 
