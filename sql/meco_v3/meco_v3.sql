@@ -492,6 +492,16 @@ CREATE VIEW "YU_energy_to_houses_without_PV" AS
 ALTER TABLE public."YU_energy_to_houses_without_PV" OWNER TO eileen;
 
 --
+-- Name: YU_energy_to_houses_without_PV_copy; Type: VIEW; Schema: public; Owner: yuma
+--
+
+CREATE VIEW "YU_energy_to_houses_without_PV_copy" AS
+    SELECT "LocationRecords".device_util_id, "LocationRecords".service_point_util_id, "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_latitude, "LocationRecords".address1, "LocationRecords".premise_util_id, "Interval".end_time, "Reading".value AS "energy to house kWh" FROM (("LocationRecords" LEFT JOIN "MSG_PV_Data" ON ((("LocationRecords".device_util_id)::text = ("MSG_PV_Data".util_device_id)::text))) JOIN "MeterData" ON ((("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id))), "Interval", "Reading" WHERE (("MSG_PV_Data".util_device_id IS NULL) AND ("Reading".channel = 1));
+
+
+ALTER TABLE public."YU_energy_to_houses_without_PV_copy" OWNER TO yuma;
+
+--
 -- Name: YU_voltages_for_houses_without_PV; Type: VIEW; Schema: public; Owner: eileen
 --
 
@@ -1432,6 +1442,16 @@ REVOKE ALL ON TABLE "YU_energy_to_houses_without_PV" FROM PUBLIC;
 REVOKE ALL ON TABLE "YU_energy_to_houses_without_PV" FROM eileen;
 GRANT ALL ON TABLE "YU_energy_to_houses_without_PV" TO eileen;
 GRANT ALL ON TABLE "YU_energy_to_houses_without_PV" TO sepgroup;
+
+
+--
+-- Name: YU_energy_to_houses_without_PV_copy; Type: ACL; Schema: public; Owner: yuma
+--
+
+REVOKE ALL ON TABLE "YU_energy_to_houses_without_PV_copy" FROM PUBLIC;
+REVOKE ALL ON TABLE "YU_energy_to_houses_without_PV_copy" FROM yuma;
+GRANT ALL ON TABLE "YU_energy_to_houses_without_PV_copy" TO yuma;
+GRANT ALL ON TABLE "YU_energy_to_houses_without_PV_copy" TO sepgroup;
 
 
 --
