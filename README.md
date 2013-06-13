@@ -55,7 +55,7 @@ v3 (Production)
 v4 (Development)
 : Will address duplicates in the Event branch and the Register branch. To include updated weather data.
 
-![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/diagrams/2013-05-29_ReadingAndMeterCounts.png)
+![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/diagrams/2013-06-13_ReadingAndMeterCounts.png)
 Plot of readings per meter counts and meter counts per day loaded to meco_v3.
 
 ## Configuration
