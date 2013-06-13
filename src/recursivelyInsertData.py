@@ -170,7 +170,11 @@ msg = "\nProcessed file count is %s.\n" % xmlGzCount
 print msg
 msgBody += msg + "\n"
 
-plotter = MECOPlotting()
+testing = False
+if commandLineArgs.testing:
+    testing = True
+
+plotter = MECOPlotting(testing)
 
 try:
     plotter.plotReadingAndMeterCounts(databaseName)
