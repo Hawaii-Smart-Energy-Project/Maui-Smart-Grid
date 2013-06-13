@@ -60,7 +60,7 @@ def makePlotAttachments():
     plotPath = configer.configOptionValue("Data Paths", "plot_path")
     sys.stderr.write("plotPath = %s\n" % plotPath)
 
-    # if plot doesn't exist
+    # If the plot doesn't exist then return.
     if not os.path.isdir(plotPath):
         return []
 
@@ -72,7 +72,7 @@ def makePlotAttachments():
 
 def logLegend():
     legend = "Log Legend: {} = dupes, [] = element group, " \
-             "() = cumulative elements, * = commit";
+             "() = cumulative elements, * = commit"
     return legend
 
 
@@ -115,7 +115,8 @@ if xmlCount != 0:
     msg = "Found XML files that are not gzip compressed.\nUnable to proceed."
     print msg
     msgBody += msg + "\n"
-    notifier.sendNotificationEmail(msgBody, commandLineArgs.testing)
+    if (commandLineArgs.email):
+        notifier.sendNotificationEmail(msgBody, commandLineArgs.testing)
     sys.exit(-1)
 
 insertScript = "%s/insertData.py" % binPath
