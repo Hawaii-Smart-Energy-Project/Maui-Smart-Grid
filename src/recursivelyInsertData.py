@@ -153,7 +153,7 @@ for root, dirnames, filenames in os.walk('.'):
                 if commandLineArgs.testing:
                     call([insertScript, "--testing", "--filepath", fullPath])
                 else:
-                    call([insertScript, "--filepath", fullPath])
+                    call([insertScript, "--testing", "--filepath", fullPath])
             else:
                 # The object method is preferred.
                 startTime = time.time()
