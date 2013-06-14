@@ -4,6 +4,8 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 import sys
+import logging
+
 
 class MECOLogger(object):
     """
@@ -14,7 +16,13 @@ class MECOLogger(object):
         Constructor.
         """
 
-        pass
+        self.logger = logging.getLogger('msg-system')
+        self.logger.setLevel(logging.DEBUG)
+        streamHandler = logging.StreamHandler()
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        streamHandler.setFormatter(formatter)
+        self.logger.addHandler(streamHandler)
 
     def logAndWrite(self, message):
         """
@@ -30,3 +38,10 @@ class MECOLogger(object):
 
         sys.stderr.write(message)
         return message
+
+    def log(self, message):
+        """
+        Write a log message.
+
+        :params message: A message to be logged.
+        """
