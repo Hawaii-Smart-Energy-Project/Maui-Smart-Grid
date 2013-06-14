@@ -34,7 +34,9 @@ class MECOXMLParser(object):
         """
 
         if (testing):
-            print "Testing Mode is ON."
+            msg = "Testing Mode is ON."
+            sys.stderr.write(msg + "\n")
+            print msg
 
         self.debug = False
         self.configer = MECOConfiger()
