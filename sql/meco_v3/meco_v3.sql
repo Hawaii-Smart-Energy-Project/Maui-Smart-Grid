@@ -522,6 +522,16 @@ CREATE VIEW "YU_energy_voltages_for_houses_without_PV" AS
 ALTER TABLE public."YU_energy_voltages_for_houses_without_PV" OWNER TO eileen;
 
 --
+-- Name: YU_one_January; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW "YU_one_January" AS
+    SELECT "YU_energy_to_houses_without_PV_copy".device_util_id, "YU_energy_to_houses_without_PV_copy"."energy to house kWh", "YU_energy_to_houses_without_PV_copy".end_time, "YU_energy_to_houses_without_PV_copy".premise_util_id, "YU_energy_to_houses_without_PV_copy".address1, "YU_energy_to_houses_without_PV_copy".service_pt_latitude, "YU_energy_to_houses_without_PV_copy".service_pt_longitude, "YU_energy_to_houses_without_PV_copy".service_point_util_id FROM "YU_energy_to_houses_without_PV_copy" WHERE (("YU_energy_to_houses_without_PV_copy".end_time > '2012-12-31 00:00:00'::timestamp without time zone) AND ("YU_energy_to_houses_without_PV_copy".end_time < '2013-02-01 00:00:00'::timestamp without time zone));
+
+
+ALTER TABLE public."YU_one_January" OWNER TO eileen;
+
+--
 -- Name: view_readings; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -600,6 +610,16 @@ ALTER TABLE public.event_id_seq OWNER TO sepgroup;
 
 ALTER SEQUENCE event_id_seq OWNED BY "Event".event_id;
 
+
+--
+-- Name: event_table_view; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW event_table_view AS
+    SELECT DISTINCT "Event".event_name, "Event".event_time, "Event".event_text, "Event".event_data_id, "Event".event_id FROM "Event";
+
+
+ALTER TABLE public.event_table_view OWNER TO eileen;
 
 --
 -- Name: get_kwh_meter_locations; Type: VIEW; Schema: public; Owner: postgres
@@ -785,30 +805,21 @@ ALTER SEQUENCE reading_id_seq OWNED BY "Reading".reading_id;
 
 
 --
--- Name: view_readings_with_meter_id; Type: VIEW; Schema: public; Owner: postgres
+-- Name: view_readings_with_meter_id_unsorted; Type: VIEW; Schema: public; Owner: postgres
 --
 
-CREATE VIEW view_readings_with_meter_id AS
-    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time, "MeterData".meter_data_id FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
+CREATE VIEW view_readings_with_meter_id_unsorted AS
+    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time, "MeterData".meter_data_id FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id)));
 
 
-ALTER TABLE public.view_readings_with_meter_id OWNER TO postgres;
-
---
--- Name: VIEW view_readings_with_meter_id; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON VIEW view_readings_with_meter_id IS 'View readings along with their end times. Retrieve the meter name along with the readings.
-
-@author Daniel Zhang (張道博)';
-
+ALTER TABLE public.view_readings_with_meter_id_unsorted OWNER TO postgres;
 
 --
 -- Name: readings_for_houses_without_pv; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW readings_for_houses_without_pv AS
-    SELECT meter_ids_for_houses_without_pv.device_util_id, view_readings_with_meter_id.end_time, view_readings_with_meter_id.meter_name, view_readings_with_meter_id.channel, view_readings_with_meter_id.raw_value, view_readings_with_meter_id.value, view_readings_with_meter_id.uom, view_readings_with_meter_id.start_time, view_readings_with_meter_id.ird_end_time FROM (meter_ids_for_houses_without_pv JOIN view_readings_with_meter_id ON (((meter_ids_for_houses_without_pv.device_util_id)::integer = (view_readings_with_meter_id.meter_name)::integer)));
+    SELECT meter_ids_for_houses_without_pv.device_util_id, view_readings_with_meter_id_unsorted.end_time, view_readings_with_meter_id_unsorted.channel, view_readings_with_meter_id_unsorted.raw_value, view_readings_with_meter_id_unsorted.value, view_readings_with_meter_id_unsorted.uom, view_readings_with_meter_id_unsorted.start_time, view_readings_with_meter_id_unsorted.ird_end_time FROM (meter_ids_for_houses_without_pv JOIN view_readings_with_meter_id_unsorted ON (((meter_ids_for_houses_without_pv.device_util_id)::integer = (view_readings_with_meter_id_unsorted.meter_name)::integer))) ORDER BY meter_ids_for_houses_without_pv.device_util_id, view_readings_with_meter_id_unsorted.end_time, view_readings_with_meter_id_unsorted.channel;
 
 
 ALTER TABLE public.readings_for_houses_without_pv OWNER TO postgres;
@@ -817,9 +828,7 @@ ALTER TABLE public.readings_for_houses_without_pv OWNER TO postgres;
 -- Name: VIEW readings_for_houses_without_pv; Type: COMMENT; Schema: public; Owner: postgres
 --
 
-COMMENT ON VIEW readings_for_houses_without_pv IS 'Retrieve readings for houses that do not have PV.
-
-@author Daniel Zhang (張道博)';
+COMMENT ON VIEW readings_for_houses_without_pv IS 'Retrieve readings for houses that do not have PV. @author Daniel Zhang (張道博)';
 
 
 --
@@ -914,6 +923,25 @@ ALTER TABLE public.tier_id_seq OWNER TO sepgroup;
 --
 
 ALTER SEQUENCE tier_id_seq OWNED BY "Tier".tier_id;
+
+
+--
+-- Name: view_readings_with_meter_id; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW view_readings_with_meter_id AS
+    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time, "MeterData".meter_data_id FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
+
+
+ALTER TABLE public.view_readings_with_meter_id OWNER TO postgres;
+
+--
+-- Name: VIEW view_readings_with_meter_id; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW view_readings_with_meter_id IS 'View readings along with their end times. Retrieve the meter name along with the readings.
+
+@author Daniel Zhang (張道博)';
 
 
 --
@@ -1198,6 +1226,13 @@ CREATE UNIQUE INDEX "Tier_tier_id_key" ON "Tier" USING btree (tier_id);
 
 
 --
+-- Name: device_util_id_index; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE UNIQUE INDEX device_util_id_index ON "LocationRecords" USING btree (device_util_id);
+
+
+--
 -- Name: interval_id_idx; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -1475,6 +1510,16 @@ GRANT ALL ON TABLE "YU_energy_voltages_for_houses_without_PV" TO sepgroup;
 
 
 --
+-- Name: YU_one_January; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE "YU_one_January" FROM PUBLIC;
+REVOKE ALL ON TABLE "YU_one_January" FROM eileen;
+GRANT ALL ON TABLE "YU_one_January" TO eileen;
+GRANT ALL ON TABLE "YU_one_January" TO sepgroup;
+
+
+--
 -- Name: view_readings; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -1510,6 +1555,16 @@ GRANT ALL ON SEQUENCE event_data_id_seq TO sepgroup;
 REVOKE ALL ON SEQUENCE event_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE event_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE event_id_seq TO sepgroup;
+
+
+--
+-- Name: event_table_view; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE event_table_view FROM PUBLIC;
+REVOKE ALL ON TABLE event_table_view FROM eileen;
+GRANT ALL ON TABLE event_table_view TO eileen;
+GRANT ALL ON TABLE event_table_view TO sepgroup;
 
 
 --
@@ -1639,13 +1694,13 @@ GRANT ALL ON SEQUENCE reading_id_seq TO sepgroup;
 
 
 --
--- Name: view_readings_with_meter_id; Type: ACL; Schema: public; Owner: postgres
+-- Name: view_readings_with_meter_id_unsorted; Type: ACL; Schema: public; Owner: postgres
 --
 
-REVOKE ALL ON TABLE view_readings_with_meter_id FROM PUBLIC;
-REVOKE ALL ON TABLE view_readings_with_meter_id FROM postgres;
-GRANT ALL ON TABLE view_readings_with_meter_id TO postgres;
-GRANT ALL ON TABLE view_readings_with_meter_id TO sepgroup;
+REVOKE ALL ON TABLE view_readings_with_meter_id_unsorted FROM PUBLIC;
+REVOKE ALL ON TABLE view_readings_with_meter_id_unsorted FROM postgres;
+GRANT ALL ON TABLE view_readings_with_meter_id_unsorted TO postgres;
+GRANT ALL ON TABLE view_readings_with_meter_id_unsorted TO sepgroup;
 
 
 --
@@ -1702,6 +1757,16 @@ GRANT ALL ON TABLE test_cast_channel TO sepgroup;
 REVOKE ALL ON SEQUENCE tier_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE tier_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE tier_id_seq TO sepgroup;
+
+
+--
+-- Name: view_readings_with_meter_id; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE view_readings_with_meter_id FROM PUBLIC;
+REVOKE ALL ON TABLE view_readings_with_meter_id FROM postgres;
+GRANT ALL ON TABLE view_readings_with_meter_id TO postgres;
+GRANT ALL ON TABLE view_readings_with_meter_id TO sepgroup;
 
 
 --
