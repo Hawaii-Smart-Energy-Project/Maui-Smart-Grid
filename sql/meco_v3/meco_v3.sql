@@ -868,16 +868,6 @@ COMMENT ON VIEW readings_for_houses_without_pv IS 'Retrieve readings for houses 
 
 
 --
--- Name: readings_for_houses_without_pv_with_locations; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW readings_for_houses_without_pv_with_locations AS
-    SELECT meter_ids_for_houses_without_pv.device_util_id, view_readings_with_meter_id_unsorted.end_time, view_readings_with_meter_id_unsorted.channel, view_readings_with_meter_id_unsorted.raw_value, view_readings_with_meter_id_unsorted.value, view_readings_with_meter_id_unsorted.uom, view_readings_with_meter_id_unsorted.start_time, view_readings_with_meter_id_unsorted.ird_end_time FROM (meter_ids_for_houses_without_pv JOIN view_readings_with_meter_id_unsorted ON (((meter_ids_for_houses_without_pv.device_util_id)::integer = (view_readings_with_meter_id_unsorted.meter_name)::integer)));
-
-
-ALTER TABLE public.readings_for_houses_without_pv_with_locations OWNER TO postgres;
-
---
 -- Name: register_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
 --
 
@@ -939,16 +929,6 @@ ALTER TABLE public.registerread_id_seq OWNER TO sepgroup;
 
 ALTER SEQUENCE registerread_id_seq OWNED BY "RegisterRead".register_read_id;
 
-
---
--- Name: test_cast_channel; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW test_cast_channel AS
-    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, (CASE WHEN ("Reading".channel = (1)::smallint) THEN "Reading".value ELSE NULL::real END)::numeric AS energy_out, (CASE WHEN ("Reading".channel = (2)::smallint) THEN "Reading".value ELSE NULL::real END)::numeric AS energy_from, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
-
-
-ALTER TABLE public.test_cast_channel OWNER TO postgres;
 
 --
 -- Name: tier_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
@@ -1770,16 +1750,6 @@ GRANT ALL ON TABLE readings_for_houses_without_pv TO sepgroup;
 
 
 --
--- Name: readings_for_houses_without_pv_with_locations; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE readings_for_houses_without_pv_with_locations FROM PUBLIC;
-REVOKE ALL ON TABLE readings_for_houses_without_pv_with_locations FROM postgres;
-GRANT ALL ON TABLE readings_for_houses_without_pv_with_locations TO postgres;
-GRANT ALL ON TABLE readings_for_houses_without_pv_with_locations TO sepgroup;
-
-
---
 -- Name: register_id_seq; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -1804,16 +1774,6 @@ GRANT ALL ON SEQUENCE registerdata_id_seq TO sepgroup;
 REVOKE ALL ON SEQUENCE registerread_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE registerread_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE registerread_id_seq TO sepgroup;
-
-
---
--- Name: test_cast_channel; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE test_cast_channel FROM PUBLIC;
-REVOKE ALL ON TABLE test_cast_channel FROM postgres;
-GRANT ALL ON TABLE test_cast_channel TO postgres;
-GRANT ALL ON TABLE test_cast_channel TO sepgroup;
 
 
 --
