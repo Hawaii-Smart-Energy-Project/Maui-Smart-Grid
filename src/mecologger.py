@@ -12,12 +12,14 @@ class MECOLogger(object):
     This class provides logging functionality.
     """
 
-    def __init__(self):
+    def __init__(self, caller):
         """
         Constructor.
+
+        :params caller: Calling class.
         """
 
-        self.logger = logging.getLogger('MSG-Data-Processing')
+        self.logger = logging.getLogger(caller)
         self.logger.setLevel(logging.DEBUG)
         self.streamHandler = logging.StreamHandler(sys.stderr)
         formatter = logging.Formatter(

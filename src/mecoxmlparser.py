@@ -43,7 +43,7 @@ class MECOXMLParser(object):
         if self.configer.configOptionValue("Debugging",
                                            'debug') == True:
             self.debug = True
-        self.logger = MECOLogger()
+        self.logger = MECOLogger(__name__)
         self.util = MECODBUtil()
         self.mapper = MECOMapper()
         self.connector = MECODBConnector(testing)

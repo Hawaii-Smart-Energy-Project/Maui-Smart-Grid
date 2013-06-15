@@ -22,7 +22,7 @@ class MECODBConnector(object):
         :param testing: Boolean indicating if Testing Mode is on.
         """
 
-        self.logger = MECOLogger()
+        self.logger = MECOLogger(__name__)
 
         if (testing):
             self.logger.log("Testing Mode is ON.")
