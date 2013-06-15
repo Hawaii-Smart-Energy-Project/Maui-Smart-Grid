@@ -12,7 +12,7 @@ class MECOLogger(object):
     This class provides logging functionality.
     """
 
-    def __init__(self, caller):
+    def __init__(self, caller, level):
         """
         Constructor.
 
@@ -25,6 +25,17 @@ class MECOLogger(object):
         formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         self.streamHandler.setFormatter(formatter)
+
+        self.loggerLevel = None
+        if level == 'info':
+            self.loggerLevel = logging.INFO
+        elif level == 'error':
+            self.loggerLevel = logging.ERROR
+        elif level == 'silent':
+            self.loggerLevel = None
+        else:
+            self.loggerLevel = None
+
         self.logger.addHandler(self.streamHandler)
 
     def logAndWrite(self, message):
@@ -42,12 +53,24 @@ class MECOLogger(object):
         sys.stderr.write(message)
         return message
 
-    def log(self, message):
+    def log(self, message, level = None):
         """
         Write a log message.
 
         :params message: A message to be logged.
+        :params level: (optional) Logging level.
         """
 
-        self.logger.log(logging.INFO, message)
-        self.streamHandler.flush()
+        loggerLevel = None
+        if level == 'info':
+            loggerLevel = logging.INFO
+        elif level == 'error':
+            loggerLevel = logging.ERROR
+        elif level == 'silent':
+            loggerLevel = None
+        else:
+            loggerLevel = self.loggerLevel
+
+        if loggerLevel != None:
+            self.logger.log(loggerLevel, message)
+            self.streamHandler.flush()

@@ -15,14 +15,14 @@ class MECODBConnector(object):
     Manage a connection to a MECO database.
     """
 
-    def __init__(self, testing = False):
+    def __init__(self, testing = False, logLevel = 'silent'):
         """
         Constructor.
 
         :param testing: Boolean indicating if Testing Mode is on.
         """
 
-        self.logger = MECOLogger(__name__)
+        self.logger = MECOLogger(__name__, logLevel)
 
         if (testing):
             self.logger.log("Testing Mode is ON.")
@@ -40,7 +40,7 @@ class MECODBConnector(object):
         else:
             self.dbName = self.configer.configOptionValue("Database", 'db_name')
 
-        self.logger.log("Using database %s." % self.dbName)
+        self.logger.log("Instantiating DB connector with database %s." % self.dbName)
 
 
         self.dbUsername = self.configer.configOptionValue("Database",
@@ -64,10 +64,10 @@ class MECODBConnector(object):
                     self.dbName, self.dbUsername, self.dbHost, self.dbPort,
                     self.dbPassword))
         except:
-            self.logger.log("Failed to connect to the database.")
+            self.logger.log("Failed to connect to the database.",'error')
             return None
 
-        self.logger.log("Opened DB connection to %s." % self.dbName)
+        self.logger.log("Opened DB connection to database %s." % self.dbName)
         return conn
 
     def closeDB(self, conn):
@@ -87,6 +87,6 @@ class MECODBConnector(object):
 
         import sys
 
-        self.logger.log("Closing the DB connection to %s." % self.dbName)
+        self.logger.log("Closing the DB connection to database %s." % self.dbName)
         self.conn.close()
 

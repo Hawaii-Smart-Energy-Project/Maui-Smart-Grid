@@ -7,6 +7,7 @@ import sys
 from mecoconfig import MECOConfiger
 from mecodbconnect import MECODBConnector
 import psycopg2
+from mecologger import MECOLogger
 
 DEBUG = 1
 
@@ -21,6 +22,7 @@ class MECODBUtil(object):
         Constructor.
         """
 
+        self.logger = MECOLogger(__name__, 'silent')
         self.configer = MECOConfiger()
 
     def getLastSequenceID(self, conn, tableName, columnName):
@@ -49,8 +51,10 @@ class MECODBUtil(object):
         try:
             row = cur.fetchone()
         except psycopg2.ProgrammingError, e:
-            print "Failed to retrieve the last sequence value."
-            print "Exception is %s" % e
+            msg = "Failed to retrieve the last sequence value."
+            msg += " Exception is %s." % e
+
+            self.logger.log(msg,'error')
             sys.exit(-1)
 
         lastSequenceValue = row[0]
@@ -75,9 +79,10 @@ class MECODBUtil(object):
             cursor.execute(sql)
         except Exception, e:
             success = False
-            print "SQL execute failed using %s." % sql
-            print "The error is: ", e[0]
-            print
+            msg = "SQL execute failed using %s." % sql
+            msg += " The error is: %s." % e[0]
+
+            self.logger.log(msg, 'error')
             sys.exit(-1)
             # return False
 
