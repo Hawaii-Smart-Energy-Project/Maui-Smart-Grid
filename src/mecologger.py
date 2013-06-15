@@ -9,6 +9,7 @@ import logging
 
 class MECOLogger(object):
     """
+    This class provides logging functionality.
     """
 
     def __init__(self):
@@ -16,13 +17,13 @@ class MECOLogger(object):
         Constructor.
         """
 
-        self.logger = logging.getLogger('msg-system')
+        self.logger = logging.getLogger('MSG-Data-Processing')
         self.logger.setLevel(logging.DEBUG)
-        streamHandler = logging.StreamHandler()
+        self.streamHandler = logging.StreamHandler(sys.stderr)
         formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        streamHandler.setFormatter(formatter)
-        self.logger.addHandler(streamHandler)
+        self.streamHandler.setFormatter(formatter)
+        self.logger.addHandler(self.streamHandler)
 
     def logAndWrite(self, message):
         """
@@ -45,3 +46,6 @@ class MECOLogger(object):
 
         :params message: A message to be logged.
         """
+
+        self.logger.log(logging.INFO, message)
+        self.streamHandler.flush()
