@@ -7,6 +7,7 @@ import psycopg2
 import psycopg2.extras
 from mecoconfig import MECOConfiger
 import sys
+from mecologger import MECOLogger
 
 
 class MECODBConnector(object):
@@ -21,10 +22,11 @@ class MECODBConnector(object):
         :param testing: Boolean indicating if Testing Mode is on.
         """
 
+        self.logger = MECOLogger()
+
         if (testing):
-            msg = "Testing Mode is ON."
-            sys.stderr.write(msg + "\n")
-            print msg
+            self.logger.log("Testing Mode is ON.")
+
 
         self.configer = MECOConfiger()
         self.dbPassword = self.configer.configOptionValue("Database",
@@ -38,9 +40,8 @@ class MECODBConnector(object):
         else:
             self.dbName = self.configer.configOptionValue("Database", 'db_name')
 
-        msg = "Using database %s." % self.dbName
-        sys.stderr.write(msg + "\n")
-        print msg
+        self.logger.log("Using database %s." % self.dbName)
+
 
         self.dbUsername = self.configer.configOptionValue("Database",
                                                           'db_username')
@@ -48,6 +49,7 @@ class MECODBConnector(object):
         self.conn = self.connectDB()
         self.dictCur = self.conn.cursor(
             cursor_factory = psycopg2.extras.DictCursor)
+
 
     def connectDB(self):
         """
@@ -62,12 +64,10 @@ class MECODBConnector(object):
                     self.dbName, self.dbUsername, self.dbHost, self.dbPort,
                     self.dbPassword))
         except:
-            print "Failed to connect to the database."
+            self.logger.log("Failed to connect to the database.")
             return None
 
-        msg = "Opened DB connection to %s.\n" % self.dbName
-        sys.stderr.write(msg + "\n")
-        print msg
+        self.logger.log("Opened DB connection to %s." % self.dbName)
         return conn
 
     def closeDB(self, conn):
@@ -75,8 +75,7 @@ class MECODBConnector(object):
         Close a database connection.
         """
 
-        msg = "Closing database %s." % self.dbName
-        sys.stderr.write(msg + "\n")
+        self.logger.log("Closing database %s." % self.dbName)
         conn.close()
 
     def __del__(self):
@@ -88,8 +87,6 @@ class MECODBConnector(object):
 
         import sys
 
-        msg = "\nClosing the DB connection to %s.\n" % self.dbName
-        sys.stderr.write(msg + "\n")
-        print msg
+        self.logger.log("Closing the DB connection to %s." % self.dbName)
         self.conn.close()
 
