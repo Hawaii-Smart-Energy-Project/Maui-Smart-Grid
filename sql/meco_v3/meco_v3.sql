@@ -603,7 +603,7 @@ ALTER TABLE public.view_readings_with_meter_id_unsorted OWNER TO postgres;
 --
 
 CREATE VIEW dz_energy_voltages_for_houses_without_pv AS
-    SELECT max((meter_ids_for_houses_without_pv_with_locations.device_util_id)::text) AS device_util_id, view_readings_with_meter_id_unsorted.end_time, max(CASE WHEN (view_readings_with_meter_id_unsorted.channel = (1)::smallint) THEN view_readings_with_meter_id_unsorted.value ELSE NULL::real END) AS "Energy to House kwH", max(CASE WHEN (view_readings_with_meter_id_unsorted.channel = (4)::smallint) THEN view_readings_with_meter_id_unsorted.value ELSE NULL::real END) AS "Voltage", max(meter_ids_for_houses_without_pv_with_locations.service_pt_longitude) AS service_pt_longitude, max(meter_ids_for_houses_without_pv_with_locations.service_pt_latitude) AS service_pt_latitude, max((meter_ids_for_houses_without_pv_with_locations.address1)::text) AS address1 FROM (meter_ids_for_houses_without_pv_with_locations JOIN view_readings_with_meter_id_unsorted ON (((meter_ids_for_houses_without_pv_with_locations.device_util_id)::bpchar = view_readings_with_meter_id_unsorted.meter_name))) WHERE ((view_readings_with_meter_id_unsorted.channel = (1)::smallint) OR (view_readings_with_meter_id_unsorted.channel = (4)::smallint)) GROUP BY view_readings_with_meter_id_unsorted.end_time;
+    SELECT meter_ids_for_houses_without_pv_with_locations.device_util_id, view_readings_with_meter_id_unsorted.end_time, max(CASE WHEN (view_readings_with_meter_id_unsorted.channel = (1)::smallint) THEN view_readings_with_meter_id_unsorted.value ELSE NULL::real END) AS "Energy to House kwH", max(CASE WHEN (view_readings_with_meter_id_unsorted.channel = (4)::smallint) THEN view_readings_with_meter_id_unsorted.value ELSE NULL::real END) AS "Voltage", max(meter_ids_for_houses_without_pv_with_locations.service_pt_longitude) AS service_pt_longitude, max(meter_ids_for_houses_without_pv_with_locations.service_pt_latitude) AS service_pt_latitude, max((meter_ids_for_houses_without_pv_with_locations.address1)::text) AS address1 FROM (meter_ids_for_houses_without_pv_with_locations JOIN view_readings_with_meter_id_unsorted ON (((meter_ids_for_houses_without_pv_with_locations.device_util_id)::bpchar = view_readings_with_meter_id_unsorted.meter_name))) WHERE ((view_readings_with_meter_id_unsorted.channel = (1)::smallint) OR (view_readings_with_meter_id_unsorted.channel = (4)::smallint)) GROUP BY meter_ids_for_houses_without_pv_with_locations.device_util_id, view_readings_with_meter_id_unsorted.end_time;
 
 
 ALTER TABLE public.dz_energy_voltages_for_houses_without_pv OWNER TO postgres;
@@ -1583,6 +1583,16 @@ REVOKE ALL ON TABLE view_readings_with_meter_id_unsorted FROM PUBLIC;
 REVOKE ALL ON TABLE view_readings_with_meter_id_unsorted FROM postgres;
 GRANT ALL ON TABLE view_readings_with_meter_id_unsorted TO postgres;
 GRANT ALL ON TABLE view_readings_with_meter_id_unsorted TO sepgroup;
+
+
+--
+-- Name: dz_energy_voltages_for_houses_without_pv; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE dz_energy_voltages_for_houses_without_pv FROM PUBLIC;
+REVOKE ALL ON TABLE dz_energy_voltages_for_houses_without_pv FROM postgres;
+GRANT ALL ON TABLE dz_energy_voltages_for_houses_without_pv TO postgres;
+GRANT ALL ON TABLE dz_energy_voltages_for_houses_without_pv TO sepgroup;
 
 
 --
