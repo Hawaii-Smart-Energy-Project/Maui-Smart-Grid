@@ -204,7 +204,14 @@ class MECOXMLParser(object):
             if matchingValues:
                 print "Verified reading values are in the database."
             assert matchingValues == True, "Duplicate check found " \
-                                           "non-matching values."
+                                           "non-matching values for meter %s," \
+                                           " endtime %s, channel %s (%s, " \
+                                           "%s)." % (
+                                               self.currentMeterName,
+                                               self.currentIntervalEndTime,
+                                               columnsAndValues['Channel'],
+                                               columnsAndValues['RawValue'],
+                                               columnsAndValues['Value'])
 
             self.channelDupeExists = False
         return parseLog
@@ -311,7 +318,7 @@ class MECOXMLParser(object):
                     parseLog += self.logger.logAndWrite(
                         "[%s]" % self.elementCount)
                     parseLog += self.logger.logAndWrite(
-                        "[%s]" % self.insertCount)
+                        "<%s>" % self.insertCount)
                     self.dupeOnInsertCount = 0
                     self.insertCount = 0
 
@@ -329,7 +336,7 @@ class MECOXMLParser(object):
             parseLog += self.logger.logAndWrite("{%s}" % self.dupeOnInsertCount)
             parseLog += self.logger.logAndWrite("[%s]" % self.commitCount)
             parseLog += self.logger.logAndWrite("[%s]" % self.elementCount)
-            parseLog += self.logger.logAndWrite("[%s]" % self.insertCount)
+            parseLog += self.logger.logAndWrite("<%s>" % self.insertCount)
         self.dupeOnInsertCount = 0
         self.insertCount = 0
 
@@ -337,7 +344,7 @@ class MECOXMLParser(object):
         parseLog += self.logger.logAndWrite("{%s}" % self.dupeOnInsertCount)
         parseLog += self.logger.logAndWrite("[%s]" % self.commitCount)
         parseLog += self.logger.logAndWrite("[%s]" % self.elementCount)
-        parseLog += self.logger.logAndWrite("[%s]" % self.insertCount)
+        parseLog += self.logger.logAndWrite("<%s>" % self.insertCount)
         self.dupeOnInsertCount = 0
         self.insertCount = 0
 
