@@ -38,6 +38,8 @@ class MECOLogger(object):
 
         self.logger.addHandler(self.streamHandler)
 
+        recordedLog = ''
+
     def logAndWrite(self, message):
         """
         With a given string, write it to stderr and return its value for
@@ -80,3 +82,9 @@ class MECOLogger(object):
         if loggerLevel != None:
             self.logger.log(loggerLevel, message)
             self.streamHandler.flush()
+
+    def startRecording(self):
+        pass
+
+    def endRecording(self):
+        pass
