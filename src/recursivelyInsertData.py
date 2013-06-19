@@ -27,10 +27,12 @@ import argparse
 from mecoplotting import MECOPlotting
 from insertData import Inserter
 import time
+from mecologger import MECOLogger
 
 xmlGzCount = 0
 xmlCount = 0
 configer = MECOConfiger()
+logger = MECOLogger(__name__, 'info')
 binPath = MECOConfiger.configOptionValue(configer, "Executable Paths",
                                          "bin_path")
 commandLineArgs = None
@@ -81,9 +83,9 @@ processCommandLineArguments()
 inserter = Inserter()
 
 if commandLineArgs.testing:
-    sys.stderr.write("Testing mode is ON.\n")
+    logger.log("Testing mode is ON.\n", 'info')
 if commandLineArgs.email:
-    sys.stderr.write("Email will be sent.\n")
+    logger.log("Email will be sent.\n", 'info')
 
 msg = ''
 databaseName = ''

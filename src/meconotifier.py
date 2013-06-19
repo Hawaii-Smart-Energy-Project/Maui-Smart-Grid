@@ -13,6 +13,7 @@ from email.MIMEBase import MIMEBase
 from email.MIMEText import MIMEText
 from email.Utils import formatdate
 from email import Encoders
+from mecologger import MECOLogger
 
 
 class MECONotifier(object):
@@ -26,6 +27,7 @@ class MECONotifier(object):
         """
 
         self.config = MECOConfiger()
+        self.logger = MECOLogger(__name__, 'info')
 
     def sendNotificationEmail(self, msgBody, testing = False):
         """
@@ -106,7 +108,7 @@ class MECONotifier(object):
 
         sys.stderr.write("Sending multipart email.\n")
         if testing:
-            sys.stderr.write("Notification testing mode is ON.\n")
+            self.logger.log("Notification testing mode is ON.\n", 'info')
 
         errorOccurred = False
         assert type(files) == list
@@ -153,12 +155,12 @@ class MECONotifier(object):
             server.login(user, password)
         except smtplib.SMTPException, e:
             errorOccurred = True
-            print "Exception = %s" % e
+            sys.logger.log("Exception = %s" % e, 'error')
 
         server.sendmail(send_from, send_to, msg.as_string())
         server.quit()
 
         if errorOccurred == False:
-            sys.stderr.write('No exceptions occurred.\n')
+            sys.logger.log('No exceptions occurred.\n', 'info')
 
         return errorOccurred

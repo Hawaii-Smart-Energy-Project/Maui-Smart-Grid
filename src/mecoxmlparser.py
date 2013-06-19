@@ -33,10 +33,10 @@ class MECOXMLParser(object):
         :param testing: (optional) Boolean indicating if Testing Mode is on.
         """
 
+        self.logger = MECOLogger(__name__, 'info')
+
         if (testing):
-            msg = "Testing Mode is ON."
-            sys.stderr.write(msg + "\n")
-            print msg
+            self.logger.log("Testing Mode is ON.", 'info')
 
         self.debug = False
         self.configer = MECOConfiger()
