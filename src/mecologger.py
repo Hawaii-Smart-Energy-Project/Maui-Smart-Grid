@@ -57,6 +57,12 @@ class MECOLogger(object):
         """
         Write a log message.
 
+        Logging levels are
+
+        * info
+        * error
+        * silent
+
         :params message: A message to be logged.
         :params level: (optional) Logging level.
         """
