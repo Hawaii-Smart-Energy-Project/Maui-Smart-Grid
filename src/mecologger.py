@@ -81,7 +81,7 @@ class MECOLogger(object):
 
         if loggerLevel != None:
             self.logger.log(loggerLevel, message)
-            self.streamHandler.flush()
+            # self.streamHandler.flush()
 
     def startRecording(self):
         pass

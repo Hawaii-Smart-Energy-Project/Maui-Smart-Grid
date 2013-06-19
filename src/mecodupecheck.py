@@ -5,6 +5,7 @@ __author__ = 'Daniel Zhang (張道博)'
 
 from mecoconfig import MECOConfiger
 from mecodbutils import MECODBUtil
+from mecologger import MECOLogger
 
 
 class MECODupeChecker(object):
@@ -18,6 +19,7 @@ class MECODupeChecker(object):
         self.mecoConfig = MECOConfiger()
         self.currentReadingID = 0
         self.dbUtil = MECODBUtil()
+        self.logger = MECOLogger(__name__, 'debug')
 
     def readingBranchDupeExists(self, conn, meterName, endTime, channel = None,
                                 DEBUG = False):
@@ -86,9 +88,15 @@ class MECODupeChecker(object):
                 self.currentReadingID = self.getLastElement(rows[0])
                 print "reading id = %s" % self.currentReadingID
 
+            # self.logger.log(
+            #     "Duplicate found for meter %s, end time %s, channel %s." % (
+            #         meterName, endTime, channel), 'debug')
+
             return True
         else:
-            print "Found no rows."
+            self.logger.log(
+                "Found no rows for meter %s, end time %s, channel %s." % (
+                    meterName, endTime, channel), 'debug')
             return False
 
 

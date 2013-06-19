@@ -33,7 +33,7 @@ class MECOXMLParser(object):
         :param testing: (optional) Boolean indicating if Testing Mode is on.
         """
 
-        self.logger = MECOLogger(__name__, 'info')
+        self.logger = MECOLogger(__name__, 'silent')
 
         if (testing):
             self.logger.log("Testing Mode is ON.", 'info')
@@ -43,7 +43,7 @@ class MECOXMLParser(object):
         if self.configer.configOptionValue("Debugging",
                                            'debug') == True:
             self.debug = True
-        self.logger = MECOLogger(__name__, 'silent')
+
         self.util = MECODBUtil()
         self.mapper = MECOMapper()
         self.connector = MECODBConnector(testing)
@@ -87,6 +87,7 @@ class MECOXMLParser(object):
         self.channelDupeExists = False
         self.commitCount = 0
         self.dupeOnInsertCount = 0
+        self.dataProcessCount = 0
 
     def parseXML(self, fileObject, insert = False):
         """
@@ -147,6 +148,8 @@ class MECOXMLParser(object):
         :returns: A string containing the parse log.
         """
 
+        self.dataProcessCount += 1
+
         # Handle a special case for duplicate reading data.
         # Intercept the duplicate reading data before insert.
         if currentTableName == "Reading":
@@ -171,7 +174,7 @@ class MECOXMLParser(object):
                                            columnsAndValues,
                                            fKeyValue,
                                            1)
-            # The last 1 indicates don't commit.
+            # The last 1 indicates don't commit. Commits are handled externally.
 
             # If no insertion took place,
             # don't attempt to get the last sequence value.
@@ -192,10 +195,11 @@ class MECOXMLParser(object):
 
             # Also, verify the data is equivalent to the existing
             # record.
-            if self.dupeChecker.readingValuesAreInTheDatabase(
-                    self.conn,
-                    columnsAndValues):
+            matchingValues = self.dupeChecker.readingValuesAreInTheDatabase(
+                self.conn, columnsAndValues)
+            if matchingValues:
                 print "Verified reading values are in the database."
+            assert (matchingValues == True, "Duplicate check found non-matching values.")
 
             self.channelDupeExists = False
         return parseLog
@@ -295,18 +299,17 @@ class MECOXMLParser(object):
                     if self.debug:
                         print "----- last reading found -----"
 
-                    parseLog += self.logger.logAndWrite("*")
-                    self.conn.commit()
-
                     parseLog += self.logger.logAndWrite(
                         "{%s}" % self.dupeOnInsertCount)
                     parseLog += self.logger.logAndWrite(
                         "[%s]" % self.commitCount)
                     parseLog += self.logger.logAndWrite(
                         "[%s]" % self.elementCount)
-
-                    self.commitCount += 1
                     self.dupeOnInsertCount = 0
+
+                    parseLog += self.logger.logAndWrite("*")
+                    self.commitCount += 1
+                    self.conn.commit()
 
                 if self.lastRegister(currentTableName, nextTableName):
                     # The last register set has been reached.
@@ -318,11 +321,20 @@ class MECOXMLParser(object):
             parseLog += self.logger.logAndWrite("{%s}" % self.dupeOnInsertCount)
             parseLog += self.logger.logAndWrite("[%s]" % self.commitCount)
             parseLog += self.logger.logAndWrite("[%s]" % self.elementCount)
+            self.dupeOnInsertCount = 0
+
+        # Final commit
+        parseLog += self.logger.logAndWrite("{%s}" % self.dupeOnInsertCount)
+        parseLog += self.logger.logAndWrite("[%s]" % self.commitCount)
+        parseLog += self.logger.logAndWrite("[%s]" % self.elementCount)
+        self.dupeOnInsertCount = 0
 
         parseLog += self.logger.logAndWrite("*")
+        self.commitCount += 1
         self.conn.commit()
         print
 
+        self.logger.log("Data process count = %s." % self.dataProcessCount, 'info')
         return parseLog
 
 
