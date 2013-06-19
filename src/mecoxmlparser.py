@@ -88,6 +88,8 @@ class MECOXMLParser(object):
         self.commitCount = 0
         self.dupeOnInsertCount = 0
         self.dataProcessCount = 0
+        self.dupeCheckCount = 0
+        self.insertCount = 0
 
     def parseXML(self, fileObject, insert = False):
         """
@@ -161,6 +163,7 @@ class MECOXMLParser(object):
                 self.currentIntervalEndTime,
                 columnsAndValues['Channel']
             )
+            self.dupeCheckCount += 1
 
 
         # Only perform an insert if there are no duplicate values
@@ -175,6 +178,7 @@ class MECOXMLParser(object):
                                            fKeyValue,
                                            1)
             # The last 1 indicates don't commit. Commits are handled externally.
+            self.insertCount += 1
 
             # If no insertion took place,
             # don't attempt to get the last sequence value.
@@ -199,7 +203,8 @@ class MECOXMLParser(object):
                 self.conn, columnsAndValues)
             if matchingValues:
                 print "Verified reading values are in the database."
-            assert (matchingValues == True, "Duplicate check found non-matching values.")
+            assert matchingValues == True, "Duplicate check found " \
+                                           "non-matching values."
 
             self.channelDupeExists = False
         return parseLog
@@ -224,7 +229,7 @@ class MECOXMLParser(object):
 
             currentTableName = self.tableNameForAnElement(element)
             nextTableName = self.tableNameForAnElement(nextElement)
-            assert (currentTableName is not None)
+            assert currentTableName is not None, "Current table does not exist."
 
             # Maintain a count of tables encountered.
             self.tableNameCount[currentTableName] += 1
@@ -305,7 +310,10 @@ class MECOXMLParser(object):
                         "[%s]" % self.commitCount)
                     parseLog += self.logger.logAndWrite(
                         "[%s]" % self.elementCount)
+                    parseLog += self.logger.logAndWrite(
+                        "[%s]" % self.insertCount)
                     self.dupeOnInsertCount = 0
+                    self.insertCount = 0
 
                     parseLog += self.logger.logAndWrite("*")
                     self.commitCount += 1
@@ -321,20 +329,26 @@ class MECOXMLParser(object):
             parseLog += self.logger.logAndWrite("{%s}" % self.dupeOnInsertCount)
             parseLog += self.logger.logAndWrite("[%s]" % self.commitCount)
             parseLog += self.logger.logAndWrite("[%s]" % self.elementCount)
-            self.dupeOnInsertCount = 0
+            parseLog += self.logger.logAndWrite("[%s]" % self.insertCount)
+        self.dupeOnInsertCount = 0
+        self.insertCount = 0
 
         # Final commit
         parseLog += self.logger.logAndWrite("{%s}" % self.dupeOnInsertCount)
         parseLog += self.logger.logAndWrite("[%s]" % self.commitCount)
         parseLog += self.logger.logAndWrite("[%s]" % self.elementCount)
+        parseLog += self.logger.logAndWrite("[%s]" % self.insertCount)
         self.dupeOnInsertCount = 0
+        self.insertCount = 0
 
         parseLog += self.logger.logAndWrite("*")
         self.commitCount += 1
         self.conn.commit()
         print
 
-        self.logger.log("Data process count = %s." % self.dataProcessCount, 'info')
+        self.logger.log("Data process count = %s." % self.dataProcessCount,
+                        'info')
+        self.logger.log("Dupe check count = %s." % self.dupeCheckCount, 'info')
         return parseLog
 
 
