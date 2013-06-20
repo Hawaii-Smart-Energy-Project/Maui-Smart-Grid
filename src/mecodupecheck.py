@@ -9,17 +9,20 @@ from mecologger import MECOLogger
 
 
 class MECODupeChecker(object):
-    """Check for duplicate data in the database.
+    """
+    Check for duplicate data in the database.
     """
 
     def __init__(self):
-        """Constructor
+        """
+        Constructor.
         """
 
+        self.logger = MECOLogger(__name__, 'debug')
         self.mecoConfig = MECOConfiger()
         self.currentReadingID = 0
         self.dbUtil = MECODBUtil()
-        self.logger = MECOLogger(__name__, 'debug')
+
 
     def readingBranchDupeExists(self, conn, meterName, endTime, channel = None,
                                 DEBUG = False):
@@ -101,7 +104,8 @@ class MECODupeChecker(object):
 
 
     def getLastElement(self, rows):
-        """Get the last element in a collection.
+        """
+        Get the last element in a collection.
 
         Example:
             rows = (element1, element2, element3)
@@ -117,8 +121,10 @@ class MECODupeChecker(object):
 
 
     def readingValuesAreInTheDatabase(self, conn, readingDataDict):
-        """Given a reading ID, verify that the values associated are present
+        """
+        Given a reading ID, verify that the values associated are present
         in the database.
+
         Values are from the columns:
             1. channel
             2. raw_value
@@ -142,7 +148,11 @@ class MECODupeChecker(object):
         self.dbUtil.executeSQL(dbCursor, sql)
         rows = dbCursor.fetchall()
 
-        assert len(rows) == 1 or len(rows) == 0
+        if self.currentReadingID == 0:
+            return False
+
+        # assert len(rows) == 1 or len(rows) == 0
+        assert len(rows) == 1, "Didn't find a matching reading for reading ID %s." % self.currentReadingID
         if len(rows) == 1:
             print "Found %s existing matches." % len(rows)
             print "rows = %s" % rows
@@ -181,7 +191,7 @@ class MECODupeChecker(object):
                     readingDataDict['UOM'] == rows[0][3])
                 allEqual = False
 
-            if float(readingDataDict['Value']) == float(rows[0][4]):
+            if self.approximatelyEqual(float(readingDataDict['Value']), float(rows[0][4]), 0.001):
                 print "value equal"
             else:
                 print "value not equal: %s,%s,%s" % (
@@ -198,3 +208,8 @@ class MECODupeChecker(object):
                 return False
         else:
             return False
+
+
+    def approximatelyEqual(self, a, b, tolerance):
+        return abs(a - b) < tolerance
+

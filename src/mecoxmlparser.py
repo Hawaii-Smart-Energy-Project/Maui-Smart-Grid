@@ -156,6 +156,7 @@ class MECOXMLParser(object):
         # Intercept the duplicate reading data before insert.
         if currentTableName == "Reading":
             # Does a meter-endtime-channel tuple duplicate exist?
+
             self.channelDupeExists \
                 = self.dupeChecker.readingBranchDupeExists(
                 self.conn,
@@ -214,6 +215,7 @@ class MECOXMLParser(object):
                                                columnsAndValues['Value'])
 
             self.channelDupeExists = False
+
         return parseLog
 
     def walkTheTreeFromRoot(self, root):
@@ -429,7 +431,6 @@ class MECOXMLParser(object):
         for i, var in enumerate(rows):
             if i == len(rows) - 1:
                 return var
-
 
     def performRollback(self):
         """
