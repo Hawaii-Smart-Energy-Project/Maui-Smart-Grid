@@ -16,6 +16,7 @@ import sys
 from mecodbconnect import MECODBConnector
 from mecodbutils import MECODBUtil
 from meconotifier import MECONotifier
+from mecoconfig import MECOConfiger
 
 filename = sys.argv[1]
 
@@ -28,6 +29,7 @@ dbUtil = MECODBUtil()
 notifier = MECONotifier()
 msg=''
 msgBody=''
+configer = MECOConfiger()
 
 dbName = configer.configOptionValue("Database", "db_name")
 
@@ -58,26 +60,26 @@ with open(filename) as tsv:
     for line in csv.reader(tsv, delimiter = "\t"):
         if lineCnt != 0:
 
-            print line
+            # print line
             data = line[0:38]
 
-            print
+            # print
             for i in range(0, 38):
                 if len(data[i]) == 0:
                     data[i] = 'NULL'
                 else:
                     data[i] = "'" + data[i] + "'"
-            print ','.join(data)
+            # print ','.join(data)
 
-            print
+            # print
             sql = """INSERT INTO "LocationRecords" (%s) VALUES (%s)""" % (
                 ','.join(cols), ','.join(data))
-            print "sql = %s" % sql
+            # print "sql = %s" % sql
 
-            print
+            # print
 
-            print len(cols)
-            print len(data)
+            # print len(cols)
+            # print len(data)
 
             success = dbUtil.executeSQL(cur, sql)
             if not success:
@@ -87,7 +89,7 @@ with open(filename) as tsv:
 
 conn.commit()
 
-msg = ("Processed %s lines.\n", lineCnt)
+msg = ("Processed %s lines.\n" % lineCnt)
 sys.stderr.write(msg)
 msgBody += msg
 

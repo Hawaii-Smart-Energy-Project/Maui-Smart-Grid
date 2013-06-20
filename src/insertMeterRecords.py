@@ -69,10 +69,10 @@ with open(filename) as tsv :
     for line in csv.reader(tsv, delimiter = "\t") :
         if lineCnt != 0 :
 
-            print line
+            # print line
             data = line[0 :66]
 
-            print
+            # print
             for i in range(0, 66) :
 
                 if len(data[i]) == 0 :
@@ -80,17 +80,17 @@ with open(filename) as tsv :
                 else :
                     data[i] = "'" + data[i] + "'"
 
-            print ','.join(data)
+            # print ','.join(data)
 
-            print
+            # print
             sql = """INSERT INTO "MeterRecords" (%s) VALUES (%s)""" % (
                 ','.join(cols), ','.join(data))
-            print "sql = %s" % sql
+            # print "sql = %s" % sql
 
-            print
+            # print
 
-            print len(cols)
-            print len(data)
+            # print len(cols)
+            # print len(data)
 
             dbUtil.executeSQL(cur, sql)
 
@@ -98,7 +98,7 @@ with open(filename) as tsv :
 
 conn.commit()
 
-msg = ("Processed %s lines.", lineCnt)
+msg = ("Processed %s lines.\n" % lineCnt)
 sys.stderr.write(msg)
 msgBody += msg
 
