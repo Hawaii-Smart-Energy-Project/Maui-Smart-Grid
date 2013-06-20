@@ -72,6 +72,8 @@ class MECOLogger(object):
         loggerLevel = None
         if level == 'info':
             loggerLevel = logging.INFO
+        elif level == 'debug':
+            loggerLevel = logging.DEBUG
         elif level == 'error':
             loggerLevel = logging.ERROR
         elif level == 'silent':

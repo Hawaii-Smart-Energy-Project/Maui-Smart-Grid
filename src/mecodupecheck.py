@@ -24,6 +24,22 @@ class MECODupeChecker(object):
         self.dbUtil = MECODBUtil()
 
 
+    def getLastElement(self, rows):
+        """
+        Get the last element in a collection.
+
+        Example:
+            rows = (element1, element2, element3)
+            getLastElement(rows) # return element3
+
+        :param rows Result froms from a query
+        :return last element in the collection
+        """
+
+        for i, var in enumerate(rows):
+            if i == len(rows) - 1:
+                return var
+
     def readingBranchDupeExists(self, conn, meterName, endTime, channel = None,
                                 DEBUG = False):
         """
@@ -82,42 +98,29 @@ class MECODupeChecker(object):
             assert len(
                 rows) < 2, "dupes should be less than 2, found %s: %s" % (
                 len(rows), rows)
-            if channel and len(rows) == 1 and \
-                    self.mecoConfig.configOptionValue("Debugging", 'debug'):
-                print "Found %s existing matches in \"Reading\"." % len(rows)
-                print "rows = ",
-                print rows
 
-                self.currentReadingID = self.getLastElement(rows[0])
-                print "reading id = %s" % self.currentReadingID
+            # if channel and len(rows) == 1 and \
+            #         self.mecoConfig.configOptionValue("Debugging", 'debug'):
+            # print "Found %s existing matches in \"Reading\"." % len(rows)
+            # print "rows = ",
+            # print rows
 
-            # self.logger.log(
-            #     "Duplicate found for meter %s, end time %s, channel %s." % (
-            #         meterName, endTime, channel), 'debug')
+            self.currentReadingID = self.getLastElement(rows[0])
+            # print "reading id = %s" % self.currentReadingID
+            self.logger.log('Reading ID = %s.' % self.currentReadingID,
+                            'silent')
 
+            self.logger.log(
+                "Duplicate found for meter %s, end time %s, channel %s." % (
+                    meterName, endTime, channel), 'silent')
             return True
+
         else:
             self.logger.log(
                 "Found no rows for meter %s, end time %s, channel %s." % (
-                    meterName, endTime, channel), 'debug')
+                    meterName, endTime, channel), 'silent')
+
             return False
-
-
-    def getLastElement(self, rows):
-        """
-        Get the last element in a collection.
-
-        Example:
-            rows = (element1, element2, element3)
-            getLastElement(rows) # return element3
-
-        :param rows Result froms from a query
-        :return last element in the collection
-        """
-
-        for i, var in enumerate(rows):
-            if i == len(rows) - 1:
-                return var
 
 
     def readingValuesAreInTheDatabase(self, conn, readingDataDict):
@@ -138,12 +141,13 @@ class MECODupeChecker(object):
         dbCursor = conn.cursor()
 
         sql = """SELECT "Reading".reading_id,
-                        "Reading".channel,
-                        "Reading".raw_value,
-                        "Reading".uom,
-                        "Reading"."value"
-                 FROM "Reading"
-                 WHERE "Reading".reading_id = %s""" % (self.currentReadingID)
+                            "Reading".channel,
+                            "Reading".raw_value,
+                            "Reading".uom,
+                            "Reading"."value"
+                     FROM "Reading"
+                     WHERE "Reading".reading_id = %s""" % (
+        self.currentReadingID)
 
         self.dbUtil.executeSQL(dbCursor, sql)
         rows = dbCursor.fetchall()
@@ -152,59 +156,67 @@ class MECODupeChecker(object):
             return False
 
         # assert len(rows) == 1 or len(rows) == 0
-        assert len(rows) == 1, "Didn't find a matching reading for reading ID %s." % self.currentReadingID
+        assert len(
+            rows) == 1, "Didn't find a matching reading for reading ID %s." % \
+                        self.currentReadingID
         if len(rows) == 1:
-            print "Found %s existing matches." % len(rows)
-            print "rows = %s" % rows
+            self.logger.log("Found %s existing matches." % len(rows), 'silent')
 
-            print "dict:"
-            for key in readingDataDict.keys():
-                print key, readingDataDict[key]
-            print "row:"
-            index = 0
-            for item in rows[0]:
-                print "index %s: %s" % (index, item)
-                index += 1
+            # print "rows = %s" % rows
+
+            # print "dict:"
+
+            # for key in readingDataDict.keys():
+            #     print key, readingDataDict[key]
+
+            # print "row:"
+
+            # index = 0
+
+            # for item in rows[0]:
+            # print "index %s: %s" % (index, item)
+            # index += 1
 
             allEqual = True
             if int(readingDataDict['Channel']) == int(rows[0][1]):
                 print "channel equal,"
             else:
-                print "channel not equal: %s,%s,%s" % (
-                    int(readingDataDict['Channel']), int(rows[0][1]),
-                    readingDataDict['Channel'] == rows[0][1])
+                self.logger.log("channel not equal: %s,%s,%s" % (
+                int(readingDataDict['Channel']), int(rows[0][1]),
+                readingDataDict['Channel'] == rows[0][1]), 'debug')
                 allEqual = False
 
             if int(readingDataDict['RawValue']) == int(rows[0][2]):
                 print "raw value equal,"
             else:
-                print "rawvalue not equal: %s,%s,%s" % (
+                self.logger.log("rawvalue not equal: %s,%s,%s" % (
                     int(readingDataDict['RawValue']), int(rows[0][2]),
-                    readingDataDict['RawValue'] == rows[0][2])
+                    readingDataDict['RawValue'] == rows[0][2]), 'debug')
                 allEqual = False
 
             if readingDataDict['UOM'] == rows[0][3]:
                 print "uom equal,"
             else:
-                print "uom not equal: %s,%s,%s" % (
+                self.logger.log("uom not equal: %s,%s,%s" % (
                     readingDataDict['UOM'], rows[0][3],
-                    readingDataDict['UOM'] == rows[0][3])
+                    readingDataDict['UOM'] == rows[0][3]), 'debug')
                 allEqual = False
 
-            if self.approximatelyEqual(float(readingDataDict['Value']), float(rows[0][4]), 0.001):
-                print "value equal"
+            if self.approximatelyEqual(float(readingDataDict['Value']),
+                                       float(rows[0][4]), 0.001):
+                self.logger.log("value equal", 'silent')
             else:
-                print "value not equal: %s,%s,%s" % (
+                self.logger.log("value not equal: %s,%s,%s" % (
                     float(readingDataDict['Value']), float(rows[0][4]),
-                    readingDataDict['Value'] == rows[0][4])
+                    readingDataDict['Value'] == rows[0][4]), 'debug')
                 allEqual = False
 
             if allEqual:
-                print "all are equal"
+                # print "all are equal"
                 return True
             else:
-                print "NOT all are equal!"
-                print rows[0][1], rows[0][2], rows[0][3], rows[0][4]
+                # print "NOT all are equal!"
+                # print rows[0][1], rows[0][2], rows[0][3], rows[0][4]
                 return False
         else:
             return False
