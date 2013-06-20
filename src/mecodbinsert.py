@@ -6,6 +6,7 @@ __author__ = 'Daniel Zhang (張道博)'
 from mecomapper import MECOMapper
 from mecodupecheck import MECODupeChecker
 from mecodbutils import MECODBUtil
+from mecologger import MECOLogger
 
 VISUALIZE_DATA = 1
 DEBUG = 1
@@ -21,6 +22,7 @@ class MECODBInserter(object):
         Constructor.
         """
 
+        self.logger = MECOLogger(__name__, 'debug')
         self.mapper = MECOMapper()
         self.dupeChecker = MECODupeChecker()
         self.dbUtil = MECODBUtil()
@@ -115,8 +117,8 @@ class MECODBInserter(object):
             cols) + ')' + ' values (' + ','.join(
             vals) + ')'
 
-        if DEBUG:
-            print "sql=" + sql
+        # if DEBUG:
+        #     print "sql=" + sql
 
         self.dbUtil.executeSQL(cur, sql)
 
@@ -124,7 +126,7 @@ class MECODBInserter(object):
             try:
                 conn.commit()
             except:
-                print "ERROR: Commit failed."
+                self.logger.log("ERROR: Commit failed.",'debug')
 
         return cur
 

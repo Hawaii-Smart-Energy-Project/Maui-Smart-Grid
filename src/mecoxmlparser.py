@@ -50,7 +50,7 @@ class MECOXMLParser(object):
         self.conn = self.connector.connectDB()
         self.filename = None
         self.fileObject = None
-        self.elementCount = 0
+        self.processForInsertElementCount = 0
         self.inserter = MECODBInserter()
         self.insertDataIntoDatabase = False
 
@@ -90,6 +90,8 @@ class MECOXMLParser(object):
         self.dataProcessCount = 0
         self.dupeCheckCount = 0
         self.insertCount = 0
+        self.cumulativeInsertCount = 0
+        self.nonProcessForInsertElementCount = 0
 
     def parseXML(self, fileObject, insert = False):
         """
@@ -180,9 +182,12 @@ class MECOXMLParser(object):
                                            1)
             # The last 1 indicates don't commit. Commits are handled externally.
             self.insertCount += 1
+            self.cumulativeInsertCount += 1
 
-            # If no insertion took place,
-            # don't attempt to get the last sequence value.
+            # if self.cumulativeInsertCount != self.dataProcessCount:
+            #     self.logger.log("Divergence at %s:%s." % (currentTableName, columnsAndValues), 'debug')
+
+            # Only attempt getting the last sequence value if an insertion took place.
             self.lastSeqVal \
                 = self.util.getLastSequenceID(self.conn,
                                               currentTableName,
@@ -192,7 +197,8 @@ class MECOXMLParser(object):
 
 
         else: # Don't insert into Reading table if a dupe exists.
-            print "Duplicate meter-endtime-channel exists."
+            self.logger.log("Duplicate meter-endtime-channel exists.",'silent')
+
             self.dupeOnInsertCount += 1
             if self.dupeOnInsertCount > 0 and self \
                 .dupeOnInsertCount < 2:
@@ -202,8 +208,8 @@ class MECOXMLParser(object):
             # record.
             matchingValues = self.dupeChecker.readingValuesAreInTheDatabase(
                 self.conn, columnsAndValues)
-            if matchingValues:
-                print "Verified reading values are in the database."
+            # if matchingValues:
+            # print "Verified reading values are in the database."
             assert matchingValues == True, "Duplicate check found " \
                                            "non-matching values for meter %s," \
                                            " endtime %s, channel %s (%s, " \
@@ -216,7 +222,18 @@ class MECOXMLParser(object):
 
             self.channelDupeExists = False
 
+            self.logger.log('Record not inserted for %s.' % columnsAndValues,
+                            'silent')
+
         return parseLog
+
+    def generateConciseLogEntries(self):
+        log = self.logger.logAndWrite("{%s}" % self.dupeOnInsertCount)
+        log += self.logger.logAndWrite("(%s)" % self.commitCount)
+        log += self.logger.logAndWrite("[%s]" % self.processForInsertElementCount)
+        log += self.logger.logAndWrite("<%s,%s>" % (self.insertCount,
+                                                    self.cumulativeInsertCount))
+        return log
 
     def walkTheTreeFromRoot(self, root):
         """
@@ -233,6 +250,8 @@ class MECOXMLParser(object):
         for element, nextElement in self.getNext(walker):
             # Process every element in the tree while reading ahead to get
             # the next element.
+
+            # self.processForInsertElementCount += 1
 
             currentTableName = self.tableNameForAnElement(element)
             nextTableName = self.tableNameForAnElement(nextElement)
@@ -251,6 +270,8 @@ class MECOXMLParser(object):
             if currentTableName in self.insertTables:
                 # Check if the current table is one of the tables to have data
                 # inserted.
+
+                self.processForInsertElementCount += 1
 
                 if self.debug:
                     print
@@ -301,6 +322,9 @@ class MECOXMLParser(object):
                                                             currentTableName,
                                                             fKeyValue, parseLog,
                                                             pkeyCol)
+                # else:
+                #     self.logger.log("Not processing for insertion %s:%s." % (
+                #     currentTableName, columnsAndValues), 'debug')
 
                 if self.debug:
                     print "lastSeqVal = ", self.lastSeqVal
@@ -311,14 +335,7 @@ class MECOXMLParser(object):
                     if self.debug:
                         print "----- last reading found -----"
 
-                    parseLog += self.logger.logAndWrite(
-                        "{%s}" % self.dupeOnInsertCount)
-                    parseLog += self.logger.logAndWrite(
-                        "(%s)" % self.commitCount)
-                    parseLog += self.logger.logAndWrite(
-                        "[%s]" % self.elementCount)
-                    parseLog += self.logger.logAndWrite(
-                        "<%s>" % self.insertCount)
+                    parseLog += self.generateConciseLogEntries()
                     self.dupeOnInsertCount = 0
                     self.insertCount = 0
 
@@ -332,29 +349,27 @@ class MECOXMLParser(object):
                     if self.debug:
                         print "----- last register found -----"
 
-            self.elementCount += 1
+            # if self.processForInsertElementCount != self.insertCount:
+            #     self.logger.log("Divergence of element count for %s, %s." % (element.tag, element.attrib),'debug')
+
+
+            # End for.
 
         # Initial commit.
         if self.commitCount == 0:
-            parseLog += self.logger.logAndWrite("{%s}" % self.dupeOnInsertCount)
-            parseLog += self.logger.logAndWrite("(%s)" % self.commitCount)
-            parseLog += self.logger.logAndWrite("[%s]" % self.elementCount)
-            parseLog += self.logger.logAndWrite("<%s>" % self.insertCount)
+            parseLog += self.generateConciseLogEntries()
         self.dupeOnInsertCount = 0
         self.insertCount = 0
 
         # Final commit.
-        parseLog += self.logger.logAndWrite("{%s}" % self.dupeOnInsertCount)
-        parseLog += self.logger.logAndWrite("(%s)" % self.commitCount)
-        parseLog += self.logger.logAndWrite("[%s]" % self.elementCount)
-        parseLog += self.logger.logAndWrite("<%s>" % self.insertCount)
+        parseLog += self.generateConciseLogEntries()
         self.dupeOnInsertCount = 0
         self.insertCount = 0
 
         parseLog += self.logger.logAndWrite("*")
         self.commitCount += 1
         self.conn.commit()
-        print
+        sys.stderr.write("\n")
 
         self.logger.log("Data process count = %s." % self.dataProcessCount,
                         'info')
