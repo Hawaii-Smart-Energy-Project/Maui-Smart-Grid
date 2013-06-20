@@ -73,8 +73,8 @@ def makePlotAttachments():
 
 
 def logLegend():
-    legend = "Log Legend: {} = dupes, [] = element group, " \
-             "() = cumulative elements, * = commit"
+    legend = "Log Legend: {} = dupes, () = element group, " \
+             "[] = cumulative elements, <> = insert count, * = commit"
     return legend
 
 

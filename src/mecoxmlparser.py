@@ -234,8 +234,6 @@ class MECOXMLParser(object):
             # Process every element in the tree while reading ahead to get
             # the next element.
 
-            self.elementCount += 1
-
             currentTableName = self.tableNameForAnElement(element)
             nextTableName = self.tableNameForAnElement(nextElement)
             assert currentTableName is not None, "Current table does not exist."
@@ -316,7 +314,7 @@ class MECOXMLParser(object):
                     parseLog += self.logger.logAndWrite(
                         "{%s}" % self.dupeOnInsertCount)
                     parseLog += self.logger.logAndWrite(
-                        "[%s]" % self.commitCount)
+                        "(%s)" % self.commitCount)
                     parseLog += self.logger.logAndWrite(
                         "[%s]" % self.elementCount)
                     parseLog += self.logger.logAndWrite(
@@ -334,17 +332,20 @@ class MECOXMLParser(object):
                     if self.debug:
                         print "----- last register found -----"
 
+            self.elementCount += 1
+
+        # Initial commit.
         if self.commitCount == 0:
             parseLog += self.logger.logAndWrite("{%s}" % self.dupeOnInsertCount)
-            parseLog += self.logger.logAndWrite("[%s]" % self.commitCount)
+            parseLog += self.logger.logAndWrite("(%s)" % self.commitCount)
             parseLog += self.logger.logAndWrite("[%s]" % self.elementCount)
             parseLog += self.logger.logAndWrite("<%s>" % self.insertCount)
         self.dupeOnInsertCount = 0
         self.insertCount = 0
 
-        # Final commit
+        # Final commit.
         parseLog += self.logger.logAndWrite("{%s}" % self.dupeOnInsertCount)
-        parseLog += self.logger.logAndWrite("[%s]" % self.commitCount)
+        parseLog += self.logger.logAndWrite("(%s)" % self.commitCount)
         parseLog += self.logger.logAndWrite("[%s]" % self.elementCount)
         parseLog += self.logger.logAndWrite("<%s>" % self.insertCount)
         self.dupeOnInsertCount = 0
