@@ -92,6 +92,7 @@ class MECOXMLParser(object):
         self.insertCount = 0
         self.cumulativeInsertCount = 0
         self.nonProcessForInsertElementCount = 0
+        self.readingsInsertCount = 0
 
     def parseXML(self, fileObject, insert = False):
         """
@@ -185,9 +186,11 @@ class MECOXMLParser(object):
             self.cumulativeInsertCount += 1
 
             # if self.cumulativeInsertCount != self.dataProcessCount:
-            #     self.logger.log("Divergence at %s:%s." % (currentTableName, columnsAndValues), 'debug')
+            #     self.logger.log("Divergence at %s:%s." % (currentTableName,
+            #  columnsAndValues), 'debug')
 
-            # Only attempt getting the last sequence value if an insertion took place.
+            # Only attempt getting the last sequence value if an insertion
+            # took place.
             self.lastSeqVal \
                 = self.util.getLastSequenceID(self.conn,
                                               currentTableName,
@@ -195,9 +198,11 @@ class MECOXMLParser(object):
             # Store the primary key.
             self.fkDeterminer.pkValforCol[pkeyCol] = self.lastSeqVal
 
+            if currentTableName == "Reading":
+                self.readingsInsertCount += 1
 
         else: # Don't insert into Reading table if a dupe exists.
-            self.logger.log("Duplicate meter-endtime-channel exists.",'silent')
+            self.logger.log("Duplicate meter-endtime-channel exists.", 'silent')
 
             self.dupeOnInsertCount += 1
             if self.dupeOnInsertCount > 0 and self \
@@ -230,10 +235,17 @@ class MECOXMLParser(object):
     def generateConciseLogEntries(self):
         log = self.logger.logAndWrite("{%s}" % self.dupeOnInsertCount)
         log += self.logger.logAndWrite("(%s)" % self.commitCount)
-        log += self.logger.logAndWrite("[%s]" % self.processForInsertElementCount)
-        log += self.logger.logAndWrite("<%s,%s>" % (self.insertCount,
-                                                    self.cumulativeInsertCount))
+        log += self.logger.logAndWrite(
+            "[%s]" % self.processForInsertElementCount)
+        log += self.logger.logAndWrite(
+            "<%s,%s,%s>" % (self.readingsInsertCount, self.insertCount,
+                            self.cumulativeInsertCount))
         return log
+
+    def resetGroupCounters(self):
+        self.dupeOnInsertCount = 0
+        self.insertCount = 0
+        self.readingsInsertCount = 0
 
     def walkTheTreeFromRoot(self, root):
         """
@@ -322,7 +334,7 @@ class MECOXMLParser(object):
                                                             currentTableName,
                                                             fKeyValue, parseLog,
                                                             pkeyCol)
-                # else:
+                    # else:
                 #     self.logger.log("Not processing for insertion %s:%s." % (
                 #     currentTableName, columnsAndValues), 'debug')
 
@@ -336,8 +348,7 @@ class MECOXMLParser(object):
                         print "----- last reading found -----"
 
                     parseLog += self.generateConciseLogEntries()
-                    self.dupeOnInsertCount = 0
-                    self.insertCount = 0
+                    self.resetGroupCounters()
 
                     parseLog += self.logger.logAndWrite("*")
                     self.commitCount += 1
@@ -349,22 +360,22 @@ class MECOXMLParser(object):
                     if self.debug:
                         print "----- last register found -----"
 
-            # if self.processForInsertElementCount != self.insertCount:
-            #     self.logger.log("Divergence of element count for %s, %s." % (element.tag, element.attrib),'debug')
+                        # if self.processForInsertElementCount != self
+                        # .insertCount:
+                        #     self.logger.log("Divergence of element count
+                        # for %s, %s." % (element.tag, element.attrib),'debug')
 
 
-            # End for.
+                        # End for.
 
         # Initial commit.
         if self.commitCount == 0:
             parseLog += self.generateConciseLogEntries()
-        self.dupeOnInsertCount = 0
-        self.insertCount = 0
+        self.resetGroupCounters()
 
         # Final commit.
         parseLog += self.generateConciseLogEntries()
-        self.dupeOnInsertCount = 0
-        self.insertCount = 0
+        self.resetGroupCounters()
 
         parseLog += self.logger.logAndWrite("*")
         self.commitCount += 1
