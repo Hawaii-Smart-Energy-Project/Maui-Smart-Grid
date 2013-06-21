@@ -47,10 +47,10 @@ v1
 : Initial data insertion from first exports. This version is deprecated.
 
 v2
-: Eliminated duplicates in the Reading branch by searching on meter name, interval end time, and channel.
+: Eliminated duplicates in the Reading branch by filtering on meter name, interval end time, and channel.
 
 v3 (Production)
-: Retroactively adding event data. Duplicates may exist in the Event branch and the Register branch.
+: Retroactively adding event data. Duplicate records exist in the Event branch and the Register branch.
 
 v4 (Development)
 : Will address duplicates in the Event branch and the Register branch. To include updated weather data.
