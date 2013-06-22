@@ -25,6 +25,8 @@ class MECOPlotting(object):
     def __init__(self, testing = False):
         """
         Constructor.
+
+        :param testing: Use testing mode if True.
         """
 
         self.reader = MECODBReader(testing)
@@ -35,6 +37,9 @@ class MECOPlotting(object):
         """
         Create a plot of reading and meter counts.
         Save the plot to local storage.
+
+        :param databaseName: Name of the database being used to generate the
+        plot.
         """
 
         matplotlib.pyplot.ioff()
