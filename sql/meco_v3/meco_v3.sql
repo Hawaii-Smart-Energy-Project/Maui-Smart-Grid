@@ -566,6 +566,23 @@ COMMENT ON VIEW count_of_readings_and_meters_by_day IS 'Get counts of readings a
 
 
 --
+-- Name: count_of_register_duplicates; Type: VIEW; Schema: public; Owner: daniel
+--
+
+CREATE VIEW count_of_register_duplicates AS
+    SELECT "Register".number, "MeterData".meter_name, "RegisterRead".read_time, (count(*) - 1) AS "Duplicate Count" FROM (((("MeterData" JOIN "RegisterData" ON (("MeterData".meter_data_id = "RegisterData".meter_data_id))) JOIN "RegisterRead" ON (("RegisterData".register_data_id = "RegisterRead".register_data_id))) JOIN "Tier" ON (("RegisterRead".register_read_id = "Tier".register_read_id))) JOIN "Register" ON (("Tier".tier_id = "Register".tier_id))) GROUP BY "Register".number, "MeterData".meter_name, "RegisterRead".read_time HAVING ((count(*) - 1) > 0) ORDER BY "RegisterRead".read_time DESC, (count(*) - 1) DESC;
+
+
+ALTER TABLE public.count_of_register_duplicates OWNER TO daniel;
+
+--
+-- Name: VIEW count_of_register_duplicates; Type: COMMENT; Schema: public; Owner: daniel
+--
+
+COMMENT ON VIEW count_of_register_duplicates IS 'Count of duplicates in the Register branch. @author Daniel Zhang (張道博)';
+
+
+--
 -- Name: meter_ids_for_houses_without_pv_with_locations; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -973,6 +990,23 @@ ALTER TABLE public.view_readings_with_meter_id OWNER TO postgres;
 COMMENT ON VIEW view_readings_with_meter_id IS 'View readings along with their end times. Retrieve the meter name along with the readings.
 
 @author Daniel Zhang (張道博)';
+
+
+--
+-- Name: view_register_records; Type: VIEW; Schema: public; Owner: daniel
+--
+
+CREATE VIEW view_register_records AS
+    SELECT "Register".number, "MeterData".meter_name, "RegisterRead".read_time FROM (((("MeterData" JOIN "RegisterData" ON (("MeterData".meter_data_id = "RegisterData".meter_data_id))) JOIN "RegisterRead" ON (("RegisterData".register_data_id = "RegisterRead".register_data_id))) JOIN "Tier" ON (("RegisterRead".register_read_id = "Tier".register_read_id))) JOIN "Register" ON (("Tier".tier_id = "Register".tier_id)));
+
+
+ALTER TABLE public.view_register_records OWNER TO daniel;
+
+--
+-- Name: VIEW view_register_records; Type: COMMENT; Schema: public; Owner: daniel
+--
+
+COMMENT ON VIEW view_register_records IS 'Using for development.';
 
 
 --
@@ -1573,6 +1607,16 @@ GRANT ALL ON TABLE count_of_readings_and_meters_by_day TO sepgroup;
 
 
 --
+-- Name: count_of_register_duplicates; Type: ACL; Schema: public; Owner: daniel
+--
+
+REVOKE ALL ON TABLE count_of_register_duplicates FROM PUBLIC;
+REVOKE ALL ON TABLE count_of_register_duplicates FROM daniel;
+GRANT ALL ON TABLE count_of_register_duplicates TO daniel;
+GRANT ALL ON TABLE count_of_register_duplicates TO sepgroup;
+
+
+--
 -- Name: meter_ids_for_houses_without_pv_with_locations; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -1810,6 +1854,16 @@ REVOKE ALL ON TABLE view_readings_with_meter_id FROM PUBLIC;
 REVOKE ALL ON TABLE view_readings_with_meter_id FROM postgres;
 GRANT ALL ON TABLE view_readings_with_meter_id TO postgres;
 GRANT ALL ON TABLE view_readings_with_meter_id TO sepgroup;
+
+
+--
+-- Name: view_register_records; Type: ACL; Schema: public; Owner: daniel
+--
+
+REVOKE ALL ON TABLE view_register_records FROM PUBLIC;
+REVOKE ALL ON TABLE view_register_records FROM daniel;
+GRANT ALL ON TABLE view_register_records TO daniel;
+GRANT ALL ON TABLE view_register_records TO sepgroup;
 
 
 --
