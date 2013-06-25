@@ -185,10 +185,6 @@ class MECOXMLParser(object):
             self.insertCount += 1
             self.cumulativeInsertCount += 1
 
-            # if self.cumulativeInsertCount != self.dataProcessCount:
-            #     self.logger.log("Divergence at %s:%s." % (currentTableName,
-            #  columnsAndValues), 'debug')
-
             # Only attempt getting the last sequence value if an insertion
             # took place.
             self.lastSeqVal \
@@ -459,8 +455,4 @@ class MECOXMLParser(object):
             if i == len(rows) - 1:
                 return var
 
-    def performRollback(self):
-        """
-        This is not used.
-        """
-        self.conn.rollback()
+

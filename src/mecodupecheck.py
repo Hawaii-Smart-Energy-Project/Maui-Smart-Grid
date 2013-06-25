@@ -99,14 +99,7 @@ class MECODupeChecker(object):
                 rows) < 2, "dupes should be less than 2, found %s: %s" % (
                 len(rows), rows)
 
-            # if channel and len(rows) == 1 and \
-            #         self.mecoConfig.configOptionValue("Debugging", 'debug'):
-            # print "Found %s existing matches in \"Reading\"." % len(rows)
-            # print "rows = ",
-            # print rows
-
             self.currentReadingID = self.getLastElement(rows[0])
-            # print "reading id = %s" % self.currentReadingID
             self.logger.log('Reading ID = %s.' % self.currentReadingID,
                             'silent')
 
@@ -162,21 +155,6 @@ class MECODupeChecker(object):
         if len(rows) == 1:
             self.logger.log("Found %s existing matches." % len(rows), 'silent')
 
-            # print "rows = %s" % rows
-
-            # print "dict:"
-
-            # for key in readingDataDict.keys():
-            #     print key, readingDataDict[key]
-
-            # print "row:"
-
-            # index = 0
-
-            # for item in rows[0]:
-            # print "index %s: %s" % (index, item)
-            # index += 1
-
             allEqual = True
             if int(readingDataDict['Channel']) == int(rows[0][1]):
                 print "channel equal,"
@@ -212,11 +190,8 @@ class MECODupeChecker(object):
                 allEqual = False
 
             if allEqual:
-                # print "all are equal"
                 return True
             else:
-                # print "NOT all are equal!"
-                # print rows[0][1], rows[0][2], rows[0][3], rows[0][4]
                 return False
         else:
             return False
