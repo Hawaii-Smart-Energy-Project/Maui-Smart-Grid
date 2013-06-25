@@ -259,8 +259,6 @@ class MECOXMLParser(object):
             # Process every element in the tree while reading ahead to get
             # the next element.
 
-            # self.processForInsertElementCount += 1
-
             currentTableName = self.tableNameForAnElement(element)
             nextTableName = self.tableNameForAnElement(nextElement)
             assert currentTableName is not None, "Current table does not exist."
@@ -330,9 +328,6 @@ class MECOXMLParser(object):
                                                             currentTableName,
                                                             fKeyValue, parseLog,
                                                             pkeyCol)
-                    # else:
-                #     self.logger.log("Not processing for insertion %s:%s." % (
-                #     currentTableName, columnsAndValues), 'debug')
 
                 if self.debug:
                     print "lastSeqVal = ", self.lastSeqVal
@@ -356,13 +351,6 @@ class MECOXMLParser(object):
                     if self.debug:
                         print "----- last register found -----"
 
-                        # if self.processForInsertElementCount != self
-                        # .insertCount:
-                        #     self.logger.log("Divergence of element count
-                        # for %s, %s." % (element.tag, element.attrib),'debug')
-
-
-                        # End for.
 
         # Initial commit.
         if self.commitCount == 0:
