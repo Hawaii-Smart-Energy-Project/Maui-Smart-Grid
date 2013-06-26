@@ -56,8 +56,8 @@ class MECODupeChecker(object):
         dbCursor = conn.cursor()
 
         sql = """SELECT "public"."MeterData".meter_name,
-                        "public"."RegisterRead".read_time
-                        "public"."Register"."number",
+                        "public"."RegisterRead".read_time,
+                        "public"."Register"."number"
                  FROM "public"."MeterData"
                  INNER JOIN "public"."RegisterData" ON
                       "public" ."MeterData".meter_data_id = "public"
@@ -71,7 +71,7 @@ class MECODupeChecker(object):
                  "public"."Register".tier_id
                  WHERE "public"."MeterData".meter_name = '%s'
                  AND "public"."RegisterRead".read_time = '%s'
-                 AND "public"."Register"."number" = '%s'
+                 AND "public"."Register".number = '%s'
                  """ % (meterName, readTime, registerNumber)
 
         self.dbUtil.executeSQL(dbCursor, sql)
@@ -112,7 +112,8 @@ class MECODupeChecker(object):
                             "Reading".channel,
                             "Reading".reading_id
                      FROM "MeterData"
-                     INNER JOIN "IntervalReadData" ON "MeterData".meter_data_id =
+                     INNER JOIN "IntervalReadData" ON "MeterData"
+                     .meter_data_id =
                       "IntervalReadData".meter_data_id
                      INNER JOIN "Interval" ON "IntervalReadData"
                      .interval_read_data_id = "Interval".interval_read_data_id
@@ -127,11 +128,13 @@ class MECODupeChecker(object):
                             "MeterData".meter_name,
                             "MeterData".meter_data_id
                      FROM "MeterData"
-                     INNER JOIN "IntervalReadData" ON "MeterData".meter_data_id =
+                     INNER JOIN "IntervalReadData" ON "MeterData"
+                     .meter_data_id =
                       "IntervalReadData".meter_data_id
                      INNER JOIN "Interval" ON "IntervalReadData"
                      .interval_read_data_id = "Interval".interval_read_data_id
-                     WHERE "Interval".end_time = '%s' and meter_name = '%s'""" % (
+                     WHERE "Interval".end_time = '%s' and meter_name =
+                     '%s'""" % (
                 endTime, meterName)
 
         self.dbUtil.executeSQL(dbCursor, sql)
@@ -154,7 +157,7 @@ class MECODupeChecker(object):
         else:
             self.logger.log(
                 "Found no rows for meter %s, end time %s, channel %s." % (
-                meterName, endTime, channel), 'silent')
+                    meterName, endTime, channel), 'silent')
             return False
 
 

@@ -183,9 +183,8 @@ class MECOXMLParser(object):
 
         # Only perform an insert if there are no duplicate values
         # for the channel.
-        if (currentTableName == "Reading" and not self.channelDupeExists) or (
-                    currentTableName == "Regiseter" and not self
-            .numberDupeExists):
+        if not self.channelDupeExists and not self.numberDupeExists:
+
             # ***********************
             # ***** INSERT DATA *****
             # ***********************
@@ -216,28 +215,42 @@ class MECOXMLParser(object):
             # self.logger.log("Duplicate meter-endtime-channel exists.",
             # 'silent')
 
-            self.readingDupeOnInsertCount += 1
-            if self.readingDupeOnInsertCount > 0 and self\
-                .readingDupeOnInsertCount < 2:
-                parseLog += self.logger.logAndWrite("{dupe on insert==>}")
+            if (self.channelDupeExists):
 
-            # Also, verify the data is equivalent to the existing
-            # record.
-            matchingValues = self.dupeChecker.readingValuesAreInTheDatabase(
-                self.conn, columnsAndValues)
-            # if matchingValues:
-            # print "Verified reading values are in the database."
-            assert matchingValues == True, "Duplicate check found " \
-                                           "non-matching values for meter %s," \
-                                           " endtime %s, channel %s (%s, " \
-                                           "%s)." % (
-                                               self.currentMeterName,
-                                               self.currentIntervalEndTime,
-                                               columnsAndValues['Channel'],
-                                               columnsAndValues['RawValue'],
-                                               columnsAndValues['Value'])
+                self.readingDupeOnInsertCount += 1
+                if self.readingDupeOnInsertCount > 0 and self\
+                    .readingDupeOnInsertCount < 2:
+                    parseLog += self.logger.logAndWrite("{c-dupe==>}")
 
-            self.channelDupeExists = False
+                # Also, verify the data is equivalent to the existing
+                # record.
+                matchingValues = self.dupeChecker.readingValuesAreInTheDatabase(
+                    self.conn, columnsAndValues)
+                # if matchingValues:
+                # print "Verified reading values are in the database."
+                assert matchingValues == True, "Duplicate check found " \
+                                               "non-matching values for meter" \
+                                               " %s," \
+                                               " endtime %s, channel %s (%s, " \
+                                               "%s)." % (
+                                                   self.currentMeterName,
+                                                   self.currentIntervalEndTime,
+                                                   columnsAndValues['Channel'],
+                                                   columnsAndValues['RawValue'],
+                                                   columnsAndValues['Value'])
+
+                self.channelDupeExists = False
+
+            elif (self.numberDupeExists):
+                self.registerDupeOnInsertCount += 1
+                if self.registerDupeOnInsertCount > 0 and self\
+                    .registerDupeOnInsertCount < 2:
+                    parseLog += self.logger.logAndWrite("{n-dupe==>}")
+
+                self.numberDupeExists = False
+
+            else:
+                assert True == False, "Duplicate condition does not exist."
 
             self.logger.log('Record not inserted for %s.' % columnsAndValues,
                             'silent')
@@ -266,6 +279,25 @@ class MECOXMLParser(object):
         self.readingDupeOnInsertCount = 0
         self.insertCount = 0
         self.readingInsertCount = 0
+
+    def performTableBasedOperations(self, columnsAndValues, currentTableName,
+                                    element):
+        """
+        Perform operations that are based on the current table.
+        """
+
+        if currentTableName == "MeterData":
+            self.currentMeterName = columnsAndValues['MeterName']
+
+        elif currentTableName == "Interval":
+            self.currentIntervalEndTime = columnsAndValues['EndTime']
+
+        elif currentTableName == "RegisterRead":
+            self.currentRegisterReadReadTime = columnsAndValues['ReadTime']
+
+        elif currentTableName == "Event":
+            columnsAndValues['Event_Content'] = element.text
+
 
     def walkTheTreeFromRoot(self, root):
         """
@@ -335,15 +367,8 @@ class MECOXMLParser(object):
                 if self.debug:
                     print "fKeyValue = %s" % fKeyValue
 
-                # Perform table based operations.
-                if currentTableName == "MeterData":
-                    self.currentMeterName = columnsAndValues['MeterName']
-
-                if currentTableName == "Interval":
-                    self.currentIntervalEndTime = columnsAndValues['EndTime']
-
-                if currentTableName == "Event":
-                    columnsAndValues['Event_Content'] = element.text
+                self.performTableBasedOperations(columnsAndValues,
+                                                 currentTableName, element)
 
                 if self.insertDataIntoDatabase:
                     # Data is intended to be inserted into the database.
