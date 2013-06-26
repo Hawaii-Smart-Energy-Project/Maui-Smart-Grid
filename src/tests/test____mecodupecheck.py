@@ -38,7 +38,7 @@ class TestMECODupeChecker(unittest.TestCase):
         self.assertTrue(
             self.dupeChecker.readingBranchDupeExists(self.conn, '100000',
                                                      '2013-04-08 00:30:00',
-                                                     '1',True),
+                                                     '1', True),
             "Record should already exist")
 
     def testLoadOnTop(self):
@@ -47,6 +47,15 @@ class TestMECODupeChecker(unittest.TestCase):
 
         This is no longer possible as
         duplicates are dropped before insertion.
+        """
+
+        pass
+
+    def testLoadSingleMissingEntry(self):
+        """
+        A reading will be inserted into the database where the reading does
+        not currently exist as determined by the
+        MeterName-IntervalEndTime-Channel tuple.
         """
 
         pass

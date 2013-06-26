@@ -31,8 +31,8 @@ class TestMECOXMLParser(unittest.TestCase):
         fileObject = open(self.p.filename, "rb")
         expectedCount = 126
         self.p.parseXML(fileObject, True)
-        print "element count = %s" % self.p.elementCount
-        self.assertEqual(self.p.elementCount, expectedCount)
+        print "element count = %s" % self.p.processForInsertElementCount
+        self.assertEqual(self.p.processForInsertElementCount, expectedCount)
 
     def testAllTableNamesArePresent(self):
         self.dbUtil.eraseTestMeco()
