@@ -83,16 +83,21 @@ class MECOXMLParser(object):
         self.dupeChecker = MECODupeChecker()
         self.currentMeterName = None
         self.currentIntervalEndTime = None
+        self.currentRegisterReadReadTime = None
         self.dupesExist = False
-        self.channelDupeExists = False
+        self.channelDupeExists = False # For Reading dupes.
+        self.numberDupeExists = False # For Register dupes.
         self.commitCount = 0
-        self.dupeOnInsertCount = 0
+        self.readingDupeOnInsertCount = 0 # For Reading dupes.
+        self.registerDupeOnInsertCount = 0 # For Register dupes.
         self.dataProcessCount = 0
-        self.dupeCheckCount = 0
+        self.readingDupeCheckCount = 0 # For Reading dupes.
+        self.registerDupeCheckCount = 0 # For Register dupes.
         self.insertCount = 0
         self.cumulativeInsertCount = 0
         self.nonProcessForInsertElementCount = 0
-        self.readingsInsertCount = 0
+        self.readingInsertCount = 0
+        self.registerInsertCount = 0
 
     def parseXML(self, fileObject, insert = False):
         """
@@ -167,12 +172,20 @@ class MECOXMLParser(object):
                 self.currentIntervalEndTime,
                 columnsAndValues['Channel']
             )
-            self.dupeCheckCount += 1
+            self.readingDupeCheckCount += 1
+
+        if currentTableName == "Register":
+            self.numberDupeExists = self.dupeChecker.registerBranchDupeExists(
+                self.conn, self.currentMeterName,
+                self.currentRegisterReadReadTime, columnsAndValues['Number'])
+            self.registerDupeCheckCount += 1
 
 
         # Only perform an insert if there are no duplicate values
         # for the channel.
-        if not self.channelDupeExists:
+        if (currentTableName == "Reading" and not self.channelDupeExists) or (
+                    currentTableName == "Regiseter" and not self
+            .numberDupeExists):
             # ***********************
             # ***** INSERT DATA *****
             # ***********************
@@ -195,14 +208,17 @@ class MECOXMLParser(object):
             self.fkDeterminer.pkValforCol[pkeyCol] = self.lastSeqVal
 
             if currentTableName == "Reading":
-                self.readingsInsertCount += 1
+                self.readingInsertCount += 1
+            elif currentTableName == "Register":
+                self.registerInsertCount += 1
 
-        else: # Don't insert into Reading table if a dupe exists.
-            self.logger.log("Duplicate meter-endtime-channel exists.", 'silent')
+        else: # Don't insert into Reading or Register table if a dupe exists.
+            # self.logger.log("Duplicate meter-endtime-channel exists.",
+            # 'silent')
 
-            self.dupeOnInsertCount += 1
-            if self.dupeOnInsertCount > 0 and self \
-                .dupeOnInsertCount < 2:
+            self.readingDupeOnInsertCount += 1
+            if self.readingDupeOnInsertCount > 0 and self\
+                .readingDupeOnInsertCount < 2:
                 parseLog += self.logger.logAndWrite("{dupe on insert==>}")
 
             # Also, verify the data is equivalent to the existing
@@ -229,19 +245,27 @@ class MECOXMLParser(object):
         return parseLog
 
     def generateConciseLogEntries(self):
-        log = self.logger.logAndWrite("{%s}" % self.dupeOnInsertCount)
+        """
+        :returns: A concatenated string of log entries.
+        """
+
+        log = self.logger.logAndWrite("{%s}" % self.readingDupeOnInsertCount)
         log += self.logger.logAndWrite("(%s)" % self.commitCount)
         log += self.logger.logAndWrite(
             "[%s]" % self.processForInsertElementCount)
         log += self.logger.logAndWrite(
-            "<%s,%s,%s>" % (self.readingsInsertCount, self.insertCount,
+            "<%s,%s,%s>" % (self.readingInsertCount, self.insertCount,
                             self.cumulativeInsertCount))
         return log
 
     def resetGroupCounters(self):
-        self.dupeOnInsertCount = 0
+        """
+        Reset counters that are keeping track of groups.
+        """
+
+        self.readingDupeOnInsertCount = 0
         self.insertCount = 0
-        self.readingsInsertCount = 0
+        self.readingInsertCount = 0
 
     def walkTheTreeFromRoot(self, root):
         """
@@ -368,7 +392,8 @@ class MECOXMLParser(object):
 
         self.logger.log("Data process count = %s." % self.dataProcessCount,
                         'info')
-        self.logger.log("Dupe check count = %s." % self.dupeCheckCount, 'info')
+        self.logger.log("Dupe check count = %s." % self.readingDupeCheckCount,
+                        'info')
         return parseLog
 
 
