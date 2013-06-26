@@ -218,7 +218,7 @@ class MECOXMLParser(object):
             if (self.channelDupeExists):
 
                 self.readingDupeOnInsertCount += 1
-                if self.readingDupeOnInsertCount > 0 and self\
+                if self.readingDupeOnInsertCount > 0 and self \
                     .readingDupeOnInsertCount < 2:
                     parseLog += self.logger.logAndWrite("{c-dupe==>}")
 
@@ -243,7 +243,7 @@ class MECOXMLParser(object):
 
             elif (self.numberDupeExists):
                 self.registerDupeOnInsertCount += 1
-                if self.registerDupeOnInsertCount > 0 and self\
+                if self.registerDupeOnInsertCount > 0 and self \
                     .registerDupeOnInsertCount < 2:
                     parseLog += self.logger.logAndWrite("{n-dupe==>}")
 
@@ -262,13 +262,17 @@ class MECOXMLParser(object):
         :returns: A concatenated string of log entries.
         """
 
-        log = self.logger.logAndWrite("{%s}" % self.readingDupeOnInsertCount)
+        log = self.logger.logAndWrite(
+            "{%sc,%sn}" % (
+            self.readingDupeOnInsertCount, self.registerDupeOnInsertCount))
         log += self.logger.logAndWrite("(%s)" % self.commitCount)
         log += self.logger.logAndWrite(
             "[%s]" % self.processForInsertElementCount)
         log += self.logger.logAndWrite(
-            "<%s,%s,%s>" % (self.readingInsertCount, self.insertCount,
-                            self.cumulativeInsertCount))
+            "<%srd,%sre,%s,%s>" % (
+                self.readingInsertCount, self.registerInsertCount,
+                self.insertCount,
+                self.cumulativeInsertCount))
         return log
 
     def resetGroupCounters(self):
@@ -417,7 +421,7 @@ class MECOXMLParser(object):
 
         self.logger.log("Data process count = %s." % self.dataProcessCount,
                         'info')
-        self.logger.log("Dupe check count = %s." % self.readingDupeCheckCount,
+        self.logger.log("Reading dupe check count = %s." % self.readingDupeCheckCount,
                         'info')
         return parseLog
 
