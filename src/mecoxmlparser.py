@@ -220,7 +220,7 @@ class MECOXMLParser(object):
                 self.readingDupeOnInsertCount += 1
                 if self.readingDupeOnInsertCount > 0 and self \
                     .readingDupeOnInsertCount < 2:
-                    parseLog += self.logger.logAndWrite("{c-dupe==>}")
+                    parseLog += self.logger.logAndWrite("{rd-dupe==>}")
 
                 # Also, verify the data is equivalent to the existing
                 # record.
@@ -245,7 +245,7 @@ class MECOXMLParser(object):
                 self.registerDupeOnInsertCount += 1
                 if self.registerDupeOnInsertCount > 0 and self \
                     .registerDupeOnInsertCount < 2:
-                    parseLog += self.logger.logAndWrite("{n-dupe==>}")
+                    parseLog += self.logger.logAndWrite("{re-dupe==>}")
 
                 self.numberDupeExists = False
 
@@ -263,7 +263,7 @@ class MECOXMLParser(object):
         """
 
         log = self.logger.logAndWrite(
-            "{%sc,%sn}" % (
+            "{%srd,%sre}" % (
             self.readingDupeOnInsertCount, self.registerDupeOnInsertCount))
         log += self.logger.logAndWrite("(%s)" % self.commitCount)
         log += self.logger.logAndWrite(
@@ -283,6 +283,8 @@ class MECOXMLParser(object):
         self.readingDupeOnInsertCount = 0
         self.insertCount = 0
         self.readingInsertCount = 0
+        self.registerDupeOnInsertCount = 0
+        self.registerInsertCount = 0
 
     def performTableBasedOperations(self, columnsAndValues, currentTableName,
                                     element):
