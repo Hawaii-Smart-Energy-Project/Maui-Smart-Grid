@@ -413,6 +413,7 @@ class MECOXMLParser(object):
         self.resetGroupCounters()
 
         # Final commit.
+        parseLog += self.logger.logAndWrite("---")
         parseLog += self.generateConciseLogEntries()
         self.resetGroupCounters()
 

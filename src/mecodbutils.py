@@ -22,7 +22,7 @@ class MECODBUtil(object):
         Constructor.
         """
 
-        self.logger = MECOLogger(__name__, 'silent')
+        self.logger = MECOLogger(__name__, 'DEBUG')
         self.configer = MECOConfiger()
 
     def getLastSequenceID(self, conn, tableName, columnName):
@@ -71,12 +71,13 @@ class MECODBUtil(object):
 
         :param cursor: A database cursor.
         :param sql: A SQL statement.
-        :returns: True for success, False for failure.
+        :returns: True for success, execution is aborted if there is an error.
         """
 
         success = True
         try:
             cursor.execute(sql)
+            self.logger.log(sql,'DEBUG')
         except Exception, e:
             success = False
             msg = "SQL execute failed using %s." % sql

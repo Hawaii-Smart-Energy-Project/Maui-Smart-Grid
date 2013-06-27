@@ -20,7 +20,10 @@ class MECOLogger(object):
         """
 
         self.logger = logging.getLogger(caller)
-        self.logger.setLevel(logging.INFO)
+
+        # Messages equal to and above the logging level will be logged.
+        self.logger.setLevel(logging.DEBUG)
+
         self.streamHandler = logging.StreamHandler(sys.stderr)
         formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -33,6 +36,8 @@ class MECOLogger(object):
             self.loggerLevel = logging.ERROR
         elif level == 'silent':
             self.loggerLevel = None
+        elif level == 'debug':
+            self.loggerLevel = logging.DEBUG
         else:
             self.loggerLevel = None
 
