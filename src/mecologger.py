@@ -20,7 +20,7 @@ class MECOLogger(object):
         """
 
         self.logger = logging.getLogger(caller)
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.INFO)
         self.streamHandler = logging.StreamHandler(sys.stderr)
         formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -35,8 +35,6 @@ class MECOLogger(object):
             self.loggerLevel = None
         else:
             self.loggerLevel = None
-
-        self.logger.addHandler(self.streamHandler)
 
         recordedLog = ''
 
@@ -69,6 +67,7 @@ class MECOLogger(object):
         :params level: (optional) Logging level.
         """
 
+        self.logger.addHandler(self.streamHandler)
         loggerLevel = None
         if level == 'info':
             loggerLevel = logging.INFO
@@ -83,6 +82,7 @@ class MECOLogger(object):
 
         if loggerLevel != None:
             self.logger.log(loggerLevel, message)
+            self.logger.removeHandler(self.streamHandler)
             # self.streamHandler.flush()
 
     def startRecording(self):
