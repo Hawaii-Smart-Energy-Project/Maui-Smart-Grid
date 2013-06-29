@@ -219,6 +219,8 @@ class MECOXMLParser(object):
                 self.readingInsertCount += 1
             elif currentTableName == "Register":
                 self.registerInsertCount += 1
+            elif currentTableName == "Event":
+                self.eventInsertCount += 1
 
         else: # Don't insert into Reading or Register table if a dupe exists.
             # self.logger.log("Duplicate meter-endtime-channel exists.",
@@ -258,6 +260,14 @@ class MECOXMLParser(object):
 
                 self.numberDupeExists = False
 
+            elif (self.eventTimeDupeExists):
+                self.eventDupeOnInsertCount += 1
+                if self.eventDupeOnInsertCount > 0 and self\
+                    .eventDupeOnInsertCount < 2:
+                    parseLog += self.logger.logAndWrite("{ev-dupe==>}")
+
+                self.eventTimeDupeExists = False
+
             else:
                 assert True == False, "Duplicate condition does not exist."
 
@@ -279,7 +289,7 @@ class MECOXMLParser(object):
         log += self.logger.logAndWrite(
             "[%s]" % self.processForInsertElementCount)
         log += self.logger.logAndWrite(
-            "<%srd,%sre,%sev, %s,%s>" % (
+            "<%srd,%sre,%sev,%s,%s>" % (
                 self.readingInsertCount, self.registerInsertCount,
                 self.eventInsertCount,
                 self.insertCount,
@@ -296,6 +306,8 @@ class MECOXMLParser(object):
         self.readingInsertCount = 0
         self.registerDupeOnInsertCount = 0
         self.registerInsertCount = 0
+        self.eventInsertCount = 0
+        self.eventDupeOnInsertCount = 0
 
     def performTableBasedOperations(self, columnsAndValues, currentTableName,
                                     element):
