@@ -40,6 +40,37 @@ class MECODupeChecker(object):
             if i == len(rows) - 1:
                 return var
 
+    def eventBranchDupeExists(self, conn, meterName, eventTime):
+        """
+
+        :param conn: Database connection.
+        :param meterName: Meter name in MeterData table.
+        :param eventTime: Timestamp of event.
+        :return: True if tuple exists, False if not.
+        """
+
+        dbCursor = conn.cursor()
+
+        sql = """SELECT "Event".event_time,
+                        "MeterData".meter_data_id,
+                        "EventData".event_data_id
+                 FROM ( ( "MeterData" JOIN "EventData" ON (
+                        ( "MeterData".meter_data_id = "EventData"
+                        .meter_data_id ) ) )
+                 JOIN "Event" ON ( ( "EventData".event_data_id = "Event"
+                 .event_data_id ) ) )
+                 WHERE "MeterData".meter_name = '%s'
+                 AND "Event".event_time = '%s' """ % (meterName, eventTime)
+
+        self.dbUtil.executeSQL(dbCursor, sql)
+        rows = dbCursor.fetchall()
+
+        if len(rows) > 0:
+            return True
+        else:
+            return False
+
+
     def registerBranchDupeExists(self, conn, meterName, readTime,
                                  registerNumber, DEBUG = False):
         """
