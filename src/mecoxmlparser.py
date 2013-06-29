@@ -188,11 +188,18 @@ class MECOXMLParser(object):
         if currentTableName == "Event":
             self.eventTimeDupeExists = self.dupeChecker.eventBranchDupeExists(
                 self.conn, self.currentMeterName, columnsAndValues['EventTime'])
+
+            # self.logger.log(
+            #     'event time dupe exists= %s' % self.eventTimeDupeExists,
+            #     'debug')
+            # self.logger.log('event time = %s' % columnsAndValues['EventTime'],
+            #                 'debug')
             self.eventDupeCheckCount += 1
 
         # Only perform an insert if there are no duplicate values
         # for the channel.
-        if not self.channelDupeExists and not self.numberDupeExists:
+        if not self.channelDupeExists and not self.numberDupeExists and not \
+            self.eventTimeDupeExists:
 
             # ***********************
             # ***** INSERT DATA *****
@@ -262,7 +269,7 @@ class MECOXMLParser(object):
 
             elif (self.eventTimeDupeExists):
                 self.eventDupeOnInsertCount += 1
-                if self.eventDupeOnInsertCount > 0 and self\
+                if self.eventDupeOnInsertCount > 0 and self \
                     .eventDupeOnInsertCount < 2:
                     parseLog += self.logger.logAndWrite("{ev-dupe==>}")
 
