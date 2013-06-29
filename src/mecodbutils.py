@@ -8,6 +8,7 @@ from mecoconfig import MECOConfiger
 from mecodbconnect import MECODBConnector
 import psycopg2
 from mecologger import MECOLogger
+import re
 
 DEBUG = 1
 
@@ -54,7 +55,7 @@ class MECODBUtil(object):
             msg = "Failed to retrieve the last sequence value."
             msg += " Exception is %s." % e
 
-            self.logger.log(msg,'error')
+            self.logger.log(msg, 'error')
             sys.exit(-1)
 
         lastSequenceValue = row[0]
@@ -77,7 +78,8 @@ class MECODBUtil(object):
         success = True
         try:
             cursor.execute(sql)
-            self.logger.log(sql,'DEBUG')
+            # if re.search('^.*insert', sql, flags = re.IGNORECASE):
+            #     self.logger.log("SQL:%s." % sql, 'debug')
         except Exception, e:
             success = False
             msg = "SQL execute failed using %s." % sql
@@ -108,7 +110,7 @@ class MECODBUtil(object):
         if (not (self.configer.configOptionValue("Database",
                                                  "testing_db_name") ==
                      databaseName)):
-            print "Testing DB name doesn't match %s." % self.configer\
+            print "Testing DB name doesn't match %s." % self.configer \
                 .configOptionValue(
                 "Database", "testing_db_name")
             exit(-1)
