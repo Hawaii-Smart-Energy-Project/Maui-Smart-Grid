@@ -87,17 +87,21 @@ class MECOXMLParser(object):
         self.dupesExist = False
         self.channelDupeExists = False # For Reading dupes.
         self.numberDupeExists = False # For Register dupes.
+        self.eventTimeDupeExists = False # For Event dupes.
         self.commitCount = 0
         self.readingDupeOnInsertCount = 0 # For Reading dupes.
         self.registerDupeOnInsertCount = 0 # For Register dupes.
+        self.eventDupeOnInsertCount = 0 # For Event dupes.
         self.dataProcessCount = 0
         self.readingDupeCheckCount = 0 # For Reading dupes.
         self.registerDupeCheckCount = 0 # For Register dupes.
+        self.eventDupeCheckCount = 0 # For Event dupes.
         self.insertCount = 0
         self.cumulativeInsertCount = 0
         self.nonProcessForInsertElementCount = 0
         self.readingInsertCount = 0
         self.registerInsertCount = 0
+        self.eventInsertCount = 0
 
     def parseXML(self, fileObject, insert = False):
         """
@@ -147,7 +151,8 @@ class MECOXMLParser(object):
                                 fKeyValue, parseLog, pkeyCol):
         """
         This is the method that performs insertion of parsed data to the
-        database.
+        database. Duplicate checks are performed on the endpoints of the data
+         branches.
 
         :param columnsAndValues: A dictionary containing columns and their
         values.
@@ -180,6 +185,10 @@ class MECOXMLParser(object):
                 self.currentRegisterReadReadTime, columnsAndValues['Number'])
             self.registerDupeCheckCount += 1
 
+        if currentTableName == "Event":
+            self.eventTimeDupeExists = self.dupeChecker.eventBranchDupeExists(
+                self.conn, self.currentMeterName, columnsAndValues['EventTime'])
+            self.eventDupeCheckCount += 1
 
         # Only perform an insert if there are no duplicate values
         # for the channel.
@@ -263,14 +272,16 @@ class MECOXMLParser(object):
         """
 
         log = self.logger.logAndWrite(
-            "{%srd,%sre}" % (
-            self.readingDupeOnInsertCount, self.registerDupeOnInsertCount))
+            "{%srd,%sre,%sev}" % (
+                self.readingDupeOnInsertCount, self.registerDupeOnInsertCount,
+                self.eventDupeOnInsertCount))
         log += self.logger.logAndWrite("(%s)" % self.commitCount)
         log += self.logger.logAndWrite(
             "[%s]" % self.processForInsertElementCount)
         log += self.logger.logAndWrite(
-            "<%srd,%sre,%s,%s>" % (
+            "<%srd,%sre,%sev, %s,%s>" % (
                 self.readingInsertCount, self.registerInsertCount,
+                self.eventInsertCount,
                 self.insertCount,
                 self.cumulativeInsertCount))
         return log
@@ -424,8 +435,9 @@ class MECOXMLParser(object):
 
         self.logger.log("Data process count = %s." % self.dataProcessCount,
                         'info')
-        self.logger.log("Reading dupe check count = %s." % self.readingDupeCheckCount,
-                        'info')
+        self.logger.log(
+            "Reading dupe check count = %s." % self.readingDupeCheckCount,
+            'info')
         return parseLog
 
 
