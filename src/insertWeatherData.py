@@ -4,8 +4,12 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 """
-Preprocess weather data from Kahalui weather stations and insert to the data
+Preprocess weather data from Kahului weather stations and insert to the data
 store.
+
+This script was developed to handle a handful of extracted data files and is
+deprecated in favor of insertCompressedWeatherData.py that handles raw data
+from NOAA.
 """
 
 import csv

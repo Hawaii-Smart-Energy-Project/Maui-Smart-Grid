@@ -8,7 +8,7 @@ Usage:
 
 time python -u ${PATH}/insertCompressedWeatherData.py [--testing] [--email]
 
-This script only supports processing of *.xml.gz files.
+This script only supports processing of *hourly.txt.gz files.
 """
 
 import os

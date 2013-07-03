@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = 'Daniel Zhang (張道博)'
+
 """
 Usage:
 
@@ -9,8 +11,6 @@ time python -u ${PATH}/insertData.py --filepath ${FILEPATH} [--testing]
 
 This script is used by recursivelyInsertData.py.
 """
-
-__author__ = 'Daniel Zhang (張道博)'
 
 from mecoxmlparser import MECOXMLParser
 import re
