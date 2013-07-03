@@ -8,16 +8,19 @@ import psycopg2.extras
 from mecodbutils import MECODBUtil
 
 class MECODBDeleter(object) :
-    """Provide delete routines for MECO DB.
+    """
+    Provide delete routines for MECO DB.
     """
 
     def __init__(self) :
-        """Constructor
+        """
+        Constructor.
         """
         self.dbUtil = MECODBUtil()
 
     def deleteRecord(self, conn, tableName, idText, idValue) :
-        """Delete record from DB where record has an int-based serial number.
+        """
+        Delete record from DB where record has an int-based serial number.
 
         param: tableName
         param: idText DB column name for record ID

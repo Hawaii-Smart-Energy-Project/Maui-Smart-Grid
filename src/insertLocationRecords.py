@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = 'Daniel Zhang (張道博)'
+
 """
 Insert Location Records into the database from a tab-separated data file.
 
@@ -8,8 +10,6 @@ Usage:
 insertLocationRecords.py ${FILENAME}
 
 """
-
-__author__ = 'Daniel Zhang (張道博)'
 
 import csv
 import sys
@@ -27,13 +27,14 @@ conn = connector.connectDB()
 cur = conn.cursor()
 dbUtil = MECODBUtil()
 notifier = MECONotifier()
-msg=''
-msgBody=''
+msg = ''
+msgBody = ''
 configer = MECOConfiger()
 
 dbName = configer.configOptionValue("Database", "db_name")
 
-msg = ("Loading static location record data in file %s to database %s.\n" % (filename, dbName))
+msg = ("Loading static location record data in file %s to database %s.\n" % (
+filename, dbName))
 sys.stderr.write(msg)
 msgBody += msg
 
@@ -60,26 +61,16 @@ with open(filename) as tsv:
     for line in csv.reader(tsv, delimiter = "\t"):
         if lineCnt != 0:
 
-            # print line
             data = line[0:38]
 
-            # print
             for i in range(0, 38):
                 if len(data[i]) == 0:
                     data[i] = 'NULL'
                 else:
                     data[i] = "'" + data[i] + "'"
-            # print ','.join(data)
 
-            # print
             sql = """INSERT INTO "LocationRecords" (%s) VALUES (%s)""" % (
                 ','.join(cols), ','.join(data))
-            # print "sql = %s" % sql
-
-            # print
-
-            # print len(cols)
-            # print len(data)
 
             success = dbUtil.executeSQL(cur, sql)
             if not success:
@@ -93,13 +84,12 @@ msg = ("Processed %s lines.\n" % lineCnt)
 sys.stderr.write(msg)
 msgBody += msg
 
-
 if not anyFailure:
-    msg= "Finished inserting location records.\n"
+    msg = "Finished inserting location records.\n"
     sys.stderr.write(msg)
     msgBody += msg
 else:
-    msg= "Location records were NOT successfully loaded.\n"
+    msg = "Location records were NOT successfully loaded.\n"
     sys.stderr.write(msg)
     msgBody += msg
 

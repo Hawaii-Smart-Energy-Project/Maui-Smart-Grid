@@ -1,11 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""Preprocess weather data from Kahalui weather stations and insert to the
-data store.
-"""
-
 __author__ = 'Daniel Zhang (張道博)'
+
+"""
+Preprocess weather data from Kahalui weather stations and insert to the data
+store.
+"""
 
 import csv
 import sys

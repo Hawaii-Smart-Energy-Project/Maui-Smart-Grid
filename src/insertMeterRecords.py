@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = 'Daniel Zhang (張道博)'
+
 """
 Static Meter Record Loading.
 
@@ -10,8 +12,6 @@ Usage:
 insertMeterRecords.py ${FILENAME}
 
 """
-
-__author__ = 'Daniel Zhang (張道博)'
 
 import csv
 import sys
@@ -31,10 +31,10 @@ notifier = MECONotifier()
 msgBody = ''
 msg = ''
 
-
 dbName = configer.configOptionValue("Database", "db_name")
 
-msg = ("Loading static meter record data in file %s to database %s.\n" % (filename, dbName))
+msg = ("Loading static meter record data in file %s to database %s.\n" % (
+filename, dbName))
 sys.stderr.write(msg)
 msgBody += msg
 
@@ -65,32 +65,21 @@ cols = ['type', 'action', 'did_sub_type', 'device_util_id', 'device_serial_no',
 
 lineCnt = 0
 
-with open(filename) as tsv :
-    for line in csv.reader(tsv, delimiter = "\t") :
-        if lineCnt != 0 :
+with open(filename) as tsv:
+    for line in csv.reader(tsv, delimiter = "\t"):
+        if lineCnt != 0:
 
-            # print line
-            data = line[0 :66]
+            data = line[0:66]
 
-            # print
-            for i in range(0, 66) :
+            for i in range(0, 66):
 
-                if len(data[i]) == 0 :
+                if len(data[i]) == 0:
                     data[i] = 'NULL'
-                else :
+                else:
                     data[i] = "'" + data[i] + "'"
 
-            # print ','.join(data)
-
-            # print
             sql = """INSERT INTO "MeterRecords" (%s) VALUES (%s)""" % (
                 ','.join(cols), ','.join(data))
-            # print "sql = %s" % sql
-
-            # print
-
-            # print len(cols)
-            # print len(data)
 
             dbUtil.executeSQL(cur, sql)
 

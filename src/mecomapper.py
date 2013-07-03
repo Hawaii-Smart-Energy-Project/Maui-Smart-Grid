@@ -5,14 +5,17 @@ __author__ = 'Daniel Zhang (張道博)'
 
 
 class MECOMapper(object):
-    """Map attribute names to db column names."""
+    """
+    Map attribute names to db column names.
+    """
 
     # DB col names are differentiated from source data column names.
     # Source data column names are capitalized.
     # All DB col names are lowercase only.
 
     def __init__(self):
-        """Constructor
+        """
+        Constructor.
 
         This class provides mappings between XML names and database names. The
         table names correspond directly to the DB table names.
@@ -81,11 +84,13 @@ class MECOMapper(object):
 
         self.dbColsEvent = {'_fkey': 'event_data_id', '_pkey': 'event_id',
                             'EventName': 'event_name',
-                            'EventTime': 'event_time', 'Event_Content':'event_text'}
+                            'EventTime': 'event_time',
+                            'Event_Content': 'event_text'}
 
 
     def dbColumnsForTable(self, table):
-        """Return DB mapping dict for a given table.
+        """
+        Return DB mapping dict for a given table.
 
         :param table DB table name
         :returns: dict
@@ -111,8 +116,9 @@ class MECOMapper(object):
             return ()
 
     def getDBColNameDict(self, tableName):
-        """Return a dictionary containing DB col names with keys of source
-        data labels.
+        """
+        Return a dictionary containing DB col names with keys of source data
+        labels.
 
         :param DB tableName
         :return: dictionary keyed with DB column names.
