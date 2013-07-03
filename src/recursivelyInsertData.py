@@ -73,10 +73,11 @@ def makePlotAttachments():
 
 
 def logLegend():
-    legend = "Log Legend: {} = dupes, " \
-             "() = element group, [] = process for insert elements, " \
-             "<> = <readings insert count, register insert count," \
-             "group insert count,total insert count>, * = commit\nrd = reading, re = register"
+    legend = "Log Legend: {} = dupes, () = element group, " \
+             "[] = process for insert elements, <> = <reading insert count, " \
+             "register insert count, event insert count, group insert count," \
+             "total insert count>, * = commit\nrd = reading, re = register, " \
+             "ev = event"
     return legend
 
 
