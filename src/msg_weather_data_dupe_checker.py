@@ -4,11 +4,16 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 
-class ClassName(object):
+class MSGWeatherDataDupeChecker(object):
     """
+    Determine if a duplicate record exists based on the tuple
+
+    (WBAN, Date, Time, StationType).
     """
 
     def __init__(self):
         """
         Constructor.
         """
+
+        pass

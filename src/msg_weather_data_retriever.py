@@ -10,16 +10,19 @@ from mecoconfig import MECOConfiger
 from mecologger import MECOLogger
 
 
-class WeatherDataRetriever(object):
+class MSGWeatherDataRetriever(object):
     """
-    Retrieve NOAA weather data relevant to the MSG project.
+    Retrieve national NOAA weather data relevant to the MSG project and save it
+    to local storage in the path given in the configuration file for [Weather
+     Data], weather_data_path.
     """
 
     def __init__(self):
         self.logger = MECOLogger(__name__, 'info')
         self.configer = MECOConfiger()
-        self.weatherDataPath = self.configer.configOptionValue('Weather Data',
-                                                               'weather_data_path')
+        self.weatherDataPath \
+            = self.configer.configOptionValue('Weather Data',
+                                              'weather_data_path')
 
     def downloadWeatherData(self):
         url = "http://cdo.ncdc.noaa.gov/qclcd_ascii/"
@@ -38,7 +41,5 @@ class WeatherDataRetriever(object):
             fp.close()
 
 
-retriever = WeatherDataRetriever()
+retriever = MSGWeatherDataRetriever()
 retriever.downloadWeatherData()
-
-
