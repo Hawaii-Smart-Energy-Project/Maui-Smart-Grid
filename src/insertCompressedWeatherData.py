@@ -17,6 +17,7 @@ from mecoconfig import MECOConfiger
 from meconotifier import MECONotifier
 import argparse
 from mecologger import MECOLogger
+import gzip
 
 configer = MECOConfiger()
 logger = MECOLogger(__name__, 'info')
@@ -25,6 +26,7 @@ binPath = MECOConfiger.configOptionValue(configer, "Executable Paths",
 commandLineArgs = None
 msgBody = ''
 notifier = MECONotifier()
+
 
 def processCommandLineArguments():
     global parser, commandLineArgs
@@ -57,7 +59,8 @@ if commandLineArgs.testing:
 else:
     databaseName = configer.configOptionValue("Database", "db_name")
 
-msg = "Recursively inserting data to the database named %s." % databaseName
+msg = "Recursively inserting weather data to the database named %s." % \
+      databaseName
 print msg
 msgBody += msg + "\n"
 
@@ -72,6 +75,8 @@ for root, dirnames, filenames in os.walk('.'):
         fullPath = os.path.join(root, filename)
         msg = fullPath
         print msg
+        fileObject = gzip.open(fullPath, "rb")
+
 
 parseLog = ''
 

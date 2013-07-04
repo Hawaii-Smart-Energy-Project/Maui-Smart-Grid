@@ -6,7 +6,8 @@ __author__ = 'Daniel Zhang (張道博)'
 """
 Usage:
 
-time python -u ${PATH}/insertMECOEnergyData.py --filepath ${FILEPATH} [--testing]
+time python -u ${PATH}/insertMECOEnergyData.py --filepath ${FILEPATH} [
+--testing]
     > ${LOG_FILE}
 
 This script is used by recursivelyInsertMECOEnergyData.py.
@@ -58,7 +59,7 @@ class Inserter(object):
             print "Debugging is on"
 
         if testing:
-            parseMsg = "\nInserting data to database %s.\n" % i.configer\
+            parseMsg = "\nInserting data to database %s.\n" % i.configer \
                 .configOptionValue(
                 "Database", "testing_db_name")
             sys.stderr.write(parseMsg)
@@ -70,7 +71,7 @@ class Inserter(object):
             sys.stderr.write(parseMsg)
             parseLog += parseMsg
 
-        filename = os.path.basename(filePath)
+        # filename = os.path.basename(filePath)
         fileObject = None
 
         # Open the file and process it.
@@ -88,6 +89,7 @@ class Inserter(object):
         fileObject.close()
         return parseLog
 
+
 def processCommandLineArguments():
     global parser, commandLineArgs
     parser = argparse.ArgumentParser(
@@ -102,10 +104,9 @@ def processCommandLineArguments():
     commandLineArgs = parser.parse_args()
 
 # @deprecated
-# The following script is deprecated in favor of the object-based method
-# insertData.
-# It should be rewritten to use that method for single-file data insert
-# processing.
+# The following script method is deprecated in favor of the object-based
+# method insertData. It should be rewritten to use that method for
+# single-file data insert processing.
 
 if USE_SCRIPT_METHOD:
 
