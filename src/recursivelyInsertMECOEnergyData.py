@@ -4,12 +4,12 @@
 """
 Usage:
 
-time python -u ${PATH}/recursivelyInsertData.py > ${LOG_FILE}
+time python -u ${PATH}/recursivelyInsertMECOEnergyData.py > ${LOG_FILE}
 
 From the current directory, recursively descend into every existing folder and
 insert all data that is found.
 
-This script makes use of insertData.py.
+This script makes use of insertMECOEnergyData.py.
 
 This script only supports processing of *.xml.gz files.
 """
@@ -25,7 +25,7 @@ import re
 from meconotifier import MECONotifier
 import argparse
 from mecoplotting import MECOPlotting
-from insertData import Inserter
+from insertMECOEnergyData import Inserter
 import time
 from mecologger import MECOLogger
 
@@ -124,7 +124,7 @@ if xmlCount != 0:
         notifier.sendNotificationEmail(msgBody, commandLineArgs.testing)
     sys.exit(-1)
 
-insertScript = "%s/insertData.py" % binPath
+insertScript = "%s/insertMECOEnergyData.py" % binPath
 msg = "insertScript = %s" % insertScript
 print msg
 msgBody += msg + "\n"
@@ -143,7 +143,7 @@ startTime = 0
 
 for root, dirnames, filenames in os.walk('.'):
     for filename in fnmatch.filter(filenames, '*.xml.gz'):
-        if re.search('.*log\.xml', filename) is None: # skip *log.xml files
+        if re.search('.*log\.xml', filename) is None: # Skip *log.xml files.
 
             fullPath = os.path.join(root, filename)
             msg = "\n"

@@ -6,10 +6,10 @@ __author__ = 'Daniel Zhang (張道博)'
 """
 Usage:
 
-time python -u ${PATH}/insertData.py --filepath ${FILEPATH} [--testing]
+time python -u ${PATH}/insertMECOEnergyData.py --filepath ${FILEPATH} [--testing]
     > ${LOG_FILE}
 
-This script is used by recursivelyInsertData.py.
+This script is used by recursivelyInsertMECOEnergyData.py.
 """
 
 from mecoxmlparser import MECOXMLParser
