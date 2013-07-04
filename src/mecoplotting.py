@@ -31,6 +31,7 @@ class MECOPlotting(object):
 
         self.reader = MECODBReader(testing)
         self.configer = MECOConfiger()
+        self.dpi = 300
 
 
     def plotReadingAndMeterCounts(self, databaseName = None):
@@ -76,7 +77,7 @@ class MECOPlotting(object):
         ax.grid(b = True, which = 'major', color = '#dddddd', linestyle = '-')
 
         plotPath = self.configer.configOptionValue("Data Paths", "plot_path")
-        pylab.savefig('%s/ReadingAndMeterCounts.png' % plotPath, dpi = 150)
+        pylab.savefig('%s/ReadingAndMeterCounts.png' % plotPath, dpi = self.dpi)
 
 
 if TEST_SCRIPT:
