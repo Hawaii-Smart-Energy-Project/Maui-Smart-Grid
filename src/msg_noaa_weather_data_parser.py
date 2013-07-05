@@ -74,10 +74,11 @@ class MSGNOAAWeatherDataParser(object):
                                 else:
                                     rowData[i] = "'" + rowData[i] + "'"
                             except IndexError, e:
-                                assert rowData != [], "Data should never be empty."
+                                assert rowData != [], "Data should never be " \
+                                                      "empty."
 
                         self.data.append(rowData)
-            # End for col
+                # End for col
 
             rowNum += 1
 
