@@ -11,6 +11,8 @@ time python -u ${PATH}/insertCompressedWeatherData.py [--testing] [--email]
 This script only supports processing of *hourly.txt.gz files.
 """
 
+TESTING = True
+
 import os
 import fnmatch
 from mecoconfig import MECOConfiger
@@ -18,6 +20,7 @@ from meconotifier import MECONotifier
 import argparse
 from mecologger import MECOLogger
 import gzip
+from msg_noaa_weather_data_parser import MSGNOAAWeatherDataParser
 
 configer = MECOConfiger()
 logger = MECOLogger(__name__, 'info')
@@ -26,22 +29,23 @@ binPath = MECOConfiger.configOptionValue(configer, "Executable Paths",
 commandLineArgs = None
 msgBody = ''
 notifier = MECONotifier()
+dataParser = MSGNOAAWeatherDataParser()
 
 
 def processCommandLineArguments():
-    global parser, commandLineArgs
-    parser = argparse.ArgumentParser(
+    global argParser, commandLineArgs
+    argParser = argparse.ArgumentParser(
         description = 'Perform recursive insertion of compressed weather data'
                       ' contained in the current directory to the MECO '
                       'database specified in the configuration file.')
-    parser.add_argument('--email', action = 'store_true', default = False,
-                        help = 'Send email notification if this flag is '
-                               'specified.')
-    parser.add_argument('--testing', action = 'store_true', default = False,
-                        help = 'If this flag is on, '
-                               'insert data to the testing database as '
-                               'specified in the local configuration file.')
-    commandLineArgs = parser.parse_args()
+    argParser.add_argument('--email', action = 'store_true', default = False,
+                           help = 'Send email notification if this flag is '
+                                  'specified.')
+    argParser.add_argument('--testing', action = 'store_true', default = False,
+                           help = 'If this flag is on, '
+                                  'insert data to the testing database as '
+                                  'specified in the local configuration file.')
+    commandLineArgs = argParser.parse_args()
 
 
 processCommandLineArguments()
@@ -76,7 +80,10 @@ for root, dirnames, filenames in os.walk('.'):
         msg = fullPath
         print msg
         fileObject = gzip.open(fullPath, "rb")
-
+        dataParser.parseWeatherData(fileObject,['22516'])
+        fileObject.close()
+        if TESTING:
+            break
 
 parseLog = ''
 
