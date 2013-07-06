@@ -21,6 +21,11 @@ class MSGNOAAWeatherDataParser(object):
 
 
     def parseWeatherData(self, fileObject, stationIDs):
+        """
+        :param fileObject: File object containing weather data.
+        :param stationIDs: List of station IDs to be parsed.
+        :returns: List of lists containing parsed weather data.
+        """
         rowNum = 0
         lastCol = 0
 
@@ -44,7 +49,7 @@ class MSGNOAAWeatherDataParser(object):
                 for col in row:
 
                     if colNum == 0:
-                        if self.processStation(col, stationIDs):
+                        if self.stationShouldBeProcessed(col, stationIDs):
                             pass
                         else:
                             # Skip station IDs not marked for processing.
@@ -78,16 +83,23 @@ class MSGNOAAWeatherDataParser(object):
                                                       "empty."
 
                         self.data.append(rowData)
-                # End for col
+                        # End for col
 
             rowNum += 1
 
         # End for row
 
-        print self.data
+        # print self.data
         return self.data
 
-    def processStation(self, myStationID, stationIDs = []):
+
+    def stationShouldBeProcessed(self, myStationID, stationIDs = []):
+        """
+        :param myStationID: Station ID to be tested.
+        :param stationIDs: List of station IDs.
+        :returns: True if a station ID is in the list of station IDs to be
+        processed.
+        """
         for sid in stationIDs:
             if myStationID == sid:
                 return True
