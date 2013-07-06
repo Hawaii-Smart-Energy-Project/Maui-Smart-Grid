@@ -575,7 +575,7 @@ CREATE TABLE "WeatherNOAA" (
     hourly_precip_flag character varying,
     altimeter character varying,
     altimeter_flag character varying,
-    created timestamp without time zone NOT NULL
+    created timestamp(6) with time zone NOT NULL
 );
 
 
