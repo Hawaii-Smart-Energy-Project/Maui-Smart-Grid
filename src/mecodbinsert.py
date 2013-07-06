@@ -6,7 +6,7 @@ __author__ = 'Daniel Zhang (張道博)'
 from mecomapper import MECOMapper
 from mecodupecheck import MECODupeChecker
 from mecodbutils import MECODBUtil
-from mecologger import MECOLogger
+from msg_logger import MSGLogger
 
 VISUALIZE_DATA = 1
 DEBUG = 1
@@ -22,7 +22,7 @@ class MECODBInserter(object):
         Constructor.
         """
 
-        self.logger = MECOLogger(__name__, 'debug')
+        self.logger = MSGLogger(__name__, 'debug')
         self.mapper = MECOMapper()
         self.dupeChecker = MECODupeChecker()
         self.dbUtil = MECODBUtil()

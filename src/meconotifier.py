@@ -13,7 +13,7 @@ from email.MIMEBase import MIMEBase
 from email.MIMEText import MIMEText
 from email.Utils import formatdate
 from email import Encoders
-from mecologger import MECOLogger
+from msg_logger import MSGLogger
 
 
 class MECONotifier(object):
@@ -27,7 +27,7 @@ class MECONotifier(object):
         """
 
         self.config = MECOConfiger()
-        self.logger = MECOLogger(__name__, 'info')
+        self.logger = MSGLogger(__name__, 'info')
 
     def sendNotificationEmail(self, msgBody, testing = False):
         """

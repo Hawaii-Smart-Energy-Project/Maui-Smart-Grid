@@ -7,7 +7,7 @@ import psycopg2
 import psycopg2.extras
 from mecoconfig import MECOConfiger
 import sys
-from mecologger import MECOLogger
+from msg_logger import MSGLogger
 
 
 class MECODBConnector(object):
@@ -22,7 +22,7 @@ class MECODBConnector(object):
         :param testing: Boolean indicating if Testing Mode is on.
         """
 
-        self.logger = MECOLogger(__name__, logLevel)
+        self.logger = MSGLogger(__name__, logLevel)
 
         if (testing):
             self.logger.log("Testing Mode is ON.")

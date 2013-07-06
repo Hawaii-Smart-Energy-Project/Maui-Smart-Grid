@@ -6,7 +6,7 @@ __author__ = 'Daniel Zhang (張道博)'
 
 from mecodbconnect import MECODBConnector
 from mecoconfig import MECOConfiger
-from mecologger import MECOLogger
+from msg_logger import MSGLogger
 import gzip
 
 
@@ -22,7 +22,7 @@ class MSGWeatherDataLoader(object):
         Constructor.
         """
 
-        self.logger = MECOLogger(__name__, 'info')
+        self.logger = MSGLogger(__name__, 'info')
         self.kahuluiStationID = '22516'
         self.stationIDs = [self.kahuluiStationID]
 

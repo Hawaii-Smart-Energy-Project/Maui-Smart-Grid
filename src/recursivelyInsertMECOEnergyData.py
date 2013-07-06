@@ -27,12 +27,12 @@ import argparse
 from mecoplotting import MECOPlotting
 from insertMECOEnergyData import Inserter
 import time
-from mecologger import MECOLogger
+from msg_logger import MSGLogger
 
 xmlGzCount = 0
 xmlCount = 0
 configer = MECOConfiger()
-logger = MECOLogger(__name__, 'info')
+logger = MSGLogger(__name__, 'info')
 binPath = MECOConfiger.configOptionValue(configer, "Executable Paths",
                                          "bin_path")
 commandLineArgs = None

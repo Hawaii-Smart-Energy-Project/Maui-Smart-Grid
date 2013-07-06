@@ -7,7 +7,7 @@ import sys
 import logging
 
 
-class MECOLogger(object):
+class MSGLogger(object):
     """
     This class provides logging functionality.
     """

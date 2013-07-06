@@ -6,7 +6,7 @@ __author__ = 'Daniel Zhang (張道博)'
 from msg_weather_data_dupe_checker import MSGWeatherDataDupeChecker
 # from msg_weather_data_mapper import MSGWeatherDataMapper
 from mecodbutils import MECODBUtil
-from mecologger import MECOLogger
+from msg_logger import MSGLogger
 
 
 class WeatherDataInserter(object):
@@ -19,7 +19,7 @@ class WeatherDataInserter(object):
         Constructor.
         """
 
-        self.logger = MECOLogger(__name__, 'info')
+        self.logger = MSGLogger(__name__, 'info')
         self.dbUtil = MECODBUtil()
         self.dupeChecker = MSGWeatherDataDupeChecker()
         # self.mapper = MSGWeatherDataMapper()

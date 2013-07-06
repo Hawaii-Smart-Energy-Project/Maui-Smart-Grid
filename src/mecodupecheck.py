@@ -5,7 +5,7 @@ __author__ = 'Daniel Zhang (張道博)'
 
 from mecoconfig import MECOConfiger
 from mecodbutils import MECODBUtil
-from mecologger import MECOLogger
+from msg_logger import MSGLogger
 
 
 class MECODupeChecker(object):
@@ -18,7 +18,7 @@ class MECODupeChecker(object):
         Constructor.
         """
 
-        self.logger = MECOLogger(__name__, 'debug')
+        self.logger = MSGLogger(__name__, 'debug')
         self.mecoConfig = MECOConfiger()
         self.currentReadingID = 0
         self.dbUtil = MECODBUtil()

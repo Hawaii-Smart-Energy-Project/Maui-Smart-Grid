@@ -7,7 +7,7 @@ import urllib2
 import re
 import pycurl
 from mecoconfig import MECOConfiger
-from mecologger import MECOLogger
+from msg_logger import MSGLogger
 
 
 class MSGWeatherDataRetriever(object):
@@ -18,7 +18,7 @@ class MSGWeatherDataRetriever(object):
     """
 
     def __init__(self):
-        self.logger = MECOLogger(__name__, 'info')
+        self.logger = MSGLogger(__name__, 'info')
         self.configer = MECOConfiger()
         self.weatherDataPath \
             = self.configer.configOptionValue('Weather Data',

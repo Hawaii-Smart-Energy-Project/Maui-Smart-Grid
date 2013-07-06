@@ -18,12 +18,12 @@ import fnmatch
 from mecoconfig import MECOConfiger
 from meconotifier import MECONotifier
 import argparse
-from mecologger import MECOLogger
+from msg_logger import MSGLogger
 import gzip
 from msg_noaa_weather_data_parser import MSGNOAAWeatherDataParser
 
 configer = MECOConfiger()
-logger = MECOLogger(__name__, 'info')
+logger = MSGLogger(__name__, 'info')
 binPath = MECOConfiger.configOptionValue(configer, "Executable Paths",
                                          "bin_path")
 commandLineArgs = None

@@ -7,7 +7,7 @@ import sys
 from mecoconfig import MECOConfiger
 from mecodbconnect import MECODBConnector
 import psycopg2
-from mecologger import MECOLogger
+from msg_logger import MSGLogger
 import re
 
 DEBUG = 1
@@ -23,7 +23,7 @@ class MECODBUtil(object):
         Constructor.
         """
 
-        self.logger = MECOLogger(__name__, 'DEBUG')
+        self.logger = MSGLogger(__name__, 'DEBUG')
         self.configer = MECOConfiger()
 
     def getLastSequenceID(self, conn, tableName, columnName):
