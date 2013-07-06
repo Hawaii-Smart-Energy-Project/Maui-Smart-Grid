@@ -9,7 +9,7 @@ from mecodbutils import MECODBUtil
 from msg_logger import MSGLogger
 
 
-class WeatherDataInserter(object):
+class MSGNOAAWeatherDataInserter(object):
     """
     Performs weather data insertion to the database.
     """
@@ -24,8 +24,8 @@ class WeatherDataInserter(object):
         self.dupeChecker = MSGWeatherDataDupeChecker()
         # self.mapper = MSGWeatherDataMapper()
 
-    def insertData(self, conn, tableName, columnsAndValues, fKeyVal = None,
-                   withoutCommit = 0):
+    def insertDataDict(self, conn, tableName, listOfDataDicts, fKeyVal = None,
+                       withoutCommit = 0):
         """
         Given a table name and a dictionary of column names and values,
         insert them to the db.
@@ -42,33 +42,43 @@ class WeatherDataInserter(object):
 
         cur = conn.cursor()
 
-        # Get a dictionary of mapped (from DB to source data) column names.
-        # columnDict = self.mapper.getDBColNameDict(tableName)
+        for row in listOfDataDicts:
 
-        dbColsAndVals = {}
+            # Get a dictionary of mapped (from DB to source data) column names.
+            # columnDict = self.mapper.getDBColNameDict(tableName)
 
-        # Add a creation timestamp.
-        dbColsAndVals['created'] = 'NOW()'
+            # dbColsAndVals = {}
 
-        cols = []
-        vals = []
-        for col in dbColsAndVals.keys():
-            cols.append(col)
+            # Add a creation timestamp using the SQL function.
+            row['created'] = 'NOW()'
 
-            vals.append(
-                "'%s'" % dbColsAndVals[col]) # surround value with single quotes
+            cols = []
+            vals = []
 
-        sql = 'insert into "' + tableName + '" (' + ','.join(
-            cols) + ')' + ' values (' + ','.join(
-            vals) + ')'
+            for col in row.keys():
+                # Prepare the columns and values for insertion via SQL.
 
-        self.dbUtil.executeSQL(cur, sql)
+                cols.append(col)
+                if (row[col] != 'NULL'):
+                    # Surround value with single quotes.
+                    vals.append("'%s'" % row[col])
+                else:
+                    # Except for NULL values.
+                    vals.append("%s" % row[col])
 
-        if withoutCommit == 0:
-            try:
-                conn.commit()
-            except:
-                self.logger.log("ERROR: Commit failed.", 'debug')
+            sql = 'insert into "' + tableName + '" (' + ','.join(
+                cols) + ')' + ' values (' + ','.join(vals) + ')'
 
-        return cur
+            # self.dbUtil.executeSQL(cur, sql)
+            print sql
+
+            if withoutCommit == 0:
+                try:
+                    # conn.commit()
+                    pass
+                except:
+                    # self.logger.log("ERROR: Commit failed.", 'debug')
+
+                    # return cur
+                    pass
 

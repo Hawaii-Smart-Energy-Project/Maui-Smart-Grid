@@ -21,7 +21,10 @@ import argparse
 from msg_logger import MSGLogger
 import gzip
 from msg_noaa_weather_data_parser import MSGNOAAWeatherDataParser
+from msg_weather_data_inserter import MSGNOAAWeatherDataInserter
+from mecodbconnect import MECODBConnector
 
+connector = MECODBConnector()
 configer = MECOConfiger()
 logger = MSGLogger(__name__, 'info')
 binPath = MECOConfiger.configOptionValue(configer, "Executable Paths",
@@ -30,6 +33,8 @@ commandLineArgs = None
 msgBody = ''
 notifier = MECONotifier()
 dataParser = MSGNOAAWeatherDataParser()
+inserter = MSGNOAAWeatherDataInserter()
+conn = connector.connectDB()
 
 
 def processCommandLineArguments():
@@ -80,7 +85,7 @@ for root, dirnames, filenames in os.walk('.'):
         msg = fullPath
         print msg
         fileObject = gzip.open(fullPath, "rb")
-        dataParser.parseWeatherData(fileObject,['22516'])
+        inserter.insertDataDict(conn, 'WeatherNOAA', dataParser.parseWeatherData(fileObject,['22516']))
         fileObject.close()
         if TESTING:
             break
