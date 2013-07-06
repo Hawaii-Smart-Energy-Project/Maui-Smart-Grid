@@ -105,9 +105,9 @@ class MSGNOAAWeatherDataParser(object):
                                         re.sub("\s+", "",
                                                rowDict[self.cols[i]])) == 0:
                                     rowDict[self.cols[i]] = 'NULL'
-                                # else:
-                                #     rowDict[self.cols[i]] = "'" + rowDict[
-                                #         self.cols[i]] + "'"
+                                    # else:
+                                    #     rowDict[self.cols[i]] = "'" + rowDict[
+                                    #         self.cols[i]] + "'"
                             except IndexError, e:
                                 print "Exception during second assignment: " \
                                       "%s, Index = %s" % (
@@ -127,13 +127,16 @@ class MSGNOAAWeatherDataParser(object):
         return self.data
 
 
-    def stationShouldBeProcessed(self, myStationID, stationIDs = []):
+    def stationShouldBeProcessed(self, myStationID, stationIDs = None):
         """
         :param myStationID: Station ID to be tested.
         :param stationIDs: List of station IDs.
         :returns: True if a station ID is in the list of station IDs to be
         processed.
         """
+
+        if stationIDs is None:
+            stationIDs = []
         for sid in stationIDs:
             if myStationID == sid:
                 return True

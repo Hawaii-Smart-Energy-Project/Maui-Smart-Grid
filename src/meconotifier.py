@@ -95,7 +95,7 @@ class MECONotifier(object):
 
         return errorOccurred != True
 
-    def sendMailWithAttachments(self, msgBody, files = [], testing = False):
+    def sendMailWithAttachments(self, msgBody, files = None, testing = False):
         """
         Send email along with attachments.
 
@@ -105,6 +105,9 @@ class MECONotifier(object):
         :param testing: True if running in testing mode.
         :returns: True if no exceptions are raised.
         """
+
+        if files is None:
+            files = []
 
         sys.stderr.write("Sending multipart email.\n")
         if testing:
