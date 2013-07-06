@@ -31,6 +31,24 @@ COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
 SET search_path = public, pg_catalog;
 
+--
+-- Name: zero_to_null(real); Type: FUNCTION; Schema: public; Owner: daniel
+--
+
+CREATE FUNCTION zero_to_null(real) RETURNS real
+    LANGUAGE sql
+    AS $_$select case when $1 < 1e-3 then null else $1 end;$_$;
+
+
+ALTER FUNCTION public.zero_to_null(real) OWNER TO daniel;
+
+--
+-- Name: FUNCTION zero_to_null(real); Type: COMMENT; Schema: public; Owner: daniel
+--
+
+COMMENT ON FUNCTION zero_to_null(real) IS 'Change float4 value to null if it is less than 1e-3. @author Daniel Zhang (張道博)';
+
+
 SET default_tablespace = '';
 
 SET default_with_oids = false;
@@ -96,6 +114,34 @@ CREATE TABLE "IntervalReadData" (
 
 
 ALTER TABLE public."IntervalReadData" OWNER TO sepgroup;
+
+--
+-- Name: IrradianceData; Type: TABLE; Schema: public; Owner: eileen; Tablespace: 
+--
+
+CREATE TABLE "IrradianceData" (
+    sensor_id integer NOT NULL,
+    irradiance_w_per_m2 double precision,
+    "timestamp" timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public."IrradianceData" OWNER TO eileen;
+
+--
+-- Name: IrradianceSensorInfo; Type: TABLE; Schema: public; Owner: eileen; Tablespace: 
+--
+
+CREATE TABLE "IrradianceSensorInfo" (
+    sensor_id integer NOT NULL,
+    latitude double precision,
+    longitude double precision,
+    manufacturer character varying,
+    model character varying
+);
+
+
+ALTER TABLE public."IrradianceSensorInfo" OWNER TO eileen;
 
 --
 -- Name: LocationRecords; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
@@ -482,14 +528,65 @@ CREATE TABLE "WeatherKahaluiAirport" (
 ALTER TABLE public."WeatherKahaluiAirport" OWNER TO sepgroup;
 
 --
--- Name: YU_energy_to_houses_without_PV; Type: VIEW; Schema: public; Owner: eileen
+-- Name: WeatherNOAA; Type: TABLE; Schema: public; Owner: daniel; Tablespace: 
 --
 
-CREATE VIEW "YU_energy_to_houses_without_PV" AS
-    SELECT "LocationRecords".device_util_id, "LocationRecords".service_point_util_id, "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_latitude, "LocationRecords".address1, "LocationRecords".premise_util_id, "Interval".end_time, "Reading".value AS "energy to house kWh" FROM (("LocationRecords" LEFT JOIN "MSG_PV_Data" ON ((("LocationRecords".device_util_id)::text = ("MSG_PV_Data".util_device_id)::text))) JOIN "MeterData" ON ((("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id))), "Interval", "Reading" WHERE (("MSG_PV_Data".util_device_id IS NULL) AND ("Reading".channel = 1));
+CREATE TABLE "WeatherNOAA" (
+    wban character varying,
+    datetime timestamp(6) without time zone,
+    station_type smallint,
+    sky_condition character varying,
+    sky_condition_flag character varying,
+    visibility character varying,
+    visibility_flag character varying,
+    weather_type character varying,
+    weather_type_flag character varying,
+    dry_bulb_farenheit character varying,
+    dry_bulb_farenheit_flag character varying,
+    dry_bulb_celsius character varying,
+    dry_bulb_celsius_flag character varying,
+    wet_bulb_farenheit character varying,
+    wet_bulb_farenheit_flag character varying,
+    wet_bulb_celsius character varying,
+    wet_bulb_celsius_flag character varying,
+    dew_point_farenheit character varying,
+    dew_point_farenheit_flag character varying,
+    dew_point_celsius character varying,
+    dew_point_celsius_flag character varying,
+    relative_humidity character varying,
+    relative_humidity_flag character varying,
+    wind_speed character varying,
+    wind_speed_flag character varying,
+    wind_direction character varying,
+    wind_direction_flag character varying,
+    value_for_wind_character character varying,
+    value_for_wind_character_flag character varying,
+    station_pressure character varying,
+    station_pressure_flag character varying,
+    pressure_tendency character varying,
+    pressure_tendency_flag character varying,
+    pressure_change character varying,
+    pressure_change_flag character varying,
+    sea_level_pressure character varying,
+    sea_level_pressure_flag character varying,
+    record_type character varying,
+    record_type_flag character varying,
+    hourly_precip character varying,
+    hourly_precip_flag character varying,
+    altimeter character varying,
+    altimeter_flag character varying,
+    created timestamp without time zone NOT NULL
+);
 
 
-ALTER TABLE public."YU_energy_to_houses_without_PV" OWNER TO eileen;
+ALTER TABLE public."WeatherNOAA" OWNER TO daniel;
+
+--
+-- Name: COLUMN "WeatherNOAA".created; Type: COMMENT; Schema: public; Owner: daniel
+--
+
+COMMENT ON COLUMN "WeatherNOAA".created IS 'Time that record was created.';
+
 
 --
 -- Name: YU_energy_to_houses_without_PV_copy; Type: VIEW; Schema: public; Owner: yuma
@@ -502,34 +599,14 @@ CREATE VIEW "YU_energy_to_houses_without_PV_copy" AS
 ALTER TABLE public."YU_energy_to_houses_without_PV_copy" OWNER TO yuma;
 
 --
--- Name: YU_voltages_for_houses_without_PV; Type: VIEW; Schema: public; Owner: eileen
+-- Name: cd_meter_ids_for_houses_with_pv_with_locations; Type: VIEW; Schema: public; Owner: eileen
 --
 
-CREATE VIEW "YU_voltages_for_houses_without_PV" AS
-    SELECT "LocationRecords".device_util_id, "LocationRecords".service_point_util_id, "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_latitude, "LocationRecords".address1, "LocationRecords".premise_util_id, "Interval".end_time, "Reading".value AS voltage FROM (("LocationRecords" LEFT JOIN "MSG_PV_Data" ON ((("LocationRecords".device_util_id)::text = ("MSG_PV_Data".util_device_id)::text))) JOIN "MeterData" ON ((("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id))), "Interval", "Reading" WHERE (("MSG_PV_Data".util_device_id IS NULL) AND ("Reading".channel = 4));
+CREATE VIEW cd_meter_ids_for_houses_with_pv_with_locations AS
+    SELECT "LocationRecords".device_util_id, "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_latitude, "LocationRecords".address1 FROM ("LocationRecords" LEFT JOIN "MSG_PV_Data" ON ((("LocationRecords".device_util_id)::text = ("MSG_PV_Data".util_device_id)::text))) WHERE ("MSG_PV_Data".util_device_id IS NOT NULL);
 
 
-ALTER TABLE public."YU_voltages_for_houses_without_PV" OWNER TO eileen;
-
---
--- Name: YU_energy_voltages_for_houses_without_PV; Type: VIEW; Schema: public; Owner: eileen
---
-
-CREATE VIEW "YU_energy_voltages_for_houses_without_PV" AS
-    SELECT "YU_energy_to_houses_without_PV".device_util_id, "YU_energy_to_houses_without_PV".service_point_util_id, "YU_energy_to_houses_without_PV".service_pt_longitude, "YU_energy_to_houses_without_PV".service_pt_latitude, "YU_energy_to_houses_without_PV".address1, "YU_energy_to_houses_without_PV".premise_util_id, "YU_energy_to_houses_without_PV".end_time, "YU_energy_to_houses_without_PV"."energy to house kWh", "YU_voltages_for_houses_without_PV".voltage FROM ("YU_energy_to_houses_without_PV" JOIN "YU_voltages_for_houses_without_PV" ON ((("YU_energy_to_houses_without_PV".device_util_id)::text = ("YU_voltages_for_houses_without_PV".device_util_id)::text)));
-
-
-ALTER TABLE public."YU_energy_voltages_for_houses_without_PV" OWNER TO eileen;
-
---
--- Name: YU_one_January; Type: VIEW; Schema: public; Owner: eileen
---
-
-CREATE VIEW "YU_one_January" AS
-    SELECT "YU_energy_to_houses_without_PV_copy".device_util_id, "YU_energy_to_houses_without_PV_copy"."energy to house kWh", "YU_energy_to_houses_without_PV_copy".end_time, "YU_energy_to_houses_without_PV_copy".premise_util_id, "YU_energy_to_houses_without_PV_copy".address1, "YU_energy_to_houses_without_PV_copy".service_pt_latitude, "YU_energy_to_houses_without_PV_copy".service_pt_longitude, "YU_energy_to_houses_without_PV_copy".service_point_util_id FROM "YU_energy_to_houses_without_PV_copy" WHERE (("YU_energy_to_houses_without_PV_copy".end_time > '2012-12-31 00:00:00'::timestamp without time zone) AND ("YU_energy_to_houses_without_PV_copy".end_time < '2013-02-01 00:00:00'::timestamp without time zone));
-
-
-ALTER TABLE public."YU_one_January" OWNER TO eileen;
+ALTER TABLE public.cd_meter_ids_for_houses_with_pv_with_locations OWNER TO eileen;
 
 --
 -- Name: view_readings_with_meter_id_unsorted; Type: VIEW; Schema: public; Owner: daniel
@@ -546,6 +623,33 @@ ALTER TABLE public.view_readings_with_meter_id_unsorted OWNER TO daniel;
 --
 
 COMMENT ON VIEW view_readings_with_meter_id_unsorted IS 'Readings along with their end times by meter. @author Daniel Zhang (張道博)';
+
+
+--
+-- Name: cd_energy_voltages_for_houses_with_pv; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW cd_energy_voltages_for_houses_with_pv AS
+    SELECT cd_meter_ids_for_houses_with_pv_with_locations.device_util_id, view_readings_with_meter_id_unsorted.end_time, max(CASE WHEN (view_readings_with_meter_id_unsorted.channel = (1)::smallint) THEN view_readings_with_meter_id_unsorted.value ELSE NULL::real END) AS "Energy to House kwH", zero_to_null(max(CASE WHEN (view_readings_with_meter_id_unsorted.channel = (4)::smallint) THEN view_readings_with_meter_id_unsorted.value ELSE NULL::real END)) AS "Voltage", max(cd_meter_ids_for_houses_with_pv_with_locations.service_pt_longitude) AS service_pt_longitude, max(cd_meter_ids_for_houses_with_pv_with_locations.service_pt_latitude) AS service_pt_latitude, max((cd_meter_ids_for_houses_with_pv_with_locations.address1)::text) AS address1 FROM (cd_meter_ids_for_houses_with_pv_with_locations JOIN view_readings_with_meter_id_unsorted ON (((cd_meter_ids_for_houses_with_pv_with_locations.device_util_id)::bpchar = view_readings_with_meter_id_unsorted.meter_name))) WHERE ((view_readings_with_meter_id_unsorted.channel = (1)::smallint) OR (view_readings_with_meter_id_unsorted.channel = (4)::smallint)) GROUP BY cd_meter_ids_for_houses_with_pv_with_locations.device_util_id, view_readings_with_meter_id_unsorted.end_time;
+
+
+ALTER TABLE public.cd_energy_voltages_for_houses_with_pv OWNER TO eileen;
+
+--
+-- Name: count_of_event_duplicates; Type: VIEW; Schema: public; Owner: daniel
+--
+
+CREATE VIEW count_of_event_duplicates AS
+    SELECT "Event".event_time, "MeterData".meter_data_id, "EventData".event_data_id, (count(*) - 1) AS "Duplicate Count" FROM (("MeterData" JOIN "EventData" ON (("MeterData".meter_data_id = "EventData".meter_data_id))) JOIN "Event" ON (("EventData".event_data_id = "Event".event_data_id))) GROUP BY "Event".event_time, "MeterData".meter_data_id, "EventData".event_data_id HAVING ((count(*) - 1) > 0) ORDER BY "Event".event_time;
+
+
+ALTER TABLE public.count_of_event_duplicates OWNER TO daniel;
+
+--
+-- Name: VIEW count_of_event_duplicates; Type: COMMENT; Schema: public; Owner: daniel
+--
+
+COMMENT ON VIEW count_of_event_duplicates IS 'Report of counts of event duplicates. @author Daniel Zhang (張道博)';
 
 
 --
@@ -602,17 +706,17 @@ COMMENT ON VIEW meter_ids_for_houses_without_pv_with_locations IS 'Retrieve mete
 
 
 --
--- Name: dz_energy_voltages_for_houses_without_pv; Type: VIEW; Schema: public; Owner: postgres
+-- Name: dz_energy_voltages_for_houses_without_pv; Type: VIEW; Schema: public; Owner: daniel
 --
 
 CREATE VIEW dz_energy_voltages_for_houses_without_pv AS
-    SELECT meter_ids_for_houses_without_pv_with_locations.device_util_id, view_readings_with_meter_id_unsorted.end_time, max(CASE WHEN (view_readings_with_meter_id_unsorted.channel = (1)::smallint) THEN view_readings_with_meter_id_unsorted.value ELSE NULL::real END) AS "Energy to House kwH", max(CASE WHEN (view_readings_with_meter_id_unsorted.channel = (4)::smallint) THEN view_readings_with_meter_id_unsorted.value ELSE NULL::real END) AS "Voltage", max(meter_ids_for_houses_without_pv_with_locations.service_pt_longitude) AS service_pt_longitude, max(meter_ids_for_houses_without_pv_with_locations.service_pt_latitude) AS service_pt_latitude, max((meter_ids_for_houses_without_pv_with_locations.address1)::text) AS address1 FROM (meter_ids_for_houses_without_pv_with_locations JOIN view_readings_with_meter_id_unsorted ON (((meter_ids_for_houses_without_pv_with_locations.device_util_id)::bpchar = view_readings_with_meter_id_unsorted.meter_name))) WHERE ((view_readings_with_meter_id_unsorted.channel = (1)::smallint) OR (view_readings_with_meter_id_unsorted.channel = (4)::smallint)) GROUP BY meter_ids_for_houses_without_pv_with_locations.device_util_id, view_readings_with_meter_id_unsorted.end_time;
+    SELECT meter_ids_for_houses_without_pv_with_locations.device_util_id, view_readings_with_meter_id_unsorted.end_time, max(CASE WHEN (view_readings_with_meter_id_unsorted.channel = (1)::smallint) THEN view_readings_with_meter_id_unsorted.value ELSE NULL::real END) AS "Energy to House kwH", zero_to_null(max(CASE WHEN (view_readings_with_meter_id_unsorted.channel = (4)::smallint) THEN view_readings_with_meter_id_unsorted.value ELSE NULL::real END)) AS "Voltage", max(meter_ids_for_houses_without_pv_with_locations.service_pt_longitude) AS service_pt_longitude, max(meter_ids_for_houses_without_pv_with_locations.service_pt_latitude) AS service_pt_latitude, max((meter_ids_for_houses_without_pv_with_locations.address1)::text) AS address1 FROM (meter_ids_for_houses_without_pv_with_locations JOIN view_readings_with_meter_id_unsorted ON (((meter_ids_for_houses_without_pv_with_locations.device_util_id)::bpchar = view_readings_with_meter_id_unsorted.meter_name))) WHERE ((view_readings_with_meter_id_unsorted.channel = (1)::smallint) OR (view_readings_with_meter_id_unsorted.channel = (4)::smallint)) GROUP BY meter_ids_for_houses_without_pv_with_locations.device_util_id, view_readings_with_meter_id_unsorted.end_time;
 
 
-ALTER TABLE public.dz_energy_voltages_for_houses_without_pv OWNER TO postgres;
+ALTER TABLE public.dz_energy_voltages_for_houses_without_pv OWNER TO daniel;
 
 --
--- Name: VIEW dz_energy_voltages_for_houses_without_pv; Type: COMMENT; Schema: public; Owner: postgres
+-- Name: VIEW dz_energy_voltages_for_houses_without_pv; Type: COMMENT; Schema: public; Owner: daniel
 --
 
 COMMENT ON VIEW dz_energy_voltages_for_houses_without_pv IS 'Return energy and voltages for houses without PV. @author Daniel Zhang (張道博)';
@@ -1178,6 +1282,22 @@ ALTER TABLE ONLY "Tier"
 
 
 --
+-- Name: irrad_sensor_info_pkey; Type: CONSTRAINT; Schema: public; Owner: eileen; Tablespace: 
+--
+
+ALTER TABLE ONLY "IrradianceSensorInfo"
+    ADD CONSTRAINT irrad_sensor_info_pkey PRIMARY KEY (sensor_id);
+
+
+--
+-- Name: irradiance_data_pkey; Type: CONSTRAINT; Schema: public; Owner: eileen; Tablespace: 
+--
+
+ALTER TABLE ONLY "IrradianceData"
+    ADD CONSTRAINT irradiance_data_pkey PRIMARY KEY (sensor_id, "timestamp");
+
+
+--
 -- Name: meter_data_pkey; Type: CONSTRAINT; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -1408,6 +1528,17 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
 --
+-- Name: zero_to_null(real); Type: ACL; Schema: public; Owner: daniel
+--
+
+REVOKE ALL ON FUNCTION zero_to_null(real) FROM PUBLIC;
+REVOKE ALL ON FUNCTION zero_to_null(real) FROM daniel;
+GRANT ALL ON FUNCTION zero_to_null(real) TO daniel;
+GRANT ALL ON FUNCTION zero_to_null(real) TO PUBLIC;
+GRANT ALL ON FUNCTION zero_to_null(real) TO sepgroup;
+
+
+--
 -- Name: Event; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -1441,6 +1572,26 @@ GRANT ALL ON TABLE "Interval" TO sepgroup;
 REVOKE ALL ON TABLE "IntervalReadData" FROM PUBLIC;
 REVOKE ALL ON TABLE "IntervalReadData" FROM sepgroup;
 GRANT ALL ON TABLE "IntervalReadData" TO sepgroup;
+
+
+--
+-- Name: IrradianceData; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE "IrradianceData" FROM PUBLIC;
+REVOKE ALL ON TABLE "IrradianceData" FROM eileen;
+GRANT ALL ON TABLE "IrradianceData" TO eileen;
+GRANT ALL ON TABLE "IrradianceData" TO sepgroup;
+
+
+--
+-- Name: IrradianceSensorInfo; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE "IrradianceSensorInfo" FROM PUBLIC;
+REVOKE ALL ON TABLE "IrradianceSensorInfo" FROM eileen;
+GRANT ALL ON TABLE "IrradianceSensorInfo" TO eileen;
+GRANT ALL ON TABLE "IrradianceSensorInfo" TO sepgroup;
 
 
 --
@@ -1535,13 +1686,13 @@ GRANT ALL ON TABLE "WeatherKahaluiAirport" TO sepgroup;
 
 
 --
--- Name: YU_energy_to_houses_without_PV; Type: ACL; Schema: public; Owner: eileen
+-- Name: WeatherNOAA; Type: ACL; Schema: public; Owner: daniel
 --
 
-REVOKE ALL ON TABLE "YU_energy_to_houses_without_PV" FROM PUBLIC;
-REVOKE ALL ON TABLE "YU_energy_to_houses_without_PV" FROM eileen;
-GRANT ALL ON TABLE "YU_energy_to_houses_without_PV" TO eileen;
-GRANT ALL ON TABLE "YU_energy_to_houses_without_PV" TO sepgroup;
+REVOKE ALL ON TABLE "WeatherNOAA" FROM PUBLIC;
+REVOKE ALL ON TABLE "WeatherNOAA" FROM daniel;
+GRANT ALL ON TABLE "WeatherNOAA" TO daniel;
+GRANT ALL ON TABLE "WeatherNOAA" TO sepgroup;
 
 
 --
@@ -1555,33 +1706,13 @@ GRANT ALL ON TABLE "YU_energy_to_houses_without_PV_copy" TO sepgroup;
 
 
 --
--- Name: YU_voltages_for_houses_without_PV; Type: ACL; Schema: public; Owner: eileen
+-- Name: cd_meter_ids_for_houses_with_pv_with_locations; Type: ACL; Schema: public; Owner: eileen
 --
 
-REVOKE ALL ON TABLE "YU_voltages_for_houses_without_PV" FROM PUBLIC;
-REVOKE ALL ON TABLE "YU_voltages_for_houses_without_PV" FROM eileen;
-GRANT ALL ON TABLE "YU_voltages_for_houses_without_PV" TO eileen;
-GRANT ALL ON TABLE "YU_voltages_for_houses_without_PV" TO sepgroup;
-
-
---
--- Name: YU_energy_voltages_for_houses_without_PV; Type: ACL; Schema: public; Owner: eileen
---
-
-REVOKE ALL ON TABLE "YU_energy_voltages_for_houses_without_PV" FROM PUBLIC;
-REVOKE ALL ON TABLE "YU_energy_voltages_for_houses_without_PV" FROM eileen;
-GRANT ALL ON TABLE "YU_energy_voltages_for_houses_without_PV" TO eileen;
-GRANT ALL ON TABLE "YU_energy_voltages_for_houses_without_PV" TO sepgroup;
-
-
---
--- Name: YU_one_January; Type: ACL; Schema: public; Owner: eileen
---
-
-REVOKE ALL ON TABLE "YU_one_January" FROM PUBLIC;
-REVOKE ALL ON TABLE "YU_one_January" FROM eileen;
-GRANT ALL ON TABLE "YU_one_January" TO eileen;
-GRANT ALL ON TABLE "YU_one_January" TO sepgroup;
+REVOKE ALL ON TABLE cd_meter_ids_for_houses_with_pv_with_locations FROM PUBLIC;
+REVOKE ALL ON TABLE cd_meter_ids_for_houses_with_pv_with_locations FROM eileen;
+GRANT ALL ON TABLE cd_meter_ids_for_houses_with_pv_with_locations TO eileen;
+GRANT ALL ON TABLE cd_meter_ids_for_houses_with_pv_with_locations TO sepgroup;
 
 
 --
@@ -1593,6 +1724,26 @@ REVOKE ALL ON TABLE view_readings_with_meter_id_unsorted FROM daniel;
 GRANT ALL ON TABLE view_readings_with_meter_id_unsorted TO daniel;
 GRANT ALL ON TABLE view_readings_with_meter_id_unsorted TO sepgroup;
 GRANT ALL ON TABLE view_readings_with_meter_id_unsorted TO postgres;
+
+
+--
+-- Name: cd_energy_voltages_for_houses_with_pv; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE cd_energy_voltages_for_houses_with_pv FROM PUBLIC;
+REVOKE ALL ON TABLE cd_energy_voltages_for_houses_with_pv FROM eileen;
+GRANT ALL ON TABLE cd_energy_voltages_for_houses_with_pv TO eileen;
+GRANT ALL ON TABLE cd_energy_voltages_for_houses_with_pv TO sepgroup;
+
+
+--
+-- Name: count_of_event_duplicates; Type: ACL; Schema: public; Owner: daniel
+--
+
+REVOKE ALL ON TABLE count_of_event_duplicates FROM PUBLIC;
+REVOKE ALL ON TABLE count_of_event_duplicates FROM daniel;
+GRANT ALL ON TABLE count_of_event_duplicates TO daniel;
+GRANT ALL ON TABLE count_of_event_duplicates TO sepgroup;
 
 
 --
@@ -1627,11 +1778,12 @@ GRANT ALL ON TABLE meter_ids_for_houses_without_pv_with_locations TO sepgroup;
 
 
 --
--- Name: dz_energy_voltages_for_houses_without_pv; Type: ACL; Schema: public; Owner: postgres
+-- Name: dz_energy_voltages_for_houses_without_pv; Type: ACL; Schema: public; Owner: daniel
 --
 
 REVOKE ALL ON TABLE dz_energy_voltages_for_houses_without_pv FROM PUBLIC;
-REVOKE ALL ON TABLE dz_energy_voltages_for_houses_without_pv FROM postgres;
+REVOKE ALL ON TABLE dz_energy_voltages_for_houses_without_pv FROM daniel;
+GRANT ALL ON TABLE dz_energy_voltages_for_houses_without_pv TO daniel;
 GRANT ALL ON TABLE dz_energy_voltages_for_houses_without_pv TO postgres;
 GRANT ALL ON TABLE dz_energy_voltages_for_houses_without_pv TO sepgroup;
 
