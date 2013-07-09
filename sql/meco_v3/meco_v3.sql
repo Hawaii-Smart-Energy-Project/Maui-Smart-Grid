@@ -533,7 +533,7 @@ ALTER TABLE public."WeatherKahaluiAirport" OWNER TO sepgroup;
 
 CREATE TABLE "WeatherNOAA" (
     wban character varying NOT NULL,
-    datetime timestamp(6) with time zone NOT NULL,
+    datetime timestamp(6) without time zone NOT NULL,
     station_type smallint,
     sky_condition character varying,
     sky_condition_flag character varying,
