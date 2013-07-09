@@ -24,7 +24,7 @@ from msg_noaa_weather_data_parser import MSGNOAAWeatherDataParser
 from msg_weather_data_inserter import MSGNOAAWeatherDataInserter
 from mecodbconnect import MECODBConnector
 
-connector = MECODBConnector()
+
 configer = MECOConfiger()
 logger = MSGLogger(__name__, 'info')
 binPath = MECOConfiger.configOptionValue(configer, "Executable Paths",
@@ -34,7 +34,6 @@ msgBody = ''
 notifier = MECONotifier()
 dataParser = MSGNOAAWeatherDataParser()
 inserter = MSGNOAAWeatherDataInserter()
-conn = connector.connectDB()
 
 
 def processCommandLineArguments():
@@ -57,8 +56,13 @@ processCommandLineArguments()
 
 if commandLineArgs.testing:
     logger.log("Testing mode is ON.\n", 'info')
+    connector = MECODBConnector(True)
+else:
+    connector = MECODBConnector()
 if commandLineArgs.email:
     logger.log("Email will be sent.\n", 'info')
+
+conn = connector.connectDB()
 
 msg = ''
 databaseName = ''

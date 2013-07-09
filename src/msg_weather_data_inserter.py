@@ -11,12 +11,13 @@ from msg_logger import MSGLogger
 
 class MSGNOAAWeatherDataInserter(object):
     """
-    Performs weather data insertion to the database.
+    Performs weather data insertion to a database.
     """
 
-    def __init__(self):
+    def __init__(self, testing = False):
         """
         Constructor.
+        :param testing: True if testing mode is being used.
         """
 
         self.logger = MSGLogger(__name__, 'info')
