@@ -11,7 +11,7 @@ time python -u ${PATH}/insertCompressedWeatherData.py [--testing] [--email]
 This script only supports processing of *hourly.txt.gz files.
 """
 
-TESTING = True
+TESTING = False
 
 import os
 import fnmatch

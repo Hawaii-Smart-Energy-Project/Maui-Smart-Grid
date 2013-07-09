@@ -66,7 +66,7 @@ class MECODBUtil(object):
 
         return lastSequenceValue
 
-    def executeSQL(self, cursor, sql):
+    def executeSQL(self, cursor, sql, exitOnFail = True):
         """
         Execute SQL given a cursor and a SQL statement.
 
@@ -89,10 +89,13 @@ class MECODBUtil(object):
             msg += " The error is: %s." % e[0]
 
             self.logger.log(msg, 'error')
-            sys.exit(-1)
-            # return False
+            if exitOnFail:
+                sys.exit(-1)
+                success = False
 
-        self.logger.log("SQL execute was successful.", 'debug')
+        if success:
+            # self.logger.log("SQL execute was successful.", 'debug')
+            pass
 
         return success
 

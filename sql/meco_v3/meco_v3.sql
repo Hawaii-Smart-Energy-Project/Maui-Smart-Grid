@@ -569,7 +569,7 @@ CREATE TABLE "WeatherNOAA" (
     pressure_change_flag character varying,
     sea_level_pressure character varying,
     sea_level_pressure_flag character varying,
-    record_type character varying,
+    record_type character varying NOT NULL,
     record_type_flag character varying,
     hourly_precip character varying,
     hourly_precip_flag character varying,
@@ -1286,7 +1286,7 @@ ALTER TABLE ONLY "Tier"
 --
 
 ALTER TABLE ONLY "WeatherNOAA"
-    ADD CONSTRAINT "WeatherNOAA_pkey" PRIMARY KEY (wban, datetime);
+    ADD CONSTRAINT "WeatherNOAA_pkey" PRIMARY KEY (wban, datetime, record_type);
 
 
 --

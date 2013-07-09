@@ -7,7 +7,7 @@ from msg_weather_data_dupe_checker import MSGWeatherDataDupeChecker
 # from msg_weather_data_mapper import MSGWeatherDataMapper
 from mecodbutils import MECODBUtil
 from msg_logger import MSGLogger
-
+import sys
 
 class MSGNOAAWeatherDataInserter(object):
     """
@@ -56,8 +56,10 @@ class MSGNOAAWeatherDataInserter(object):
             cols = []
             vals = []
 
+
             for col in row.keys():
                 # Prepare the columns and values for insertion via SQL.
+
 
                 cols.append(col)
                 if (row[col] != 'NULL'):
@@ -70,8 +72,12 @@ class MSGNOAAWeatherDataInserter(object):
             sql = 'insert into "' + tableName + '" (' + ','.join(
                 cols) + ')' + ' values (' + ','.join(vals) + ')'
 
-            self.dbUtil.executeSQL(cur, sql)
-            self.logger.log("sql = %s" % sql, 'debug')
+            if self.dbUtil.executeSQL(cur, sql, exitOnFail = False) is False:
+                for col in sorted(row.keys()):
+                    print "%s: %s" % (col,row[col])
+                sys.exit(-1)
+
+            # self.logger.log("sql = %s" % sql, 'debug')
 
             if commit:
                 try:
