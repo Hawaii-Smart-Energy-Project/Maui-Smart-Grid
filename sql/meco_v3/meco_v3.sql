@@ -532,8 +532,8 @@ ALTER TABLE public."WeatherKahaluiAirport" OWNER TO sepgroup;
 --
 
 CREATE TABLE "WeatherNOAA" (
-    wban character varying,
-    datetime timestamp(6) without time zone,
+    wban character varying NOT NULL,
+    datetime timestamp(6) with time zone NOT NULL,
     station_type smallint,
     sky_condition character varying,
     sky_condition_flag character varying,
@@ -1279,6 +1279,14 @@ ALTER TABLE ONLY "Register"
 
 ALTER TABLE ONLY "Tier"
     ADD CONSTRAINT "Tier_pkey" PRIMARY KEY (tier_id);
+
+
+--
+-- Name: WeatherNOAA_pkey; Type: CONSTRAINT; Schema: public; Owner: daniel; Tablespace: 
+--
+
+ALTER TABLE ONLY "WeatherNOAA"
+    ADD CONSTRAINT "WeatherNOAA_pkey" PRIMARY KEY (wban, datetime);
 
 
 --
