@@ -70,6 +70,9 @@ class MECODBUtil(object):
         """
         Execute SQL given a cursor and a SQL statement.
 
+        The cursor is passed here to allow control of committing outside of
+        this class.
+
         :param cursor: A database cursor.
         :param sql: A SQL statement.
         :returns: True for success, execution is aborted if there is an error.
@@ -89,7 +92,7 @@ class MECODBUtil(object):
             sys.exit(-1)
             # return False
 
-        print "SQL execute was successful."
+        self.logger.log("SQL execute was successful.", 'debug')
 
         return success
 

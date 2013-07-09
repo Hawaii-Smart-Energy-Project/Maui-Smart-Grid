@@ -26,7 +26,7 @@ class MSGNOAAWeatherDataInserter(object):
         # self.mapper = MSGWeatherDataMapper()
 
     def insertDataDict(self, conn, tableName, listOfDataDicts, fKeyVal = None,
-                       withoutCommit = 0):
+                       commit = False):
         """
         Given a table name and a dictionary of column names and values,
         insert them to the db.
@@ -70,16 +70,13 @@ class MSGNOAAWeatherDataInserter(object):
             sql = 'insert into "' + tableName + '" (' + ','.join(
                 cols) + ')' + ' values (' + ','.join(vals) + ')'
 
-            # self.dbUtil.executeSQL(cur, sql)
-            print sql
+            self.dbUtil.executeSQL(cur, sql)
+            self.logger.log("sql = %s" % sql, 'debug')
 
-            if withoutCommit == 0:
+            if commit:
                 try:
-                    # conn.commit()
-                    pass
+                    conn.commit()
                 except:
-                    # self.logger.log("ERROR: Commit failed.", 'debug')
+                    self.logger.log("ERROR: Commit failed.", 'debug')
 
-                    # return cur
-                    pass
 

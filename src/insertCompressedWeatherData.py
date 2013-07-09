@@ -89,7 +89,10 @@ for root, dirnames, filenames in os.walk('.'):
         msg = fullPath
         print msg
         fileObject = gzip.open(fullPath, "rb")
-        inserter.insertDataDict(conn, 'WeatherNOAA', dataParser.parseWeatherData(fileObject,['22516']))
+        inserter.insertDataDict(conn, 'WeatherNOAA',
+                                dataParser.parseWeatherData(fileObject,
+                                                            ['22516']),
+                                commit = True)
         fileObject.close()
         if TESTING:
             break

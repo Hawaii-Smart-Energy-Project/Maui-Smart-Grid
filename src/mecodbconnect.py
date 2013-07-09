@@ -6,7 +6,6 @@ __author__ = 'Daniel Zhang (張道博)'
 import psycopg2
 import psycopg2.extras
 from mecoconfig import MECOConfiger
-import sys
 from msg_logger import MSGLogger
 
 
@@ -20,13 +19,13 @@ class MECODBConnector(object):
         Constructor.
 
         :param testing: Boolean indicating if Testing Mode is on.
+        :param logLevel
         """
 
         self.logger = MSGLogger(__name__, logLevel)
 
         if (testing):
             self.logger.log("Testing Mode is ON.")
-
 
         self.configer = MECOConfiger()
         self.dbPassword = self.configer.configOptionValue("Database",
@@ -40,8 +39,8 @@ class MECODBConnector(object):
         else:
             self.dbName = self.configer.configOptionValue("Database", 'db_name')
 
-        self.logger.log("Instantiating DB connector with database %s." % self.dbName)
-
+        self.logger.log(
+            "Instantiating DB connector with database %s." % self.dbName)
 
         self.dbUsername = self.configer.configOptionValue("Database",
                                                           'db_username')
@@ -64,7 +63,7 @@ class MECODBConnector(object):
                     self.dbName, self.dbUsername, self.dbHost, self.dbPort,
                     self.dbPassword))
         except:
-            self.logger.log("Failed to connect to the database.",'error')
+            self.logger.log("Failed to connect to the database.", 'error')
             return None
 
         self.logger.log("Opened DB connection to database %s." % self.dbName)
@@ -87,6 +86,7 @@ class MECODBConnector(object):
 
         import sys
 
-        self.logger.log("Closing the DB connection to database %s." % self.dbName)
+        self.logger.log(
+            "Closing the DB connection to database %s." % self.dbName)
         self.conn.close()
 
