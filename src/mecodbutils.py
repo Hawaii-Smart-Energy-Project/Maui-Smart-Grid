@@ -91,7 +91,6 @@ class MECODBUtil(object):
             self.logger.log(msg, 'error')
             if exitOnFail:
                 sys.exit(-1)
-                success = False
 
         if success:
             # self.logger.log("SQL execute was successful.", 'debug')

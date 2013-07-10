@@ -11,7 +11,8 @@ time python -u ${PATH}/insertCompressedWeatherData.py [--testing] [--email]
 This script only supports processing of *hourly.txt.gz files.
 """
 
-TESTING = False
+TESTING = True
+KAHULUI_AIRPORT = '22516'
 
 import os
 import fnmatch
@@ -91,7 +92,7 @@ for root, dirnames, filenames in os.walk('.'):
         fileObject = gzip.open(fullPath, "rb")
         inserter.insertDataDict(conn, 'WeatherNOAA',
                                 dataParser.parseWeatherData(fileObject,
-                                                            ['22516']),
+                                                            [KAHULUI_AIRPORT]),
                                 commit = True)
         fileObject.close()
         if TESTING:

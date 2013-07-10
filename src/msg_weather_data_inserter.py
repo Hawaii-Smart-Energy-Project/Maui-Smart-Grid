@@ -4,10 +4,10 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 from msg_weather_data_dupe_checker import MSGWeatherDataDupeChecker
-# from msg_weather_data_mapper import MSGWeatherDataMapper
 from mecodbutils import MECODBUtil
 from msg_logger import MSGLogger
 import sys
+
 
 class MSGNOAAWeatherDataInserter(object):
     """
@@ -23,7 +23,6 @@ class MSGNOAAWeatherDataInserter(object):
         self.logger = MSGLogger(__name__, 'info')
         self.dbUtil = MECODBUtil()
         self.dupeChecker = MSGWeatherDataDupeChecker()
-        # self.mapper = MSGWeatherDataMapper()
 
     def insertDataDict(self, conn, tableName, listOfDataDicts, fKeyVal = None,
                        commit = False):
@@ -31,14 +30,14 @@ class MSGNOAAWeatherDataInserter(object):
         Given a table name and a dictionary of column names and values,
         insert them to the db.
 
-        :param conn: database connection
-        :param tableName: name of the db table
-        :param columnsAndValues: dictionary of columns and values to be
-        inserted to the db
-        :param (optional) fKeyVal: an explicit foreign key value
-        :param (optional) withoutCommit: a flag indicated that the insert
-        will not be immediately committed
-        :returns: A database cursor.
+        :param conn: A database connection.
+        :param tableName: Name of the DB table to be inserted to.
+        :param columnsAndValues: Dictionary of columns and values to be
+        inserted to the DB.
+        :param (optional) fKeyVal: An explicit foreign key value.
+        :param (optional) commit: A flag indicated that DB transactions will
+        be committed.
+        :returns: None.
         """
 
         cur = conn.cursor()
@@ -56,14 +55,12 @@ class MSGNOAAWeatherDataInserter(object):
             cols = []
             vals = []
 
-
             for col in row.keys():
                 # Prepare the columns and values for insertion via SQL.
 
-
                 cols.append(col)
                 if (row[col] != 'NULL'):
-                    # Surround value with single quotes.
+                    # Surround each value with single quotes...
                     vals.append("'%s'" % row[col])
                 else:
                     # Except for NULL values.
@@ -72,17 +69,27 @@ class MSGNOAAWeatherDataInserter(object):
             sql = 'insert into "' + tableName + '" (' + ','.join(
                 cols) + ')' + ' values (' + ','.join(vals) + ')'
 
-            if self.dbUtil.executeSQL(cur, sql, exitOnFail = False) is False:
-                for col in sorted(row.keys()):
-                    print "%s: %s" % (col,row[col])
-                sys.exit(-1)
+            if self.dupeChecker.duplicateExists(cur, row['wban'],
+                                                row['datetime'],
+                                                row['record_type']):
+                self.logger.log("Dupe found, dropping dupe.",'info')
+            else:
 
-            # self.logger.log("sql = %s" % sql, 'debug')
+                if self.dbUtil.executeSQL(cur, sql,
+                                          exitOnFail = False) is False:
+                    # An error occurred.
 
-            if commit:
-                try:
-                    conn.commit()
-                except:
-                    self.logger.log("ERROR: Commit failed.", 'debug')
+                    for col in sorted(row.keys()):
+                        print "%s: %s" % (col, row[col])
+                    sys.exit(-1)
 
+                    pass
+
+                    # self.logger.log("sql = %s" % sql, 'debug')
+
+        if commit:
+            try:
+                conn.commit()
+            except:
+                self.logger.log("ERROR: Commit failed.", 'debug')
 
