@@ -132,14 +132,48 @@ Location and meter records are stored in separate tab-separated files and are in
 
     $ insertMeterRecords.py ${FILENAME}
 
-### Inserting Weather Data (Kahalui Station)
+### Inserting NOAA Weather Data (Kahului Station WBAN 22516)
+
+A single file containing weather data can be processed using
 
     $ insertWeatherData.py ${FILENAME}
+    
+This method of inserting weather data  is deprecated in favor of using
+
+    $ insertCompressedWeatherData.py 
+    
+that supports recursive data processing of a set of files.
 
 ### Utility Scripts
 
 `grantAllPermissionsToDatabase.sh ${DATABASE}`
 : Set appropriate permissions to databases.
+
+## Notifications
+
+Notification of the results of data processing events is provided by the MSG Notification System. Notifications are distributed by email to a predefined recipient list contained in the configuration file.
+
+### Example Notification for Data Loading
+
+    Recursively inserting data to the database named meco_v3.
+    Starting in /msg-data/2013_07_10
+    insertScript = insertMECOEnergyData.py
+    
+    ./20130710-99bb8b2b-12a1-4db5-8a1c-7312277cf404-1-1.xml.gz
+    
+    Inserting data to database meco_v3.
+    
+    Parsing XML in ./20130710-99bb8b2b-12a1-4db5-8a1c-7312277cf404-1-1.xml.gz.
+    {0rd,0re,0ev}(0)[8869]<6912rd,144re,24ev,8869,8869>*{0rd,0re,0ev}(1)[13291]<3456rd,72re,0ev,4422,13291>*{0rd,0re,0ev}(2)[17713]<3456rd,72re,0ev,4422,17713>*{0rd,0re,0ev}(3)[26566]<6912rd,144re,8ev,8853,26566>*{0rd,0re,0ev}  ...  ---{0rd,0re,0ev}(37)[191467]<0rd,0re,0ev,0,191459>*
+    
+    Wall time = 512.54 seconds.
+    
+    Log Legend: {} = dupes, () = element group, [] = process for insert elements, <> = <reading insert count, register insert count, event insert count, group insert count,total insert count>, * = commit
+    rd = reading, re = register, ev = event
+    
+    Processed file count is 1.
+    
+    Plot is attached.
 
 ## Software Dependencies
 ### Python Modules
