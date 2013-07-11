@@ -132,7 +132,7 @@ Location and meter records are stored in separate tab-separated files and are in
 
     $ insertMeterRecords.py ${FILENAME}
 
-### Inserting NOAA Weather Data (Kahului Station WBAN 22516)
+### Inserting NOAA Weather Data (Kahului Airport Station WBAN 22516)
 
 A single file containing weather data can be processed using
 
