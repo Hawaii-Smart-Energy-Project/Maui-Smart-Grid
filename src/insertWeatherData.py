@@ -17,7 +17,7 @@ import sys
 import re
 from mecodbconnect import MECODBConnector
 from mecodbutils import MECODBUtil
-from meconotifier import MECONotifier
+from meconotifier import MSGNotifier
 from mecoconfig import MECOConfiger
 
 try:
@@ -33,7 +33,7 @@ connector = MECODBConnector()
 conn = connector.connectDB()
 cur = conn.cursor()
 dbUtil = MECODBUtil()
-notifier = MECONotifier()
+notifier = MSGNotifier()
 sqlSuccess = False
 configer = MECOConfiger()
 

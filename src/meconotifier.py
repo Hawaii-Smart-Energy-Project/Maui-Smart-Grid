@@ -16,7 +16,7 @@ from email import Encoders
 from msg_logger import MSGLogger
 
 
-class MECONotifier(object):
+class MSGNotifier(object):
     """
     Notification services for MECO data processing.
     """

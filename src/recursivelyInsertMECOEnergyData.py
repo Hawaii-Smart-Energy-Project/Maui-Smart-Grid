@@ -22,7 +22,7 @@ import sys
 from subprocess import call
 from mecoconfig import MECOConfiger
 import re
-from meconotifier import MECONotifier
+from meconotifier import MSGNotifier
 import argparse
 from mecoplotting import MECOPlotting
 from insertMECOEnergyData import Inserter
@@ -37,7 +37,7 @@ binPath = MECOConfiger.configOptionValue(configer, "Executable Paths",
                                          "bin_path")
 commandLineArgs = None
 msgBody = ''
-notifier = MECONotifier()
+notifier = MSGNotifier()
 
 USE_SCRIPT_METHOD = False
 

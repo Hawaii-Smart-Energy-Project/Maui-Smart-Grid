@@ -17,7 +17,7 @@ KAHULUI_AIRPORT = '22516'
 import os
 import fnmatch
 from mecoconfig import MECOConfiger
-from meconotifier import MECONotifier
+from meconotifier import MSGNotifier
 import argparse
 from msg_logger import MSGLogger
 import gzip
@@ -32,7 +32,7 @@ binPath = MECOConfiger.configOptionValue(configer, "Executable Paths",
                                          "bin_path")
 commandLineArgs = None
 msgBody = ''
-notifier = MECONotifier()
+notifier = MSGNotifier()
 dataParser = MSGNOAAWeatherDataParser()
 inserter = MSGNOAAWeatherDataInserter()
 
