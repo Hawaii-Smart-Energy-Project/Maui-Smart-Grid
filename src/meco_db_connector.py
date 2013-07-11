@@ -9,7 +9,7 @@ from msg_config import MSGConfiger
 from msg_logger import MSGLogger
 
 
-class MECODBConnector(object):
+class MSGDBConnector(object):
     """
     Manage a connection to a MECO database.
     """

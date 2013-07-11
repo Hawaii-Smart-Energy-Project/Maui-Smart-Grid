@@ -5,7 +5,7 @@ __author__ = 'Daniel Zhang (張道博)'
 
 import unittest
 from mecoxmlparser import MECOXMLParser
-from mecodbconnect import MECODBConnector
+from meco_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 
 
@@ -16,7 +16,7 @@ class TestMECOXMLParser(unittest.TestCase):
 
     def setUp(self):
         self.p = MECOXMLParser(True) # run in testing mode
-        self.dbConnect = MECODBConnector(True)
+        self.dbConnect = MSGDBConnector(True)
         self.dbUtil = MSGDBUtil()
         self.conn = self.dbConnect.connectDB()
         self.cur = self.conn.cursor()

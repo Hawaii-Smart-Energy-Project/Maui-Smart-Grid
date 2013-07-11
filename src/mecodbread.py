@@ -3,7 +3,7 @@
 
 __author__ = 'Daniel Zhang (張道博)'
 
-from mecodbconnect import MECODBConnector
+from meco_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 import psycopg2
 import psycopg2.extras
@@ -21,8 +21,8 @@ class MECODBReader(object):
         :param testing: True if in testing mode.
         """
 
-        self.connector = MECODBConnector()
-        self.conn = MECODBConnector(testing).connectDB()
+        self.connector = MSGDBConnector()
+        self.conn = MSGDBConnector(testing).connectDB()
         self.dbUtil = MSGDBUtil()
         self.dbName = self.dbUtil.getDBName(self.connector.dictCur)
 

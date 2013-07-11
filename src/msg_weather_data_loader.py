@@ -4,7 +4,7 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 
-from mecodbconnect import MECODBConnector
+from meco_db_connector import MSGDBConnector
 from msg_config import MSGConfiger
 from msg_logger import MSGLogger
 import gzip

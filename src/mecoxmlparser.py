@@ -9,7 +9,7 @@ from mecodbinsert import MECODBInserter
 from msg_config import MSGConfiger
 from msg_db_util import MSGDBUtil
 from mecomapper import MECOMapper
-from mecodbconnect import MECODBConnector
+from meco_db_connector import MSGDBConnector
 from meco_fk import MECOFKDeterminer
 import sys
 from itertools import tee, islice, izip_longest
@@ -46,7 +46,7 @@ class MECOXMLParser(object):
 
         self.util = MSGDBUtil()
         self.mapper = MECOMapper()
-        self.connector = MECODBConnector(testing)
+        self.connector = MSGDBConnector(testing)
         self.conn = self.connector.connectDB()
         self.filename = None
         self.fileObject = None

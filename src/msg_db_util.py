@@ -5,7 +5,7 @@ __author__ = 'Daniel Zhang (張道博)'
 
 import sys
 from msg_config import MSGConfiger
-from mecodbconnect import MECODBConnector
+from meco_db_connector import MSGDBConnector
 import psycopg2
 from msg_logger import MSGLogger
 import re
@@ -106,7 +106,7 @@ class MSGDBUtil(object):
         All sequences are reset to start with the value of one (1).
         """
 
-        self.dbConnect = MECODBConnector(True)
+        self.dbConnect = MSGDBConnector(True)
         self.conn = self.dbConnect.connectDB()
         dbCursor = self.conn.cursor()
 

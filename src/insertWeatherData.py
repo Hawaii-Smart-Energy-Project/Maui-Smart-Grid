@@ -15,7 +15,7 @@ from NOAA.
 import csv
 import sys
 import re
-from mecodbconnect import MECODBConnector
+from meco_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 from msg_notifier import MSGNotifier
 from msg_config import MSGConfiger
@@ -29,7 +29,7 @@ except:
 filename = sys.argv[1]
 msgBody = ''
 
-connector = MECODBConnector()
+connector = MSGDBConnector()
 conn = connector.connectDB()
 cur = conn.cursor()
 dbUtil = MSGDBUtil()

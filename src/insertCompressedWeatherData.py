@@ -23,7 +23,7 @@ from msg_logger import MSGLogger
 import gzip
 from msg_noaa_weather_data_parser import MSGNOAAWeatherDataParser
 from msg_weather_data_inserter import MSGNOAAWeatherDataInserter
-from mecodbconnect import MECODBConnector
+from meco_db_connector import MSGDBConnector
 
 
 configer = MSGConfiger()
@@ -57,9 +57,9 @@ processCommandLineArguments()
 
 if commandLineArgs.testing:
     logger.log("Testing mode is ON.\n", 'info')
-    connector = MECODBConnector(True)
+    connector = MSGDBConnector(True)
 else:
-    connector = MECODBConnector()
+    connector = MSGDBConnector()
 if commandLineArgs.email:
     logger.log("Email will be sent.\n", 'info')
 
