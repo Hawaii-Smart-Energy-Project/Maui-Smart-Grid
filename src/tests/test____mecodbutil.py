@@ -4,7 +4,7 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 import unittest
-from mecodbutils import MECODBUtil
+from msg_db_util import MSGDBUtil
 from mecodbinsert import MECODBInserter
 from mecodbconnect import MECODBConnector
 from meco_dbdelete import MECODBDeleter
@@ -18,7 +18,7 @@ class TestMECODBUtil(unittest.TestCase):
 
     def setUp(self):
         self.i = MECODBInserter()
-        self.dbUtil = MECODBUtil()
+        self.dbUtil = MSGDBUtil()
         self.connector = MECODBConnector(True)
         self.conn = self.connector.connectDB()
         self.lastSeqVal = None

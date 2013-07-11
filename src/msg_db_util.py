@@ -13,7 +13,7 @@ import re
 DEBUG = 1
 
 
-class MECODBUtil(object):
+class MSGDBUtil(object):
     """
     Utility methods.
     """

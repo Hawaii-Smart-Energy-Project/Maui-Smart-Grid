@@ -4,7 +4,7 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 from mecodbconnect import MECODBConnector
-from mecodbutils import MECODBUtil
+from msg_db_util import MSGDBUtil
 import psycopg2
 import psycopg2.extras
 
@@ -23,7 +23,7 @@ class MECODBReader(object):
 
         self.connector = MECODBConnector()
         self.conn = MECODBConnector(testing).connectDB()
-        self.dbUtil = MECODBUtil()
+        self.dbUtil = MSGDBUtil()
         self.dbName = self.dbUtil.getDBName(self.connector.dictCur)
 
     def selectRecord(self, conn, table, keyName, keyValue):

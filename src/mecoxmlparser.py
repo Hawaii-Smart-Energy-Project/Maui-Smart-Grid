@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 import re
 from mecodbinsert import MECODBInserter
 from msg_config import MSGConfiger
-from mecodbutils import MECODBUtil
+from msg_db_util import MSGDBUtil
 from mecomapper import MECOMapper
 from mecodbconnect import MECODBConnector
 from meco_fk import MECOFKDeterminer
@@ -44,7 +44,7 @@ class MECOXMLParser(object):
                                            'debug') == True:
             self.debug = True
 
-        self.util = MECODBUtil()
+        self.util = MSGDBUtil()
         self.mapper = MECOMapper()
         self.connector = MECODBConnector(testing)
         self.conn = self.connector.connectDB()

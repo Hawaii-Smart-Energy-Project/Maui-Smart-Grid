@@ -16,7 +16,7 @@ import csv
 import sys
 import re
 from mecodbconnect import MECODBConnector
-from mecodbutils import MECODBUtil
+from msg_db_util import MSGDBUtil
 from msg_notifier import MSGNotifier
 from msg_config import MSGConfiger
 
@@ -32,7 +32,7 @@ msgBody = ''
 connector = MECODBConnector()
 conn = connector.connectDB()
 cur = conn.cursor()
-dbUtil = MECODBUtil()
+dbUtil = MSGDBUtil()
 notifier = MSGNotifier()
 sqlSuccess = False
 configer = MSGConfiger()

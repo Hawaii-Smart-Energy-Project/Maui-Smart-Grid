@@ -14,7 +14,7 @@ insertLocationRecords.py ${FILENAME}
 import csv
 import sys
 from mecodbconnect import MECODBConnector
-from mecodbutils import MECODBUtil
+from msg_db_util import MSGDBUtil
 from msg_notifier import MSGNotifier
 from msg_config import MSGConfiger
 
@@ -25,7 +25,7 @@ anyFailure = False
 connector = MECODBConnector()
 conn = connector.connectDB()
 cur = conn.cursor()
-dbUtil = MECODBUtil()
+dbUtil = MSGDBUtil()
 notifier = MSGNotifier()
 msg = ''
 msgBody = ''

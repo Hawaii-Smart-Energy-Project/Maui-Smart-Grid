@@ -4,7 +4,7 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 from msg_logger import MSGLogger
-from mecodbutils import MECODBUtil
+from msg_db_util import MSGDBUtil
 
 class MSGWeatherDataDupeChecker(object):
     """
@@ -19,7 +19,7 @@ class MSGWeatherDataDupeChecker(object):
         """
 
         self.logger = MSGLogger(__name__, 'debug')
-        self.dbUtil = MECODBUtil()
+        self.dbUtil = MSGDBUtil()
 
 
     def duplicateExists(self, dbCursor, wban, datetime, recordType):

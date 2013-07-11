@@ -4,7 +4,7 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 from msg_weather_data_dupe_checker import MSGWeatherDataDupeChecker
-from mecodbutils import MECODBUtil
+from msg_db_util import MSGDBUtil
 from msg_logger import MSGLogger
 import sys
 
@@ -21,7 +21,7 @@ class MSGNOAAWeatherDataInserter(object):
         """
 
         self.logger = MSGLogger(__name__, 'info')
-        self.dbUtil = MECODBUtil()
+        self.dbUtil = MSGDBUtil()
         self.dupeChecker = MSGWeatherDataDupeChecker()
 
     def insertDataDict(self, conn, tableName, listOfDataDicts, fKeyVal = None,

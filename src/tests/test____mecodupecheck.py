@@ -7,7 +7,7 @@ import unittest
 from mecodupecheck import MECODupeChecker
 from mecoxmlparser import MECOXMLParser
 from mecodbconnect import MECODBConnector
-from mecodbutils import MECODBUtil
+from msg_db_util import MSGDBUtil
 
 
 class TestMECODupeChecker(unittest.TestCase):
@@ -18,7 +18,7 @@ class TestMECODupeChecker(unittest.TestCase):
         self.dupeChecker = MECODupeChecker()
         self.p = MECOXMLParser(True) # run in testing mode
         self.dbConnect = MECODBConnector(True)
-        self.dbUtil = MECODBUtil()
+        self.dbUtil = MSGDBUtil()
         self.conn = self.dbConnect.connectDB()
         self.cur = self.conn.cursor()
 

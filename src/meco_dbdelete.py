@@ -5,7 +5,7 @@ __author__ = 'Daniel Zhang (張道博)'
 
 import psycopg2
 import psycopg2.extras
-from mecodbutils import MECODBUtil
+from msg_db_util import MSGDBUtil
 
 class MECODBDeleter(object) :
     """
@@ -16,7 +16,7 @@ class MECODBDeleter(object) :
         """
         Constructor.
         """
-        self.dbUtil = MECODBUtil()
+        self.dbUtil = MSGDBUtil()
 
     def deleteRecord(self, conn, tableName, idText, idValue) :
         """

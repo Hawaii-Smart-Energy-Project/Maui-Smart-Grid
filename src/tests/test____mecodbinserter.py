@@ -5,7 +5,7 @@ __author__ = 'Daniel Zhang (張道博)'
 
 import unittest
 from mecodbinsert import MECODBInserter
-from mecodbutils import MECODBUtil
+from msg_db_util import MSGDBUtil
 from mecodbconnect import MECODBConnector
 from meco_dbdelete import MECODBDeleter
 from mecodbread import MECODBReader
@@ -17,7 +17,7 @@ class TestMECODBInserter(unittest.TestCase):
 
     def setUp(self):
         self.i = MECODBInserter()
-        self.util = MECODBUtil()
+        self.util = MSGDBUtil()
         self.connector = MECODBConnector(True)
         self.deleter = MECODBDeleter()
         self.reader = MECODBReader()

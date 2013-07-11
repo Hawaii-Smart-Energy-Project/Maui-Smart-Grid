@@ -7,7 +7,7 @@ import unittest
 from mecodbread import MECODBReader
 from mecodbconnect import MECODBConnector
 from mecodbinsert import MECODBInserter
-from mecodbutils import MECODBUtil
+from msg_db_util import MSGDBUtil
 from meco_dbdelete import MECODBDeleter
 
 
@@ -17,7 +17,7 @@ class TestMECODBRead(unittest.TestCase):
         self.connector = MECODBConnector(True)
         self.conn = self.connector.connectDB()
         self.inserter = MECODBInserter()
-        self.util = MECODBUtil()
+        self.util = MSGDBUtil()
         self.lastSeqVal = None
         self.tableName = 'MeterData'
         self.colName = 'meter_data_id'

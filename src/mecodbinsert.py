@@ -5,7 +5,7 @@ __author__ = 'Daniel Zhang (張道博)'
 
 from mecomapper import MECOMapper
 from mecodupecheck import MECODupeChecker
-from mecodbutils import MECODBUtil
+from msg_db_util import MSGDBUtil
 from msg_logger import MSGLogger
 
 VISUALIZE_DATA = 1
@@ -25,7 +25,7 @@ class MECODBInserter(object):
         self.logger = MSGLogger(__name__, 'debug')
         self.mapper = MECOMapper()
         self.dupeChecker = MECODupeChecker()
-        self.dbUtil = MECODBUtil()
+        self.dbUtil = MSGDBUtil()
 
     def __call__(self, param):
         print "CallableClass.__call__(%s)" % param
