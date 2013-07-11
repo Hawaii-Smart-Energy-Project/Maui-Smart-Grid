@@ -6,7 +6,7 @@ __author__ = 'Daniel Zhang (張道博)'
 import xml.etree.ElementTree as ET
 import re
 from mecodbinsert import MECODBInserter
-from mecoconfig import MECOConfiger
+from msg_config import MSGConfiger
 from mecodbutils import MECODBUtil
 from mecomapper import MECOMapper
 from mecodbconnect import MECODBConnector
@@ -39,7 +39,7 @@ class MECOXMLParser(object):
             self.logger.log("Testing Mode is ON.", 'info')
 
         self.debug = False
-        self.configer = MECOConfiger()
+        self.configer = MSGConfiger()
         if self.configer.configOptionValue("Debugging",
                                            'debug') == True:
             self.debug = True

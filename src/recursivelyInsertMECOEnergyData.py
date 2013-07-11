@@ -20,9 +20,9 @@ import os
 import fnmatch
 import sys
 from subprocess import call
-from mecoconfig import MECOConfiger
+from msg_config import MSGConfiger
 import re
-from meconotifier import MSGNotifier
+from msg_notifier import MSGNotifier
 import argparse
 from mecoplotting import MECOPlotting
 from insertMECOEnergyData import Inserter
@@ -31,9 +31,9 @@ from msg_logger import MSGLogger
 
 xmlGzCount = 0
 xmlCount = 0
-configer = MECOConfiger()
+configer = MSGConfiger()
 logger = MSGLogger(__name__, 'info')
-binPath = MECOConfiger.configOptionValue(configer, "Executable Paths",
+binPath = MSGConfiger.configOptionValue(configer, "Executable Paths",
                                          "bin_path")
 commandLineArgs = None
 msgBody = ''

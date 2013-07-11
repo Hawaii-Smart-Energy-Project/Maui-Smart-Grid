@@ -15,8 +15,8 @@ import csv
 import sys
 from mecodbconnect import MECODBConnector
 from mecodbutils import MECODBUtil
-from meconotifier import MSGNotifier
-from mecoconfig import MECOConfiger
+from msg_notifier import MSGNotifier
+from msg_config import MSGConfiger
 
 filename = sys.argv[1]
 
@@ -29,7 +29,7 @@ dbUtil = MECODBUtil()
 notifier = MSGNotifier()
 msg = ''
 msgBody = ''
-configer = MECOConfiger()
+configer = MSGConfiger()
 
 dbName = configer.configOptionValue("Database", "db_name")
 

@@ -9,7 +9,7 @@ import stat
 import sys
 
 
-class MECOConfiger(object):
+class MSGConfiger(object):
     """
     Supports system-specific configuration for MECO data processing.
     The site configuration file is located in ~/.meco-data-operations.cfg.

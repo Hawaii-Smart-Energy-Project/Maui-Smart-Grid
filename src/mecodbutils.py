@@ -4,7 +4,7 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 import sys
-from mecoconfig import MECOConfiger
+from msg_config import MSGConfiger
 from mecodbconnect import MECODBConnector
 import psycopg2
 from msg_logger import MSGLogger
@@ -24,7 +24,7 @@ class MECODBUtil(object):
         """
 
         self.logger = MSGLogger(__name__, 'DEBUG')
-        self.configer = MECOConfiger()
+        self.configer = MSGConfiger()
 
     def getLastSequenceID(self, conn, tableName, columnName):
         """

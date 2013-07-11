@@ -5,7 +5,7 @@ __author__ = 'Daniel Zhang (張道博)'
 
 import unittest
 from mecomapper import MECOMapper
-from mecoconfig import MECOConfiger
+from msg_config import MSGConfiger
 
 
 class TestMECOMapper(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestMECOMapper(unittest.TestCase):
         self.testColumns = self.m.dbColsMeterData.values()
         self.testLabels = self.m.dbColsMeterData.keys()
         self.testTableName = 'MeterData'
-        self.config = MECOConfiger()
+        self.config = MSGConfiger()
 
     def testMECOMapperCanBeInited(self):
         localMapper = MECOMapper()

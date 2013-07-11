@@ -8,7 +8,7 @@ from mecodbutils import MECODBUtil
 from mecodbinsert import MECODBInserter
 from mecodbconnect import MECODBConnector
 from meco_dbdelete import MECODBDeleter
-from mecoconfig import MECOConfiger
+from msg_config import MSGConfiger
 
 
 class TestMECODBUtil(unittest.TestCase):
@@ -29,7 +29,7 @@ class TestMECODBUtil(unittest.TestCase):
         self.deleter = MECODBDeleter()
         self.tableName = 'MeterData'
         self.columnName = 'meter_data_id'
-        self.configer = MECOConfiger()
+        self.configer = MSGConfiger()
 
     def testMECODBUtilCanBeInited(self):
         self.assertIsNotNone(self.dbUtil)

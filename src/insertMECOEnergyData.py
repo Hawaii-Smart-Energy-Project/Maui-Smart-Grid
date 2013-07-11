@@ -15,7 +15,7 @@ This script is used by recursivelyInsertMECOEnergyData.py.
 
 from mecoxmlparser import MECOXMLParser
 import re
-from mecoconfig import MECOConfiger
+from msg_config import MSGConfiger
 import gzip
 import sys
 import argparse
@@ -38,7 +38,7 @@ class Inserter(object):
         """
 
         self.parser = MECOXMLParser(testing)
-        self.configer = MECOConfiger()
+        self.configer = MSGConfiger()
 
     def insertData(self, filePath, testing = False):
         """

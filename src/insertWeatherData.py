@@ -17,8 +17,8 @@ import sys
 import re
 from mecodbconnect import MECODBConnector
 from mecodbutils import MECODBUtil
-from meconotifier import MSGNotifier
-from mecoconfig import MECOConfiger
+from msg_notifier import MSGNotifier
+from msg_config import MSGConfiger
 
 try:
     len(sys.argv[1])
@@ -35,7 +35,7 @@ cur = conn.cursor()
 dbUtil = MECODBUtil()
 notifier = MSGNotifier()
 sqlSuccess = False
-configer = MECOConfiger()
+configer = MSGConfiger()
 
 dbName = configer.configOptionValue("Database", "db_name")
 

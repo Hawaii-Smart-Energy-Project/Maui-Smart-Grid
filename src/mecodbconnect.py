@@ -5,7 +5,7 @@ __author__ = 'Daniel Zhang (張道博)'
 
 import psycopg2
 import psycopg2.extras
-from mecoconfig import MECOConfiger
+from msg_config import MSGConfiger
 from msg_logger import MSGLogger
 
 
@@ -27,7 +27,7 @@ class MECODBConnector(object):
         if (testing):
             self.logger.log("Testing Mode is ON.")
 
-        self.configer = MECOConfiger()
+        self.configer = MSGConfiger()
         self.dbPassword = self.configer.configOptionValue("Database",
                                                           'db_password')
         self.dbHost = self.configer.configOptionValue("Database", 'db_host')

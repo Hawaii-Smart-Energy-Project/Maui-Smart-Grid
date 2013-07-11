@@ -4,16 +4,16 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 import unittest
-from mecoconfig import MECOConfiger
+from msg_config import MSGConfiger
 
 
 class TestMECOConfig(unittest.TestCase):
     def setUp(self):
-        self.configer = MECOConfiger()
+        self.configer = MSGConfiger()
 
     def test_init(self):
         # @todo Improve this test by using direct introspection instead of this roundabout method.
-        localConfiger = MECOConfiger()
+        localConfiger = MSGConfiger()
         self.assertIsInstance(self.configer, type(localConfiger))
 
     def test_get_debugging(self):

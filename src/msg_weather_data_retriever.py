@@ -6,7 +6,7 @@ __author__ = 'Daniel Zhang (張道博)'
 import urllib2
 import re
 import pycurl
-from mecoconfig import MECOConfiger
+from msg_config import MSGConfiger
 from msg_logger import MSGLogger
 
 
@@ -19,7 +19,7 @@ class MSGWeatherDataRetriever(object):
 
     def __init__(self):
         self.logger = MSGLogger(__name__, 'info')
-        self.configer = MECOConfiger()
+        self.configer = MSGConfiger()
         self.weatherDataPath \
             = self.configer.configOptionValue('Weather Data',
                                               'weather_data_path')

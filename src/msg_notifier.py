@@ -5,7 +5,7 @@ __author__ = 'Daniel Zhang (張道博)'
 
 import smtplib
 from datetime import datetime
-from mecoconfig import MECOConfiger
+from msg_config import MSGConfiger
 import sys
 import os
 from email.MIMEMultipart import MIMEMultipart
@@ -26,7 +26,7 @@ class MSGNotifier(object):
         Constructor.
         """
 
-        self.config = MECOConfiger()
+        self.config = MSGConfiger()
         self.logger = MSGLogger(__name__, 'info')
 
     def sendNotificationEmail(self, msgBody, testing = False):

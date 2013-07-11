@@ -4,10 +4,10 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 import unittest
-from meconotifier import MSGNotifier
+from msg_notifier import MSGNotifier
 import smtplib
 
-from mecoconfig import MECOConfiger
+from msg_config import MSGConfiger
 
 SEND_EMAIL = False
 
@@ -19,7 +19,7 @@ class TestMECONotifier(unittest.TestCase):
 
     def setUp(self):
         self.notifier = MSGNotifier()
-        self.config = MECOConfiger()
+        self.config = MSGConfiger()
 
     def tearDown(self):
         pass

@@ -10,7 +10,7 @@ matplotlib.use('Agg')
 import pylab
 import matplotlib.pyplot as plt
 import matplotlib.dates
-from mecoconfig import MECOConfiger
+from msg_config import MSGConfiger
 import time
 
 # Set TEST_SCRIPT to True to run plotting as a script.
@@ -30,7 +30,7 @@ class MECOPlotting(object):
         """
 
         self.reader = MECODBReader(testing)
-        self.configer = MECOConfiger()
+        self.configer = MSGConfiger()
         self.dpi = 300
 
 

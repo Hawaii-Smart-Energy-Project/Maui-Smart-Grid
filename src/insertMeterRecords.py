@@ -17,12 +17,12 @@ import csv
 import sys
 from mecodbconnect import MECODBConnector
 from mecodbutils import MECODBUtil
-from meconotifier import MSGNotifier
-from mecoconfig import MECOConfiger
+from msg_notifier import MSGNotifier
+from msg_config import MSGConfiger
 
 filename = sys.argv[1]
 
-configer = MECOConfiger()
+configer = MSGConfiger()
 connector = MECODBConnector()
 conn = connector.connectDB()
 cur = conn.cursor()
