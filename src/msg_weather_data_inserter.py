@@ -44,11 +44,6 @@ class MSGNOAAWeatherDataInserter(object):
 
         for row in listOfDataDicts:
 
-            # Get a dictionary of mapped (from DB to source data) column names.
-            # columnDict = self.mapper.getDBColNameDict(tableName)
-
-            # dbColsAndVals = {}
-
             # Add a creation timestamp using the SQL function.
             row['created'] = 'NOW()'
 
@@ -82,10 +77,6 @@ class MSGNOAAWeatherDataInserter(object):
                     for col in sorted(row.keys()):
                         print "%s: %s" % (col, row[col])
                     sys.exit(-1)
-
-                    pass
-
-                    # self.logger.log("sql = %s" % sql, 'debug')
 
         if commit:
             try:

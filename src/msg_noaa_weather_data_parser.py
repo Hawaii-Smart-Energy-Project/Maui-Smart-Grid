@@ -105,9 +105,7 @@ class MSGNOAAWeatherDataParser(object):
                                         re.sub("\s+", "",
                                                rowDict[self.cols[i]])) == 0:
                                     rowDict[self.cols[i]] = 'NULL'
-                                    # else:
-                                    #     rowDict[self.cols[i]] = "'" + rowDict[
-                                    #         self.cols[i]] + "'"
+
                             except IndexError, e:
                                 print "Exception during second assignment: " \
                                       "%s, Index = %s" % (

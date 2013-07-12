@@ -101,6 +101,6 @@ for root, dirnames, filenames in os.walk('.'):
 parseLog = ''
 
 if commandLineArgs.email:
-    # notifier.sendMailWithAttachments(msgBody, makePlotAttachments(),
-    #                                  commandLineArgs.testing)
+    # Provide loading notification with results by email.
+
     pass
