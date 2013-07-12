@@ -18,7 +18,7 @@ from msg_logger import MSGLogger
 
 class MSGNotifier(object):
     """
-    Notification services for MECO data processing.
+    Provides notification service functionality for MSG data processing.
     """
 
     def __init__(self):
