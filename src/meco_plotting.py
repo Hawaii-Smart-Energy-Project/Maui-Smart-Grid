@@ -3,7 +3,7 @@
 
 __author__ = 'Daniel Zhang (張道博)'
 
-from mecodbread import MECODBReader
+from meco_db_read import MECODBReader
 import matplotlib
 
 matplotlib.use('Agg')

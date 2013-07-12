@@ -13,7 +13,7 @@ time python -u ${PATH}/insertMECOEnergyData.py --filepath ${FILEPATH} [
 This script is used by recursivelyInsertMECOEnergyData.py.
 """
 
-from mecoxmlparser import MECOXMLParser
+from meco_xml_parser import MECOXMLParser
 import re
 from msg_config import MSGConfiger
 import gzip

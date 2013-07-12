@@ -4,7 +4,7 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 import unittest
-from mecoxmlparser import MECOXMLParser
+from meco_xml_parser import MECOXMLParser
 from meco_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 

@@ -3,8 +3,8 @@
 
 __author__ = 'Daniel Zhang (張道博)'
 
-from mecomapper import MECOMapper
-from mecodupecheck import MECODupeChecker
+from meco_mapper import MECOMapper
+from meco_dupe_check import MECODupeChecker
 from msg_db_util import MSGDBUtil
 from msg_logger import MSGLogger
 

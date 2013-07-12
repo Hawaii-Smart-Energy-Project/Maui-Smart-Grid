@@ -5,15 +5,15 @@ __author__ = 'Daniel Zhang (張道博)'
 
 import xml.etree.ElementTree as ET
 import re
-from mecodbinsert import MECODBInserter
+from meco_db_insert import MECODBInserter
 from msg_config import MSGConfiger
 from msg_db_util import MSGDBUtil
-from mecomapper import MECOMapper
+from meco_mapper import MECOMapper
 from meco_db_connector import MSGDBConnector
 from meco_fk import MECOFKDeterminer
 import sys
 from itertools import tee, islice, izip_longest
-from mecodupecheck import MECODupeChecker
+from meco_dupe_check import MECODupeChecker
 from msg_logger import MSGLogger
 
 DEBUG = 0 # print debugging info if 1

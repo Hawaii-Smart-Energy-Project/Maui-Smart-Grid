@@ -5,9 +5,9 @@ __author__ = 'Daniel Zhang (張道博)'
 
 import unittest
 from msg_db_util import MSGDBUtil
-from mecodbinsert import MECODBInserter
+from meco_db_insert import MECODBInserter
 from meco_db_connector import MSGDBConnector
-from meco_dbdelete import MECODBDeleter
+from meco_db_delete import MECODBDeleter
 from msg_config import MSGConfiger
 
 

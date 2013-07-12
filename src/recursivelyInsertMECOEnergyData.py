@@ -24,7 +24,7 @@ from msg_config import MSGConfiger
 import re
 from msg_notifier import MSGNotifier
 import argparse
-from mecoplotting import MECOPlotting
+from meco_plotting import MECOPlotting
 from insertMECOEnergyData import Inserter
 import time
 from msg_logger import MSGLogger

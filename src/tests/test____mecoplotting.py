@@ -4,7 +4,7 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 import unittest
-from mecoplotting import MECOPlotting
+from meco_plotting import MECOPlotting
 import numpy as np
 import matplotlib.pyplot as plt
 import pylab
