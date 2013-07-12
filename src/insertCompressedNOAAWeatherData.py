@@ -6,7 +6,7 @@ __author__ = 'Daniel Zhang (張道博)'
 """
 Usage:
 
-time python -u ${PATH}/insertCompressedWeatherData.py [--testing] [--email]
+time python -u ${PATH}/insertCompressedNOAAWeatherData.py [--testing] [--email]
 
 This script only supports processing of *hourly.txt.gz files.
 """

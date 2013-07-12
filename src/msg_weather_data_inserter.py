@@ -37,10 +37,11 @@ class MSGNOAAWeatherDataInserter(object):
         :param (optional) fKeyVal: An explicit foreign key value.
         :param (optional) commit: A flag indicated that DB transactions will
         be committed.
-        :returns: None.
+        :returns: Set of datetimes processed.
         """
 
         cur = conn.cursor()
+        processedDateTimes = set()
 
         for row in listOfDataDicts:
 
@@ -69,11 +70,10 @@ class MSGNOAAWeatherDataInserter(object):
                                                 row['record_type']):
                 self.logger.log("Dupe found, dropping dupe.",'info')
             else:
-
+                processedDateTimes.add(row['datetime'])
                 if self.dbUtil.executeSQL(cur, sql,
                                           exitOnFail = False) is False:
                     # An error occurred.
-
                     for col in sorted(row.keys()):
                         print "%s: %s" % (col, row[col])
                     sys.exit(-1)
@@ -84,3 +84,4 @@ class MSGNOAAWeatherDataInserter(object):
             except:
                 self.logger.log("ERROR: Commit failed.", 'debug')
 
+        return processedDateTimes

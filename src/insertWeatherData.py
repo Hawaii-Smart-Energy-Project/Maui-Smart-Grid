@@ -8,7 +8,7 @@ Preprocess weather data from Kahului weather stations and insert to the data
 store.
 
 This script was developed to handle a handful of extracted data files and is
-deprecated in favor of insertCompressedWeatherData.py that handles raw data
+deprecated in favor of insertCompressedNOAAWeatherData.py that handles raw data
 from NOAA.
 """
 
