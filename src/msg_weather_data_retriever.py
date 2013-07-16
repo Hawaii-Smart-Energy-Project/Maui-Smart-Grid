@@ -26,7 +26,7 @@ class MSGWeatherDataRetriever(object):
 
     def downloadWeatherData(self):
         url = "http://cdo.ncdc.noaa.gov/qclcd_ascii/"
-        pattern = '<A HREF=".*?">(QCLCD(2012|2013).*?)</A>'
+        pattern = '<A HREF=".*?">(QCLCD(201208|201209|201210|201211|201212|2013).*?)</A>'
 
         response = urllib2.urlopen(url).read()
 
