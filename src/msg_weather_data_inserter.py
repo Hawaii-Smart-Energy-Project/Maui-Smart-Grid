@@ -7,6 +7,7 @@ from msg_weather_data_dupe_checker import MSGWeatherDataDupeChecker
 from msg_db_util import MSGDBUtil
 from msg_logger import MSGLogger
 import sys
+import datetime as dt
 
 
 class MSGNOAAWeatherDataInserter(object):
@@ -62,15 +63,16 @@ class MSGNOAAWeatherDataInserter(object):
                     # Except for NULL values.
                     vals.append("%s" % row[col])
 
-            sql = 'insert into "' + tableName + '" (' + ','.join(
-                cols) + ')' + ' values (' + ','.join(vals) + ')'
+            sql = 'INSERT INTO "' + tableName + '" (' + ','.join(
+                cols) + ')' + ' VALUES (' + ','.join(vals) + ')'
 
             if self.dupeChecker.duplicateExists(cur, row['wban'],
                                                 row['datetime'],
                                                 row['record_type']):
-                self.logger.log("Dupe found, dropping dupe.",'info')
+                self.logger.log("Dupe found, dropping dupe.", 'info')
             else:
-                processedDateTimes.add(row['datetime'])
+                processedDateTimes.add(
+                    dt.datetime.strptime(row['datetime'], "%Y-%m-%d %H:%M"))
                 if self.dbUtil.executeSQL(cur, sql,
                                           exitOnFail = False) is False:
                     # An error occurred.
