@@ -34,7 +34,12 @@ class MSGTimeUtil(object):
         if datetimes is None:
             return "No days processed."
 
-        datetimeList = list(datetimes)
+        myDates = set()
+        for day in datetimes:
+            assert type(day) is dt.datetime, "Day should be type datetime."
+            myDates.add(day)
+
+        datetimeList = list(myDates)
         datetimeList.sort()
 
         countOfDays = len(datetimeList)
