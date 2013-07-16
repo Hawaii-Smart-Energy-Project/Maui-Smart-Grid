@@ -25,11 +25,11 @@ class MSGTimeUtil(object):
         Return report of days processed.
 
         :param datetimes: A set of datetimes.
-
-        @todo Verify datetimes is a Set.
         """
 
-        self.logger.log("datetimes = %s" % datetimes, 'debug')
+        #  @todo Verify datetimes is a Set.
+
+        # self.logger.log("datetimes = %s" % datetimes, 'debug')
 
         if datetimes is None:
             return "No days processed."
@@ -37,7 +37,7 @@ class MSGTimeUtil(object):
         myDates = set()
         for day in datetimes:
             assert type(day) is dt.datetime, "Day should be type datetime."
-            myDates.add(day)
+            myDates.add(day.date())
 
         datetimeList = list(myDates)
         datetimeList.sort()
@@ -54,11 +54,11 @@ class MSGTimeUtil(object):
 
 
 # For debugging
-timeUtil = MSGTimeUtil()
+# timeUtil = MSGTimeUtil()
 
-testDays = set()
-testDays.add(dt.datetime.strptime("2003-01-01 00:00", "%Y-%m-%d %H:%M"))
-testDays.add(dt.datetime.strptime("2003-01-02 00:00", "%Y-%m-%d %H:%M"))
-testDays.add(dt.datetime.strptime("2003-01-01 00:00", "%Y-%m-%d %H:%M"))
+# testDays = set()
+# testDays.add(dt.datetime.strptime("2003-01-01 00:00", "%Y-%m-%d %H:%M"))
+# testDays.add(dt.datetime.strptime("2003-01-02 00:00", "%Y-%m-%d %H:%M"))
+# testDays.add(dt.datetime.strptime("2003-01-01 00:00", "%Y-%m-%d %H:%M"))
 
-print timeUtil.reportOfDays(testDays)
+# print timeUtil.reportOfDays(testDays)
