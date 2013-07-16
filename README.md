@@ -186,8 +186,10 @@ Notification of the results of data processing events is provided by the MSG Not
 * gzip
 * matplotlib
 * psycopg2
+* pycurl
 * pylab
 * smtplib
+* urllib2
 * xml.etree.ElementTree
 
 ## License
