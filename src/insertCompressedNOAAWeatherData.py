@@ -11,7 +11,7 @@ time python -u ${PATH}/insertCompressedNOAAWeatherData.py [--testing] [--email]
 This script only supports processing of *hourly.txt.gz files.
 """
 
-TESTING = True
+TESTING = False
 KAHULUI_AIRPORT = '22516'
 
 import os
