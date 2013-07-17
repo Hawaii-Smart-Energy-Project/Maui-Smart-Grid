@@ -88,6 +88,8 @@ with open(filename, "rU") as csvFile:
                 if len(data[i]) == 0:
                     data[i] = 'NULL'
                 else:
+                    # Escape single quotes with double single quotes in
+                    # PostgreSQL.
                     data[i] = data[i].replace("'", "\'\'")
                     data[i] = "'" + data[i] + "'"
 
