@@ -321,6 +321,29 @@ COMMENT ON COLUMN "MeterData".created IS 'timestamp for when data is inserted';
 
 
 --
+-- Name: MeterLocationHistory; Type: TABLE; Schema: public; Owner: daniel; Tablespace: 
+--
+
+CREATE TABLE "MeterLocationHistory" (
+    meter_name character varying NOT NULL,
+    mac_address character varying NOT NULL,
+    installed timestamp without time zone NOT NULL,
+    uninstalled timestamp without time zone,
+    address character varying,
+    city character varying,
+    latitude real,
+    longitude real,
+    service_point_id character varying,
+    service_point_height real,
+    service_point_latitude real,
+    service_point_longitude real,
+    notes character varying
+);
+
+
+ALTER TABLE public."MeterLocationHistory" OWNER TO daniel;
+
+--
 -- Name: MeterRecords; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -867,6 +890,16 @@ ALTER SEQUENCE intervalreaddata_id_seq OWNED BY "IntervalReadData".interval_read
 
 
 --
+-- Name: kz_meter_id_voltage_and_net_energy; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW kz_meter_id_voltage_and_net_energy AS
+    SELECT "MeterData".util_device_id, "Reading".channel, "Reading".uom, "Reading".value, "Interval".end_time FROM ((("MeterData" JOIN "IntervalReadData" ON (("IntervalReadData".meter_data_id = "MeterData".meter_data_id))) JOIN "Interval" ON (("Interval".interval_read_data_id = "IntervalReadData".interval_read_data_id))) JOIN "Reading" ON (("Reading".interval_id = "Interval".interval_id))) WHERE (((("MeterData".util_device_id = '115501'::bpchar) OR ("MeterData".util_device_id = '115502'::bpchar)) OR ("MeterData".util_device_id = '115482'::bpchar)) AND (("Reading".channel = 4) OR ("Reading".channel = 3))) LIMIT 100;
+
+
+ALTER TABLE public.kz_meter_id_voltage_and_net_energy OWNER TO eileen;
+
+--
 -- Name: meter_ids_for_houses_without_pv; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -1231,6 +1264,14 @@ ALTER TABLE ONLY "Interval"
 
 ALTER TABLE ONLY "LocationRecords"
     ADD CONSTRAINT "LocationRecords_pkey" PRIMARY KEY (device_util_id);
+
+
+--
+-- Name: MeterLocationHistory_pkey; Type: CONSTRAINT; Schema: public; Owner: daniel; Tablespace: 
+--
+
+ALTER TABLE ONLY "MeterLocationHistory"
+    ADD CONSTRAINT "MeterLocationHistory_pkey" PRIMARY KEY (meter_name, installed);
 
 
 --
@@ -1631,6 +1672,16 @@ GRANT ALL ON TABLE "MeterData" TO sepgroup;
 
 
 --
+-- Name: MeterLocationHistory; Type: ACL; Schema: public; Owner: daniel
+--
+
+REVOKE ALL ON TABLE "MeterLocationHistory" FROM PUBLIC;
+REVOKE ALL ON TABLE "MeterLocationHistory" FROM daniel;
+GRANT ALL ON TABLE "MeterLocationHistory" TO daniel;
+GRANT ALL ON TABLE "MeterLocationHistory" TO sepgroup;
+
+
+--
 -- Name: MeterRecords; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -1890,6 +1941,16 @@ GRANT ALL ON SEQUENCE interval_id_seq TO sepgroup;
 REVOKE ALL ON SEQUENCE intervalreaddata_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE intervalreaddata_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE intervalreaddata_id_seq TO sepgroup;
+
+
+--
+-- Name: kz_meter_id_voltage_and_net_energy; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE kz_meter_id_voltage_and_net_energy FROM PUBLIC;
+REVOKE ALL ON TABLE kz_meter_id_voltage_and_net_energy FROM eileen;
+GRANT ALL ON TABLE kz_meter_id_voltage_and_net_energy TO eileen;
+GRANT ALL ON TABLE kz_meter_id_voltage_and_net_energy TO sepgroup;
 
 
 --
