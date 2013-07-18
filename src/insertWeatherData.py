@@ -4,6 +4,8 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 """
+@DEPRECATED
+
 Preprocess weather data from Kahului weather stations and insert to the data
 store.
 
