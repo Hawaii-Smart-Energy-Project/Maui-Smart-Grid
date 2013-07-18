@@ -158,12 +158,12 @@ class MSGNotifier(object):
             server.login(user, password)
         except smtplib.SMTPException, e:
             errorOccurred = True
-            sys.logger.log("Exception = %s" % e, 'error')
+            self.logger.log("Exception = %s" % e, 'error')
 
         server.sendmail(send_from, send_to, msg.as_string())
         server.quit()
 
         if errorOccurred == False:
-            sys.logger.log('No exceptions occurred.\n', 'info')
+            self.logger.log('No exceptions occurred.\n', 'info')
 
         return errorOccurred
