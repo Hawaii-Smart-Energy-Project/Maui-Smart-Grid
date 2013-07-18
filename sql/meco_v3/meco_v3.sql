@@ -1683,6 +1683,16 @@ GRANT ALL ON TABLE "MeterData" TO sepgroup;
 
 
 --
+-- Name: MeterLocationHistory; Type: ACL; Schema: public; Owner: daniel
+--
+
+REVOKE ALL ON TABLE "MeterLocationHistory" FROM PUBLIC;
+REVOKE ALL ON TABLE "MeterLocationHistory" FROM daniel;
+GRANT ALL ON TABLE "MeterLocationHistory" TO daniel;
+GRANT ALL ON TABLE "MeterLocationHistory" TO sepgroup;
+
+
+--
 -- Name: MeterRecords; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -2076,6 +2086,16 @@ REVOKE ALL ON TABLE view_readings_with_meter_id FROM PUBLIC;
 REVOKE ALL ON TABLE view_readings_with_meter_id FROM postgres;
 GRANT ALL ON TABLE view_readings_with_meter_id TO postgres;
 GRANT ALL ON TABLE view_readings_with_meter_id TO sepgroup;
+
+
+--
+-- Name: view_readings_with_meter_id_unsorted_copy; Type: ACL; Schema: public; Owner: daniel
+--
+
+REVOKE ALL ON TABLE view_readings_with_meter_id_unsorted_copy FROM PUBLIC;
+REVOKE ALL ON TABLE view_readings_with_meter_id_unsorted_copy FROM daniel;
+GRANT ALL ON TABLE view_readings_with_meter_id_unsorted_copy TO daniel;
+GRANT ALL ON TABLE view_readings_with_meter_id_unsorted_copy TO sepgroup;
 
 
 --
