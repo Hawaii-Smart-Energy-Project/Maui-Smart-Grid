@@ -1,151 +1,195 @@
-#!/usr/bin/env python
+#!/usr/bin/env python -u
 # -*- coding: utf-8 -*-
-
-__author__ = 'Daniel Zhang (張道博)'
 
 """
 Usage:
 
-time python -u ${PATH}/insertMECOEnergyData.py --filepath ${FILEPATH} [
---testing]
-    > ${LOG_FILE}
+time python -u ${PATH}/insertMECOEnergyData.py > ${LOG_FILE}
 
-This script is used by recursivelyInsertMECOEnergyData.py.
+From the *current directory*, recursively descend into every existing folder and
+insert all data that is found.
+
+This script makes use of insertSingleMECOEnergyDataFile.py.
+
+This script only supports processing of *.xml.gz files.
 """
 
-from meco_xml_parser import MECOXMLParser
-import re
-from msg_config import MSGConfiger
-import gzip
-import sys
-import argparse
+__author__ = 'Daniel Zhang (張道博)'
+
 import os
+import fnmatch
+import sys
+from subprocess import call
+from msg_config import MSGConfiger
+import re
+from msg_notifier import MSGNotifier
+import argparse
+from meco_plotting import MECOPlotting
+from insertSingleMECOEnergyDataFile import Inserter
+import time
+from msg_logger import MSGLogger
+
+xmlGzCount = 0
+xmlCount = 0
+configer = MSGConfiger()
+logger = MSGLogger(__name__, 'info')
+binPath = MSGConfiger.configOptionValue(configer, "Executable Paths",
+                                         "bin_path")
+commandLineArgs = None
+msgBody = ''
+notifier = MSGNotifier()
 
 USE_SCRIPT_METHOD = False
-
-
-class Inserter(object):
-    """
-    Perform insertion of data contained in a single file to the MECO database
-    specified in the configuration file.
-    """
-
-    def __init__(self, testing = False):
-        """
-        Constructor.
-
-        :param testing: Flag indicating if testing mode is on.
-        """
-
-        self.parser = MECOXMLParser(testing)
-        self.configer = MSGConfiger()
-
-    def insertData(self, filePath, testing = False):
-        """
-        Insert data from a single file to the database.
-
-        :param filePath: Full path of a data file.
-        :param testing: Boolean flag indicating if the testing database
-        should be used.
-        :returns: String containing concise log of activity.
-        """
-
-        parseMsg = ''
-        parseLog = ''
-
-        print "Processing file %s." % filePath
-        i = Inserter(testing)
-        if i.configer.configOptionValue("Debugging", "debug"):
-            print "Debugging is on"
-
-        if testing:
-            parseMsg = "\nInserting data to database %s.\n" % i.configer \
-                .configOptionValue(
-                "Database", "testing_db_name")
-            sys.stderr.write(parseMsg)
-            parseLog += parseMsg
-        else:
-            parseMsg += "\nInserting data to database %s.\n" % i.configer \
-                .configOptionValue(
-                "Database", "db_name")
-            sys.stderr.write(parseMsg)
-            parseLog += parseMsg
-
-        # filename = os.path.basename(filePath)
-        fileObject = None
-
-        # Open the file and process it.
-        if re.search('.*\.xml$', filePath):
-            fileObject = open(filePath, "rb")
-        elif re.search('.*\.xml\.gz$', filePath):
-            fileObject = gzip.open(filePath, "rb")
-        else:
-            print "Error: %s is not an XML file." % filePath
-        i.parser.filename = filePath
-
-        # Obtain the log of the parsing.
-        parseLog += i.parser.parseXML(fileObject, True)
-
-        fileObject.close()
-        return parseLog
 
 
 def processCommandLineArguments():
     global parser, commandLineArgs
     parser = argparse.ArgumentParser(
-        description = 'Perform insertion of data contained in a single file to '
-                      'the MECO database specified in the configuration file.')
-    parser.add_argument('--filepath',
-                        help = 'A filepath, including the filename, '
-                               'for a file containing data to be inserted.')
-    parser.add_argument('--testing', action = 'store_true',
-                        help = 'Insert data to the testing database as '
+        description = 'Perform recursive insertion of data contained in the '
+                      'current directory to the MECO database specified in the '
+                      'configuration file.')
+    parser.add_argument('--email', action = 'store_true', default = False,
+                        help = 'Send email notification if this flag is '
+                               'specified.')
+    parser.add_argument('--testing', action = 'store_true', default = False,
+                        help = 'If this flag is on, '
+                               'insert data to the testing database as '
                                'specified in the local configuration file.')
     commandLineArgs = parser.parse_args()
 
-# @deprecated
-# The following script method is deprecated in favor of the object-based
-# method insertData. It should be rewritten to use that method for
-# single-file data insert processing.
 
-if USE_SCRIPT_METHOD:
+def makePlotAttachments():
+    plotPath = configer.configOptionValue("Data Paths", "plot_path")
+    sys.stderr.write("plotPath = %s\n" % plotPath)
 
-    processCommandLineArguments()
+    # If the plot doesn't exist then return.
+    if not os.path.isdir(plotPath):
+        return []
 
-    if (commandLineArgs.filepath):
-        print "Processing %s." % commandLineArgs.filepath
-    else:
-        print "Usage: insertData --filepath ${FILEPATH} [--testing]"
-        sys.exit(-1)
+    attachments = ["%s/ReadingAndMeterCounts.png" % plotPath]
+    for a in attachments:
+        sys.stderr.write("attachment = %s\n" % a)
+    return attachments
 
-    filepath = commandLineArgs.filepath
 
-    i = Inserter(commandLineArgs.testing)
+def logLegend():
+    legend = "Log Legend: {} = dupes, () = element group, " \
+             "[] = process for insert elements, <> = <reading insert count, " \
+             "register insert count, event insert count, group insert count," \
+             "total insert count>, * = commit\nrd = reading, re = register, " \
+             "ev = event"
+    return legend
 
-    if i.configer.configOptionValue("Debugging", "debug"):
-        print "Debugging is on"
 
-    if commandLineArgs.testing:
-        sys.stderr.write("\nInserting data to database %s.\n" % \
-                         i.configer.configOptionValue("Database",
-                                                      "testing_db_name"))
-    else:
-        sys.stderr.write("\nInserting data to database %s.\n" % \
-                         i.configer.configOptionValue("Database", "db_name"))
+processCommandLineArguments()
 
-    filename = os.path.basename(filepath)
-    fileObject = None
+inserter = Inserter()
 
-    # Open the file and process it.
-    if re.search('.*\.xml$', filepath):
-        fileObject = open(filepath, "rb")
-    elif re.search('.*\.xml\.gz$', filepath):
-        fileObject = gzip.open(filepath, "rb")
-    else:
-        print "Error: %s is not an XML file." % filepath
-    i.parser.filename = commandLineArgs.filepath
+if commandLineArgs.testing:
+    logger.log("Testing mode is ON.\n", 'info')
+if commandLineArgs.email:
+    logger.log("Email will be sent.\n", 'info')
 
-    # Obtain the log of the parsing.
-    parseLog = i.parser.parseXML(fileObject, True)
+msg = ''
+databaseName = ''
 
-    fileObject.close()
+if commandLineArgs.testing:
+    databaseName = configer.configOptionValue("Database", "testing_db_name")
+else:
+    databaseName = configer.configOptionValue("Database", "db_name")
+
+msg = "Recursively inserting data to the database named %s." % databaseName
+print msg
+msgBody += msg + "\n"
+
+startingDirectory = os.getcwd()
+msg = "Starting in %s." % startingDirectory
+print msg
+msgBody += msg + "\n"
+
+for root, dirnames, filenames in os.walk('.'):
+
+    for filename in fnmatch.filter(filenames, '*.xml'):
+        fullPath = os.path.join(root, filename)
+        msg = fullPath
+        print msg
+        msgBody += msg + "\n"
+        xmlCount += 1
+
+if xmlCount != 0:
+    msg = "Found XML files that are not gzip compressed.\nUnable to proceed."
+    print msg
+    msgBody += msg + "\n"
+    if (commandLineArgs.email):
+        notifier.sendNotificationEmail(msgBody, commandLineArgs.testing)
+    sys.exit(-1)
+
+insertScript = "%s/insertSingleMECOEnergyDataFile.py" % binPath
+msg = "insertScript = %s" % insertScript
+print msg
+msgBody += msg + "\n"
+
+parseLog = ''
+
+try:
+    with open(insertScript):
+        pass
+except IOError:
+    msg = "Insert script %s not found." % insertScript
+    print msg
+    msgBody += msg + "\n"
+
+startTime = 0
+
+for root, dirnames, filenames in os.walk('.'):
+    for filename in fnmatch.filter(filenames, '*.xml.gz'):
+        if re.search('.*log\.xml', filename) is None: # Skip *log.xml files.
+
+            fullPath = os.path.join(root, filename)
+            msg = "\n"
+            msg += fullPath
+            print msg
+            msgBody += msg + "\n"
+            xmlGzCount += 1
+
+            # Execute the insert data script for the file.
+
+            if USE_SCRIPT_METHOD:
+                if commandLineArgs.testing:
+                    call([insertScript, "--testing", "--filepath", fullPath])
+                else:
+                    call([insertScript, "--testing", "--filepath", fullPath])
+            else:
+                # The object method is preferred.
+                startTime = time.time()
+                parseLog = inserter.insertData(fullPath,
+                                               commandLineArgs.testing)
+                msgBody += parseLog + "\n"
+                msgBody += "\nWall time = {:.2f} seconds.\n".format(
+                    time.time() - startTime)
+
+msgBody += "\n" + logLegend() + "\n"
+
+msg = "\nProcessed file count is %s.\n" % xmlGzCount
+
+print msg
+msgBody += msg + "\n"
+
+testing = False
+if commandLineArgs.testing:
+    testing = True
+
+plotter = MECOPlotting(testing)
+
+try:
+    plotter.plotReadingAndMeterCounts(databaseName)
+    msg = "\nPlot is attached.\n"
+except:
+    msg = "\nFailed to generate plot.\n"
+
+msgBody += msg
+
+if commandLineArgs.email:
+    notifier.sendMailWithAttachments(msgBody, makePlotAttachments(),
+                                     commandLineArgs.testing)
+
