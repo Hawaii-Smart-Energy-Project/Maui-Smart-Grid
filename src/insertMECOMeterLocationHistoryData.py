@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__author__ = 'Daniel Zhang (張道博)'
-
 """
 Insert Meter Location History data into the database from a tab-separated
 data file.
@@ -11,6 +9,8 @@ Usage:
 insertMECOMeterLocationHistoryData.py --filename ${FILENAME} [--email] [
 --testing]
 """
+
+__author__ = 'Daniel Zhang (張道博)'
 
 import csv
 import sys
@@ -52,7 +52,7 @@ filename = commandLineArgs.filename
 
 success = True
 anyFailure = False
-connector = MSGDBConnector()
+connector = MSGDBConnector(testing = commandLineArgs.testing)
 conn = connector.connectDB()
 cur = conn.cursor()
 dbUtil = MSGDBUtil()
@@ -61,7 +61,10 @@ msg = ''
 msgBody = ''
 configer = MSGConfiger()
 
-dbName = configer.configOptionValue("Database", "db_name")
+if commandLineArgs.testing:
+    dbName = configer.configOptionValue("Database", "testing_db_name")
+else:
+    dbName = configer.configOptionValue("Database", "db_name")
 
 msg = ("Loading Meter Location History data in file %s to database %s.\n" % (
     filename, dbName))
@@ -118,4 +121,4 @@ else:
     msgBody += msg
 
 if commandLineArgs.email:
-    notifier.sendNotificationEmail(msgBody)
+    notifier.sendNotificationEmail(msgBody, testing = commandLineArgs.testing)
