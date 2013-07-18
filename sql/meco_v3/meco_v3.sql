@@ -326,17 +326,18 @@ COMMENT ON COLUMN "MeterData".created IS 'timestamp for when data is inserted';
 
 CREATE TABLE "MeterLocationHistory" (
     meter_name character varying NOT NULL,
-    mac_address character varying NOT NULL,
-    installed timestamp without time zone NOT NULL,
-    uninstalled timestamp without time zone,
+    mac_address character varying,
+    installed timestamp(6) without time zone NOT NULL,
+    uninstalled timestamp(6) without time zone,
+    location character varying,
     address character varying,
     city character varying,
-    latitude real,
-    longitude real,
+    latitude double precision,
+    longitude double precision,
     service_point_id character varying,
-    service_point_height real,
-    service_point_latitude real,
-    service_point_longitude real,
+    service_point_height double precision,
+    service_point_latitude double precision,
+    service_point_longitude double precision,
     notes character varying
 );
 
@@ -1130,6 +1131,16 @@ COMMENT ON VIEW view_readings_with_meter_id IS 'View readings along with their e
 
 
 --
+-- Name: view_readings_with_meter_id_unsorted_copy; Type: VIEW; Schema: public; Owner: daniel
+--
+
+CREATE VIEW view_readings_with_meter_id_unsorted_copy AS
+    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time, "MeterData".meter_data_id FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id)));
+
+
+ALTER TABLE public.view_readings_with_meter_id_unsorted_copy OWNER TO daniel;
+
+--
 -- Name: view_register_records; Type: VIEW; Schema: public; Owner: daniel
 --
 
@@ -1669,16 +1680,6 @@ GRANT ALL ON TABLE "MSG_PV_Data" TO sepgroup;
 REVOKE ALL ON TABLE "MeterData" FROM PUBLIC;
 REVOKE ALL ON TABLE "MeterData" FROM sepgroup;
 GRANT ALL ON TABLE "MeterData" TO sepgroup;
-
-
---
--- Name: MeterLocationHistory; Type: ACL; Schema: public; Owner: daniel
---
-
-REVOKE ALL ON TABLE "MeterLocationHistory" FROM PUBLIC;
-REVOKE ALL ON TABLE "MeterLocationHistory" FROM daniel;
-GRANT ALL ON TABLE "MeterLocationHistory" TO daniel;
-GRANT ALL ON TABLE "MeterLocationHistory" TO sepgroup;
 
 
 --
