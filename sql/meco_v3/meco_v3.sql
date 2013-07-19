@@ -1030,7 +1030,7 @@ ALTER SEQUENCE reading_id_seq OWNED BY "Reading".reading_id;
 --
 
 CREATE VIEW readings_by_meter_location_history AS
-    SELECT "MeterLocationHistory".meter_name, "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".location, "MeterLocationHistory".latitude, "MeterLocationHistory".longitude, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "Interval".end_time FROM (((("MeterLocationHistory" JOIN "MeterData" ON ((("MeterLocationHistory".meter_name)::bpchar = "MeterData".meter_name))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (((("Interval".interval_id = "Reading".interval_id) AND ("Interval".end_time >= "MeterLocationHistory".installed)) AND CASE WHEN ("MeterLocationHistory".uninstalled IS NULL) THEN true ELSE ("Interval".end_time <= "MeterLocationHistory".uninstalled) END)));
+    SELECT "MeterLocationHistory".meter_name, "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".location, "MeterLocationHistory".address, "MeterLocationHistory".latitude, "MeterLocationHistory".longitude, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "Interval".end_time FROM (((("MeterLocationHistory" JOIN "MeterData" ON ((("MeterLocationHistory".meter_name)::bpchar = "MeterData".meter_name))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (((("Interval".interval_id = "Reading".interval_id) AND ("Interval".end_time >= "MeterLocationHistory".installed)) AND CASE WHEN ("MeterLocationHistory".uninstalled IS NULL) THEN true ELSE ("Interval".end_time <= "MeterLocationHistory".uninstalled) END)));
 
 
 ALTER TABLE public.readings_by_meter_location_history OWNER TO daniel;
@@ -2057,16 +2057,6 @@ GRANT ALL ON TABLE raw_meter_readings TO sepgroup;
 REVOKE ALL ON SEQUENCE reading_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE reading_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE reading_id_seq TO sepgroup;
-
-
---
--- Name: readings_by_meter_location_history; Type: ACL; Schema: public; Owner: daniel
---
-
-REVOKE ALL ON TABLE readings_by_meter_location_history FROM PUBLIC;
-REVOKE ALL ON TABLE readings_by_meter_location_history FROM daniel;
-GRANT ALL ON TABLE readings_by_meter_location_history TO daniel;
-GRANT ALL ON TABLE readings_by_meter_location_history TO sepgroup;
 
 
 --
