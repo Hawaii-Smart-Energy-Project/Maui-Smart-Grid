@@ -711,6 +711,44 @@ COMMENT ON VIEW count_of_register_duplicates IS 'Count of duplicates in the Regi
 
 
 --
+-- Name: deprecated_view_readings; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW deprecated_view_readings AS
+    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
+
+
+ALTER TABLE public.deprecated_view_readings OWNER TO postgres;
+
+--
+-- Name: VIEW deprecated_view_readings; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW deprecated_view_readings IS 'View readings along with their end times.
+
+@author Daniel Zhang (張道博)';
+
+
+--
+-- Name: deprecated_view_readings_with_meter_id; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW deprecated_view_readings_with_meter_id AS
+    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time, "MeterData".meter_data_id FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
+
+
+ALTER TABLE public.deprecated_view_readings_with_meter_id OWNER TO postgres;
+
+--
+-- Name: VIEW deprecated_view_readings_with_meter_id; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW deprecated_view_readings_with_meter_id IS 'View readings along with their end times. Retrieve the meter name along with the readings.
+
+@author Daniel Zhang (張道博)';
+
+
+--
 -- Name: meter_ids_for_houses_without_pv_with_locations; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -992,6 +1030,23 @@ ALTER SEQUENCE reading_id_seq OWNED BY "Reading".reading_id;
 
 
 --
+-- Name: readings_by_meter_location_history; Type: VIEW; Schema: public; Owner: daniel
+--
+
+CREATE VIEW readings_by_meter_location_history AS
+    SELECT "MeterLocationHistory".meter_name, "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".location, "MeterLocationHistory".latitude, "MeterLocationHistory".longitude, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "Interval".end_time AS ird_end_time FROM (((("MeterLocationHistory" JOIN "MeterData" ON ((("MeterLocationHistory".meter_name)::bpchar = "MeterData".meter_name))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (((("Interval".interval_id = "Reading".interval_id) AND ("Interval".end_time >= "MeterLocationHistory".installed)) AND CASE WHEN ("MeterLocationHistory".uninstalled IS NULL) THEN true ELSE ("Interval".end_time <= "MeterLocationHistory".uninstalled) END)));
+
+
+ALTER TABLE public.readings_by_meter_location_history OWNER TO daniel;
+
+--
+-- Name: VIEW readings_by_meter_location_history; Type: COMMENT; Schema: public; Owner: daniel
+--
+
+COMMENT ON VIEW readings_by_meter_location_history IS 'Readings limited by Meter Location History. @author Daniel Zhang (張道博)';
+
+
+--
 -- Name: readings_for_houses_without_pv; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -1091,54 +1146,6 @@ ALTER TABLE public.tier_id_seq OWNER TO sepgroup;
 
 ALTER SEQUENCE tier_id_seq OWNED BY "Tier".tier_id;
 
-
---
--- Name: view_readings; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW view_readings AS
-    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
-
-
-ALTER TABLE public.view_readings OWNER TO postgres;
-
---
--- Name: VIEW view_readings; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON VIEW view_readings IS 'View readings along with their end times.
-
-@author Daniel Zhang (張道博)';
-
-
---
--- Name: view_readings_with_meter_id; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW view_readings_with_meter_id AS
-    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time, "MeterData".meter_data_id FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
-
-
-ALTER TABLE public.view_readings_with_meter_id OWNER TO postgres;
-
---
--- Name: VIEW view_readings_with_meter_id; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON VIEW view_readings_with_meter_id IS 'View readings along with their end times. Retrieve the meter name along with the readings.
-
-@author Daniel Zhang (張道博)';
-
-
---
--- Name: view_readings_with_meter_id_unsorted_copy; Type: VIEW; Schema: public; Owner: daniel
---
-
-CREATE VIEW view_readings_with_meter_id_unsorted_copy AS
-    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time, "MeterData".meter_data_id FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id)));
-
-
-ALTER TABLE public.view_readings_with_meter_id_unsorted_copy OWNER TO daniel;
 
 --
 -- Name: view_register_records; Type: VIEW; Schema: public; Owner: daniel
@@ -1478,6 +1485,13 @@ CREATE UNIQUE INDEX device_util_id_index ON "LocationRecords" USING btree (devic
 
 
 --
+-- Name: installed_uninstalled_idx; Type: INDEX; Schema: public; Owner: daniel; Tablespace: 
+--
+
+CREATE INDEX installed_uninstalled_idx ON "MeterLocationHistory" USING btree (installed, uninstalled);
+
+
+--
 -- Name: interval_id_idx; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -1503,6 +1517,13 @@ CREATE INDEX meter_data_id_idx ON "IntervalReadData" USING btree (meter_data_id)
 --
 
 CREATE UNIQUE INDEX reading_id_idx ON "Reading" USING btree (reading_id);
+
+
+--
+-- Name: service_point_id_idx; Type: INDEX; Schema: public; Owner: daniel; Tablespace: 
+--
+
+CREATE INDEX service_point_id_idx ON "MeterLocationHistory" USING btree (service_point_id);
 
 
 --
@@ -1838,6 +1859,26 @@ GRANT ALL ON TABLE count_of_register_duplicates TO sepgroup;
 
 
 --
+-- Name: deprecated_view_readings; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE deprecated_view_readings FROM PUBLIC;
+REVOKE ALL ON TABLE deprecated_view_readings FROM postgres;
+GRANT ALL ON TABLE deprecated_view_readings TO postgres;
+GRANT ALL ON TABLE deprecated_view_readings TO sepgroup;
+
+
+--
+-- Name: deprecated_view_readings_with_meter_id; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE deprecated_view_readings_with_meter_id FROM PUBLIC;
+REVOKE ALL ON TABLE deprecated_view_readings_with_meter_id FROM postgres;
+GRANT ALL ON TABLE deprecated_view_readings_with_meter_id TO postgres;
+GRANT ALL ON TABLE deprecated_view_readings_with_meter_id TO sepgroup;
+
+
+--
 -- Name: meter_ids_for_houses_without_pv_with_locations; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -2066,36 +2107,6 @@ GRANT ALL ON SEQUENCE registerread_id_seq TO sepgroup;
 REVOKE ALL ON SEQUENCE tier_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE tier_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE tier_id_seq TO sepgroup;
-
-
---
--- Name: view_readings; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE view_readings FROM PUBLIC;
-REVOKE ALL ON TABLE view_readings FROM postgres;
-GRANT ALL ON TABLE view_readings TO postgres;
-GRANT ALL ON TABLE view_readings TO sepgroup;
-
-
---
--- Name: view_readings_with_meter_id; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE view_readings_with_meter_id FROM PUBLIC;
-REVOKE ALL ON TABLE view_readings_with_meter_id FROM postgres;
-GRANT ALL ON TABLE view_readings_with_meter_id TO postgres;
-GRANT ALL ON TABLE view_readings_with_meter_id TO sepgroup;
-
-
---
--- Name: view_readings_with_meter_id_unsorted_copy; Type: ACL; Schema: public; Owner: daniel
---
-
-REVOKE ALL ON TABLE view_readings_with_meter_id_unsorted_copy FROM PUBLIC;
-REVOKE ALL ON TABLE view_readings_with_meter_id_unsorted_copy FROM daniel;
-GRANT ALL ON TABLE view_readings_with_meter_id_unsorted_copy TO daniel;
-GRANT ALL ON TABLE view_readings_with_meter_id_unsorted_copy TO sepgroup;
 
 
 --
