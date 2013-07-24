@@ -65,6 +65,7 @@ class MSGLogger(object):
         Logging levels are
 
         * info
+        * debug
         * error
         * silent
 

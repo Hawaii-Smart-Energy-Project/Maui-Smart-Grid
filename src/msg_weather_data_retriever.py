@@ -32,10 +32,26 @@ class MSGWeatherDataRetriever(object):
 
         for filename in re.findall(pattern, response):
             print filename[0]
-            fp = open(self.weatherDataPath + "/" + filename[0], "wb")
-            curl = pycurl.Curl()
-            curl.setopt(pycurl.URL, url + "/" + filename[0])
-            curl.setopt(pycurl.WRITEDATA, fp)
-            curl.perform()
-            curl.close()
-            fp.close()
+            if not self.fileExists(filename[0]):
+                fp = open(self.weatherDataPath + "/" + filename[0], "wb")
+                curl = pycurl.Curl()
+                curl.setopt(pycurl.URL, url + "/" + filename[0])
+                curl.setopt(pycurl.WRITEDATA, fp)
+                curl.perform()
+                curl.close()
+                fp.close()
+            else:
+                self.logger.log(
+                    'Not retrieving %s because it exists.' % filename[0],
+                    'info')
+
+    def fileExists(self, filename):
+        try:
+            with open(filename):
+                return True
+
+        except IOError:
+            self.logger.log("IO error.", 'error')
+            return
+
+        return False
