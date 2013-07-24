@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__author__ = 'Daniel Zhang (張道博)'
-
 """
 Insert Location Records into the database from a tab-separated data file.
 
@@ -10,6 +8,9 @@ Usage:
 insertLocationRecords.py ${FILENAME}
 
 """
+
+__author__ = 'Daniel Zhang (張道博)'
+
 
 import csv
 import sys

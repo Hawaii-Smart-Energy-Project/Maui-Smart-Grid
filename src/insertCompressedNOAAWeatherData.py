@@ -1,8 +1,6 @@
 #!/usr/bin/env python -u
 # -*- coding: utf-8 -*-
 
-__author__ = 'Daniel Zhang (張道博)'
-
 """
 Usage:
 
@@ -10,6 +8,9 @@ time python -u ${PATH}/insertCompressedNOAAWeatherData.py [--testing] [--email]
 
 This script only supports processing of *hourly.txt.gz files.
 """
+
+__author__ = 'Daniel Zhang (張道博)'
+
 
 TESTING = False
 KAHULUI_AIRPORT = '22516'

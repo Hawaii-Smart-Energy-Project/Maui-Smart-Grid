@@ -1,8 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-__author__ = 'Daniel Zhang (張道博)'
-
 """
 @DEPRECATED
 
@@ -13,6 +11,9 @@ This script was developed to handle a handful of extracted data files and is
 deprecated in favor of insertCompressedNOAAWeatherData.py that handles raw data
 from NOAA.
 """
+
+__author__ = 'Daniel Zhang (張道博)'
+
 
 import csv
 import sys

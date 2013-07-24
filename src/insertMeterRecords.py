@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__author__ = 'Daniel Zhang (張道博)'
-
 """
 Static Meter Record Loading.
 
@@ -12,6 +10,8 @@ Usage:
 insertMeterRecords.py ${FILENAME}
 
 """
+
+__author__ = 'Daniel Zhang (張道博)'
 
 import csv
 import sys

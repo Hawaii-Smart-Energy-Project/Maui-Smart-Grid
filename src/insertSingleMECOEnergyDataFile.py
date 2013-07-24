@@ -13,6 +13,7 @@ This script is used by insertMECOEnergyData.py.
 
 __author__ = 'Daniel Zhang (張道博)'
 
+
 from meco_xml_parser import MECOXMLParser
 import re
 from msg_config import MSGConfiger
