@@ -20,13 +20,13 @@ class MSGWeatherDataRetriever(object):
     def __init__(self):
         self.logger = MSGLogger(__name__, 'info')
         self.configer = MSGConfiger()
-        self.weatherDataPath \
-            = self.configer.configOptionValue('Weather Data',
-                                              'weather_data_path')
+        self.weatherDataPath = self.configer.configOptionValue('Weather Data',
+                                                               'weather_data_path')
 
     def downloadWeatherData(self):
         url = "http://cdo.ncdc.noaa.gov/qclcd_ascii/"
-        pattern = '<A HREF=".*?">(QCLCD(201208|201209|201210|201211|201212|2013).*?)</A>'
+        pattern = '<A HREF=".*?">(QCLCD(' \
+                  '201208|201209|201210|201211|201212|2013).*?)</A>'
 
         response = urllib2.urlopen(url).read()
 
@@ -39,7 +39,3 @@ class MSGWeatherDataRetriever(object):
             curl.perform()
             curl.close()
             fp.close()
-
-
-retriever = MSGWeatherDataRetriever()
-retriever.downloadWeatherData()
