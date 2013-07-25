@@ -422,6 +422,17 @@ CREATE TABLE "MeterRecords" (
 ALTER TABLE public."MeterRecords" OWNER TO sepgroup;
 
 --
+-- Name: PVServicePointIDs; Type: TABLE; Schema: public; Owner: eileen; Tablespace: 
+--
+
+CREATE TABLE "PVServicePointIDs" (
+    "service_point_ID" character varying NOT NULL
+);
+
+
+ALTER TABLE public."PVServicePointIDs" OWNER TO eileen;
+
+--
 -- Name: Reading; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -1427,6 +1438,14 @@ ALTER TABLE ONLY "MeterRecords"
 
 
 --
+-- Name: PVServicePointIDs_pkey; Type: CONSTRAINT; Schema: public; Owner: eileen; Tablespace: 
+--
+
+ALTER TABLE ONLY "PVServicePointIDs"
+    ADD CONSTRAINT "PVServicePointIDs_pkey" PRIMARY KEY ("service_point_ID");
+
+
+--
 -- Name: Reading_pkey; Type: CONSTRAINT; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -1849,6 +1868,16 @@ GRANT ALL ON TABLE "MeterRecords" TO sepgroup;
 
 
 --
+-- Name: PVServicePointIDs; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE "PVServicePointIDs" FROM PUBLIC;
+REVOKE ALL ON TABLE "PVServicePointIDs" FROM eileen;
+GRANT ALL ON TABLE "PVServicePointIDs" TO eileen;
+GRANT ALL ON TABLE "PVServicePointIDs" TO sepgroup;
+
+
+--
 -- Name: Reading; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -2258,6 +2287,16 @@ GRANT ALL ON TABLE meter_read_dates TO sepgroup;
 REVOKE ALL ON SEQUENCE meterdata_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE meterdata_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE meterdata_id_seq TO sepgroup;
+
+
+--
+-- Name: name_address_service_point_id; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE name_address_service_point_id FROM PUBLIC;
+REVOKE ALL ON TABLE name_address_service_point_id FROM eileen;
+GRANT ALL ON TABLE name_address_service_point_id TO eileen;
+GRANT ALL ON TABLE name_address_service_point_id TO sepgroup;
 
 
 --
