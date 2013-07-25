@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
+@DEPRECATED
+
 Retrieve NOAA weather data to local storage.
 """
 
