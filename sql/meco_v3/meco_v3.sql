@@ -426,7 +426,7 @@ ALTER TABLE public."MeterRecords" OWNER TO sepgroup;
 --
 
 CREATE TABLE "PVServicePointIDs" (
-    "service_point_ID" character varying NOT NULL
+    pv_service_point_id character varying NOT NULL
 );
 
 
@@ -975,7 +975,7 @@ COMMENT ON VIEW readings_by_meter_location_history IS 'Readings that are referen
 --
 
 CREATE VIEW dz_energy_voltages_for_houses_without_pv AS
-    SELECT readings_by_meter_location_history_2.meter_name, readings_by_meter_location_history_2.end_time, max(CASE WHEN (readings_by_meter_location_history_2.channel = (1)::smallint) THEN readings_by_meter_location_history_2.value ELSE NULL::real END) AS "Energy to House kwH", zero_to_null(max(CASE WHEN (readings_by_meter_location_history_2.channel = (4)::smallint) THEN readings_by_meter_location_history_2.value ELSE NULL::real END)) AS "Voltage", max(readings_by_meter_location_history_2.service_point_longitude) AS service_pt_longitude, max(readings_by_meter_location_history_2.service_point_latitude) AS service_pt_latitude, max((readings_by_meter_location_history_2.address)::text) AS address FROM (meter_ids_for_houses_without_pv JOIN readings_by_meter_location_history readings_by_meter_location_history_2 ON (((meter_ids_for_houses_without_pv.device_util_id)::text = (readings_by_meter_location_history_2.meter_name)::text))) WHERE ((readings_by_meter_location_history_2.channel = (1)::smallint) OR (readings_by_meter_location_history_2.channel = (4)::smallint)) GROUP BY readings_by_meter_location_history_2.meter_name, readings_by_meter_location_history_2.end_time;
+    SELECT readings_by_meter_location_history.meter_name, readings_by_meter_location_history.end_time, max(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy to House kwH", zero_to_null(max(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END)) AS "Voltage", max(readings_by_meter_location_history.service_point_longitude) AS service_pt_longitude, max(readings_by_meter_location_history.service_point_latitude) AS service_pt_latitude, max((readings_by_meter_location_history.address)::text) AS address FROM (meter_ids_for_houses_without_pv JOIN readings_by_meter_location_history readings_by_meter_location_history ON (((meter_ids_for_houses_without_pv.device_util_id)::text = (readings_by_meter_location_history.meter_name)::text))) WHERE ((readings_by_meter_location_history.channel = (1)::smallint) OR (readings_by_meter_location_history.channel = (4)::smallint)) GROUP BY readings_by_meter_location_history.meter_name, readings_by_meter_location_history.end_time;
 
 
 ALTER TABLE public.dz_energy_voltages_for_houses_without_pv OWNER TO postgres;
@@ -986,6 +986,16 @@ ALTER TABLE public.dz_energy_voltages_for_houses_without_pv OWNER TO postgres;
 
 COMMENT ON VIEW dz_energy_voltages_for_houses_without_pv IS 'Energy and voltages for houses without PV limited by Meter Location History. @author Daniel Zhang (張道博)';
 
+
+--
+-- Name: energy_by_location; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW energy_by_location AS
+    SELECT readings_by_meter_location_history.meter_name, readings_by_meter_location_history.end_time, max(("PVServicePointIDs".pv_service_point_id)::text) AS service_point_id_pv, max(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy to House kwH", max(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy from House kwH(rec)", max(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Net Energy to House KwH", zero_to_null(max(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END)) AS "Voltage VrmsA-N", max(readings_by_meter_location_history.service_point_longitude) AS service_pt_longitude, max(readings_by_meter_location_history.service_point_latitude) AS service_pt_latitude, max((readings_by_meter_location_history.address)::text) AS address FROM ("PVServicePointIDs" JOIN readings_by_meter_location_history readings_by_meter_location_history ON ((("PVServicePointIDs".pv_service_point_id)::text = (readings_by_meter_location_history.service_point_id)::text))) GROUP BY readings_by_meter_location_history.meter_name, readings_by_meter_location_history.end_time;
+
+
+ALTER TABLE public.energy_by_location OWNER TO postgres;
 
 --
 -- Name: event_data_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
@@ -1112,6 +1122,16 @@ ALTER SEQUENCE intervalreaddata_id_seq OWNED BY "IntervalReadData".interval_read
 
 
 --
+-- Name: irradiance_data; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW irradiance_data AS
+    SELECT "IrradianceData".irradiance_w_per_m2, "IrradianceData".sensor_id, "IrradianceData"."timestamp", "IrradianceSensorInfo".latitude, "IrradianceSensorInfo".longitude, "IrradianceSensorInfo".name FROM ("IrradianceData" JOIN "IrradianceSensorInfo" ON (("IrradianceData".sensor_id = "IrradianceSensorInfo".sensor_id))) WHERE ("IrradianceData".irradiance_w_per_m2 > (0)::double precision);
+
+
+ALTER TABLE public.irradiance_data OWNER TO eileen;
+
+--
 -- Name: kz_meter_id_voltage_and_net_energy; Type: VIEW; Schema: public; Owner: eileen
 --
 
@@ -1120,6 +1140,16 @@ CREATE VIEW kz_meter_id_voltage_and_net_energy AS
 
 
 ALTER TABLE public.kz_meter_id_voltage_and_net_energy OWNER TO eileen;
+
+--
+-- Name: locations_with_pv_service_points_ids; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW locations_with_pv_service_points_ids AS
+    SELECT DISTINCT "MeterLocationHistory".location FROM ("PVServicePointIDs" JOIN "MeterLocationHistory" ON ((("PVServicePointIDs".pv_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text)));
+
+
+ALTER TABLE public.locations_with_pv_service_points_ids OWNER TO postgres;
 
 --
 -- Name: meter_read_dates; Type: VIEW; Schema: public; Owner: eileen
@@ -1194,6 +1224,16 @@ ALTER SEQUENCE reading_id_seq OWNED BY "Reading".reading_id;
 
 
 --
+-- Name: readings_by_meter_location_history_for_pv_compare; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW readings_by_meter_location_history_for_pv_compare AS
+    SELECT "MeterLocationHistory".meter_name, "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".location, "MeterLocationHistory".address, "MeterLocationHistory".latitude, "MeterLocationHistory".longitude, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "Interval".end_time, "MeterData".meter_data_id FROM (((("MeterLocationHistory" JOIN "MeterData" ON ((("MeterLocationHistory".meter_name)::bpchar = "MeterData".meter_name))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (((("Interval".interval_id = "Reading".interval_id) AND ("Interval".end_time >= "MeterLocationHistory".installed)) AND CASE WHEN ("MeterLocationHistory".uninstalled IS NULL) THEN true ELSE ("Interval".end_time < "MeterLocationHistory".uninstalled) END)));
+
+
+ALTER TABLE public.readings_by_meter_location_history_for_pv_compare OWNER TO postgres;
+
+--
 -- Name: readings_not_referenced_by_mlh; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -1208,6 +1248,23 @@ ALTER TABLE public.readings_not_referenced_by_mlh OWNER TO postgres;
 --
 
 COMMENT ON VIEW readings_not_referenced_by_mlh IS 'Readings that are present in the DB but are not referenced by the Meter Location History. @author Daniel Zhang (張道博)';
+
+
+--
+-- Name: readings_with_pv_service_point_id; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW readings_with_pv_service_point_id AS
+    SELECT readings_by_meter_location_history.meter_name, readings_by_meter_location_history.end_time, max((readings_by_meter_location_history.location)::text) AS location_id, max(("PVServicePointIDs".pv_service_point_id)::text) AS pv_service_point_id, max(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS pv_channel_1, max(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS pv_channel_2, max(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS pv_channel_3, zero_to_null(max(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END)) AS pv_channel_4_voltage FROM ("PVServicePointIDs" JOIN readings_by_meter_location_history ON ((("PVServicePointIDs".pv_service_point_id)::text = (readings_by_meter_location_history.service_point_id)::text))) GROUP BY readings_by_meter_location_history.meter_name, readings_by_meter_location_history.end_time;
+
+
+ALTER TABLE public.readings_with_pv_service_point_id OWNER TO postgres;
+
+--
+-- Name: VIEW readings_with_pv_service_point_id; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW readings_with_pv_service_point_id IS 'Readings that have an associated PV Service Point ID. @author Daniel Zhang (張道博)';
 
 
 --
@@ -1442,7 +1499,7 @@ ALTER TABLE ONLY "MeterRecords"
 --
 
 ALTER TABLE ONLY "PVServicePointIDs"
-    ADD CONSTRAINT "PVServicePointIDs_pkey" PRIMARY KEY ("service_point_ID");
+    ADD CONSTRAINT "PVServicePointIDs_pkey" PRIMARY KEY (pv_service_point_id);
 
 
 --
@@ -2185,6 +2242,16 @@ GRANT ALL ON TABLE dz_energy_voltages_for_houses_without_pv TO sepgroup;
 
 
 --
+-- Name: energy_by_location; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE energy_by_location FROM PUBLIC;
+REVOKE ALL ON TABLE energy_by_location FROM postgres;
+GRANT ALL ON TABLE energy_by_location TO postgres;
+GRANT ALL ON TABLE energy_by_location TO sepgroup;
+
+
+--
 -- Name: event_data_id_seq; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -2261,6 +2328,16 @@ GRANT ALL ON SEQUENCE intervalreaddata_id_seq TO sepgroup;
 
 
 --
+-- Name: irradiance_data; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE irradiance_data FROM PUBLIC;
+REVOKE ALL ON TABLE irradiance_data FROM eileen;
+GRANT ALL ON TABLE irradiance_data TO eileen;
+GRANT ALL ON TABLE irradiance_data TO sepgroup;
+
+
+--
 -- Name: kz_meter_id_voltage_and_net_energy; Type: ACL; Schema: public; Owner: eileen
 --
 
@@ -2268,6 +2345,16 @@ REVOKE ALL ON TABLE kz_meter_id_voltage_and_net_energy FROM PUBLIC;
 REVOKE ALL ON TABLE kz_meter_id_voltage_and_net_energy FROM eileen;
 GRANT ALL ON TABLE kz_meter_id_voltage_and_net_energy TO eileen;
 GRANT ALL ON TABLE kz_meter_id_voltage_and_net_energy TO sepgroup;
+
+
+--
+-- Name: locations_with_pv_service_points_ids; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE locations_with_pv_service_points_ids FROM PUBLIC;
+REVOKE ALL ON TABLE locations_with_pv_service_points_ids FROM postgres;
+GRANT ALL ON TABLE locations_with_pv_service_points_ids TO postgres;
+GRANT ALL ON TABLE locations_with_pv_service_points_ids TO sepgroup;
 
 
 --
@@ -2319,6 +2406,16 @@ GRANT ALL ON SEQUENCE reading_id_seq TO sepgroup;
 
 
 --
+-- Name: readings_by_meter_location_history_for_pv_compare; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE readings_by_meter_location_history_for_pv_compare FROM PUBLIC;
+REVOKE ALL ON TABLE readings_by_meter_location_history_for_pv_compare FROM postgres;
+GRANT ALL ON TABLE readings_by_meter_location_history_for_pv_compare TO postgres;
+GRANT ALL ON TABLE readings_by_meter_location_history_for_pv_compare TO sepgroup;
+
+
+--
 -- Name: readings_not_referenced_by_mlh; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -2327,6 +2424,16 @@ REVOKE ALL ON TABLE readings_not_referenced_by_mlh FROM postgres;
 GRANT ALL ON TABLE readings_not_referenced_by_mlh TO postgres;
 GRANT ALL ON TABLE readings_not_referenced_by_mlh TO sepgroup;
 GRANT ALL ON TABLE readings_not_referenced_by_mlh TO daniel;
+
+
+--
+-- Name: readings_with_pv_service_point_id; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE readings_with_pv_service_point_id FROM PUBLIC;
+REVOKE ALL ON TABLE readings_with_pv_service_point_id FROM postgres;
+GRANT ALL ON TABLE readings_with_pv_service_point_id TO postgres;
+GRANT ALL ON TABLE readings_with_pv_service_point_id TO sepgroup;
 
 
 --
