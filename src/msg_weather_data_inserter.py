@@ -25,8 +25,7 @@ class MSGNOAAWeatherDataInserter(object):
         self.dbUtil = MSGDBUtil()
         self.dupeChecker = MSGWeatherDataDupeChecker()
 
-    def insertDataDict(self, conn, tableName, listOfDataDicts, fKeyVal = None,
-                       commit = False):
+    def insertDataDict(self, conn, tableName, listOfDataDicts, commit = False):
         """
         Given a table name and a dictionary of column names and values,
         insert them to the db.
@@ -35,7 +34,6 @@ class MSGNOAAWeatherDataInserter(object):
         :param tableName: Name of the DB table to be inserted to.
         :param columnsAndValues: Dictionary of columns and values to be
         inserted to the DB.
-        :param (optional) fKeyVal: An explicit foreign key value.
         :param (optional) commit: A flag indicated that DB transactions will
         be committed.
         :returns: Set of datetimes processed.
