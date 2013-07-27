@@ -5,6 +5,8 @@
 
 Parallelized weather retrieval and processing.
 
+@todo Convert fully to class versus the current hybrid implementation.
+
 """
 
 __author__ = 'Daniel Zhang (張道博)'
@@ -19,6 +21,7 @@ import zipfile
 import os.path
 import os
 import gzip
+from msg_weather_data_util import MSGWeatherDataUtil
 
 weatherDataPath = ''
 retriever = None
@@ -45,21 +48,22 @@ class MSGWeatherDataRetriever(object):
         self.pool = None
         self.fileList = []
         self.dateList = []
+        self.weatherUtil = MSGWeatherDataUtil()
 
         global weatherDataPath
         weatherDataPath = self.configer.configOptionValue('Weather Data',
                                                           'weather_data_path')
 
-    def fillFileList(self):
-
-        url = "http://cdo.ncdc.noaa.gov/qclcd_ascii/"
-        pattern = '<A HREF=".*?">(QCLCD(' \
-                  '201208|201209|201210|201211|201212|2013).*?)</A>'
-        response = urllib2.urlopen(url).read()
-
-        for filename in re.findall(pattern, response):
-            self.fileList.append(filename[0])
-            self.dateList.append(datePart(filename[0]))
+    # def fillFileList(self):
+    #
+    #     url = "http://cdo.ncdc.noaa.gov/qclcd_ascii/"
+    #     pattern = '<A HREF=".*?">(QCLCD(' \
+    #               '201208|201209|201210|201211|201212|2013).*?)</A>'
+    #     response = urllib2.urlopen(url).read()
+    #
+    #     for filename in re.findall(pattern, response):
+    #         self.fileList.append(filename[0])
+    #         self.dateList.append(datePart(filename[0]))
 
 
     def fileExists(self, filename):
@@ -87,16 +91,17 @@ def fileExists(filename):
     return False
 
 
-def datePart(filename):
-    newName = filename.replace("QCLCD", '')
-    newName = newName.replace(".zip", '')
-    return newName
+# def datePart(filename):
+#     newName = filename.replace("QCLCD", '')
+#     newName = newName.replace(".zip", '')
+#     return newName
 
 
 def unzipWorker(filename, forceDownload = False):
     originalName = filename
 
-    hourlyGzName = datePart(filename) + "hourly.txt.gz"
+    global retriever
+    hourlyGzName = retriever.weatherUtil.datePart(filename) + "hourly.txt.gz"
     if fileExists(hourlyGzName) and not forceDownload:
         return
 
@@ -117,7 +122,8 @@ def unzipWorker(filename, forceDownload = False):
                 fd.write(zfile.read(name))
                 fd.close()
 
-            hourlyName = datePart(originalName) + "hourly.txt"
+            hourlyName = retriever.weatherUtil.datePart(
+                originalName) + "hourly.txt"
 
             if fileExists(hourlyName):
                 print "Hourly file exists"
@@ -164,7 +170,10 @@ def performDownloading(filename, forceDownload = False):
 if __name__ == '__main__':
     retriever = MSGWeatherDataRetriever()
 
-    retriever.fillFileList()
+
+    # retriever.fillFileList()
+    retriever.fileList = retriever.weatherUtil.fileList
+    retriever.dateList = retriever.weatherUtil.dateList
 
     retriever.pool = multiprocessing.Pool(4)
     retriever.pool.map(performDownloading, retriever.fileList)

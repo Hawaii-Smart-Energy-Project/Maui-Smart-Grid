@@ -25,6 +25,7 @@ from msg_noaa_weather_data_parser import MSGNOAAWeatherDataParser
 from msg_weather_data_inserter import MSGNOAAWeatherDataInserter
 from meco_db_connector import MSGDBConnector
 from msg_time_util import MSGTimeUtil
+from msg_weather_data_util import MSGWeatherDataUtil
 
 
 configer = MSGConfiger()
@@ -52,6 +53,12 @@ def processCommandLineArguments():
                            help = 'If this flag is on, '
                                   'insert data to the testing database as '
                                   'specified in the local configuration file.')
+    argParser.add_argument('--alldata', action = 'store_true', default = False,
+                           help = 'If this flag is on, all weather data will '
+                                  'be processed for insertion versus only '
+                                  'processing the latest data. Processing '
+                                  'only the latest data is the default '
+                                  'behavior.')
     commandLineArgs = argParser.parse_args()
 
 
@@ -90,25 +97,55 @@ weatherDays = []
 setOfAllDays = set()
 for root, dirnames, filenames in os.walk('.'):
 
-    for filename in fnmatch.filter(filenames, '*hourly.txt.gz'):
-        fullPath = os.path.join(root, filename)
-        msg = fullPath
-        print msg
-        msgBody += "Processing %s.\n" % msg
-        fileObject = gzip.open(fullPath, "rb")
-        weatherDays = inserter.insertDataDict(conn, 'WeatherNOAA',
-                                              dataParser.parseWeatherData(
-                                                  fileObject,
-                                                  [KAHULUI_AIRPORT]),
-                                              commit = True)
-        allDays += weatherDays
+    if commandLineArgs.alldata:
 
-        fileObject.close()
-        if TESTING:
-            break
+        for filename in fnmatch.filter(filenames, '*hourly.txt.gz'):
+            fullPath = os.path.join(root, filename)
+            msg = fullPath
+            print msg
+            msgBody += "Processing %s.\n" % msg
+            fileObject = gzip.open(fullPath, "rb")
+            weatherDays = inserter.insertDataDict(conn, 'WeatherNOAA',
+                                                  dataParser.parseWeatherData(
+                                                      fileObject,
+                                                      [KAHULUI_AIRPORT]),
+                                                  commit = True)
+            allDays += weatherDays
 
-setOfAllDays = set(allDays)
-msgBody += timeUtil.reportOfDays(setOfAllDays)
+            fileObject.close()
+            if TESTING:
+                break
+
+    else: # Only process the latest data.
+        weatherUtil = MSGWeatherDataUtil()
+        for filename in fnmatch.filter(filenames, weatherUtil.dateList[
+            -1] + 'hourly.txt.gz'):
+            print filename
+
+            fullPath = os.path.join(root, filename)
+            msg = fullPath
+            print msg
+            msgBody += "Processing %s.\n" % msg
+            fileObject = gzip.open(fullPath, "rb")
+            weatherDays = inserter.insertDataDict(conn, 'WeatherNOAA',
+                                                  dataParser.parseWeatherData(
+                                                      fileObject,
+                                                      [KAHULUI_AIRPORT]),
+                                                  commit = True)
+            allDays += weatherDays
+
+            fileObject.close()
+            if TESTING:
+                break
+
+
+# print "length all days = %s" % len(allDays)
+
+if len(allDays) == 0:
+    msgBody += "No weather data was processed."
+else:
+    setOfAllDays = set(allDays)
+    msgBody += timeUtil.reportOfDays(setOfAllDays)
 
 parseLog = ''
 
