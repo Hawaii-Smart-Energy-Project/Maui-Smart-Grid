@@ -157,7 +157,7 @@ for root, dirnames, filenames in os.walk('.'):
             if USE_SCRIPT_METHOD:
                 if commandLineArgs.testing:
                     call([insertScript, "--testing", "--filepath", fullPath])
-                else:
+                else: # @todo Remove this redundant statement.
                     call([insertScript, "--testing", "--filepath", fullPath])
             else:
                 # The object method is preferred.
