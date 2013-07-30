@@ -30,6 +30,7 @@ class MSGLogger(object):
         self.streamHandler.setFormatter(formatter)
 
         self.loggerLevel = None
+        level = level.lower()
         if level == 'info':
             self.loggerLevel = logging.INFO
         elif level == 'error':
