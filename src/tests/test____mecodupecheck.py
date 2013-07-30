@@ -11,7 +11,8 @@ from msg_db_util import MSGDBUtil
 
 
 class TestMECODupeChecker(unittest.TestCase):
-    """Unit tests for duplicate checking.
+    """
+    Unit tests for duplicate checking.
     """
 
     def setUp(self):
@@ -27,7 +28,8 @@ class TestMECODupeChecker(unittest.TestCase):
                          "Dupe checker has been created.")
 
     def testFindIndividualDupe(self):
-        """Find a duplicate record when only one exists.
+        """
+        Find a duplicate record when only one exists.
         """
         self.dbUtil.eraseTestMeco()
 
@@ -42,7 +44,8 @@ class TestMECODupeChecker(unittest.TestCase):
             "Record should already exist")
 
     def testLoadOnTop(self):
-        """If the same data set is loaded in succession,
+        """
+        If the same data set is loaded in succession,
         all values will be duplicated. Verify that this is true.
 
         This is no longer possible as

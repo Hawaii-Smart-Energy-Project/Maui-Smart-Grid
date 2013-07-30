@@ -8,7 +8,8 @@ from meco_db_connector import MSGDBConnector
 import meco_db_connector
 
 class TestMECODBConnect(unittest.TestCase):
-    """These tests require a database connection be available.
+    """
+    These tests require a database connection be available.
     """
 
     def setUp(self):

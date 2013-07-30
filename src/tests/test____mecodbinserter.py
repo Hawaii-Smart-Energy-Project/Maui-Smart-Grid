@@ -12,7 +12,8 @@ from meco_db_read import MECODBReader
 
 
 class TestMECODBInserter(unittest.TestCase):
-    """Unit tests for MECO XML Parser.
+    """
+    Unit tests for the MECO XML Parser.
     """
 
     def setUp(self):

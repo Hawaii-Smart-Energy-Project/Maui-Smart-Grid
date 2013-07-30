@@ -9,7 +9,8 @@ from msg_config import MSGConfiger
 
 
 class TestMECOMapper(unittest.TestCase):
-    """Unit tests for MECO Mapper.
+    """
+    Unit tests for MECO Mapper.
     """
 
     def setUp(self):
@@ -27,7 +28,8 @@ class TestMECOMapper(unittest.TestCase):
         self.assertTrue(len(self.testColumns) > 0)
 
     def test_fkey_mappings(self):
-        """Verify fkey mappings for tables.
+        """
+        Verify fkey mappings for tables.
         """
 
         print "test_fkey_mappings:"
@@ -47,7 +49,8 @@ class TestMECOMapper(unittest.TestCase):
 
     # @todo finish writing this test
     def testMappingIsValidForMeterData(self):
-        """Compare columns that are mapped for given data labels.
+        """
+        Compare columns that are mapped for given data labels.
         """
 
         # Given labels from the source data, map them to DB column names.

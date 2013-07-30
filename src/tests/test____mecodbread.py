@@ -27,7 +27,8 @@ class TestMECODBRead(unittest.TestCase):
         self.assertIsNotNone(self.reader)
 
     def testSelectRecord(self):
-        """Insert and retrieve a record to test the ability to select a record.
+        """
+        Insert and retrieve a record to test the ability to select a record.
         """
 
         print "testSelectRecord:"

@@ -8,7 +8,8 @@ from meco_fk import MECOFKDeterminer
 
 
 class TestMECOFKeys(unittest.TestCase):
-    """Unit tests for MECO DB foreign keys.
+    """
+    Unit tests for MECO DB foreign keys.
     """
 
     def setUp(self):
