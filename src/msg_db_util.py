@@ -8,7 +8,6 @@ from msg_config import MSGConfiger
 from meco_db_connector import MSGDBConnector
 import psycopg2
 from msg_logger import MSGLogger
-import re
 
 DEBUG = 1
 
@@ -146,7 +145,7 @@ class MSGDBUtil(object):
         :returns: Name of the current database.
         """
 
-        self.executeSQL(cursor, "select current_database()")
+        self.executeSQL(cursor, """select current_database();""")
         row = cursor.fetchone()
-        return row[0]
+        return row
 

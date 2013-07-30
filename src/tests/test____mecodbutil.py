@@ -9,6 +9,7 @@ from meco_db_insert import MECODBInserter
 from meco_db_connector import MSGDBConnector
 from meco_db_delete import MECODBDeleter
 from msg_config import MSGConfiger
+from msg_logger import MSGLogger
 
 
 class TestMECODBUtil(unittest.TestCase):
@@ -18,18 +19,20 @@ class TestMECODBUtil(unittest.TestCase):
 
     def setUp(self):
         self.i = MECODBInserter()
-        self.dbUtil = MSGDBUtil()
-        self.connector = MSGDBConnector(True)
+        self.connector = MSGDBConnector(testing = True)
         self.conn = self.connector.connectDB()
         self.lastSeqVal = None
 
         # Does this work having the dictCur be in another class?
         self.dictCur = self.connector.dictCur
 
+        self.cursor = self.conn.cursor()
         self.deleter = MECODBDeleter()
         self.tableName = 'MeterData'
         self.columnName = 'meter_data_id'
         self.configer = MSGConfiger()
+        self.logger = MSGLogger(__name__, 'debug')
+        self.dbUtil = MSGDBUtil()
 
     def testMECODBUtilCanBeInited(self):
         self.assertIsNotNone(self.dbUtil)
@@ -59,13 +62,15 @@ class TestMECODBUtil(unittest.TestCase):
         self.assertEqual(self.lastSeqVal, meterDataID)
 
     def testGetDBName(self):
-        print "DB name is %s" % self.dbUtil.getDBName(self.dictCur)[0]
-        self.assertIsNotNone(self.dbUtil.getDBName(self.dictCur),
-                             "A DB name should be returned.")
+        dbName = self.dbUtil.getDBName(self.cursor)[0]
+        self.logger.log("DB name is %s" % dbName, 'info')
+        self.assertEqual(dbName, "test_meco",
+                         "Testing DB name should be set correctly.")
+
 
     def testEraseTestingDatabase(self):
-        dbName = self.dbUtil.getDBName(self.dictCur)[0]
-        print "dbName = %s" % dbName
+        dbName = self.dbUtil.getDBName(self.cursor)[0]
+        self.logger.log("DB name is %s" % dbName, 'info')
         self.assertEqual(dbName, "test_meco",
                          "Testing DB name should be set correctly.")
         self.dbUtil.eraseTestMeco()
