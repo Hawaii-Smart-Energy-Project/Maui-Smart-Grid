@@ -426,7 +426,19 @@ ALTER TABLE public."MeterRecords" OWNER TO sepgroup;
 --
 
 CREATE TABLE "PVServicePointIDs" (
-    pv_service_point_id character varying NOT NULL
+    pv_service_point_id character varying,
+    house_service_point_id character varying,
+    "PV_Mod_size_kW" double precision,
+    inverter_model character varying,
+    "inverter_size_kW" double precision,
+    "system_cap_kW" double precision,
+    "add_cap_kW" character varying,
+    bat character varying,
+    sub character varying,
+    circuit smallint,
+    date_uploaded timestamp without time zone,
+    has_smart_meter smallint,
+    has_pv_meter smallint
 );
 
 
@@ -726,59 +738,6 @@ ALTER TABLE public.count_of_register_duplicates OWNER TO daniel;
 
 COMMENT ON VIEW count_of_register_duplicates IS 'Count of duplicates in the Register branch. @author Daniel Zhang (張道博)';
 
-
---
--- Name: deprecated_WeatherKahuluiAirport; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
---
-
-CREATE TABLE "deprecated_WeatherKahuluiAirport" (
-    wban character varying,
-    datetime timestamp(6) without time zone,
-    station_type smallint,
-    sky_condition character varying,
-    sky_condition_flag character varying,
-    visibility character varying,
-    visibility_flag character varying,
-    weather_type character varying,
-    weather_type_flag character varying,
-    dry_bulb_farenheit character varying,
-    dry_bulb_farenheit_flag character varying,
-    dry_bulb_celsius character varying,
-    dry_bulb_celsius_flag character varying,
-    wet_bulb_farenheit character varying,
-    wet_bulb_farenheit_flag character varying,
-    wet_bulb_celsius character varying,
-    wet_bulb_celsius_flag character varying,
-    dew_point_farenheit character varying,
-    dew_point_farenheit_flag character varying,
-    dew_point_celsius character varying,
-    dew_point_celsius_flag character varying,
-    relative_humidity character varying,
-    relative_humidity_flag character varying,
-    wind_speed character varying,
-    wind_speed_flag character varying,
-    wind_direction character varying,
-    wind_direction_flag character varying,
-    value_for_wind_character character varying,
-    value_for_wind_character_flag character varying,
-    station_pressure character varying,
-    station_pressure_flag character varying,
-    pressure_tendency character varying,
-    pressure_tendency_flag character varying,
-    pressure_change character varying,
-    pressure_change_flag character varying,
-    sea_level_pressure character varying,
-    sea_level_pressure_flag character varying,
-    record_type character varying,
-    record_type_flag character varying,
-    hourly_precip character varying,
-    hourly_precip_flag character varying,
-    altimeter character varying,
-    altimeter_flag character varying
-);
-
-
-ALTER TABLE public."deprecated_WeatherKahuluiAirport" OWNER TO sepgroup;
 
 --
 -- Name: deprecated_YU_energy_to_houses_without_PV_copy; Type: VIEW; Schema: public; Owner: yuma
@@ -1495,14 +1454,6 @@ ALTER TABLE ONLY "MeterRecords"
 
 
 --
--- Name: PVServicePointIDs_pkey; Type: CONSTRAINT; Schema: public; Owner: eileen; Tablespace: 
---
-
-ALTER TABLE ONLY "PVServicePointIDs"
-    ADD CONSTRAINT "PVServicePointIDs_pkey" PRIMARY KEY (pv_service_point_id);
-
-
---
 -- Name: Reading_pkey; Type: CONSTRAINT; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -2089,15 +2040,6 @@ REVOKE ALL ON TABLE count_of_register_duplicates FROM PUBLIC;
 REVOKE ALL ON TABLE count_of_register_duplicates FROM daniel;
 GRANT ALL ON TABLE count_of_register_duplicates TO daniel;
 GRANT ALL ON TABLE count_of_register_duplicates TO sepgroup;
-
-
---
--- Name: deprecated_WeatherKahuluiAirport; Type: ACL; Schema: public; Owner: sepgroup
---
-
-REVOKE ALL ON TABLE "deprecated_WeatherKahuluiAirport" FROM PUBLIC;
-REVOKE ALL ON TABLE "deprecated_WeatherKahuluiAirport" FROM sepgroup;
-GRANT ALL ON TABLE "deprecated_WeatherKahuluiAirport" TO sepgroup;
 
 
 --
