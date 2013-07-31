@@ -23,7 +23,7 @@ from msg_logger import MSGLogger
 import gzip
 from msg_noaa_weather_data_parser import MSGNOAAWeatherDataParser
 from msg_weather_data_inserter import MSGNOAAWeatherDataInserter
-from meco_db_connector import MSGDBConnector
+from msg_db_connector import MSGDBConnector
 from msg_time_util import MSGTimeUtil
 from msg_weather_data_util import MSGWeatherDataUtil
 

@@ -18,7 +18,7 @@ __author__ = 'Daniel Zhang (張道博)'
 import csv
 import sys
 import re
-from meco_db_connector import MSGDBConnector
+from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 from msg_notifier import MSGNotifier
 from msg_config import MSGConfiger

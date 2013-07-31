@@ -3,7 +3,7 @@
 
 __author__ = 'Daniel Zhang (張道博)'
 
-from meco_db_connector import MSGDBConnector
+from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 import psycopg2
 import psycopg2.extras

@@ -9,7 +9,7 @@ from meco_db_insert import MECODBInserter
 from msg_config import MSGConfiger
 from msg_db_util import MSGDBUtil
 from meco_mapper import MECOMapper
-from meco_db_connector import MSGDBConnector
+from msg_db_connector import MSGDBConnector
 from meco_fk import MECOFKDeterminer
 import sys
 from itertools import tee, islice, izip_longest

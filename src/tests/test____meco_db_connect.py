@@ -4,8 +4,8 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 import unittest
-from meco_db_connector import MSGDBConnector
-import meco_db_connector
+from msg_db_connector import MSGDBConnector
+import msg_db_connector
 
 class TestMECODBConnect(unittest.TestCase):
     """
@@ -18,7 +18,7 @@ class TestMECODBConnect(unittest.TestCase):
 
     def test_init(self):
         self.assertTrue(
-            isinstance(self.connector, meco_db_connector.MSGDBConnector),
+            isinstance(self.connector, msg_db_connector.MSGDBConnector),
             "self.connection is an instance of MECODBConnector")
 
     def test_db_connection(self):

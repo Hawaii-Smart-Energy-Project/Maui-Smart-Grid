@@ -6,7 +6,7 @@ __author__ = 'Daniel Zhang (張道博)'
 import unittest
 from meco_dupe_check import MECODupeChecker
 from meco_xml_parser import MECOXMLParser
-from meco_db_connector import MSGDBConnector
+from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 
 

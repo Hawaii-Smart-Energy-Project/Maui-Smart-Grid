@@ -4,12 +4,17 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 import unittest
+from msg_weather_data_util import MSGWeatherDataUtil
+from msg_logger import MSGLogger
+from msg_db_connector import MSGDBConnector
 
 
-class MyTestCase(unittest.TestCase):
-    def test_something(self):
-        self.assertEqual(True, False)
+class WeatherDataLoadingTester(unittest.TestCase):
 
+    def setUp(self):
+        self.weatherUtil = MSGWeatherDataUtil()
+        self.logger = MSGLogger(__name__, 'DEBUG')
+        self.dbConnector = MSGDBConnector()
 
     def testLoadDataSinceLastLoaded(self):
         """
@@ -17,8 +22,8 @@ class MyTestCase(unittest.TestCase):
         """
         pass
 
-
     def testGetLastLoadedDate(self):
+        self.weatherUtil.getLastDateLoaded()
         pass
 
 
