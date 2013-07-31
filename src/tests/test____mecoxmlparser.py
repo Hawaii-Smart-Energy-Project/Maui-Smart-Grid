@@ -29,7 +29,7 @@ class TestMECOXMLParser(unittest.TestCase):
 
         self.p.filename = "../../test-data/meco_v3-energy-test-data.xml"
         fileObject = open(self.p.filename, "rb")
-        expectedCount = 126
+        expectedCount = 125
         self.p.parseXML(fileObject, True)
         print "element count = %s" % self.p.processForInsertElementCount
         self.assertEqual(self.p.processForInsertElementCount, expectedCount)
