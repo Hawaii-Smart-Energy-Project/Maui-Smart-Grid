@@ -44,10 +44,10 @@ class WeatherDataLoadingTester(unittest.TestCase):
         match = re.match(myPattern, testString)
         self.logger.log("pattern = %s" % myPattern, 'info')
         if match:
-            self.logger.log("match = %s" % match, 'info')
-            self.logger.log("match group = %s" % match.group(1), 'info')
+            self.logger.log("match = %s" % match)
+            self.logger.log("match group = %s" % match.group(1))
         else:
-            self.logger.log("match not found", 'info')
+            self.logger.log("match not found")
         assert match and match.group(1) == 'QCLCD201208.zip', "Download filename was matched."
 
 

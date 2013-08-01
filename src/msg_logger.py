@@ -12,7 +12,7 @@ class MSGLogger(object):
     This class provides logging functionality.
     """
 
-    def __init__(self, caller, level):
+    def __init__(self, caller, level = 'info'):
         """
         Constructor.
 
@@ -75,17 +75,22 @@ class MSGLogger(object):
         """
 
         self.logger.addHandler(self.streamHandler)
-        loggerLevel = None
-        if level == 'info':
-            loggerLevel = logging.INFO
-        elif level == 'debug':
-            loggerLevel = logging.DEBUG
-        elif level == 'error':
-            loggerLevel = logging.ERROR
-        elif level == 'silent':
-            loggerLevel = None
-        else:
+
+        if not level:
             loggerLevel = self.loggerLevel
+
+        else:
+            loggerLevel = None
+            if level == 'info':
+                loggerLevel = logging.INFO
+            elif level == 'debug':
+                loggerLevel = logging.DEBUG
+            elif level == 'error':
+                loggerLevel = logging.ERROR
+            elif level == 'silent':
+                loggerLevel = None
+            else:
+                loggerLevel = self.loggerLevel
 
         if loggerLevel != None:
             self.logger.log(loggerLevel, message)
