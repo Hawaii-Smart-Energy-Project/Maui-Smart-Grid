@@ -7,14 +7,17 @@ import unittest
 from msg_weather_data_util import MSGWeatherDataUtil
 from msg_logger import MSGLogger
 from msg_db_connector import MSGDBConnector
+import re
+from msg_logger import MSGLogger
 
 
 class WeatherDataLoadingTester(unittest.TestCase):
-
     def setUp(self):
         self.weatherUtil = MSGWeatherDataUtil()
         self.logger = MSGLogger(__name__, 'DEBUG')
         self.dbConnector = MSGDBConnector()
+        self.cursor = self.dbConnector.conn.cursor()
+
 
     def testLoadDataSinceLastLoaded(self):
         """
@@ -22,10 +25,13 @@ class WeatherDataLoadingTester(unittest.TestCase):
         """
         pass
 
-    def testGetLastLoadedDate(self):
-        self.weatherUtil.getLastDateLoaded()
-        pass
 
+    def testGetLastLoadedDate(self):
+        myDate = self.weatherUtil.getLastDateLoaded(self.cursor).strftime(
+            "%Y-%m-%d %H:%M:%S")
+        pattern = '^(\d+-\d+-\d+\s\d+:\d+:\d+)$'
+        match = re.match(pattern, myDate)
+        assert match and (match.group(1) == myDate), "Date format is valid."
 
 if __name__ == '__main__':
     unittest.main()

@@ -6,6 +6,8 @@ __author__ = 'Daniel Zhang (張道博)'
 import urllib2
 import re
 from msg_db_util import MSGDBUtil
+from msg_logger import MSGLogger
+
 
 class MSGWeatherDataUtil(object):
     """
@@ -17,11 +19,14 @@ class MSGWeatherDataUtil(object):
         Constructor.
         """
 
+        self.logger = MSGLogger(__name__, 'info')
         self.url = "http://cdo.ncdc.noaa.gov/qclcd_ascii/"
-        self.pattern = '<A HREF=".*?">(QCLCD(201208|201209|201210|201211|201212|2013).*?)</A>'
+        self.pattern = '<A HREF=".*?">(QCLCD(' \
+                       '201208|201209|201210|201211|201212|2013).*?)</A>'
         self.fileList = []
         self.dateList = []
         self.fillFileListAndDateList()
+        self.dbUtil = MSGDBUtil()
 
     def fillFileListAndDateList(self):
         """
@@ -56,4 +61,5 @@ class MSGWeatherDataUtil(object):
 
         self.dbUtil.executeSQL(cursor, sql)
         row = cursor.fetchone()
-        print row[1]
+        # self.logger.log('Date last loaded = %s' % row[1], 'info')
+        return row[1]
