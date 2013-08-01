@@ -3,7 +3,7 @@
 
 __author__ = 'Daniel Zhang (張道博)'
 
-from msg_weather_data_dupe_checker import MSGWeatherDataDupeChecker
+from msg_noaa_weather_data_dupe_checker import MSGWeatherDataDupeChecker
 from msg_db_util import MSGDBUtil
 from msg_logger import MSGLogger
 import sys

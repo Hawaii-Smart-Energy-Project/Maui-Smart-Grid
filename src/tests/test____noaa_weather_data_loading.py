@@ -4,7 +4,7 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 import unittest
-from msg_weather_data_util import MSGWeatherDataUtil
+from msg_noaa_weather_data_util import MSGWeatherDataUtil
 from msg_logger import MSGLogger
 from msg_db_connector import MSGDBConnector
 import re

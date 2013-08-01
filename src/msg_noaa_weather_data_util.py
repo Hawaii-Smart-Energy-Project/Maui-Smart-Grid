@@ -7,6 +7,7 @@ import urllib2
 import re
 from msg_db_util import MSGDBUtil
 from msg_logger import MSGLogger
+from msg_config import MSGConfiger
 
 
 class MSGWeatherDataUtil(object):
@@ -20,9 +21,11 @@ class MSGWeatherDataUtil(object):
         """
 
         self.logger = MSGLogger(__name__, 'info')
-        self.url = "http://cdo.ncdc.noaa.gov/qclcd_ascii/"
-        self.pattern = '<A HREF=".*?">(QCLCD(' \
-                       '201208|201209|201210|201211|201212|2013).*?)</A>'
+        self.configer = MSGConfiger()
+        self.url = self.configer.configOptionValue('Weather Data',
+                                                   'weather_data_url')
+        self.pattern = self.configer.configOptionValue('Weather Data',
+                                                       'weather_data_pattern')
         self.fileList = []
         self.dateList = []
         self.fillFileListAndDateList()

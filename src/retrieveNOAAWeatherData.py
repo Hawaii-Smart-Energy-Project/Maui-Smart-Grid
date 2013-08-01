@@ -11,8 +11,6 @@ Parallelized weather retrieval and processing.
 
 __author__ = 'Daniel Zhang (張道博)'
 
-import urllib2
-import re
 import pycurl
 from msg_config import MSGConfiger
 from msg_logger import MSGLogger
@@ -21,7 +19,7 @@ import zipfile
 import os.path
 import os
 import gzip
-from msg_weather_data_util import MSGWeatherDataUtil
+from msg_noaa_weather_data_util import MSGWeatherDataUtil
 
 weatherDataPath = ''
 retriever = None
@@ -54,17 +52,6 @@ class MSGWeatherDataRetriever(object):
         weatherDataPath = self.configer.configOptionValue('Weather Data',
                                                           'weather_data_path')
 
-    # def fillFileList(self):
-    #
-    #     url = "http://cdo.ncdc.noaa.gov/qclcd_ascii/"
-    #     pattern = '<A HREF=".*?">(QCLCD(' \
-    #               '201208|201209|201210|201211|201212|2013).*?)</A>'
-    #     response = urllib2.urlopen(url).read()
-    #
-    #     for filename in re.findall(pattern, response):
-    #         self.fileList.append(filename[0])
-    #         self.dateList.append(datePart(filename[0]))
-
 
     def fileExists(self, filename):
         try:
@@ -89,12 +76,6 @@ def fileExists(filename):
         return False
 
     return False
-
-
-# def datePart(filename):
-#     newName = filename.replace("QCLCD", '')
-#     newName = newName.replace(".zip", '')
-#     return newName
 
 
 def unzipWorker(filename, forceDownload = False):
@@ -147,10 +128,10 @@ def unzipFile(filename, forceDownload = False):
     unzipWorker(filename, forceDownload)
 
 
-def performDownloading(filename, forceDownload = False):
+def performDownloading(filename, url, forceDownload = False):
     if not fileExists(filename) or forceDownload:
         global weatherDataPath
-        url = "http://cdo.ncdc.noaa.gov/qclcd_ascii/"
+        # url = "http://cdo.ncdc.noaa.gov/qclcd_ascii/"
         print "Performing download on " + filename
         fp = open(weatherDataPath + "/" + filename, "wb")
         curl = pycurl.Curl()
@@ -169,6 +150,8 @@ def performDownloading(filename, forceDownload = False):
 
 if __name__ == '__main__':
     retriever = MSGWeatherDataRetriever()
+    configer = MSGConfiger()
+    weatherURL = configer.configOptionValue('Weather Data', 'weather_data_url')
 
 
     # retriever.fillFileList()
@@ -183,5 +166,5 @@ if __name__ == '__main__':
     if downloadCount == 0:
         # Retrieve last dated set if all others are present.
         retriever.dateList.sort()
-        performDownloading(retriever.fileList[-1], forceDownload = True)
+        performDownloading(retriever.fileList[-1], url, forceDownload = True)
 
