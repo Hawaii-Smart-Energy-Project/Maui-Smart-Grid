@@ -31,7 +31,7 @@ class MSGConfiger(object):
         # Check permissions on the config file. Refuse to run if the permissions
         # are not set appropriately.
 
-        configFilePath = '~/.meco-data-operations.cfg'
+        configFilePath = '~/.msg-data-operations.cfg'
 
         if self.isMoreThanOwnerReadableAndWritable(
                 os.path.expanduser(configFilePath)):

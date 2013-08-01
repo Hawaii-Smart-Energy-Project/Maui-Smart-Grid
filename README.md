@@ -60,21 +60,21 @@ Plot of readings per meter counts and meter counts per day loaded to meco_v3.
 
 ## Configuration
 
-The software is configured through a text configuration file contained in the user's home directory. The file is named `~/meco-data-operations.cfg`. Permissions should be limited to owner read/write only. It is read by the `ConfigParser` module. 
+The software is configured through a text configuration file contained in the user's home directory. The file is named `~/.msg-data-operations.cfg`. Permissions should be limited to owner read/write only. It is read by the `ConfigParser` module. 
 
 ### Example Configuration File Content
 
-The reference template can be found in `config/sample-dot-meco-data-operations.cfg.`
+The reference template can be found in `config/sample-dot-msg-data-operations.cfg.`
 
     [Debugging]
     debug=False
     limit_commits=False
     
     [Data Paths]
-    plot_path=${MECO_PLOT_PATH}
+    plot_path=${MSG_PLOT_PATH}
     
     [Executable Paths]
-    bin_path=${MECO_BIN_DIR}
+    bin_path=${MSG_BIN_DIR}
     
     [Notifications]
     email_fromaddr=${EMAIL_FROM_ADDRESS}
