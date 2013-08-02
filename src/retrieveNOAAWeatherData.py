@@ -23,9 +23,7 @@ from msg_noaa_weather_data_util import MSGWeatherDataUtil
 
 weatherDataPath = ''
 retriever = None
-logger = MSGLogger(__name__, 'info')
 downloadCount = 0
-
 
 class MSGWeatherDataRetriever(object):
     """
@@ -37,10 +35,8 @@ class MSGWeatherDataRetriever(object):
     """
 
     def __init__(self):
-        self.logger = MSGLogger(__name__, 'info')
         self.configer = MSGConfiger()
-        self.weatherDataPath = self.configer.configOptionValue('Weather Data',
-                                                               'weather_data_path')
+
         self.queue = multiprocessing.JoinableQueue()
         self.procs = []
         self.pool = None
@@ -51,6 +47,12 @@ class MSGWeatherDataRetriever(object):
         global weatherDataPath
         weatherDataPath = self.configer.configOptionValue('Weather Data',
                                                           'weather_data_path')
+        global weatherDataURL
+        weatherDataURL = self.configer.configOptionValue('Weather Data',
+                                                          'weather_data_url')
+
+        global weatherDataPattern
+        weatherDataPattern  = self.configer.configOptionValue('Weather Data', 'weather_data_pattern')
 
 
     def fileExists(self, filename):
@@ -81,9 +83,9 @@ def fileExists(filename):
 def unzipWorker(filename, forceDownload = False):
     originalName = filename
 
-    global retriever
     hourlyGzName = retriever.weatherUtil.datePart(filename) + "hourly.txt.gz"
     if fileExists(hourlyGzName) and not forceDownload:
+        print "%s already exists." % hourlyGzName
         return
 
     if (fileExists(filename)):
@@ -128,14 +130,14 @@ def unzipFile(filename, forceDownload = False):
     unzipWorker(filename, forceDownload)
 
 
-def performDownloading(filename, url, forceDownload = False):
+def performDownloading(filename, forceDownload = False):
+    logger.log('')
     if not fileExists(filename) or forceDownload:
-        global weatherDataPath
 
         print "Performing download on " + filename
         fp = open(weatherDataPath + "/" + filename, "wb")
         curl = pycurl.Curl()
-        curl.setopt(pycurl.URL, url + "/" + filename)
+        curl.setopt(pycurl.URL, weatherDataURL + "/" + filename)
         curl.setopt(pycurl.WRITEDATA, fp)
         curl.perform()
         curl.close()
@@ -149,9 +151,18 @@ def performDownloading(filename, url, forceDownload = False):
 
 
 if __name__ == '__main__':
+    print "Downloading NOAA weather data."
+
     retriever = MSGWeatherDataRetriever()
     configer = MSGConfiger()
-    weatherURL = configer.configOptionValue('Weather Data', 'weather_data_url')
+
+    print "Using URL %s." % weatherDataURL
+    print "Using pattern %s." % weatherDataPattern
+
+    global logger
+    logger = MSGLogger(__name__)
+    weatherDataURL = configer.configOptionValue('Weather Data',
+                                                'weather_data_url')
 
     retriever.fileList = retriever.weatherUtil.fileList
     retriever.dateList = retriever.weatherUtil.dateList
@@ -164,5 +175,5 @@ if __name__ == '__main__':
     if downloadCount == 0:
         # Retrieve last dated set if all others are present.
         retriever.dateList.sort()
-        performDownloading(retriever.fileList[-1], url, forceDownload = True)
+        performDownloading(retriever.fileList[-1], forceDownload = True)
 

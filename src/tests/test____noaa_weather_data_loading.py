@@ -28,6 +28,13 @@ class WeatherDataLoadingTester(unittest.TestCase):
         pass
 
 
+    def testRetrieveDataSinceLastLoaded(self):
+        """
+        Data since the last loaded date is retrieved.
+        """
+        pass
+
+
     def testGetLastLoadedDate(self):
         myDate = self.weatherUtil.getLastDateLoaded(self.cursor).strftime(
             "%Y-%m-%d %H:%M:%S")
@@ -48,13 +55,15 @@ class WeatherDataLoadingTester(unittest.TestCase):
             self.logger.log("match group = %s" % match.group(1))
         else:
             self.logger.log("match not found")
-        assert match and match.group(1) == 'QCLCD201208.zip', "Download filename was matched."
+        assert match and match.group(
+            1) == 'QCLCD201208.zip', "Download filename was matched."
 
 
     def testWeatherDataURL(self):
         myURL = self.configer.configOptionValue('Weather Data',
                                                 'weather_data_url')
         pass
+
 
 if __name__ == '__main__':
     unittest.main()
