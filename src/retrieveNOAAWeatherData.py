@@ -131,7 +131,7 @@ def unzipFile(filename, forceDownload = False):
 def performDownloading(filename, url, forceDownload = False):
     if not fileExists(filename) or forceDownload:
         global weatherDataPath
-        # url = "http://cdo.ncdc.noaa.gov/qclcd_ascii/"
+
         print "Performing download on " + filename
         fp = open(weatherDataPath + "/" + filename, "wb")
         curl = pycurl.Curl()
@@ -153,8 +153,6 @@ if __name__ == '__main__':
     configer = MSGConfiger()
     weatherURL = configer.configOptionValue('Weather Data', 'weather_data_url')
 
-
-    # retriever.fillFileList()
     retriever.fileList = retriever.weatherUtil.fileList
     retriever.dateList = retriever.weatherUtil.dateList
 
