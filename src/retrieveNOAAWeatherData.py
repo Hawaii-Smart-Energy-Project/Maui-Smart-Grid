@@ -21,6 +21,8 @@ import os
 import gzip
 from msg_noaa_weather_data_util import MSGWeatherDataUtil
 from msg_db_connector import MSGDBConnector
+import datetime as dt
+from dateutil.relativedelta import relativedelta
 
 weatherDataPath = ''
 retriever = None
@@ -39,8 +41,8 @@ class MSGWeatherDataRetriever(object):
     def __init__(self):
         self.configer = MSGConfiger()
 
-        self.queue = multiprocessing.JoinableQueue()
-        self.procs = []
+        # self.queue = multiprocessing.JoinableQueue()
+        # self.procs = []
         self.pool = None
         self.fileList = []
         self.dateList = []
@@ -136,6 +138,7 @@ def unzipFile(filename, forceDownload = False):
 
 def performDownloading(filename, forceDownload = False):
     logger.log('')
+
     if not fileExists(filename) or forceDownload:
         print "Performing download on " + filename
         fp = open(weatherDataPath + "/" + filename, "wb")
@@ -152,6 +155,10 @@ def performDownloading(filename, forceDownload = False):
     global downloadCount
     downloadCount += 1
 
+# Use case: Month changes from Aug to Sep.
+# Last loaded date was in Aug.
+# Downloader is going to get Sep, but not the rest of Aug.
+# To get the remainder of Aug, force download on Aug.
 
 if __name__ == '__main__':
     dbConnector = MSGDBConnector()
@@ -176,15 +183,51 @@ if __name__ == '__main__':
     retriever.fileList = retriever.weatherUtil.fileList
     retriever.dateList = retriever.weatherUtil.dateList
 
-    retriever.pool = multiprocessing.Pool(4)
-    retriever.pool.map(performDownloading, retriever.fileList)
-    retriever.pool.close()
-    retriever.pool.join()
+    LAST_DATE_TESTING = False
+    if not LAST_DATE_TESTING:
 
-    if downloadCount == 0:
-        # Retrieve last dated set if all others are present.
-        retriever.dateList.sort()
-        performDownloading(retriever.fileList[-1], forceDownload = True)
+        retriever.pool = multiprocessing.Pool(4)
+        retriever.pool.map(performDownloading, retriever.fileList)
+        retriever.pool.close()
+        retriever.pool.join()
 
+        if downloadCount == 0:
+            # Retrieve last dated set if all others are present.
+            retriever.dateList.sort()
+            performDownloading(retriever.fileList[-1], forceDownload = True)
 
+    # Force download on intermediate dates between last loaded date and now.
+    # If a date is less than the last loaded date, pop it from the list.
+    keepList = []
+    i = 0
+    for date in retriever.fileList:
+        listDate = dt.datetime.strptime(weatherUtil.datePart(filename = date),
+                                        "%Y%m")
+        print listDate
+        lastDate = weatherUtil.getLastDateLoaded(cursor)
+        if lastDate < listDate:
+            keepList.append((i, listDate))
+        i += 1
+
+    if keepList:
+        keepList.sort()
+        print "New data exists."
+
+        # Also retrieve one month less than the earliest date in the keep list.
+        keepList.append(
+            (keepList[0][0] - 1, keepList[0][1] - relativedelta(months = 1)))
+
+        # print "keepList:"
+        # print keepList
+
+        # Rewrite keep list.
+        fileListFollowUp = []
+        for d in keepList:
+            fileListFollowUp.append(retriever.fileList[d[0]])
+
+        print "File List Follow Up:"
+        print fileListFollowUp
+
+        for f in fileListFollowUp:
+            performDownloading(f, forceDownload = True)
 
