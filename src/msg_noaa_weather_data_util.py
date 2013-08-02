@@ -40,18 +40,23 @@ class MSGWeatherDataUtil(object):
 
         for filename in re.findall(self.pattern, response):
             self.fileList.append(filename[0])
-            self.dateList.append(self.datePart(filename[0]))
+            self.dateList.append(self.datePart(filename = filename[0]))
 
 
-    def datePart(self, filename):
+    def datePart(self, filename = None, datetime = None):
         """
         Return the date part of a NOAA weather data filename.
         :param: The filename.
-        :returns: The date part of the filename.
+        :param: A datetime object.
+        :returns: The date part of the given parameter.
         """
-        newName = filename.replace("QCLCD", '')
-        newName = newName.replace(".zip", '')
-        return newName
+        assert filename == None or datetime == None, "One argument is allowed."
+        if filename:
+            newName = filename.replace("QCLCD", '')
+            newName = newName.replace(".zip", '')
+            return newName
+        if datetime:
+            return datetime.strftime('%Y-%m-%d')
 
     def getLastDateLoaded(self, cursor):
         """
