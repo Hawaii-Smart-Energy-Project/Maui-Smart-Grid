@@ -21,12 +21,9 @@ import os
 import gzip
 from msg_noaa_weather_data_util import MSGWeatherDataUtil
 from msg_db_connector import MSGDBConnector
-import datetime as dt
-from dateutil.relativedelta import relativedelta
 
 weatherDataPath = ''
 retriever = None
-# global downloadCount
 downloadCount = 0
 
 
@@ -41,9 +38,6 @@ class MSGWeatherDataRetriever(object):
 
     def __init__(self):
         self.configer = MSGConfiger()
-
-        # self.queue = multiprocessing.JoinableQueue()
-        # self.procs = []
         self.pool = None
         self.fileList = []
         self.dateList = []
@@ -184,7 +178,7 @@ if __name__ == '__main__':
     retriever.fileList = retriever.weatherUtil.fileList
     retriever.dateList = retriever.weatherUtil.dateList
 
-    LAST_DATE_TESTING = False
+    LAST_DATE_TESTING = True
     if not LAST_DATE_TESTING:
         retriever.pool = multiprocessing.Pool(4)
         retriever.pool.map(performDownloading, retriever.fileList)
@@ -194,40 +188,12 @@ if __name__ == '__main__':
     # Force download on intermediate dates between last loaded date and now.
     # If a date is less than the last loaded date, remove it from the list,
     # effectively.
-    keepList = []
-    i = 0
-    for date in retriever.fileList:
-        listDate = dt.datetime.strptime(weatherUtil.datePart(filename = date),
-                                        "%Y%m")
-        # print listDate
-        lastDate = weatherUtil.getLastDateLoaded(cursor)
-        if lastDate < listDate:
-            keepList.append((i, listDate))
-        i += 1
 
-    if keepList:
-        keepList.sort()
-        print "New data exists."
+    # Get the keep list.
+    for f in weatherUtil.getKeepList(retriever.fileList, cursor):
+        performDownloading(f, forceDownload = True)
 
-        # Also retrieve one month less than the earliest date in the keep list.
-        keepList.append(
-            (keepList[0][0] - 1, keepList[0][1] - relativedelta(months = 1)))
-
-        # print "keepList:"
-        # print keepList
-
-        # Rewrite keep list.
-        fileListFollowUp = []
-        for d in keepList:
-            fileListFollowUp.append(retriever.fileList[d[0]])
-
-        print "File List Follow Up:"
-        print fileListFollowUp
-
-        for f in fileListFollowUp:
-            downloadCount += 1
-            performDownloading(f, forceDownload = True)
-
+    # Just retrieve the last set if nothing else was retrieved.
     if downloadCount == 0:
         # Retrieve last dated set if nothing else was retrieved.
         retriever.dateList.sort()

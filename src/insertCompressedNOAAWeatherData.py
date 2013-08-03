@@ -117,6 +117,7 @@ for root, dirnames, filenames in os.walk('.'):
                 break
 
     else: # Only process the latest data.
+        # @todo Process data from the last loaded date.
         weatherUtil = MSGWeatherDataUtil()
         for filename in fnmatch.filter(filenames, weatherUtil.dateList[
             -1] + 'hourly.txt.gz'):
@@ -137,7 +138,6 @@ for root, dirnames, filenames in os.walk('.'):
             fileObject.close()
             if TESTING:
                 break
-
 
 # print "length all days = %s" % len(allDays)
 
