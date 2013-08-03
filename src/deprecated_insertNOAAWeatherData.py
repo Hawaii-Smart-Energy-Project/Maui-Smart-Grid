@@ -26,7 +26,7 @@ from msg_config import MSGConfiger
 try:
     len(sys.argv[1])
 except:
-    print "Usage: insertNOAAWeatherData.py FILENAME"
+    print "Usage: deprecated_insertNOAAWeatherData.py FILENAME"
     sys.exit()
 
 filename = sys.argv[1]
