@@ -126,7 +126,6 @@ for root, dirnames, filenames in os.walk('.'):
         hourlyNames = [k + 'hourly.txt.gz' for k in keepDates]
 
         for n in hourlyNames:
-            print n
             fullPath = os.path.join(root, n)
             msg = fullPath
             print msg
@@ -142,8 +141,6 @@ for root, dirnames, filenames in os.walk('.'):
             fileObject.close()
             if TESTING:
                 break
-
-# print "length all days = %s" % len(allDays)
 
 if len(allDays) == 0:
     msgBody += "No weather data was processed."

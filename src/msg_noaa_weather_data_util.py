@@ -11,6 +11,7 @@ from msg_config import MSGConfiger
 import datetime as dt
 from dateutil.relativedelta import relativedelta
 
+
 class MSGWeatherDataUtil(object):
     """
     Utility methods for working with weather data.
@@ -109,10 +110,5 @@ class MSGWeatherDataUtil(object):
                     keepList[0][0] - 1,
                     keepList[0][1] - relativedelta(months = 1)))
 
-            # Rewrite keep list.
-            fileListFollowUp = []
-            for d in keepList:
-                fileListFollowUp.append(fileList[d[0]])
-
-        return fileListFollowUp
+        return [fileList[d[0]] for d in keepList]
 
