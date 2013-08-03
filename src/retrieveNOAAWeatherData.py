@@ -26,6 +26,7 @@ from dateutil.relativedelta import relativedelta
 
 weatherDataPath = ''
 retriever = None
+# global downloadCount
 downloadCount = 0
 
 
@@ -185,25 +186,20 @@ if __name__ == '__main__':
 
     LAST_DATE_TESTING = False
     if not LAST_DATE_TESTING:
-
         retriever.pool = multiprocessing.Pool(4)
         retriever.pool.map(performDownloading, retriever.fileList)
         retriever.pool.close()
         retriever.pool.join()
 
-        if downloadCount == 0:
-            # Retrieve last dated set if all others are present.
-            retriever.dateList.sort()
-            performDownloading(retriever.fileList[-1], forceDownload = True)
-
     # Force download on intermediate dates between last loaded date and now.
-    # If a date is less than the last loaded date, pop it from the list.
+    # If a date is less than the last loaded date, remove it from the list,
+    # effectively.
     keepList = []
     i = 0
     for date in retriever.fileList:
         listDate = dt.datetime.strptime(weatherUtil.datePart(filename = date),
                                         "%Y%m")
-        print listDate
+        # print listDate
         lastDate = weatherUtil.getLastDateLoaded(cursor)
         if lastDate < listDate:
             keepList.append((i, listDate))
@@ -229,5 +225,12 @@ if __name__ == '__main__':
         print fileListFollowUp
 
         for f in fileListFollowUp:
+            downloadCount += 1
             performDownloading(f, forceDownload = True)
 
+    if downloadCount == 0:
+        # Retrieve last dated set if nothing else was retrieved.
+        retriever.dateList.sort()
+        performDownloading(retriever.fileList[-1], forceDownload = True)
+
+    print "downloadCount = %s." % downloadCount
