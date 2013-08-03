@@ -21,7 +21,8 @@ class MSGWeatherDataUtil(object):
         Constructor.
 
         A database connection is not maintained here to keep this class
-        lightweight.
+        lightweight. This results in the class not having a parameter for
+        TESTING MODE.
         """
 
         self.logger = MSGLogger(__name__, 'info')
@@ -31,7 +32,7 @@ class MSGWeatherDataUtil(object):
         self.pattern = self.configer.configOptionValue('Weather Data',
                                                        'weather_data_pattern')
         self.fileList = []
-        self.dateList = []
+        self.dateList = [] # List of dates corresponding weather data files.
         self.fillFileListAndDateList()
         self.dbUtil = MSGDBUtil()
 

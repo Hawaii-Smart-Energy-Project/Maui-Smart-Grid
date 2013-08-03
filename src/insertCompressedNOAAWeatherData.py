@@ -37,6 +37,7 @@ msgBody = ''
 notifier = MSGNotifier()
 dataParser = MSGNOAAWeatherDataParser()
 inserter = MSGNOAAWeatherDataInserter()
+
 timeUtil = MSGTimeUtil()
 
 
@@ -98,7 +99,7 @@ setOfAllDays = set()
 for root, dirnames, filenames in os.walk('.'):
 
     if commandLineArgs.alldata:
-
+        # Load ALL data.
         for filename in fnmatch.filter(filenames, '*hourly.txt.gz'):
             fullPath = os.path.join(root, filename)
             msg = fullPath
@@ -116,14 +117,17 @@ for root, dirnames, filenames in os.walk('.'):
             if TESTING:
                 break
 
-    else: # Only process the latest data.
-        # @todo Process data from the last loaded date.
+    else: # Only process the latest data from the last loaded date.
         weatherUtil = MSGWeatherDataUtil()
-        for filename in fnmatch.filter(filenames, weatherUtil.dateList[
-            -1] + 'hourly.txt.gz'):
-            print filename
+        keepList = weatherUtil.getKeepList(weatherUtil.fileList,
+                                           connector.conn.cursor())
 
-            fullPath = os.path.join(root, filename)
+        keepDates = [weatherUtil.datePart(filename = k) for k in keepList]
+        hourlyNames = [k + 'hourly.txt.gz' for k in keepDates]
+
+        for n in hourlyNames:
+            print n
+            fullPath = os.path.join(root, n)
             msg = fullPath
             print msg
             msgBody += "Processing %s.\n" % msg
