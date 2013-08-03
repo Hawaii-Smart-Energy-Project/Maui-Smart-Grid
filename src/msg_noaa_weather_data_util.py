@@ -10,7 +10,6 @@ from msg_logger import MSGLogger
 from msg_config import MSGConfiger
 import datetime as dt
 from dateutil.relativedelta import relativedelta
-# from msg_db_connector import MSGDBConnector
 
 class MSGWeatherDataUtil(object):
     """
@@ -35,10 +34,6 @@ class MSGWeatherDataUtil(object):
         self.dateList = []
         self.fillFileListAndDateList()
         self.dbUtil = MSGDBUtil()
-        # self.dbConnector = MSGDBConnector()
-        # self.cursor = self.dbConnector.conn.cursor()
-        # self.lastLoadedDate = self.getLastDateLoaded(self.cursor)
-
 
     def fillFileListAndDateList(self):
         """
@@ -98,7 +93,6 @@ class MSGWeatherDataUtil(object):
         for date in fileList:
             listDate = dt.datetime.strptime(self.datePart(filename = date),
                                             "%Y%m")
-            # print listDate
             lastDate = self.getLastDateLoaded(cursor)
             if lastDate < listDate:
                 keepList.append((i, listDate))
@@ -106,7 +100,6 @@ class MSGWeatherDataUtil(object):
 
         if keepList:
             keepList.sort()
-            # print "New data exists."
 
             # Also retrieve one month less than the earliest date in the keep
             #  list.
@@ -115,16 +108,10 @@ class MSGWeatherDataUtil(object):
                     keepList[0][0] - 1,
                     keepList[0][1] - relativedelta(months = 1)))
 
-            # print "keepList:"
-            # print keepList
-
             # Rewrite keep list.
             fileListFollowUp = []
             for d in keepList:
                 fileListFollowUp.append(fileList[d[0]])
-
-            # print "File List Follow Up:"
-            # print fileListFollowUp
 
         return fileListFollowUp
 
