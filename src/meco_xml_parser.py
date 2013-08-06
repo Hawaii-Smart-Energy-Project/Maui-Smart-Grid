@@ -16,7 +16,7 @@ from itertools import tee, islice, izip_longest
 from meco_dupe_check import MECODupeChecker
 from msg_logger import MSGLogger
 
-DEBUG = 0 # print debugging info if 1
+# DEBUG = 0 # print debugging info if 1
 
 
 class MECOXMLParser(object):
@@ -63,15 +63,13 @@ class MECOXMLParser(object):
                                'ChannelStatus': 0, 'EventData': 0,
                                'Event': 0}
 
-        # @todo adjust unit test to handle interval status and channel status
-
         # Use this dictionary to track which channels were processed when
         # readings are being processed. this is to prevent duplicate channel
         # data from being inserted.
         self.channelProcessed = {}
 
         self.initChannelProcessed()
-        self.processingReadingsNow = False
+        # self.processingReadingsNow = False
 
         # Tables to be inserted to.
         self.insertTables = self.configer.insertTables
@@ -188,12 +186,6 @@ class MECOXMLParser(object):
         if currentTableName == "Event":
             self.eventTimeDupeExists = self.dupeChecker.eventBranchDupeExists(
                 self.conn, self.currentMeterName, columnsAndValues['EventTime'])
-
-            # self.logger.log(
-            #     'event time dupe exists= %s' % self.eventTimeDupeExists,
-            #     'debug')
-            # self.logger.log('event time = %s' % columnsAndValues['EventTime'],
-            #                 'debug')
             self.eventDupeCheckCount += 1
 
         # Only perform an insert if there are no duplicate values
@@ -207,8 +199,8 @@ class MECOXMLParser(object):
             cur = self.inserter.insertData(self.conn,
                                            currentTableName,
                                            columnsAndValues,
-                                           fKeyValue,
-                                           1)
+                                           fKeyVal = fKeyValue,
+                                           withoutCommit = 1)
             # The last 1 indicates don't commit. Commits are handled externally.
             self.insertCount += 1
             self.cumulativeInsertCount += 1
@@ -230,22 +222,15 @@ class MECOXMLParser(object):
                 self.eventInsertCount += 1
 
         else: # Don't insert into Reading or Register table if a dupe exists.
-            # self.logger.log("Duplicate meter-endtime-channel exists.",
-            # 'silent')
-
             if (self.channelDupeExists):
-
                 self.readingDupeOnInsertCount += 1
                 if self.readingDupeOnInsertCount > 0 and self \
                     .readingDupeOnInsertCount < 2:
                     parseLog += self.logger.logAndWrite("{rd-dupe==>}")
 
-                # Also, verify the data is equivalent to the existing
-                # record.
+                # Also, verify the data is equivalent to the existing record.
                 matchingValues = self.dupeChecker.readingValuesAreInTheDatabase(
                     self.conn, columnsAndValues)
-                # if matchingValues:
-                # print "Verified reading values are in the database."
                 assert matchingValues == True, "Duplicate check found " \
                                                "non-matching values for meter" \
                                                " %s," \
@@ -344,7 +329,7 @@ class MECOXMLParser(object):
         """
 
         parseLog = ''
-        parseMsg = ''
+        # parseMsg = ''
         walker = root.iter()
 
         for element, nextElement in self.getNext(walker):
