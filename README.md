@@ -84,6 +84,11 @@ The reference template can be found in `config/sample-dot-msg-data-operations.cf
     testing_email_recipients=${LIST_OF_TESTING_EMAIL_RECIPIENTS}
     email_smtp_server=${SMTP_SERVER_ADDRESS}
 
+    [Weather Data]
+    weather_data_url=${WEATHER_DATA_URL}
+    weather_data_pattern=${WEATHER_DATA_MATCHING_PATTERN}
+    weather_data_path=${LOCAL_WEATHER_DATA_PATH}
+
     [Database]
     db_password=${PASSWORD}
     db_host=${IP_ADDRESS_OR_HOSTNAME}
@@ -104,7 +109,7 @@ The database schema can be installed using the following command form where `${D
 
 The exported XML data files contain the energy data. Insertion to the database is performed by running
 
-    $ time python -u ${PATH_TO_SCRIPT}/insertData.py > insert-log.txt
+    $ time python -u ${PATH_TO_SCRIPT}/insertMECOEnergyData.py --email > insert-log.txt
     
 in the directory where the data files are contained. The use of `time` is for informational purposes only and is not necessary. Redirecting to `insert-log.txt` is also unneeded but reduces the output to the short form.
 
@@ -140,14 +145,14 @@ A single file containing weather data can be processed using
     
 This method of inserting weather data  is deprecated in favor of using
 
-    $ insertCompressedWeatherData.py 
+    $ insertCompressedWeatherData.py --email
     
-that supports recursive data processing of a set of files.
+that supports recursive data processing of a set of files from the current directory.
 
 ### Utility Scripts
 
 `grantAllPermissionsToDatabase.sh ${DATABASE}`
-: Set appropriate permissions to databases.
+: Set appropriate group permissions to databases.
 
 ## Notifications
 
@@ -174,23 +179,16 @@ Notification of the results of data processing events is provided by the MSG Not
     Processed file count is 1.
     
     Plot is attached.
+    
+The final group, after the '---', is a summary report of the operations performed.
 
 ## Software Dependencies
-### Python Modules
-* ConfigParser
-* argparse
-* csv
-* datetime
-* email
-* fnmatch
-* gzip
+### Python Modules Not in the Standard Library
+* dateutil
 * matplotlib
 * psycopg2
 * pycurl
 * pylab
-* smtplib
-* urllib2
-* xml.etree.ElementTree
 
 ## License
 
