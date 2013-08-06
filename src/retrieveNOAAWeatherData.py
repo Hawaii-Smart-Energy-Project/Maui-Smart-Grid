@@ -178,7 +178,7 @@ if __name__ == '__main__':
     retriever.fileList = retriever.weatherUtil.fileList
     retriever.dateList = retriever.weatherUtil.dateList
 
-    LAST_DATE_TESTING = True
+    LAST_DATE_TESTING = False
     if not LAST_DATE_TESTING:
         retriever.pool = multiprocessing.Pool(4)
         retriever.pool.map(performDownloading, retriever.fileList)
