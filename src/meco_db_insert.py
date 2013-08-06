@@ -111,7 +111,7 @@ class MECODBInserter(object):
                 vals.append(dbColsAndVals[col])
             else:
                 vals.append("'%s'" % dbColsAndVals[
-                    col]) # surround value with single quotes
+                    col]) # Surround value with single quotes.
 
         sql = 'insert into "' + tableName + '" (' + ','.join(
             cols) + ')' + ' values (' + ','.join(

@@ -150,6 +150,10 @@ def performDownloading(filename, forceDownload = False):
     global downloadCount
     downloadCount += 1
 
+
+def performDownloadingWithForcedDownload(filename):
+    performDownloading(filename, forceDownload = True)
+
 # Use case: Month changes from Aug to Sep.
 # Last loaded date was in Aug.
 # Downloader is going to get Sep, but not the rest of Aug.
@@ -180,18 +184,28 @@ if __name__ == '__main__':
 
     LAST_DATE_TESTING = False
     if not LAST_DATE_TESTING:
-        retriever.pool = multiprocessing.Pool(4)
-        retriever.pool.map(performDownloading, retriever.fileList)
-        retriever.pool.close()
-        retriever.pool.join()
+        if retriever.fileList:
+            print "Performing primary retrieval."
+
+            retriever.pool = multiprocessing.Pool(4)
+            retriever.pool.map(performDownloading, retriever.fileList)
+            retriever.pool.close()
+            retriever.pool.join()
 
     # Force download on intermediate dates between last loaded date and now.
     # If a date is less than the last loaded date, remove it from the list,
     # effectively.
 
     # Get the keep list.
-    for f in weatherUtil.getKeepList(retriever.fileList, cursor):
-        performDownloading(f, forceDownload = True)
+    keepList = weatherUtil.getKeepList(retriever.fileList, cursor)
+    if keepList:
+        print "Performing secondary retrieval."
+
+        retriever.pool = multiprocessing.Pool(4)
+        retriever.pool.map(performDownloadingWithForcedDownload, keepList)
+        retriever.pool.close()
+        retriever.pool.join()
+
 
     # Just retrieve the last set if nothing else was retrieved.
     if downloadCount == 0:
