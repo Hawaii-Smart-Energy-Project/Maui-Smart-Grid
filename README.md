@@ -139,15 +139,17 @@ Location and meter records are stored in separate tab-separated files and are in
 
 ### Inserting NOAA Weather Data (Kahului Airport Station WBAN 22516)
 
-A single file containing weather data can be processed using
+Weather data loading is a two-stage process involving retrieval and insertion.
 
-    $ insertWeatherData.py ${FILENAME}
-    
-This method of inserting weather data  is deprecated in favor of using
+Retrieval is performed using
 
-    $ insertCompressedWeatherData.py --email
+    $ retrieveNOAAWeatherData.py
+     
+Insertion is performed using
+
+    $ insertCompressedNOAAWeatherData.py --email
     
-that supports recursive data processing of a set of files from the current directory.
+and supports recursive data processing of a set of files from the current directory.
 
 ### Utility Scripts
 
