@@ -430,15 +430,20 @@ CREATE TABLE "PVServicePointIDs" (
     house_service_point_id character varying,
     "PV_Mod_size_kW" double precision,
     inverter_model character varying,
-    "inverter_size_kW" double precision,
-    "system_cap_kW" double precision,
-    "add_cap_kW" character varying,
+    "size_kW" real,
+    "system_cap_kW" real,
     bat character varying,
     sub character varying,
     circuit smallint,
     date_uploaded timestamp without time zone,
-    has_smart_meter smallint,
-    has_pv_meter smallint
+    has_meter smallint,
+    has_separate_pv_meter smallint,
+    "add_cap_kW" real,
+    upgraded_total_kw real,
+    street character varying,
+    city character varying,
+    state character varying,
+    zip integer
 );
 
 
@@ -621,6 +626,53 @@ CREATE VIEW cd_energy_voltages_for_houses_with_pv AS
 ALTER TABLE public.cd_energy_voltages_for_houses_with_pv OWNER TO eileen;
 
 --
+-- Name: readings_by_meter_location_history; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW readings_by_meter_location_history AS
+    SELECT "MeterLocationHistory".meter_name, "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".location, "MeterLocationHistory".address, "MeterLocationHistory".latitude, "MeterLocationHistory".longitude, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "Interval".end_time, "MeterData".meter_data_id FROM (((("MeterLocationHistory" JOIN "MeterData" ON ((("MeterLocationHistory".meter_name)::bpchar = "MeterData".meter_name))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (((("Interval".interval_id = "Reading".interval_id) AND ("Interval".end_time >= "MeterLocationHistory".installed)) AND CASE WHEN ("MeterLocationHistory".uninstalled IS NULL) THEN true ELSE ("Interval".end_time < "MeterLocationHistory".uninstalled) END)));
+
+
+ALTER TABLE public.readings_by_meter_location_history OWNER TO postgres;
+
+--
+-- Name: VIEW readings_by_meter_location_history; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW readings_by_meter_location_history IS 'Readings that are referenced by the MLH. @author Daniel Zhang (張道博)';
+
+
+--
+-- Name: cd_report_testing; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW cd_report_testing AS
+    SELECT max((readings_by_meter_location_history.service_point_id)::text) AS max, sum(readings_by_meter_location_history.value) AS sum, (readings_by_meter_location_history.end_time)::date AS end_time FROM readings_by_meter_location_history WHERE (((readings_by_meter_location_history.end_time >= '2013-01-01 00:00:00'::timestamp without time zone) AND (readings_by_meter_location_history.end_time <= '2013-02-01 00:00:00'::timestamp without time zone)) AND ((readings_by_meter_location_history.service_point_id)::text = '98726'::text)) GROUP BY (readings_by_meter_location_history.end_time)::date;
+
+
+ALTER TABLE public.cd_report_testing OWNER TO eileen;
+
+--
+-- Name: cd_report_testing_2; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW cd_report_testing_2 AS
+    SELECT readings_by_meter_location_history.service_point_id, avg(readings_by_meter_location_history.value) AS avg, date_trunc('hour'::text, readings_by_meter_location_history.end_time) AS date_trunc FROM readings_by_meter_location_history WHERE ((readings_by_meter_location_history.end_time >= '2012-12-01 00:00:00'::timestamp without time zone) AND (readings_by_meter_location_history.end_time <= '2013-01-01 00:00:00'::timestamp without time zone)) GROUP BY readings_by_meter_location_history.service_point_id, date_trunc('hour'::text, readings_by_meter_location_history.end_time);
+
+
+ALTER TABLE public.cd_report_testing_2 OWNER TO eileen;
+
+--
+-- Name: cd_spid=115477_2013-01; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW "cd_spid=115477_2013-01" AS
+    SELECT readings_by_meter_location_history.service_point_id, sum(readings_by_meter_location_history.value) AS sum, (readings_by_meter_location_history.end_time)::date AS end_time FROM readings_by_meter_location_history WHERE ((((readings_by_meter_location_history.channel = (1)::smallint) AND ((readings_by_meter_location_history.service_point_id)::text = '115477'::text)) AND (readings_by_meter_location_history.end_time >= '2013-01-01 00:00:00'::timestamp without time zone)) AND (readings_by_meter_location_history.end_time < '2013-02-01 00:00:00'::timestamp without time zone)) GROUP BY (readings_by_meter_location_history.end_time)::date, readings_by_meter_location_history.service_point_id;
+
+
+ALTER TABLE public."cd_spid=115477_2013-01" OWNER TO eileen;
+
+--
 -- Name: count_of_event_duplicates; Type: VIEW; Schema: public; Owner: daniel
 --
 
@@ -740,97 +792,6 @@ COMMENT ON VIEW count_of_register_duplicates IS 'Count of duplicates in the Regi
 
 
 --
--- Name: deprecated_YU_energy_to_houses_without_PV_copy; Type: VIEW; Schema: public; Owner: yuma
---
-
-CREATE VIEW "deprecated_YU_energy_to_houses_without_PV_copy" AS
-    SELECT "LocationRecords".device_util_id, "LocationRecords".service_point_util_id, "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_latitude, "LocationRecords".address1, "LocationRecords".premise_util_id, "Interval".end_time, "Reading".value AS "energy to house kWh" FROM (("LocationRecords" LEFT JOIN "MSG_PV_Data" ON ((("LocationRecords".device_util_id)::text = ("MSG_PV_Data".util_device_id)::text))) JOIN "MeterData" ON ((("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id))), "Interval", "Reading" WHERE (("MSG_PV_Data".util_device_id IS NULL) AND ("Reading".channel = 1));
-
-
-ALTER TABLE public."deprecated_YU_energy_to_houses_without_PV_copy" OWNER TO yuma;
-
---
--- Name: deprecated_meter_ids_for_houses_without_pv_with_locations; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW deprecated_meter_ids_for_houses_without_pv_with_locations AS
-    SELECT "LocationRecords".device_util_id, "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_latitude, "LocationRecords".address1 FROM ("LocationRecords" LEFT JOIN "MSG_PV_Data" ON ((("LocationRecords".device_util_id)::text = ("MSG_PV_Data".util_device_id)::text))) WHERE ("MSG_PV_Data".util_device_id IS NULL);
-
-
-ALTER TABLE public.deprecated_meter_ids_for_houses_without_pv_with_locations OWNER TO postgres;
-
---
--- Name: VIEW deprecated_meter_ids_for_houses_without_pv_with_locations; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON VIEW deprecated_meter_ids_for_houses_without_pv_with_locations IS '@DEPRECATED. Meter IDs for houses that do not have PV while including locations. @author Daniel Zhang (張道博)';
-
-
---
--- Name: deprecated_dz_energy_voltages_for_houses_without_pv; Type: VIEW; Schema: public; Owner: daniel
---
-
-CREATE VIEW deprecated_dz_energy_voltages_for_houses_without_pv AS
-    SELECT meter_ids_for_houses_without_pv_with_locations.device_util_id, view_readings_with_meter_id_unsorted.end_time, max(CASE WHEN (view_readings_with_meter_id_unsorted.channel = (1)::smallint) THEN view_readings_with_meter_id_unsorted.value ELSE NULL::real END) AS "Energy to House kwH", zero_to_null(max(CASE WHEN (view_readings_with_meter_id_unsorted.channel = (4)::smallint) THEN view_readings_with_meter_id_unsorted.value ELSE NULL::real END)) AS "Voltage", max(meter_ids_for_houses_without_pv_with_locations.service_pt_longitude) AS service_pt_longitude, max(meter_ids_for_houses_without_pv_with_locations.service_pt_latitude) AS service_pt_latitude, max((meter_ids_for_houses_without_pv_with_locations.address1)::text) AS address1 FROM (deprecated_meter_ids_for_houses_without_pv_with_locations meter_ids_for_houses_without_pv_with_locations JOIN readings_unfiltered view_readings_with_meter_id_unsorted ON (((meter_ids_for_houses_without_pv_with_locations.device_util_id)::bpchar = view_readings_with_meter_id_unsorted.meter_name))) WHERE ((view_readings_with_meter_id_unsorted.channel = (1)::smallint) OR (view_readings_with_meter_id_unsorted.channel = (4)::smallint)) GROUP BY meter_ids_for_houses_without_pv_with_locations.device_util_id, view_readings_with_meter_id_unsorted.end_time;
-
-
-ALTER TABLE public.deprecated_dz_energy_voltages_for_houses_without_pv OWNER TO daniel;
-
---
--- Name: VIEW deprecated_dz_energy_voltages_for_houses_without_pv; Type: COMMENT; Schema: public; Owner: daniel
---
-
-COMMENT ON VIEW deprecated_dz_energy_voltages_for_houses_without_pv IS 'Return energy and voltages for houses without PV. @author Daniel Zhang (張道博)';
-
-
---
--- Name: deprecated_get_kwh_meter_locations; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW deprecated_get_kwh_meter_locations AS
-    SELECT "MeterData".meter_name, "MeterData".util_device_id, "MeterData".mac_id, "MeterData".meter_data_id, "Reading".value, "Reading".uom, "Reading".channel, "IntervalReadData".start_time, "IntervalReadData".end_time, "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_latitude, "LocationRecords".service_pt_height, "LocationRecords".device_status FROM (((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) JOIN "LocationRecords" ON ((("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id))) WHERE ("Reading".channel < 4);
-
-
-ALTER TABLE public.deprecated_get_kwh_meter_locations OWNER TO postgres;
-
---
--- Name: deprecated_get_meter_readings_locations; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW deprecated_get_meter_readings_locations AS
-    SELECT "MeterData".meter_name, "MeterData".util_device_id, "MeterData".mac_id, "MeterData".meter_data_id, "Reading".value, "Reading".uom, "Reading".channel, "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_latitude, "Interval".end_time FROM (((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) JOIN "LocationRecords" ON (((("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id) AND (("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id)))) WHERE ("Reading".channel < 4);
-
-
-ALTER TABLE public.deprecated_get_meter_readings_locations OWNER TO postgres;
-
---
--- Name: deprecated_new_energy_readings_with_location_address; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW deprecated_new_energy_readings_with_location_address AS
-    SELECT "LocationRecords".service_pt_latitude, "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_height, "LocationRecords".device_util_id, "LocationRecords".device_serial_no, "LocationRecords".device_status, "MeterData".util_device_id, "MeterData".meter_name, "IntervalReadData".end_time, "Reading".channel, "Reading".uom, "Reading".value, "LocationRecords".address1 FROM (((("LocationRecords" JOIN "MeterData" ON (((("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id) AND (("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id)))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) WHERE ("Reading".channel < 4);
-
-
-ALTER TABLE public.deprecated_new_energy_readings_with_location_address OWNER TO postgres;
-
---
--- Name: deprecated_readings_by_meter_location_history; Type: VIEW; Schema: public; Owner: daniel
---
-
-CREATE VIEW deprecated_readings_by_meter_location_history AS
-    SELECT "MeterLocationHistory".meter_name, "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".location, "MeterLocationHistory".address, "MeterLocationHistory".latitude, "MeterLocationHistory".longitude, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "Interval".end_time FROM (((("MeterLocationHistory" JOIN "MeterData" ON ((("MeterLocationHistory".meter_name)::bpchar = "MeterData".meter_name))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (((("Interval".interval_id = "Reading".interval_id) AND ("Interval".end_time >= "MeterLocationHistory".installed)) AND CASE WHEN ("MeterLocationHistory".uninstalled IS NULL) THEN true ELSE ("Interval".end_time <= "MeterLocationHistory".uninstalled) END)));
-
-
-ALTER TABLE public.deprecated_readings_by_meter_location_history OWNER TO daniel;
-
---
--- Name: VIEW deprecated_readings_by_meter_location_history; Type: COMMENT; Schema: public; Owner: daniel
---
-
-COMMENT ON VIEW deprecated_readings_by_meter_location_history IS 'Readings limited by Meter Location History. @author Daniel Zhang (張道博)';
-
-
---
 -- Name: meter_ids_for_houses_without_pv; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -845,88 +806,6 @@ ALTER TABLE public.meter_ids_for_houses_without_pv OWNER TO postgres;
 --
 
 COMMENT ON VIEW meter_ids_for_houses_without_pv IS 'Meter IDs for houses that do not have PV. @author Daniel Zhang (張道博)';
-
-
---
--- Name: deprecated_readings_for_houses_without_pv; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW deprecated_readings_for_houses_without_pv AS
-    SELECT meter_ids_for_houses_without_pv.device_util_id, view_readings_with_meter_id_unsorted.end_time, view_readings_with_meter_id_unsorted.channel, view_readings_with_meter_id_unsorted.raw_value, view_readings_with_meter_id_unsorted.value, view_readings_with_meter_id_unsorted.uom, view_readings_with_meter_id_unsorted.start_time, view_readings_with_meter_id_unsorted.ird_end_time FROM (meter_ids_for_houses_without_pv JOIN readings_unfiltered view_readings_with_meter_id_unsorted ON (((meter_ids_for_houses_without_pv.device_util_id)::integer = (view_readings_with_meter_id_unsorted.meter_name)::integer)));
-
-
-ALTER TABLE public.deprecated_readings_for_houses_without_pv OWNER TO postgres;
-
---
--- Name: VIEW deprecated_readings_for_houses_without_pv; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON VIEW deprecated_readings_for_houses_without_pv IS 'Retrieve readings for houses that do not have PV. @author Daniel Zhang (張道博)';
-
-
---
--- Name: deprecated_view_readings; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW deprecated_view_readings AS
-    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
-
-
-ALTER TABLE public.deprecated_view_readings OWNER TO postgres;
-
---
--- Name: VIEW deprecated_view_readings; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON VIEW deprecated_view_readings IS 'View readings along with their end times.
-
-@author Daniel Zhang (張道博)';
-
-
---
--- Name: deprecated_view_readings_with_meter_id; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW deprecated_view_readings_with_meter_id AS
-    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time, "MeterData".meter_data_id FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
-
-
-ALTER TABLE public.deprecated_view_readings_with_meter_id OWNER TO postgres;
-
---
--- Name: VIEW deprecated_view_readings_with_meter_id; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON VIEW deprecated_view_readings_with_meter_id IS 'View readings along with their end times. Retrieve the meter name along with the readings.
-
-@author Daniel Zhang (張道博)';
-
-
---
--- Name: deprecated_voltage_locations_highlow_events; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW deprecated_voltage_locations_highlow_events AS
-    SELECT "LocationRecords".service_pt_latitude, "LocationRecords".service_pt_longitude, "LocationRecords".service_pt_height, "LocationRecords".device_serial_no, "LocationRecords".device_status, "MeterData".util_device_id, "MeterData".meter_name, "Reading".channel, "Reading".uom, "Reading".value AS voltage, "LocationRecords".address1, CASE WHEN ("Reading".value > (252)::double precision) THEN 1 ELSE 0 END AS high_event, CASE WHEN ("Reading".value < (228)::double precision) THEN 1 ELSE 0 END AS low_event, "LocationRecords".service_point_util_id, "Interval".end_time FROM (((("LocationRecords" JOIN "MeterData" ON (((("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id) AND (("LocationRecords".device_util_id)::bpchar = "MeterData".util_device_id)))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) WHERE (("Reading".channel = 4) AND ("Reading".value > (0)::double precision));
-
-
-ALTER TABLE public.deprecated_voltage_locations_highlow_events OWNER TO postgres;
-
---
--- Name: readings_by_meter_location_history; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW readings_by_meter_location_history AS
-    SELECT "MeterLocationHistory".meter_name, "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".location, "MeterLocationHistory".address, "MeterLocationHistory".latitude, "MeterLocationHistory".longitude, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "Interval".end_time, "MeterData".meter_data_id FROM (((("MeterLocationHistory" JOIN "MeterData" ON ((("MeterLocationHistory".meter_name)::bpchar = "MeterData".meter_name))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (((("Interval".interval_id = "Reading".interval_id) AND ("Interval".end_time >= "MeterLocationHistory".installed)) AND CASE WHEN ("MeterLocationHistory".uninstalled IS NULL) THEN true ELSE ("Interval".end_time < "MeterLocationHistory".uninstalled) END)));
-
-
-ALTER TABLE public.readings_by_meter_location_history OWNER TO postgres;
-
---
--- Name: VIEW readings_by_meter_location_history; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON VIEW readings_by_meter_location_history IS 'Readings that are referenced by the MLH. @author Daniel Zhang (張道博)';
 
 
 --
@@ -1972,6 +1851,16 @@ GRANT ALL ON TABLE cd_energy_voltages_for_houses_with_pv TO sepgroup;
 
 
 --
+-- Name: readings_by_meter_location_history; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE readings_by_meter_location_history FROM PUBLIC;
+REVOKE ALL ON TABLE readings_by_meter_location_history FROM postgres;
+GRANT ALL ON TABLE readings_by_meter_location_history TO postgres;
+GRANT ALL ON TABLE readings_by_meter_location_history TO sepgroup;
+
+
+--
 -- Name: count_of_event_duplicates; Type: ACL; Schema: public; Owner: daniel
 --
 
@@ -2043,77 +1932,6 @@ GRANT ALL ON TABLE count_of_register_duplicates TO sepgroup;
 
 
 --
--- Name: deprecated_YU_energy_to_houses_without_PV_copy; Type: ACL; Schema: public; Owner: yuma
---
-
-REVOKE ALL ON TABLE "deprecated_YU_energy_to_houses_without_PV_copy" FROM PUBLIC;
-REVOKE ALL ON TABLE "deprecated_YU_energy_to_houses_without_PV_copy" FROM yuma;
-GRANT ALL ON TABLE "deprecated_YU_energy_to_houses_without_PV_copy" TO yuma;
-GRANT ALL ON TABLE "deprecated_YU_energy_to_houses_without_PV_copy" TO sepgroup;
-
-
---
--- Name: deprecated_meter_ids_for_houses_without_pv_with_locations; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE deprecated_meter_ids_for_houses_without_pv_with_locations FROM PUBLIC;
-REVOKE ALL ON TABLE deprecated_meter_ids_for_houses_without_pv_with_locations FROM postgres;
-GRANT ALL ON TABLE deprecated_meter_ids_for_houses_without_pv_with_locations TO postgres;
-GRANT ALL ON TABLE deprecated_meter_ids_for_houses_without_pv_with_locations TO sepgroup;
-
-
---
--- Name: deprecated_dz_energy_voltages_for_houses_without_pv; Type: ACL; Schema: public; Owner: daniel
---
-
-REVOKE ALL ON TABLE deprecated_dz_energy_voltages_for_houses_without_pv FROM PUBLIC;
-REVOKE ALL ON TABLE deprecated_dz_energy_voltages_for_houses_without_pv FROM daniel;
-GRANT ALL ON TABLE deprecated_dz_energy_voltages_for_houses_without_pv TO daniel;
-GRANT ALL ON TABLE deprecated_dz_energy_voltages_for_houses_without_pv TO postgres;
-GRANT ALL ON TABLE deprecated_dz_energy_voltages_for_houses_without_pv TO sepgroup;
-
-
---
--- Name: deprecated_get_kwh_meter_locations; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE deprecated_get_kwh_meter_locations FROM PUBLIC;
-REVOKE ALL ON TABLE deprecated_get_kwh_meter_locations FROM postgres;
-GRANT ALL ON TABLE deprecated_get_kwh_meter_locations TO postgres;
-GRANT ALL ON TABLE deprecated_get_kwh_meter_locations TO sepgroup;
-
-
---
--- Name: deprecated_get_meter_readings_locations; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE deprecated_get_meter_readings_locations FROM PUBLIC;
-REVOKE ALL ON TABLE deprecated_get_meter_readings_locations FROM postgres;
-GRANT ALL ON TABLE deprecated_get_meter_readings_locations TO postgres;
-GRANT ALL ON TABLE deprecated_get_meter_readings_locations TO sepgroup;
-
-
---
--- Name: deprecated_new_energy_readings_with_location_address; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE deprecated_new_energy_readings_with_location_address FROM PUBLIC;
-REVOKE ALL ON TABLE deprecated_new_energy_readings_with_location_address FROM postgres;
-GRANT ALL ON TABLE deprecated_new_energy_readings_with_location_address TO postgres;
-GRANT ALL ON TABLE deprecated_new_energy_readings_with_location_address TO sepgroup;
-
-
---
--- Name: deprecated_readings_by_meter_location_history; Type: ACL; Schema: public; Owner: daniel
---
-
-REVOKE ALL ON TABLE deprecated_readings_by_meter_location_history FROM PUBLIC;
-REVOKE ALL ON TABLE deprecated_readings_by_meter_location_history FROM daniel;
-GRANT ALL ON TABLE deprecated_readings_by_meter_location_history TO daniel;
-GRANT ALL ON TABLE deprecated_readings_by_meter_location_history TO sepgroup;
-
-
---
 -- Name: meter_ids_for_houses_without_pv; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -2121,56 +1939,6 @@ REVOKE ALL ON TABLE meter_ids_for_houses_without_pv FROM PUBLIC;
 REVOKE ALL ON TABLE meter_ids_for_houses_without_pv FROM postgres;
 GRANT ALL ON TABLE meter_ids_for_houses_without_pv TO postgres;
 GRANT ALL ON TABLE meter_ids_for_houses_without_pv TO sepgroup;
-
-
---
--- Name: deprecated_readings_for_houses_without_pv; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE deprecated_readings_for_houses_without_pv FROM PUBLIC;
-REVOKE ALL ON TABLE deprecated_readings_for_houses_without_pv FROM postgres;
-GRANT ALL ON TABLE deprecated_readings_for_houses_without_pv TO postgres;
-GRANT ALL ON TABLE deprecated_readings_for_houses_without_pv TO sepgroup;
-
-
---
--- Name: deprecated_view_readings; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE deprecated_view_readings FROM PUBLIC;
-REVOKE ALL ON TABLE deprecated_view_readings FROM postgres;
-GRANT ALL ON TABLE deprecated_view_readings TO postgres;
-GRANT ALL ON TABLE deprecated_view_readings TO sepgroup;
-
-
---
--- Name: deprecated_view_readings_with_meter_id; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE deprecated_view_readings_with_meter_id FROM PUBLIC;
-REVOKE ALL ON TABLE deprecated_view_readings_with_meter_id FROM postgres;
-GRANT ALL ON TABLE deprecated_view_readings_with_meter_id TO postgres;
-GRANT ALL ON TABLE deprecated_view_readings_with_meter_id TO sepgroup;
-
-
---
--- Name: deprecated_voltage_locations_highlow_events; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE deprecated_voltage_locations_highlow_events FROM PUBLIC;
-REVOKE ALL ON TABLE deprecated_voltage_locations_highlow_events FROM postgres;
-GRANT ALL ON TABLE deprecated_voltage_locations_highlow_events TO postgres;
-GRANT ALL ON TABLE deprecated_voltage_locations_highlow_events TO sepgroup;
-
-
---
--- Name: readings_by_meter_location_history; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE readings_by_meter_location_history FROM PUBLIC;
-REVOKE ALL ON TABLE readings_by_meter_location_history FROM postgres;
-GRANT ALL ON TABLE readings_by_meter_location_history TO postgres;
-GRANT ALL ON TABLE readings_by_meter_location_history TO sepgroup;
 
 
 --
