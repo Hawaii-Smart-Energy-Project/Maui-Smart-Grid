@@ -21,6 +21,7 @@ import os
 import gzip
 from msg_noaa_weather_data_util import MSGWeatherDataUtil
 from msg_db_connector import MSGDBConnector
+import fnmatch
 
 weatherDataPath = ''
 retriever = None
@@ -159,6 +160,21 @@ def performDownloadingWithForcedDownload(filename):
 # Downloader is going to get Sep, but not the rest of Aug.
 # To get the remainder of Aug, force download on Aug.
 
+def cleanUpTxtFiles():
+    """
+    Clean up unused txt files.
+    """
+
+    patterns = ['*hourly.txt', '*daily.txt', '*monthly.txt', '*precip.txt',
+                '*remarks.txt', '*station.txt']
+    for root, dirs, filenames in os.walk(
+            configer.configOptionValue('Weather Data', 'weather_data_path')):
+        for pat in patterns:
+            for filename in fnmatch.filter(filenames, pat):
+                os.remove(filename)
+                print "Removed %s." % filename
+
+
 if __name__ == '__main__':
     dbConnector = MSGDBConnector()
     cursor = dbConnector.conn.cursor()
@@ -214,3 +230,4 @@ if __name__ == '__main__':
         performDownloading(retriever.fileList[-1], forceDownload = True)
 
     print "downloadCount = %s." % downloadCount
+    cleanUpTxtFiles()
