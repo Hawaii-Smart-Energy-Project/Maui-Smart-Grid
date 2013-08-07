@@ -135,13 +135,20 @@ def unzipFile(filename, forceDownload = False):
 def performDownloading(filename, forceDownload = False):
     logger.log('')
 
+    success = True
     if not fileExists(filename) or forceDownload:
         print "Performing download on " + filename
         fp = open(weatherDataPath + "/" + filename, "wb")
         curl = pycurl.Curl()
         curl.setopt(pycurl.URL, weatherDataURL + "/" + filename)
         curl.setopt(pycurl.WRITEDATA, fp)
-        curl.perform()
+        try:
+            curl.perform()
+        except pycurl.error, e:
+            errorCode, errorText = e.args
+            logger.log('Error during retrieval: code: %s, text: %s.' % (
+                errorCode, errorText))
+            success = False
         curl.close()
         fp.close()
 
@@ -150,6 +157,8 @@ def performDownloading(filename, forceDownload = False):
 
     global downloadCount
     downloadCount += 1
+
+    return success
 
 
 def performDownloadingWithForcedDownload(filename):
@@ -204,9 +213,13 @@ if __name__ == '__main__':
             print "Performing primary retrieval."
 
             retriever.pool = multiprocessing.Pool(4)
-            retriever.pool.map(performDownloading, retriever.fileList)
+            results = retriever.pool.map(performDownloading, retriever.fileList)
             retriever.pool.close()
             retriever.pool.join()
+
+            if False in results:
+                print "An error occurred during primary retrieval."
+                # print results
 
     # Force download on intermediate dates between last loaded date and now.
     # If a date is less than the last loaded date, remove it from the list,
@@ -218,9 +231,13 @@ if __name__ == '__main__':
         print "Performing secondary retrieval."
 
         retriever.pool = multiprocessing.Pool(4)
-        retriever.pool.map(performDownloadingWithForcedDownload, keepList)
+        results = retriever.pool.map(performDownloadingWithForcedDownload,
+                                     keepList)
         retriever.pool.close()
         retriever.pool.join()
+
+        if False in results:
+            print "An error occurred during secondary retrieval."
 
 
     # Just retrieve the last set if nothing else was retrieved.
