@@ -12,7 +12,7 @@ Parallelized weather retrieval and processing.
 __author__ = 'Daniel Zhang (張道博)'
 
 import pycurl
-from msg_config import MSGConfiger
+from msg_configer import MSGConfiger
 from msg_logger import MSGLogger
 import multiprocessing
 import zipfile

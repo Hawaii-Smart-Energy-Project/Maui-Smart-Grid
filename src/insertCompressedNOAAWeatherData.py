@@ -16,7 +16,7 @@ KAHULUI_AIRPORT = '22516'
 
 import os
 import fnmatch
-from msg_config import MSGConfiger
+from msg_configer import MSGConfiger
 from msg_notifier import MSGNotifier
 import argparse
 from msg_logger import MSGLogger

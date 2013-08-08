@@ -3,7 +3,7 @@
 
 __author__ = 'Daniel Zhang (張道博)'
 
-from msg_config import MSGConfiger
+from msg_configer import MSGConfiger
 from msg_db_util import MSGDBUtil
 from msg_logger import MSGLogger
 

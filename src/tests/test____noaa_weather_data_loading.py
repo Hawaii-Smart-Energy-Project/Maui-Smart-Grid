@@ -9,7 +9,7 @@ from msg_logger import MSGLogger
 from msg_db_connector import MSGDBConnector
 import re
 from msg_logger import MSGLogger
-from msg_config import MSGConfiger
+from msg_configer import MSGConfiger
 
 
 class WeatherDataLoadingTester(unittest.TestCase):

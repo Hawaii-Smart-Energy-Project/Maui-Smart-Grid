@@ -10,7 +10,7 @@ matplotlib.use('Agg')
 import pylab
 import matplotlib.pyplot as plt
 import matplotlib.dates
-from msg_config import MSGConfiger
+from msg_configer import MSGConfiger
 import time
 
 # Set TEST_SCRIPT to True to run plotting as a script.

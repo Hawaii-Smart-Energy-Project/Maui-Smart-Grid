@@ -4,7 +4,7 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 from time import strptime
-import datetime as dt
+from datetime import datetime as dt
 import sys
 from msg_logger import MSGLogger
 
@@ -22,9 +22,10 @@ class MSGTimeUtil(object):
 
     def reportOfDays(self, datetimes = None):
         """
-        Return report of days processed.
+        Return report of days processed given a set of days.
 
         :param datetimes: A set of datetimes.
+        :returns: Report of processing as a string.
         """
 
         #  @todo Verify datetimes is a Set.
@@ -51,6 +52,14 @@ class MSGTimeUtil(object):
         else:
             return "Processed %s days between %s to %s, inclusive." % (
                 countOfDays, firstDay, lastDay)
+
+    def conciseNow(self):
+        """
+        Returns the current date and time in a concise format.
+        """
+
+        return dt.strftime(dt.now(), '%Y-%m-%d_%H%m%S')
+
 
 
 # For debugging

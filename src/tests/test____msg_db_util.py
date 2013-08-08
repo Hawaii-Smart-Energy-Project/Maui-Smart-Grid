@@ -8,7 +8,7 @@ from msg_db_util import MSGDBUtil
 from meco_db_insert import MECODBInserter
 from msg_db_connector import MSGDBConnector
 from meco_db_delete import MECODBDeleter
-from msg_config import MSGConfiger
+from msg_configer import MSGConfiger
 from msg_logger import MSGLogger
 
 

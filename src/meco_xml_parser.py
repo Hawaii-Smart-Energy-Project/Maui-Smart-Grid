@@ -6,7 +6,7 @@ __author__ = 'Daniel Zhang (張道博)'
 import xml.etree.ElementTree as ET
 import re
 from meco_db_insert import MECODBInserter
-from msg_config import MSGConfiger
+from msg_configer import MSGConfiger
 from msg_db_util import MSGDBUtil
 from meco_mapper import MECOMapper
 from msg_db_connector import MSGDBConnector

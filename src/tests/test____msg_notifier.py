@@ -7,7 +7,7 @@ import unittest
 from msg_notifier import MSGNotifier
 import smtplib
 
-from msg_config import MSGConfiger
+from msg_configer import MSGConfiger
 
 SEND_EMAIL = False
 

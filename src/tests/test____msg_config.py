@@ -4,7 +4,7 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 import unittest
-from msg_config import MSGConfiger
+from msg_configer import MSGConfiger
 
 
 class TestMECOConfig(unittest.TestCase):

@@ -7,7 +7,7 @@ import urllib2
 import re
 from msg_db_util import MSGDBUtil
 from msg_logger import MSGLogger
-from msg_config import MSGConfiger
+from msg_configer import MSGConfiger
 import datetime as dt
 from dateutil.relativedelta import relativedelta
 

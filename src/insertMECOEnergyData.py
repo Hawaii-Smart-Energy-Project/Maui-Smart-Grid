@@ -20,7 +20,7 @@ import os
 import fnmatch
 import sys
 from subprocess import call
-from msg_config import MSGConfiger
+from msg_configer import MSGConfiger
 import re
 from msg_notifier import MSGNotifier
 import argparse

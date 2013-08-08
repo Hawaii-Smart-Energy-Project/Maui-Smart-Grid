@@ -18,7 +18,7 @@ import sys
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 from msg_notifier import MSGNotifier
-from msg_config import MSGConfiger
+from msg_configer import MSGConfiger
 
 filename = sys.argv[1]
 

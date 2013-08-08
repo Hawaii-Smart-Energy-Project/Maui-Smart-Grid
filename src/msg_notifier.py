@@ -5,7 +5,7 @@ __author__ = 'Daniel Zhang (張道博)'
 
 import smtplib
 from datetime import datetime
-from msg_config import MSGConfiger
+from msg_configer import MSGConfiger
 import sys
 import os
 from email.MIMEMultipart import MIMEMultipart

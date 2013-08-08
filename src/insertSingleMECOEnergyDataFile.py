@@ -16,7 +16,7 @@ __author__ = 'Daniel Zhang (張道博)'
 
 from meco_xml_parser import MECOXMLParser
 import re
-from msg_config import MSGConfiger
+from msg_configer import MSGConfiger
 import gzip
 import sys
 import argparse
