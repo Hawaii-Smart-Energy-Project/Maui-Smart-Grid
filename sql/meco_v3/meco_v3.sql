@@ -443,7 +443,9 @@ CREATE TABLE "PVServicePointIDs" (
     street character varying,
     city character varying,
     state character varying,
-    zip integer
+    zip integer,
+    month_installed integer,
+    day_installed integer
 );
 
 
@@ -643,94 +645,34 @@ COMMENT ON VIEW readings_by_meter_location_history IS 'Readings that are referen
 
 
 --
--- Name: cd_practice3; Type: VIEW; Schema: public; Owner: eileen
---
-
-CREATE VIEW cd_practice3 AS
-    SELECT readings_by_meter_location_history.meter_name, min(readings_by_meter_location_history.end_time) AS min, max(readings_by_meter_location_history.end_time) AS max, readings_by_meter_location_history.service_point_id FROM readings_by_meter_location_history GROUP BY readings_by_meter_location_history.meter_name, readings_by_meter_location_history.service_point_id;
-
-
-ALTER TABLE public.cd_practice3 OWNER TO eileen;
-
---
--- Name: cd_practice_spid98726; Type: VIEW; Schema: public; Owner: eileen
---
-
-CREATE VIEW cd_practice_spid98726 AS
-    SELECT readings_by_meter_location_history.service_point_id, readings_by_meter_location_history.channel, readings_by_meter_location_history.value, readings_by_meter_location_history.end_time FROM readings_by_meter_location_history WHERE ((readings_by_meter_location_history.service_point_id)::text = '98726'::text);
-
-
-ALTER TABLE public.cd_practice_spid98726 OWNER TO eileen;
-
---
 -- Name: cd_readings_channel_as_columns_by_service_point; Type: VIEW; Schema: public; Owner: eileen
 --
 
 CREATE VIEW cd_readings_channel_as_columns_by_service_point AS
-    SELECT readings_by_meter_location_history.service_point_id, max(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy to House kwH", max(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy from House kwH(rec)", max(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Net Energy to House KwH", max(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "voltage at house", readings_by_meter_location_history.end_time FROM readings_by_meter_location_history GROUP BY readings_by_meter_location_history.service_point_id, readings_by_meter_location_history.end_time;
+    SELECT readings_by_meter_location_history.service_point_id, max(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy to House kwH", max(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy from House kwH(rec)", max(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Net Energy to House KwH", max(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "voltage at house", readings_by_meter_location_history.end_time, max(readings_by_meter_location_history.service_point_latitude) AS service_point_latitude, max(readings_by_meter_location_history.service_point_longitude) AS service_point_longitude, max((readings_by_meter_location_history.location)::text) AS "location_ID", max((readings_by_meter_location_history.address)::text) AS address, max(readings_by_meter_location_history.latitude) AS location_latitude, max(readings_by_meter_location_history.longitude) AS location_longitude FROM readings_by_meter_location_history GROUP BY readings_by_meter_location_history.service_point_id, readings_by_meter_location_history.end_time;
 
 
 ALTER TABLE public.cd_readings_channel_as_columns_by_service_point OWNER TO eileen;
 
 --
--- Name: cd_report_testing; Type: VIEW; Schema: public; Owner: eileen
+-- Name: cd_monthly_summary_1; Type: VIEW; Schema: public; Owner: eileen
 --
 
-CREATE VIEW cd_report_testing AS
-    SELECT max((readings_by_meter_location_history.service_point_id)::text) AS max, sum(readings_by_meter_location_history.value) AS sum, (readings_by_meter_location_history.end_time)::date AS end_time FROM readings_by_meter_location_history WHERE (((readings_by_meter_location_history.end_time >= '2013-01-01 00:00:00'::timestamp without time zone) AND (readings_by_meter_location_history.end_time <= '2013-02-01 00:00:00'::timestamp without time zone)) AND ((readings_by_meter_location_history.service_point_id)::text = '98726'::text)) GROUP BY (readings_by_meter_location_history.end_time)::date;
+CREATE VIEW cd_monthly_summary_1 AS
+    SELECT cd_readings_channel_as_columns_by_service_point.service_point_id, sum(cd_readings_channel_as_columns_by_service_point."Energy to House kwH") AS total_energy_to_house_kwh, sum(cd_readings_channel_as_columns_by_service_point."Energy from House kwH(rec)") AS total_energy_from_house_kwh, sum(cd_readings_channel_as_columns_by_service_point."Net Energy to House KwH") AS total_net_energy_kwh, avg(cd_readings_channel_as_columns_by_service_point."voltage at house") AS avg, date_trunc('month'::text, cd_readings_channel_as_columns_by_service_point.end_time) AS month, max(cd_readings_channel_as_columns_by_service_point.service_point_latitude) AS sp_latitude, max(cd_readings_channel_as_columns_by_service_point.service_point_longitude) AS sp_longtidue, max(cd_readings_channel_as_columns_by_service_point."location_ID") AS location_id, max(cd_readings_channel_as_columns_by_service_point.address) AS address, max(cd_readings_channel_as_columns_by_service_point.location_latitude) AS location_latitude, max(cd_readings_channel_as_columns_by_service_point.location_longitude) AS location_longitude, max("PVServicePointIDs".has_meter) AS """has_meter""", max("PVServicePointIDs".has_separate_pv_meter) AS """has_separate_pv_meter""" FROM (cd_readings_channel_as_columns_by_service_point LEFT JOIN "PVServicePointIDs" ON ((cd_readings_channel_as_columns_by_service_point.address = ("PVServicePointIDs".street)::text))) GROUP BY cd_readings_channel_as_columns_by_service_point.service_point_id, date_trunc('month'::text, cd_readings_channel_as_columns_by_service_point.end_time);
 
 
-ALTER TABLE public.cd_report_testing OWNER TO eileen;
-
---
--- Name: cd_report_testing_2; Type: VIEW; Schema: public; Owner: eileen
---
-
-CREATE VIEW cd_report_testing_2 AS
-    SELECT readings_by_meter_location_history.service_point_id, avg(readings_by_meter_location_history.value) AS avg, date_trunc('hour'::text, readings_by_meter_location_history.end_time) AS date_trunc FROM readings_by_meter_location_history WHERE ((readings_by_meter_location_history.end_time >= '2012-12-01 00:00:00'::timestamp without time zone) AND (readings_by_meter_location_history.end_time <= '2013-01-01 00:00:00'::timestamp without time zone)) GROUP BY readings_by_meter_location_history.service_point_id, date_trunc('hour'::text, readings_by_meter_location_history.end_time);
-
-
-ALTER TABLE public.cd_report_testing_2 OWNER TO eileen;
+ALTER TABLE public.cd_monthly_summary_1 OWNER TO eileen;
 
 --
--- Name: cd_spid=115477_2013-01; Type: VIEW; Schema: public; Owner: eileen
+-- Name: cd_monthly_summary_2; Type: VIEW; Schema: public; Owner: eileen
 --
 
-CREATE VIEW "cd_spid=115477_2013-01" AS
-    SELECT readings_by_meter_location_history.service_point_id, sum(readings_by_meter_location_history.value) AS sum, (readings_by_meter_location_history.end_time)::date AS end_time FROM readings_by_meter_location_history WHERE ((((readings_by_meter_location_history.channel = (1)::smallint) AND ((readings_by_meter_location_history.service_point_id)::text = '115477'::text)) AND (readings_by_meter_location_history.end_time >= '2013-01-01 00:00:00'::timestamp without time zone)) AND (readings_by_meter_location_history.end_time < '2013-02-01 00:00:00'::timestamp without time zone)) GROUP BY (readings_by_meter_location_history.end_time)::date, readings_by_meter_location_history.service_point_id;
+CREATE VIEW cd_monthly_summary_2 AS
+    SELECT cd_readings_channel_as_columns_by_service_point.service_point_id, sum(cd_readings_channel_as_columns_by_service_point."Energy to House kwH") AS total_energy_to_house_kwh, sum(cd_readings_channel_as_columns_by_service_point."Energy from House kwH(rec)") AS total_energy_from_house_kwh, sum(cd_readings_channel_as_columns_by_service_point."Net Energy to House KwH") AS total_net_energy_kwh, avg(cd_readings_channel_as_columns_by_service_point."voltage at house") AS avg, date_trunc('month'::text, cd_readings_channel_as_columns_by_service_point.end_time) AS month, max(cd_readings_channel_as_columns_by_service_point.service_point_latitude) AS sp_latitude, max(cd_readings_channel_as_columns_by_service_point.service_point_longitude) AS sp_longtidue, max(cd_readings_channel_as_columns_by_service_point."location_ID") AS location_id, max(cd_readings_channel_as_columns_by_service_point.address) AS address, max(cd_readings_channel_as_columns_by_service_point.location_latitude) AS location_latitude, max(cd_readings_channel_as_columns_by_service_point.location_longitude) AS location_longitude, (((count(cd_readings_channel_as_columns_by_service_point.end_time))::double precision / (4)::double precision) / (24)::double precision) AS count_day FROM cd_readings_channel_as_columns_by_service_point GROUP BY cd_readings_channel_as_columns_by_service_point.service_point_id, date_trunc('month'::text, cd_readings_channel_as_columns_by_service_point.end_time);
 
 
-ALTER TABLE public."cd_spid=115477_2013-01" OWNER TO eileen;
-
---
--- Name: deprecated_energy_by_location; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW deprecated_energy_by_location AS
-    SELECT readings_by_meter_location_history.meter_name, readings_by_meter_location_history.end_time, max(("PVServicePointIDs".pv_service_point_id)::text) AS service_point_id_pv, max(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy to House kwH", max(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy from House kwH(rec)", max(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Net Energy to House KwH", zero_to_null(max(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END)) AS "Voltage VrmsA-N", max(readings_by_meter_location_history.service_point_longitude) AS service_pt_longitude, max(readings_by_meter_location_history.service_point_latitude) AS service_pt_latitude, max((readings_by_meter_location_history.address)::text) AS address FROM ("PVServicePointIDs" JOIN readings_by_meter_location_history readings_by_meter_location_history ON ((("PVServicePointIDs".pv_service_point_id)::text = (readings_by_meter_location_history.service_point_id)::text))) GROUP BY readings_by_meter_location_history.meter_name, readings_by_meter_location_history.end_time;
-
-
-ALTER TABLE public.deprecated_energy_by_location OWNER TO postgres;
-
---
--- Name: cd_travis_report; Type: VIEW; Schema: public; Owner: eileen
---
-
-CREATE VIEW cd_travis_report AS
-    SELECT date_trunc('month'::text, energy_by_location.end_time) AS date_trunc, energy_by_location.service_point_id_pv, sum(energy_by_location."Energy to House kwH") AS "Energy to House kwH", sum(energy_by_location."Energy from House kwH(rec)") AS "Energy from House kwH(rec)", sum(energy_by_location."Net Energy to House KwH") AS "Net Energy to House KwH", avg(energy_by_location."Voltage VrmsA-N") AS "Voltage VrmsA-N", (((count(energy_by_location.end_time))::double precision / (4)::double precision) / (24)::double precision) AS count_day FROM deprecated_energy_by_location energy_by_location GROUP BY energy_by_location.service_point_id_pv, date_trunc('month'::text, energy_by_location.end_time) LIMIT 100;
-
-
-ALTER TABLE public.cd_travis_report OWNER TO eileen;
-
---
--- Name: cd_travis_report_2; Type: VIEW; Schema: public; Owner: eileen
---
-
-CREATE VIEW cd_travis_report_2 AS
-    SELECT cd_readings_channel_as_columns_by_service_point.service_point_id, sum(cd_readings_channel_as_columns_by_service_point."Energy to House kwH") AS "Total_Energy_to_House_kwH", sum(cd_readings_channel_as_columns_by_service_point."Energy from House kwH(rec)") AS "Total_Energy_from_House_kwH", sum(cd_readings_channel_as_columns_by_service_point."Net Energy to House KwH") AS "Total_Net_Energy_to_House_kwH", avg(cd_readings_channel_as_columns_by_service_point."voltage at house") AS "Avg_Voltage", date_trunc('month'::text, cd_readings_channel_as_columns_by_service_point.end_time) AS date_trunc, (((count(cd_readings_channel_as_columns_by_service_point.end_time))::double precision / (4)::double precision) / (24)::double precision) AS count_day FROM cd_readings_channel_as_columns_by_service_point GROUP BY cd_readings_channel_as_columns_by_service_point.service_point_id, date_trunc('month'::text, cd_readings_channel_as_columns_by_service_point.end_time);
-
-
-ALTER TABLE public.cd_travis_report_2 OWNER TO eileen;
+ALTER TABLE public.cd_monthly_summary_2 OWNER TO eileen;
 
 --
 -- Name: count_of_event_duplicates; Type: VIEW; Schema: public; Owner: daniel
@@ -852,6 +794,46 @@ COMMENT ON VIEW count_of_register_duplicates IS 'Count of duplicates in the Regi
 
 
 --
+-- Name: deprecated_energy_by_location; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW deprecated_energy_by_location AS
+    SELECT readings_by_meter_location_history.meter_name, readings_by_meter_location_history.end_time, max(("PVServicePointIDs".pv_service_point_id)::text) AS service_point_id_pv, max(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy to House kwH", max(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy from House kwH(rec)", max(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Net Energy to House KwH", zero_to_null(max(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END)) AS "Voltage VrmsA-N", max(readings_by_meter_location_history.service_point_longitude) AS service_pt_longitude, max(readings_by_meter_location_history.service_point_latitude) AS service_pt_latitude, max((readings_by_meter_location_history.address)::text) AS address FROM ("PVServicePointIDs" JOIN readings_by_meter_location_history readings_by_meter_location_history ON ((("PVServicePointIDs".pv_service_point_id)::text = (readings_by_meter_location_history.service_point_id)::text))) GROUP BY readings_by_meter_location_history.meter_name, readings_by_meter_location_history.end_time;
+
+
+ALTER TABLE public.deprecated_energy_by_location OWNER TO postgres;
+
+--
+-- Name: deprecated_get_voltages; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW deprecated_get_voltages AS
+    SELECT "Reading".channel, "Reading".value, "Reading".interval_id, "Reading".reading_id FROM "Reading" WHERE ("Reading".channel = 4);
+
+
+ALTER TABLE public.deprecated_get_voltages OWNER TO postgres;
+
+--
+-- Name: deprecated_get_voltage_with_interval; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW deprecated_get_voltage_with_interval AS
+    SELECT get_voltages.channel, get_voltages.value, get_voltages.interval_id, get_voltages.reading_id, "Interval".end_time, "Interval".interval_read_data_id FROM (deprecated_get_voltages get_voltages JOIN "Interval" ON (("Interval".interval_id = get_voltages.interval_id)));
+
+
+ALTER TABLE public.deprecated_get_voltage_with_interval OWNER TO postgres;
+
+--
+-- Name: deprecated_get_voltage_with_meter_id; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW deprecated_get_voltage_with_meter_id AS
+    SELECT get_voltage_with_interval.channel, get_voltage_with_interval.value, get_voltage_with_interval.end_time, "IntervalReadData".start_time, "MeterData".meter_data_id, "MeterData".meter_name, "MeterData".util_device_id, "MeterData".mac_id FROM ((deprecated_get_voltage_with_interval get_voltage_with_interval JOIN "IntervalReadData" ON ((get_voltage_with_interval.interval_read_data_id = "IntervalReadData".interval_read_data_id))) JOIN "MeterData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id)));
+
+
+ALTER TABLE public.deprecated_get_voltage_with_meter_id OWNER TO postgres;
+
+--
 -- Name: deprecated_kz_meter_id_voltage_and_net_energy; Type: VIEW; Schema: public; Owner: eileen
 --
 
@@ -893,6 +875,40 @@ ALTER TABLE public.dz_energy_voltages_for_houses_without_pv OWNER TO postgres;
 --
 
 COMMENT ON VIEW dz_energy_voltages_for_houses_without_pv IS 'Energy and voltages for houses without PV limited by Meter Location History. @author Daniel Zhang (張道博)';
+
+
+--
+-- Name: nonpv_service_point_ids; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW nonpv_service_point_ids AS
+    SELECT "MeterLocationHistory".service_point_id FROM "MeterLocationHistory" WHERE (NOT (EXISTS (SELECT "PVServicePointIDs".pv_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".pv_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text))));
+
+
+ALTER TABLE public.nonpv_service_point_ids OWNER TO postgres;
+
+--
+-- Name: VIEW nonpv_service_point_ids; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW nonpv_service_point_ids IS 'Service Point IDs, in the MLH,  that are not PV Service Point IDs. @author Daniel Zhang (張道博)';
+
+
+--
+-- Name: dz_monthly_energy_summary_for_nonpv_service_points; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW dz_monthly_energy_summary_for_nonpv_service_points AS
+    SELECT max((readings_by_meter_location_history.service_point_id)::text) AS service_point_id, sum(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_energy_to_house_kwh, sum(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_energy_from_house_kwh, sum(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_net_energy_kwh, avg(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS avg, to_char(date_trunc('month'::text, readings_by_meter_location_history.end_time), 'yyyy-mm'::text) AS service_month, max(readings_by_meter_location_history.service_point_latitude) AS sp_latitude, max(readings_by_meter_location_history.service_point_longitude) AS sp_longitude, max((readings_by_meter_location_history.location)::text) AS location_id, max((readings_by_meter_location_history.address)::text) AS address, max(readings_by_meter_location_history.latitude) AS location_latitude, max(readings_by_meter_location_history.longitude) AS location_longitude, ((count(readings_by_meter_location_history.end_time) / 4) / 24) AS count_day FROM (readings_by_meter_location_history JOIN nonpv_service_point_ids ON (((readings_by_meter_location_history.service_point_id)::text = (nonpv_service_point_ids.service_point_id)::text))) GROUP BY readings_by_meter_location_history.service_point_id, to_char(date_trunc('month'::text, readings_by_meter_location_history.end_time), 'yyyy-mm'::text);
+
+
+ALTER TABLE public.dz_monthly_energy_summary_for_nonpv_service_points OWNER TO postgres;
+
+--
+-- Name: VIEW dz_monthly_energy_summary_for_nonpv_service_points; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW dz_monthly_energy_summary_for_nonpv_service_points IS 'Monthly energy summary for Non-PV service points. @author Daniel Zhang (張道博)';
 
 
 --
@@ -946,36 +962,6 @@ CREATE VIEW event_table_view AS
 
 
 ALTER TABLE public.event_table_view OWNER TO eileen;
-
---
--- Name: get_voltages; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW get_voltages AS
-    SELECT "Reading".channel, "Reading".value, "Reading".interval_id, "Reading".reading_id FROM "Reading" WHERE ("Reading".channel = 4);
-
-
-ALTER TABLE public.get_voltages OWNER TO postgres;
-
---
--- Name: get_voltage_with_interval; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW get_voltage_with_interval AS
-    SELECT get_voltages.channel, get_voltages.value, get_voltages.interval_id, get_voltages.reading_id, "Interval".end_time, "Interval".interval_read_data_id FROM (get_voltages JOIN "Interval" ON (("Interval".interval_id = get_voltages.interval_id)));
-
-
-ALTER TABLE public.get_voltage_with_interval OWNER TO postgres;
-
---
--- Name: get_voltage_with_meter_id; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW get_voltage_with_meter_id AS
-    SELECT get_voltage_with_interval.channel, get_voltage_with_interval.value, get_voltage_with_interval.end_time, "IntervalReadData".start_time, "MeterData".meter_data_id, "MeterData".meter_name, "MeterData".util_device_id, "MeterData".mac_id FROM ((get_voltage_with_interval JOIN "IntervalReadData" ON ((get_voltage_with_interval.interval_read_data_id = "IntervalReadData".interval_read_data_id))) JOIN "MeterData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id)));
-
-
-ALTER TABLE public.get_voltage_with_meter_id OWNER TO postgres;
 
 --
 -- Name: interval_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
@@ -1071,6 +1057,26 @@ ALTER SEQUENCE meterdata_id_seq OWNED BY "MeterData".meter_data_id;
 
 
 --
+-- Name: monthly_energy_summary_all_meters; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW monthly_energy_summary_all_meters AS
+    SELECT cd_readings_channel_as_columns_by_service_point.service_point_id, sum(cd_readings_channel_as_columns_by_service_point."Energy to House kwH") AS total_energy_to_house_kwh, sum(cd_readings_channel_as_columns_by_service_point."Energy from House kwH(rec)") AS total_energy_from_house_kwh, sum(cd_readings_channel_as_columns_by_service_point."Net Energy to House KwH") AS total_net_energy_kwh, avg(cd_readings_channel_as_columns_by_service_point."voltage at house") AS "avg voltage", date_trunc('month'::text, cd_readings_channel_as_columns_by_service_point.end_time) AS month, max(cd_readings_channel_as_columns_by_service_point.service_point_latitude) AS sp_latitude, max(cd_readings_channel_as_columns_by_service_point.service_point_longitude) AS sp_longtidue, max(cd_readings_channel_as_columns_by_service_point."location_ID") AS location_id, max(cd_readings_channel_as_columns_by_service_point.address) AS address, max(cd_readings_channel_as_columns_by_service_point.location_latitude) AS location_latitude, max(cd_readings_channel_as_columns_by_service_point.location_longitude) AS location_longitude, (((count(cd_readings_channel_as_columns_by_service_point.end_time))::double precision / (4)::double precision) / (24)::double precision) AS count_day FROM cd_readings_channel_as_columns_by_service_point GROUP BY cd_readings_channel_as_columns_by_service_point.service_point_id, date_trunc('month'::text, cd_readings_channel_as_columns_by_service_point.end_time);
+
+
+ALTER TABLE public.monthly_energy_summary_all_meters OWNER TO eileen;
+
+--
+-- Name: monthly_energy_summary_houses_with_pv; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW monthly_energy_summary_houses_with_pv AS
+    SELECT cd_readings_channel_as_columns_by_service_point.service_point_id, sum(cd_readings_channel_as_columns_by_service_point."Energy to House kwH") AS total_energy_to_house_kwh, sum(cd_readings_channel_as_columns_by_service_point."Energy from House kwH(rec)") AS total_energy_from_house_kwh, sum(cd_readings_channel_as_columns_by_service_point."Net Energy to House KwH") AS total_net_energy_kwh, avg(cd_readings_channel_as_columns_by_service_point."voltage at house") AS avg, date_trunc('month'::text, cd_readings_channel_as_columns_by_service_point.end_time) AS month, max(cd_readings_channel_as_columns_by_service_point.service_point_latitude) AS sp_latitude, max(cd_readings_channel_as_columns_by_service_point.service_point_longitude) AS sp_longtidue, max(cd_readings_channel_as_columns_by_service_point."location_ID") AS location_id, max(cd_readings_channel_as_columns_by_service_point.address) AS address, max(cd_readings_channel_as_columns_by_service_point.location_latitude) AS location_latitude, max(cd_readings_channel_as_columns_by_service_point.location_longitude) AS location_longitude, (((count(cd_readings_channel_as_columns_by_service_point.end_time))::double precision / (4)::double precision) / (24)::double precision) AS count_day FROM (cd_readings_channel_as_columns_by_service_point JOIN "PVServicePointIDs" ON (((cd_readings_channel_as_columns_by_service_point.service_point_id)::text = ("PVServicePointIDs".house_service_point_id)::text))) WHERE ((cd_readings_channel_as_columns_by_service_point.service_point_id)::text = ("PVServicePointIDs".house_service_point_id)::text) GROUP BY cd_readings_channel_as_columns_by_service_point.service_point_id, date_trunc('month'::text, cd_readings_channel_as_columns_by_service_point.end_time);
+
+
+ALTER TABLE public.monthly_energy_summary_houses_with_pv OWNER TO eileen;
+
+--
 -- Name: name_address_service_point_id; Type: VIEW; Schema: public; Owner: eileen
 --
 
@@ -1079,6 +1085,16 @@ CREATE VIEW name_address_service_point_id AS
 
 
 ALTER TABLE public.name_address_service_point_id OWNER TO eileen;
+
+--
+-- Name: pv_service_points_specifications_view; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW pv_service_points_specifications_view AS
+    SELECT "PVServicePointIDs".pv_service_point_id, "PVServicePointIDs".house_service_point_id, "PVServicePointIDs"."PV_Mod_size_kW", "PVServicePointIDs".inverter_model, "PVServicePointIDs"."size_kW", "PVServicePointIDs"."system_cap_kW", "PVServicePointIDs".bat, "PVServicePointIDs".sub, "PVServicePointIDs".circuit, "PVServicePointIDs".has_meter, "PVServicePointIDs".has_separate_pv_meter, "PVServicePointIDs"."add_cap_kW", "PVServicePointIDs".upgraded_total_kw, "PVServicePointIDs".street, "PVServicePointIDs".city, "PVServicePointIDs".state, "PVServicePointIDs".zip FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".has_meter = 1) OR ("PVServicePointIDs".has_separate_pv_meter = 1));
+
+
+ALTER TABLE public.pv_service_points_specifications_view OWNER TO eileen;
 
 --
 -- Name: raw_meter_readings; Type: VIEW; Schema: public; Owner: postgres
@@ -1911,26 +1927,6 @@ GRANT ALL ON TABLE readings_by_meter_location_history TO sepgroup;
 
 
 --
--- Name: cd_practice3; Type: ACL; Schema: public; Owner: eileen
---
-
-REVOKE ALL ON TABLE cd_practice3 FROM PUBLIC;
-REVOKE ALL ON TABLE cd_practice3 FROM eileen;
-GRANT ALL ON TABLE cd_practice3 TO eileen;
-GRANT ALL ON TABLE cd_practice3 TO sepgroup;
-
-
---
--- Name: cd_practice_spid98726; Type: ACL; Schema: public; Owner: eileen
---
-
-REVOKE ALL ON TABLE cd_practice_spid98726 FROM PUBLIC;
-REVOKE ALL ON TABLE cd_practice_spid98726 FROM eileen;
-GRANT ALL ON TABLE cd_practice_spid98726 TO eileen;
-GRANT ALL ON TABLE cd_practice_spid98726 TO sepgroup;
-
-
---
 -- Name: cd_readings_channel_as_columns_by_service_point; Type: ACL; Schema: public; Owner: eileen
 --
 
@@ -1941,63 +1937,23 @@ GRANT ALL ON TABLE cd_readings_channel_as_columns_by_service_point TO sepgroup;
 
 
 --
--- Name: cd_report_testing; Type: ACL; Schema: public; Owner: eileen
+-- Name: cd_monthly_summary_1; Type: ACL; Schema: public; Owner: eileen
 --
 
-REVOKE ALL ON TABLE cd_report_testing FROM PUBLIC;
-REVOKE ALL ON TABLE cd_report_testing FROM eileen;
-GRANT ALL ON TABLE cd_report_testing TO eileen;
-GRANT ALL ON TABLE cd_report_testing TO sepgroup;
-
-
---
--- Name: cd_report_testing_2; Type: ACL; Schema: public; Owner: eileen
---
-
-REVOKE ALL ON TABLE cd_report_testing_2 FROM PUBLIC;
-REVOKE ALL ON TABLE cd_report_testing_2 FROM eileen;
-GRANT ALL ON TABLE cd_report_testing_2 TO eileen;
-GRANT ALL ON TABLE cd_report_testing_2 TO sepgroup;
+REVOKE ALL ON TABLE cd_monthly_summary_1 FROM PUBLIC;
+REVOKE ALL ON TABLE cd_monthly_summary_1 FROM eileen;
+GRANT ALL ON TABLE cd_monthly_summary_1 TO eileen;
+GRANT ALL ON TABLE cd_monthly_summary_1 TO sepgroup;
 
 
 --
--- Name: cd_spid=115477_2013-01; Type: ACL; Schema: public; Owner: eileen
+-- Name: cd_monthly_summary_2; Type: ACL; Schema: public; Owner: eileen
 --
 
-REVOKE ALL ON TABLE "cd_spid=115477_2013-01" FROM PUBLIC;
-REVOKE ALL ON TABLE "cd_spid=115477_2013-01" FROM eileen;
-GRANT ALL ON TABLE "cd_spid=115477_2013-01" TO eileen;
-GRANT ALL ON TABLE "cd_spid=115477_2013-01" TO sepgroup;
-
-
---
--- Name: deprecated_energy_by_location; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE deprecated_energy_by_location FROM PUBLIC;
-REVOKE ALL ON TABLE deprecated_energy_by_location FROM postgres;
-GRANT ALL ON TABLE deprecated_energy_by_location TO postgres;
-GRANT ALL ON TABLE deprecated_energy_by_location TO sepgroup;
-
-
---
--- Name: cd_travis_report; Type: ACL; Schema: public; Owner: eileen
---
-
-REVOKE ALL ON TABLE cd_travis_report FROM PUBLIC;
-REVOKE ALL ON TABLE cd_travis_report FROM eileen;
-GRANT ALL ON TABLE cd_travis_report TO eileen;
-GRANT ALL ON TABLE cd_travis_report TO sepgroup;
-
-
---
--- Name: cd_travis_report_2; Type: ACL; Schema: public; Owner: eileen
---
-
-REVOKE ALL ON TABLE cd_travis_report_2 FROM PUBLIC;
-REVOKE ALL ON TABLE cd_travis_report_2 FROM eileen;
-GRANT ALL ON TABLE cd_travis_report_2 TO eileen;
-GRANT ALL ON TABLE cd_travis_report_2 TO sepgroup;
+REVOKE ALL ON TABLE cd_monthly_summary_2 FROM PUBLIC;
+REVOKE ALL ON TABLE cd_monthly_summary_2 FROM eileen;
+GRANT ALL ON TABLE cd_monthly_summary_2 TO eileen;
+GRANT ALL ON TABLE cd_monthly_summary_2 TO sepgroup;
 
 
 --
@@ -2072,6 +2028,46 @@ GRANT ALL ON TABLE count_of_register_duplicates TO sepgroup;
 
 
 --
+-- Name: deprecated_energy_by_location; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE deprecated_energy_by_location FROM PUBLIC;
+REVOKE ALL ON TABLE deprecated_energy_by_location FROM postgres;
+GRANT ALL ON TABLE deprecated_energy_by_location TO postgres;
+GRANT ALL ON TABLE deprecated_energy_by_location TO sepgroup;
+
+
+--
+-- Name: deprecated_get_voltages; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE deprecated_get_voltages FROM PUBLIC;
+REVOKE ALL ON TABLE deprecated_get_voltages FROM postgres;
+GRANT ALL ON TABLE deprecated_get_voltages TO postgres;
+GRANT ALL ON TABLE deprecated_get_voltages TO sepgroup;
+
+
+--
+-- Name: deprecated_get_voltage_with_interval; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE deprecated_get_voltage_with_interval FROM PUBLIC;
+REVOKE ALL ON TABLE deprecated_get_voltage_with_interval FROM postgres;
+GRANT ALL ON TABLE deprecated_get_voltage_with_interval TO postgres;
+GRANT ALL ON TABLE deprecated_get_voltage_with_interval TO sepgroup;
+
+
+--
+-- Name: deprecated_get_voltage_with_meter_id; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE deprecated_get_voltage_with_meter_id FROM PUBLIC;
+REVOKE ALL ON TABLE deprecated_get_voltage_with_meter_id FROM postgres;
+GRANT ALL ON TABLE deprecated_get_voltage_with_meter_id TO postgres;
+GRANT ALL ON TABLE deprecated_get_voltage_with_meter_id TO sepgroup;
+
+
+--
 -- Name: deprecated_kz_meter_id_voltage_and_net_energy; Type: ACL; Schema: public; Owner: eileen
 --
 
@@ -2102,6 +2098,26 @@ GRANT ALL ON TABLE dz_energy_voltages_for_houses_without_pv TO sepgroup;
 
 
 --
+-- Name: nonpv_service_point_ids; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE nonpv_service_point_ids FROM PUBLIC;
+REVOKE ALL ON TABLE nonpv_service_point_ids FROM postgres;
+GRANT ALL ON TABLE nonpv_service_point_ids TO postgres;
+GRANT ALL ON TABLE nonpv_service_point_ids TO sepgroup;
+
+
+--
+-- Name: dz_monthly_energy_summary_for_nonpv_service_points; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE dz_monthly_energy_summary_for_nonpv_service_points FROM PUBLIC;
+REVOKE ALL ON TABLE dz_monthly_energy_summary_for_nonpv_service_points FROM postgres;
+GRANT ALL ON TABLE dz_monthly_energy_summary_for_nonpv_service_points TO postgres;
+GRANT ALL ON TABLE dz_monthly_energy_summary_for_nonpv_service_points TO sepgroup;
+
+
+--
 -- Name: event_data_id_seq; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -2127,36 +2143,6 @@ REVOKE ALL ON TABLE event_table_view FROM PUBLIC;
 REVOKE ALL ON TABLE event_table_view FROM eileen;
 GRANT ALL ON TABLE event_table_view TO eileen;
 GRANT ALL ON TABLE event_table_view TO sepgroup;
-
-
---
--- Name: get_voltages; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE get_voltages FROM PUBLIC;
-REVOKE ALL ON TABLE get_voltages FROM postgres;
-GRANT ALL ON TABLE get_voltages TO postgres;
-GRANT ALL ON TABLE get_voltages TO sepgroup;
-
-
---
--- Name: get_voltage_with_interval; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE get_voltage_with_interval FROM PUBLIC;
-REVOKE ALL ON TABLE get_voltage_with_interval FROM postgres;
-GRANT ALL ON TABLE get_voltage_with_interval TO postgres;
-GRANT ALL ON TABLE get_voltage_with_interval TO sepgroup;
-
-
---
--- Name: get_voltage_with_meter_id; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE get_voltage_with_meter_id FROM PUBLIC;
-REVOKE ALL ON TABLE get_voltage_with_meter_id FROM postgres;
-GRANT ALL ON TABLE get_voltage_with_meter_id TO postgres;
-GRANT ALL ON TABLE get_voltage_with_meter_id TO sepgroup;
 
 
 --
@@ -2217,6 +2203,26 @@ GRANT ALL ON SEQUENCE meterdata_id_seq TO sepgroup;
 
 
 --
+-- Name: monthly_energy_summary_all_meters; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE monthly_energy_summary_all_meters FROM PUBLIC;
+REVOKE ALL ON TABLE monthly_energy_summary_all_meters FROM eileen;
+GRANT ALL ON TABLE monthly_energy_summary_all_meters TO eileen;
+GRANT ALL ON TABLE monthly_energy_summary_all_meters TO sepgroup;
+
+
+--
+-- Name: monthly_energy_summary_houses_with_pv; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE monthly_energy_summary_houses_with_pv FROM PUBLIC;
+REVOKE ALL ON TABLE monthly_energy_summary_houses_with_pv FROM eileen;
+GRANT ALL ON TABLE monthly_energy_summary_houses_with_pv TO eileen;
+GRANT ALL ON TABLE monthly_energy_summary_houses_with_pv TO sepgroup;
+
+
+--
 -- Name: name_address_service_point_id; Type: ACL; Schema: public; Owner: eileen
 --
 
@@ -2224,6 +2230,16 @@ REVOKE ALL ON TABLE name_address_service_point_id FROM PUBLIC;
 REVOKE ALL ON TABLE name_address_service_point_id FROM eileen;
 GRANT ALL ON TABLE name_address_service_point_id TO eileen;
 GRANT ALL ON TABLE name_address_service_point_id TO sepgroup;
+
+
+--
+-- Name: pv_service_points_specifications_view; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE pv_service_points_specifications_view FROM PUBLIC;
+REVOKE ALL ON TABLE pv_service_points_specifications_view FROM eileen;
+GRANT ALL ON TABLE pv_service_points_specifications_view TO eileen;
+GRANT ALL ON TABLE pv_service_points_specifications_view TO sepgroup;
 
 
 --
