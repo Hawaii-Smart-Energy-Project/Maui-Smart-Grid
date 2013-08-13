@@ -15,6 +15,10 @@ This script only supports processing of *.xml.gz files.
 """
 
 __author__ = 'Daniel Zhang (張道博)'
+__copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
+__license__ = 'https://raw.github' \
+              '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
+              '-LICENSE.txt'
 
 import os
 import fnmatch
@@ -28,13 +32,14 @@ from meco_plotting import MECOPlotting
 from insertSingleMECOEnergyDataFile import Inserter
 import time
 from msg_logger import MSGLogger
+import multiprocessing
 
 xmlGzCount = 0
 xmlCount = 0
 configer = MSGConfiger()
 logger = MSGLogger(__name__, 'info')
 binPath = MSGConfiger.configOptionValue(configer, "Executable Paths",
-                                         "bin_path")
+                                        "bin_path")
 commandLineArgs = None
 msgBody = ''
 notifier = MSGNotifier()
@@ -59,6 +64,10 @@ def processCommandLineArguments():
 
 
 def makePlotAttachments():
+    """
+    Make data plots.
+    """
+
     plotPath = configer.configOptionValue("Data Paths", "plot_path")
     sys.stderr.write("plotPath = %s\n" % plotPath)
 
@@ -73,12 +82,34 @@ def makePlotAttachments():
 
 
 def logLegend():
+    """
+    Output a legend describing the concise report format.
+    """
+
     legend = "Log Legend: {} = dupes, () = element group, " \
              "[] = process for insert elements, <> = <reading insert count, " \
              "register insert count, event insert count, group insert count," \
              "total insert count>, * = commit\nrd = reading, re = register, " \
              "ev = event"
     return legend
+
+
+def insertDataWrapper(fullPath):
+    """
+    A wrapper for data insertion multiprocessing.
+    :returns: Log of parsing along with performance results.
+    """
+
+    parseLog = "\n"
+    parseLog += fullPath
+    # print msg
+    parseLog += "\n"
+    startTime = time.time()
+    parseLog += inserter.insertData(fullPath, commandLineArgs.testing)
+    parseLog += "\n"
+    parseLog += "\nWall time = {:.2f} seconds.\n".format(
+        time.time() - startTime)
+    return parseLog
 
 
 processCommandLineArguments()
@@ -141,32 +172,38 @@ except IOError:
 
 startTime = 0
 
+pathsToProcess = []
 for root, dirnames, filenames in os.walk('.'):
     for filename in fnmatch.filter(filenames, '*.xml.gz'):
         if re.search('.*log\.xml', filename) is None: # Skip *log.xml files.
-
-            fullPath = os.path.join(root, filename)
-            msg = "\n"
-            msg += fullPath
-            print msg
-            msgBody += msg + "\n"
             xmlGzCount += 1
+            pathsToProcess.append(os.path.join(root, filename))
 
             # Execute the insert data script for the file.
 
-            if USE_SCRIPT_METHOD:
-                if commandLineArgs.testing:
-                    call([insertScript, "--testing", "--filepath", fullPath])
-                else: # @todo Remove this redundant statement.
-                    call([insertScript, "--testing", "--filepath", fullPath])
-            else:
-                # The object method is preferred.
-                startTime = time.time()
-                parseLog = inserter.insertData(fullPath,
-                                               commandLineArgs.testing)
-                msgBody += parseLog + "\n"
-                msgBody += "\nWall time = {:.2f} seconds.\n".format(
-                    time.time() - startTime)
+            # if USE_SCRIPT_METHOD:
+            #     if commandLineArgs.testing:
+            #         call([insertScript, "--testing", "--filepath", fullPath])
+            # else:
+            # The object method is preferred.
+            # startTime = time.time()
+            # parseLog = inserter.insertData(fullPath,
+            #                                testing = commandLineArgs
+            #                                .testing)
+            # msgBody += parseLog + "\n"
+            # msgBody += "\nWall time = {:.2f} seconds.\n".format(
+            #     time.time() - startTime)
+            # pass
+
+try:
+    pool = multiprocessing.Pool(
+        int(configer.configOptionValue('Hardware', 'multiprocessing_limit')))
+
+    msgBody += pool.map_async(insertDataWrapper, pathsToProcess).get(999999)
+    pool.close()
+    pool.join()
+except:
+    pass
 
 msgBody += "\n" + logLegend() + "\n"
 
@@ -185,9 +222,12 @@ try:
     plotter.plotReadingAndMeterCounts(databaseName)
     msg = "\nPlot is attached.\n"
 except:
+    # @todo What exception is thrown?
     msg = "\nFailed to generate plot.\n"
 
 msgBody += msg
+
+print "msgBody = %s" % msgBody
 
 if commandLineArgs.email:
     notifier.sendMailWithAttachments(msgBody, makePlotAttachments(),
