@@ -41,6 +41,7 @@ logger = MSGLogger(__name__, 'info')
 binPath = MSGConfiger.configOptionValue(configer, "Executable Paths",
                                         "bin_path")
 commandLineArgs = None
+global msgBody
 msgBody = ''
 notifier = MSGNotifier()
 
@@ -94,31 +95,51 @@ def logLegend():
     return legend
 
 
-def insertDataWorker(fullPath):
+def insertDataWrapper(fullPath):
     """
     A wrapper for data insertion multiprocessing.
     :returns: Log of parsing along with performance results.
     """
 
+    global msgBody
     logger.log('Inserting data.')
     # logger.logAndWrite("current process is %s" % multiprocessing
     # .current_process())
-    pattern = 'PoolWorker-(\d+),'
-    jobString = str(multiprocessing.current_process())
-    match = re.search(pattern, jobString)
-    assert match.group(1), "Process ID was matched."
 
-    parseLog = "\n"
-    parseLog += fullPath
+    # pattern = 'PoolWorker-(\d+),'
+    # jobString = str(multiprocessing.current_process())
+    # match = re.search(pattern, jobString)
+    # assert match.group(1), "Process ID was matched."
+
+    # print queue.
+
+    myLog = ''
+    myLog += "\n"
+    myLog += fullPath
     # print msg
-    parseLog += "\n"
+    myLog += "\n"
     startTime = time.time()
-    parseLog += inserter.insertData(fullPath, testing = commandLineArgs.testing,
-                                    jobID = match.group(1))
-    parseLog += "\n"
-    parseLog += "\nWall time = {:.2f} seconds.\n".format(
+    myLog += inserter.insertData(fullPath, testing = commandLineArgs.testing,
+                                 jobID = '')
+    myLog += "\n"
+    myLog += "\nWall time = {:.2f} seconds.\n".format(
         time.time() - startTime)
-    return parseLog
+
+    logger.log('myLog = %s' % myLog)
+
+    msgBody += myLog
+
+    # return myLog
+
+
+def worker():
+    for item in iter(queue.get, None):
+        logger.logAndWrite("Current process is")
+        if multiprocessing.current_process():
+            logger.logAndWrite(str(multiprocessing.current_process()))
+        insertDataWrapper(item)
+        queue.task_done()
+    queue.task_done()
 
 
 processCommandLineArguments()
@@ -208,11 +229,33 @@ try:
     pool = multiprocessing.Pool(
         int(configer.configOptionValue('Hardware', 'multiprocessing_limit')))
 
-    msgBody += pool.map_async(insertDataWorker, pathsToProcess).get(999999)
-    pool.close()
-    pool.join()
-except:
-    pass
+    # result = pool.map_async(insertDataWorker, pathsToProcess)
+    # msgBody += result.get(999999)
+    # print "result"
+    # print "**************************************************************"
+    # print result.get(999999)
+    # result = pool.map(insertDataWorker, pathsToProcess)
+
+    # logger.log('result = %s' % result)
+    # pool.close()
+    # pool.join()
+
+    queue = multiprocessing.JoinableQueue()
+    procs = []
+    for i in range(
+            int(configer.configOptionValue('Hardware',
+                                           'multiprocessing_limit'))):
+        procs.append(multiprocessing.Process(target = worker))
+        procs[-1].daemon = True
+        procs[-1].start()
+
+    for path in pathsToProcess:
+        queue.put(path)
+
+    queue.join()
+
+except Exception, e:
+    logger.log('An exception occurred: %s' % e, 'error')
 
 msgBody += "\n" + logLegend() + "\n"
 
@@ -236,4 +279,4 @@ if commandLineArgs.email:
     notifier.sendMailWithAttachments(msgBody, makePlotAttachments(),
                                      commandLineArgs.testing)
 
-logger.logAndWrite("msgBody = %s" % msgBody)
+logger.log("msgBody = %s" % msgBody)
