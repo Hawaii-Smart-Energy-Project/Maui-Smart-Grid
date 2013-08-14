@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 
 __author__ = 'Daniel Zhang (張道博)'
+__copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
+__license__ = 'https://raw.github' \
+              '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
+              '-LICENSE.txt'
 
 import xml.etree.ElementTree as ET
 import re
@@ -101,7 +105,7 @@ class MECOXMLParser(object):
         self.registerInsertCount = 0
         self.eventInsertCount = 0
 
-    def parseXML(self, fileObject, insert = False):
+    def parseXML(self, fileObject, insert = False, jobID = ''):
         """
         Parse an XML file.
 
@@ -124,7 +128,7 @@ class MECOXMLParser(object):
         tree = ET.parse(fileObject)
         root = tree.getroot()
 
-        parseLog += self.walkTheTreeFromRoot(root)
+        parseLog += self.walkTheTreeFromRoot(root, jobID = jobID)
 
         return parseLog
 
@@ -268,7 +272,7 @@ class MECOXMLParser(object):
 
         return parseLog
 
-    def generateConciseLogEntries(self):
+    def generateConciseLogEntries(self, jobID = ''):
         """
         :returns: A concatenated string of log entries.
         """
@@ -320,7 +324,7 @@ class MECOXMLParser(object):
             columnsAndValues['Event_Content'] = element.text
 
 
-    def walkTheTreeFromRoot(self, root):
+    def walkTheTreeFromRoot(self, root, jobID = ''):
         """
         Walk an XML tree from its root node.
 
@@ -329,7 +333,6 @@ class MECOXMLParser(object):
         """
 
         parseLog = ''
-        # parseMsg = ''
         walker = root.iter()
 
         for element, nextElement in self.getNext(walker):
@@ -393,7 +396,6 @@ class MECOXMLParser(object):
 
                 if self.insertDataIntoDatabase:
                     # Data is intended to be inserted into the database.
-
                     parseLog = self.processDataToBeInserted(columnsAndValues,
                                                             currentTableName,
                                                             fKeyValue, parseLog,
