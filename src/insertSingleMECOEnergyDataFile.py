@@ -12,7 +12,10 @@ This script is used by insertMECOEnergyData.py.
 """
 
 __author__ = 'Daniel Zhang (張道博)'
-
+__copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
+__license__ = 'https://raw.github' \
+              '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
+              '-LICENSE.txt'
 
 from meco_xml_parser import MECOXMLParser
 import re
@@ -41,13 +44,14 @@ class Inserter(object):
         self.parser = MECOXMLParser(testing)
         self.configer = MSGConfiger()
 
-    def insertData(self, filePath, testing = False):
+    def insertData(self, filePath, testing = False, jobID = ''):
         """
         Insert data from a single file to the database.
 
         :param filePath: Full path of a data file.
         :param testing: Boolean flag indicating if the testing database
         should be used.
+        :param jobID: An ID used to distinguish multiprocessing jobs.
         :returns: String containing concise log of activity.
         """
 
@@ -72,7 +76,6 @@ class Inserter(object):
             sys.stderr.write(parseMsg)
             parseLog += parseMsg
 
-        # filename = os.path.basename(filePath)
         fileObject = None
 
         # Open the file and process it.
