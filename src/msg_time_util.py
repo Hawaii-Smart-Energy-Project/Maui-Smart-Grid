@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 
 __author__ = 'Daniel Zhang (張道博)'
+__copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
+__license__ = 'https://raw.github' \
+              '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
+              '-LICENSE.txt'
 
 from time import strptime
 from datetime import datetime as dt
@@ -11,6 +15,7 @@ from msg_logger import MSGLogger
 
 class MSGTimeUtil(object):
     """
+    Utilities for working with time.
     """
 
     def __init__(self):
