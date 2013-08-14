@@ -4,7 +4,8 @@
 """
 Usage:
 
-time python -u ${PATH}/insertSingleMECOEnergyDataFile.py --filepath ${FILEPATH} [
+time python -u ${PATH}/insertSingleMECOEnergyDataFile.py --filepath ${
+FILEPATH} [
 --testing]
     > ${LOG_FILE}
 
@@ -88,7 +89,7 @@ class Inserter(object):
         i.parser.filename = filePath
 
         # Obtain the log of the parsing.
-        parseLog += i.parser.parseXML(fileObject, True)
+        parseLog += i.parser.parseXML(fileObject, True, jobID = jobID)
 
         fileObject.close()
         return parseLog

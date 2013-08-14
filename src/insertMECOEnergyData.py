@@ -94,18 +94,27 @@ def logLegend():
     return legend
 
 
-def insertDataWrapper(fullPath):
+def insertDataWorker(fullPath):
     """
     A wrapper for data insertion multiprocessing.
     :returns: Log of parsing along with performance results.
     """
+
+    logger.log('Inserting data.')
+    # logger.logAndWrite("current process is %s" % multiprocessing
+    # .current_process())
+    pattern = 'PoolWorker-(\d+),'
+    jobString = str(multiprocessing.current_process())
+    match = re.search(pattern, jobString)
+    assert match.group(1), "Process ID was matched."
 
     parseLog = "\n"
     parseLog += fullPath
     # print msg
     parseLog += "\n"
     startTime = time.time()
-    parseLog += inserter.insertData(fullPath, commandLineArgs.testing)
+    parseLog += inserter.insertData(fullPath, testing = commandLineArgs.testing,
+                                    jobID = match.group(1))
     parseLog += "\n"
     parseLog += "\nWall time = {:.2f} seconds.\n".format(
         time.time() - startTime)
@@ -199,7 +208,7 @@ try:
     pool = multiprocessing.Pool(
         int(configer.configOptionValue('Hardware', 'multiprocessing_limit')))
 
-    msgBody += pool.map_async(insertDataWrapper, pathsToProcess).get(999999)
+    msgBody += pool.map_async(insertDataWorker, pathsToProcess).get(999999)
     pool.close()
     pool.join()
 except:
@@ -212,11 +221,7 @@ msg = "\nProcessed file count is %s.\n" % xmlGzCount
 print msg
 msgBody += msg + "\n"
 
-testing = False
-if commandLineArgs.testing:
-    testing = True
-
-plotter = MECOPlotting(testing)
+plotter = MECOPlotting(commandLineArgs.testing)
 
 try:
     plotter.plotReadingAndMeterCounts(databaseName)
@@ -227,9 +232,8 @@ except:
 
 msgBody += msg
 
-print "msgBody = %s" % msgBody
-
 if commandLineArgs.email:
     notifier.sendMailWithAttachments(msgBody, makePlotAttachments(),
                                      commandLineArgs.testing)
 
+logger.logAndWrite("msgBody = %s" % msgBody)

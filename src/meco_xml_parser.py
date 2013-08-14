@@ -278,7 +278,8 @@ class MECOXMLParser(object):
         """
 
         log = self.logger.logAndWrite(
-            "{%srd,%sre,%sev}" % (
+            "%s:{%srd,%sre,%sev}" % (
+                jobID,
                 self.readingDupeOnInsertCount, self.registerDupeOnInsertCount,
                 self.eventDupeOnInsertCount))
         log += self.logger.logAndWrite("(%s)" % self.commitCount)
@@ -410,7 +411,7 @@ class MECOXMLParser(object):
                     if self.debug:
                         print "----- last reading found -----"
 
-                    parseLog += self.generateConciseLogEntries()
+                    parseLog += self.generateConciseLogEntries(jobID = jobID)
                     self.resetGroupCounters()
 
                     parseLog += self.logger.logAndWrite("*")
@@ -426,12 +427,12 @@ class MECOXMLParser(object):
 
         # Initial commit.
         if self.commitCount == 0:
-            parseLog += self.generateConciseLogEntries()
+            parseLog += self.generateConciseLogEntries(jobID = jobID)
         self.resetGroupCounters()
 
         # Final commit.
         parseLog += self.logger.logAndWrite("---")
-        parseLog += self.generateConciseLogEntries()
+        parseLog += self.generateConciseLogEntries(jobID = jobID)
         self.resetGroupCounters()
 
         parseLog += self.logger.logAndWrite("*")
