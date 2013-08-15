@@ -150,7 +150,7 @@ class MECOXMLParser(object):
 
 
     def processDataToBeInserted(self, columnsAndValues, currentTableName,
-                                fKeyValue, parseLog, pkeyCol):
+                                fKeyValue, parseLog, pkeyCol, jobID = ''):
         """
         This is the method that performs insertion of parsed data to the
         database. Duplicate checks are performed on the endpoints of the data
@@ -226,11 +226,13 @@ class MECOXMLParser(object):
                 self.eventInsertCount += 1
 
         else: # Don't insert into Reading or Register table if a dupe exists.
+
             if (self.channelDupeExists):
                 self.readingDupeOnInsertCount += 1
                 if self.readingDupeOnInsertCount > 0 and self \
                     .readingDupeOnInsertCount < 2:
-                    parseLog += self.logger.logAndWrite("{rd-dupe==>}")
+                    parseLog += self.logger.logAndWrite(
+                        "%s:{rd-dupe==>}" % jobID)
 
                 # Also, verify the data is equivalent to the existing record.
                 matchingValues = self.dupeChecker.readingValuesAreInTheDatabase(
@@ -252,7 +254,8 @@ class MECOXMLParser(object):
                 self.registerDupeOnInsertCount += 1
                 if self.registerDupeOnInsertCount > 0 and self \
                     .registerDupeOnInsertCount < 2:
-                    parseLog += self.logger.logAndWrite("{re-dupe==>}")
+                    parseLog += self.logger.logAndWrite(
+                        "%s:{re-dupe==>}" % jobID)
 
                 self.numberDupeExists = False
 
@@ -260,7 +263,8 @@ class MECOXMLParser(object):
                 self.eventDupeOnInsertCount += 1
                 if self.eventDupeOnInsertCount > 0 and self \
                     .eventDupeOnInsertCount < 2:
-                    parseLog += self.logger.logAndWrite("{ev-dupe==>}")
+                    parseLog += self.logger.logAndWrite(
+                        "%s:{ev-dupe==>}" % jobID)
 
                 self.eventTimeDupeExists = False
 
@@ -400,7 +404,8 @@ class MECOXMLParser(object):
                     parseLog = self.processDataToBeInserted(columnsAndValues,
                                                             currentTableName,
                                                             fKeyValue, parseLog,
-                                                            pkeyCol)
+                                                            pkeyCol,
+                                                            jobID = jobID)
 
                 if self.debug:
                     print "lastSeqVal = ", self.lastSeqVal
