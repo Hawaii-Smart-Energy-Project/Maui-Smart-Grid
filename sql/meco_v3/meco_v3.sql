@@ -54,6 +54,24 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
+-- Name: CircuitData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "CircuitData" (
+    circuit integer NOT NULL,
+    "timestamp" timestamp without time zone NOT NULL,
+    amp_a integer,
+    amp_b integer,
+    amp_c integer,
+    mvar double precision,
+    mw double precision,
+    upload_date date DEFAULT now()
+);
+
+
+ALTER TABLE public."CircuitData" OWNER TO sepgroup;
+
+--
 -- Name: Event; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -116,7 +134,7 @@ CREATE TABLE "IntervalReadData" (
 ALTER TABLE public."IntervalReadData" OWNER TO sepgroup;
 
 --
--- Name: IrradianceData; Type: TABLE; Schema: public; Owner: eileen; Tablespace: 
+-- Name: IrradianceData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
 CREATE TABLE "IrradianceData" (
@@ -126,10 +144,10 @@ CREATE TABLE "IrradianceData" (
 );
 
 
-ALTER TABLE public."IrradianceData" OWNER TO eileen;
+ALTER TABLE public."IrradianceData" OWNER TO sepgroup;
 
 --
--- Name: IrradianceSensorInfo; Type: TABLE; Schema: public; Owner: eileen; Tablespace: 
+-- Name: IrradianceSensorInfo; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
 CREATE TABLE "IrradianceSensorInfo" (
@@ -142,7 +160,7 @@ CREATE TABLE "IrradianceSensorInfo" (
 );
 
 
-ALTER TABLE public."IrradianceSensorInfo" OWNER TO eileen;
+ALTER TABLE public."IrradianceSensorInfo" OWNER TO sepgroup;
 
 --
 -- Name: LocationRecords; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
@@ -422,7 +440,7 @@ CREATE TABLE "MeterRecords" (
 ALTER TABLE public."MeterRecords" OWNER TO sepgroup;
 
 --
--- Name: PVServicePointIDs; Type: TABLE; Schema: public; Owner: eileen; Tablespace: 
+-- Name: PVServicePointIDs; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
 CREATE TABLE "PVServicePointIDs" (
@@ -445,11 +463,11 @@ CREATE TABLE "PVServicePointIDs" (
     state character varying,
     zip integer,
     month_installed integer,
-    day_installed integer
+    year_installed integer
 );
 
 
-ALTER TABLE public."PVServicePointIDs" OWNER TO eileen;
+ALTER TABLE public."PVServicePointIDs" OWNER TO sepgroup;
 
 --
 -- Name: Reading; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
@@ -528,6 +546,23 @@ CREATE TABLE "Tier" (
 
 
 ALTER TABLE public."Tier" OWNER TO sepgroup;
+
+--
+-- Name: TransformerData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "TransformerData" (
+    transformer character varying NOT NULL,
+    "timestamp" timestamp without time zone NOT NULL,
+    vlt_a double precision,
+    vlt_b double precision,
+    vlt_c double precision,
+    volt double precision,
+    upload_date date DEFAULT now()
+);
+
+
+ALTER TABLE public."TransformerData" OWNER TO sepgroup;
 
 --
 -- Name: WeatherNOAA; Type: TABLE; Schema: public; Owner: daniel; Tablespace: 
@@ -844,6 +879,16 @@ CREATE VIEW deprecated_kz_meter_id_voltage_and_net_energy AS
 ALTER TABLE public.deprecated_kz_meter_id_voltage_and_net_energy OWNER TO eileen;
 
 --
+-- Name: deprecated_readings_by_meter_location_history_for_pv_compare; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW deprecated_readings_by_meter_location_history_for_pv_compare AS
+    SELECT "MeterLocationHistory".meter_name, "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".location, "MeterLocationHistory".address, "MeterLocationHistory".latitude, "MeterLocationHistory".longitude, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "Interval".end_time, "MeterData".meter_data_id FROM (((("MeterLocationHistory" JOIN "MeterData" ON ((("MeterLocationHistory".meter_name)::bpchar = "MeterData".meter_name))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (((("Interval".interval_id = "Reading".interval_id) AND ("Interval".end_time >= "MeterLocationHistory".installed)) AND CASE WHEN ("MeterLocationHistory".uninstalled IS NULL) THEN true ELSE ("Interval".end_time < "MeterLocationHistory".uninstalled) END)));
+
+
+ALTER TABLE public.deprecated_readings_by_meter_location_history_for_pv_compare OWNER TO postgres;
+
+--
 -- Name: meter_ids_for_houses_without_pv; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -1128,16 +1173,6 @@ ALTER SEQUENCE reading_id_seq OWNED BY "Reading".reading_id;
 
 
 --
--- Name: readings_by_meter_location_history_for_pv_compare; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW readings_by_meter_location_history_for_pv_compare AS
-    SELECT "MeterLocationHistory".meter_name, "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".location, "MeterLocationHistory".address, "MeterLocationHistory".latitude, "MeterLocationHistory".longitude, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "Interval".end_time, "MeterData".meter_data_id FROM (((("MeterLocationHistory" JOIN "MeterData" ON ((("MeterLocationHistory".meter_name)::bpchar = "MeterData".meter_name))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (((("Interval".interval_id = "Reading".interval_id) AND ("Interval".end_time >= "MeterLocationHistory".installed)) AND CASE WHEN ("MeterLocationHistory".uninstalled IS NULL) THEN true ELSE ("Interval".end_time < "MeterLocationHistory".uninstalled) END)));
-
-
-ALTER TABLE public.readings_by_meter_location_history_for_pv_compare OWNER TO postgres;
-
---
 -- Name: readings_not_referenced_by_mlh; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -1343,6 +1378,14 @@ ALTER TABLE ONLY "Tier" ALTER COLUMN tier_id SET DEFAULT nextval('tier_id_seq'::
 
 
 --
+-- Name: CircuitData_pkey; Type: CONSTRAINT; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+ALTER TABLE ONLY "CircuitData"
+    ADD CONSTRAINT "CircuitData_pkey" PRIMARY KEY (circuit, "timestamp");
+
+
+--
 -- Name: EventData_pkey; Type: CONSTRAINT; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -1439,6 +1482,14 @@ ALTER TABLE ONLY "Tier"
 
 
 --
+-- Name: TransformerData_pkey; Type: CONSTRAINT; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+ALTER TABLE ONLY "TransformerData"
+    ADD CONSTRAINT "TransformerData_pkey" PRIMARY KEY (transformer, "timestamp");
+
+
+--
 -- Name: WeatherNOAA_pkey; Type: CONSTRAINT; Schema: public; Owner: daniel; Tablespace: 
 --
 
@@ -1447,7 +1498,7 @@ ALTER TABLE ONLY "WeatherNOAA"
 
 
 --
--- Name: irrad_sensor_info_pkey; Type: CONSTRAINT; Schema: public; Owner: eileen; Tablespace: 
+-- Name: irrad_sensor_info_pkey; Type: CONSTRAINT; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
 ALTER TABLE ONLY "IrradianceSensorInfo"
@@ -1455,7 +1506,7 @@ ALTER TABLE ONLY "IrradianceSensorInfo"
 
 
 --
--- Name: irradiance_data_pkey; Type: CONSTRAINT; Schema: public; Owner: eileen; Tablespace: 
+-- Name: irradiance_data_pkey; Type: CONSTRAINT; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
 ALTER TABLE ONLY "IrradianceData"
@@ -1754,22 +1805,20 @@ GRANT ALL ON TABLE "IntervalReadData" TO sepgroup;
 
 
 --
--- Name: IrradianceData; Type: ACL; Schema: public; Owner: eileen
+-- Name: IrradianceData; Type: ACL; Schema: public; Owner: sepgroup
 --
 
 REVOKE ALL ON TABLE "IrradianceData" FROM PUBLIC;
-REVOKE ALL ON TABLE "IrradianceData" FROM eileen;
-GRANT ALL ON TABLE "IrradianceData" TO eileen;
+REVOKE ALL ON TABLE "IrradianceData" FROM sepgroup;
 GRANT ALL ON TABLE "IrradianceData" TO sepgroup;
 
 
 --
--- Name: IrradianceSensorInfo; Type: ACL; Schema: public; Owner: eileen
+-- Name: IrradianceSensorInfo; Type: ACL; Schema: public; Owner: sepgroup
 --
 
 REVOKE ALL ON TABLE "IrradianceSensorInfo" FROM PUBLIC;
-REVOKE ALL ON TABLE "IrradianceSensorInfo" FROM eileen;
-GRANT ALL ON TABLE "IrradianceSensorInfo" TO eileen;
+REVOKE ALL ON TABLE "IrradianceSensorInfo" FROM sepgroup;
 GRANT ALL ON TABLE "IrradianceSensorInfo" TO sepgroup;
 
 
@@ -1821,12 +1870,11 @@ GRANT ALL ON TABLE "MeterRecords" TO sepgroup;
 
 
 --
--- Name: PVServicePointIDs; Type: ACL; Schema: public; Owner: eileen
+-- Name: PVServicePointIDs; Type: ACL; Schema: public; Owner: sepgroup
 --
 
 REVOKE ALL ON TABLE "PVServicePointIDs" FROM PUBLIC;
-REVOKE ALL ON TABLE "PVServicePointIDs" FROM eileen;
-GRANT ALL ON TABLE "PVServicePointIDs" TO eileen;
+REVOKE ALL ON TABLE "PVServicePointIDs" FROM sepgroup;
 GRANT ALL ON TABLE "PVServicePointIDs" TO sepgroup;
 
 
@@ -2078,6 +2126,16 @@ GRANT ALL ON TABLE deprecated_kz_meter_id_voltage_and_net_energy TO sepgroup;
 
 
 --
+-- Name: deprecated_readings_by_meter_location_history_for_pv_compare; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE deprecated_readings_by_meter_location_history_for_pv_compare FROM PUBLIC;
+REVOKE ALL ON TABLE deprecated_readings_by_meter_location_history_for_pv_compare FROM postgres;
+GRANT ALL ON TABLE deprecated_readings_by_meter_location_history_for_pv_compare TO postgres;
+GRANT ALL ON TABLE deprecated_readings_by_meter_location_history_for_pv_compare TO sepgroup;
+
+
+--
 -- Name: meter_ids_for_houses_without_pv; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -2259,16 +2317,6 @@ GRANT ALL ON TABLE raw_meter_readings TO sepgroup;
 REVOKE ALL ON SEQUENCE reading_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE reading_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE reading_id_seq TO sepgroup;
-
-
---
--- Name: readings_by_meter_location_history_for_pv_compare; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE readings_by_meter_location_history_for_pv_compare FROM PUBLIC;
-REVOKE ALL ON TABLE readings_by_meter_location_history_for_pv_compare FROM postgres;
-GRANT ALL ON TABLE readings_by_meter_location_history_for_pv_compare TO postgres;
-GRANT ALL ON TABLE readings_by_meter_location_history_for_pv_compare TO sepgroup;
 
 
 --
