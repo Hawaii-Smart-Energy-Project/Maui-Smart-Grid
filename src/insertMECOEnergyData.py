@@ -101,13 +101,14 @@ def insertDataWrapper(fullPath):
     :returns: Log of parsing along with performance results.
     """
 
-    global msgBody
-    logger.log('Inserting data.')
-    logger.logAndWrite("current process is %s" % multiprocessing.current_process())
+    # global msgBody
+    # logger.log('Inserting data.')
+    # logger.logAndWrite("current process is %s" % multiprocessing
+    # .current_process())
 
     pattern = 'Process-(\d+),'
     jobString = str(multiprocessing.current_process())
-    print "jobstring = %s" % jobString
+    # print "jobstring = %s" % jobString
     match = re.search(pattern, jobString)
     assert match.group(1) is not None, "Process ID was matched."
 
@@ -127,16 +128,26 @@ def insertDataWrapper(fullPath):
 
     logger.log('myLog = %s' % myLog)
 
-    msgBody += myLog
+    # msgBody += myLog
 
-    # return myLog
+    return myLog
 
 
-def worker():
-    for item in iter(queue.get, None):
-        insertDataWrapper(item)
-        queue.task_done()
-    queue.task_done()
+def worker(path, returnDict):
+    # for item in iter(queue.get, None):
+    #     insertDataWrapper(item)
+    #     queue.task_done()
+    # queue.task_done()
+    result = insertDataWrapper(path)
+    sys.stderr.write("result\n")
+    sys.stderr.write(result)
+    sys.stderr.write("\n")
+    pattern = 'Process-(\d+),'
+    jobString = str(multiprocessing.current_process())
+    # print "jobstring = %s" % jobString
+    match = re.search(pattern, jobString)
+    assert match.group(1) is not None, "Process ID was matched."
+    returnDict[match.group(1)] = result
 
 
 processCommandLineArguments()
@@ -237,19 +248,35 @@ try:
     # pool.close()
     # pool.join()
 
-    queue = multiprocessing.JoinableQueue()
+    # queue = multiprocessing.JoinableQueue()
     procs = []
-    for i in range(
-            int(configer.configOptionValue('Hardware',
-                                           'multiprocessing_limit'))):
-        procs.append(multiprocessing.Process(target = worker))
+    manager = multiprocessing.Manager()
+    returnDict = manager.dict()
+    # for i in range(
+    #         int(configer.configOptionValue('Hardware',
+    #                                        'multiprocessing_limit'))):
+    #     procs.append(multiprocessing.Process(target = worker,
+    # args=(returnDict,)))
+    #     procs[-1].daemon = True
+    #     procs[-1].start()
+
+    for path in pathsToProcess:
+        # queue.put(path)
+        procs.append(
+            multiprocessing.Process(target = worker, args = (path, returnDict)))
         procs[-1].daemon = True
         procs[-1].start()
 
-    for path in pathsToProcess:
-        queue.put(path)
+    for proc in procs:
+        proc.join()
+        # queue.join()
 
-    queue.join()
+    # logger.logAndWrite("return dict values\n")
+    for key in returnDict.keys():
+        sys.stderr.write("Process %s results:\n" % key)
+        sys.stderr.write(returnDict[key])
+        sys.stderr.write("\n")
+        msgBody += returnDict[key]
 
 except Exception, e:
     logger.log('An exception occurred: %s' % e, 'error')
