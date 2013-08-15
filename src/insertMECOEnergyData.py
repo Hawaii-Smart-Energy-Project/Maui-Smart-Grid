@@ -103,13 +103,13 @@ def insertDataWrapper(fullPath):
 
     global msgBody
     logger.log('Inserting data.')
-    # logger.logAndWrite("current process is %s" % multiprocessing
-    # .current_process())
+    logger.logAndWrite("current process is %s" % multiprocessing.current_process())
 
-    # pattern = 'PoolWorker-(\d+),'
-    # jobString = str(multiprocessing.current_process())
-    # match = re.search(pattern, jobString)
-    # assert match.group(1), "Process ID was matched."
+    pattern = 'Process-(\d+),'
+    jobString = str(multiprocessing.current_process())
+    print "jobstring = %s" % jobString
+    match = re.search(pattern, jobString)
+    assert match.group(1) is not None, "Process ID was matched."
 
     # print queue.
 
@@ -120,7 +120,7 @@ def insertDataWrapper(fullPath):
     myLog += "\n"
     startTime = time.time()
     myLog += inserter.insertData(fullPath, testing = commandLineArgs.testing,
-                                 jobID = '')
+                                 jobID = match.group(1))
     myLog += "\n"
     myLog += "\nWall time = {:.2f} seconds.\n".format(
         time.time() - startTime)
@@ -134,9 +134,6 @@ def insertDataWrapper(fullPath):
 
 def worker():
     for item in iter(queue.get, None):
-        logger.logAndWrite("Current process is")
-        if multiprocessing.current_process():
-            logger.logAndWrite(str(multiprocessing.current_process()))
         insertDataWrapper(item)
         queue.task_done()
     queue.task_done()
