@@ -87,7 +87,7 @@ def logLegend():
     Output a legend describing the concise report format.
     """
 
-    legend = "Log Legend: {} = dupes, () = element group, " \
+    legend = "Log Legend: #: = process ID, {} = dupes, () = element group, " \
              "[] = process for insert elements, <> = <reading insert count, " \
              "register insert count, event insert count, group insert count," \
              "total insert count>, * = commit\nrd = reading, re = register, " \
@@ -101,18 +101,10 @@ def insertDataWrapper(fullPath):
     :returns: Log of parsing along with performance results.
     """
 
-    # global msgBody
-    # logger.log('Inserting data.')
-    # logger.logAndWrite("current process is %s" % multiprocessing
-    # .current_process())
-
     pattern = 'Process-(\d+),'
     jobString = str(multiprocessing.current_process())
-    # print "jobstring = %s" % jobString
     match = re.search(pattern, jobString)
     assert match.group(1) is not None, "Process ID was matched."
-
-    # print queue.
 
     myLog = ''
     myLog += "\n"
@@ -128,23 +120,16 @@ def insertDataWrapper(fullPath):
 
     logger.log('myLog = %s' % myLog)
 
-    # msgBody += myLog
-
     return myLog
 
 
 def worker(path, returnDict):
-    # for item in iter(queue.get, None):
-    #     insertDataWrapper(item)
-    #     queue.task_done()
-    # queue.task_done()
     result = insertDataWrapper(path)
     sys.stderr.write("result\n")
     sys.stderr.write(result)
     sys.stderr.write("\n")
     pattern = 'Process-(\d+),'
     jobString = str(multiprocessing.current_process())
-    # print "jobstring = %s" % jobString
     match = re.search(pattern, jobString)
     assert match.group(1) is not None, "Process ID was matched."
     returnDict[match.group(1)] = result
@@ -217,51 +202,15 @@ for root, dirnames, filenames in os.walk('.'):
             xmlGzCount += 1
             pathsToProcess.append(os.path.join(root, filename))
 
-            # Execute the insert data script for the file.
-
-            # if USE_SCRIPT_METHOD:
-            #     if commandLineArgs.testing:
-            #         call([insertScript, "--testing", "--filepath", fullPath])
-            # else:
-            # The object method is preferred.
-            # startTime = time.time()
-            # parseLog = inserter.insertData(fullPath,
-            #                                testing = commandLineArgs
-            #                                .testing)
-            # msgBody += parseLog + "\n"
-            # msgBody += "\nWall time = {:.2f} seconds.\n".format(
-            #     time.time() - startTime)
-            # pass
-
 try:
     pool = multiprocessing.Pool(
         int(configer.configOptionValue('Hardware', 'multiprocessing_limit')))
 
-    # result = pool.map_async(insertDataWorker, pathsToProcess)
-    # msgBody += result.get(999999)
-    # print "result"
-    # print "**************************************************************"
-    # print result.get(999999)
-    # result = pool.map(insertDataWorker, pathsToProcess)
-
-    # logger.log('result = %s' % result)
-    # pool.close()
-    # pool.join()
-
-    # queue = multiprocessing.JoinableQueue()
     procs = []
     manager = multiprocessing.Manager()
     returnDict = manager.dict()
-    # for i in range(
-    #         int(configer.configOptionValue('Hardware',
-    #                                        'multiprocessing_limit'))):
-    #     procs.append(multiprocessing.Process(target = worker,
-    # args=(returnDict,)))
-    #     procs[-1].daemon = True
-    #     procs[-1].start()
 
     for path in pathsToProcess:
-        # queue.put(path)
         procs.append(
             multiprocessing.Process(target = worker, args = (path, returnDict)))
         procs[-1].daemon = True
@@ -269,9 +218,7 @@ try:
 
     for proc in procs:
         proc.join()
-        # queue.join()
 
-    # logger.logAndWrite("return dict values\n")
     for key in returnDict.keys():
         sys.stderr.write("Process %s results:\n" % key)
         sys.stderr.write(returnDict[key])
