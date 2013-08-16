@@ -125,9 +125,9 @@ def insertDataWrapper(fullPath):
 
 def worker(path, returnDict):
     result = insertDataWrapper(path)
-    sys.stderr.write("result\n")
-    sys.stderr.write(result)
-    sys.stderr.write("\n")
+    # sys.stderr.write("result\n")
+    # sys.stderr.write(result)
+    # sys.stderr.write("\n")
     pattern = 'Process-(\d+),'
     jobString = str(multiprocessing.current_process())
     match = re.search(pattern, jobString)
@@ -203,8 +203,8 @@ for root, dirnames, filenames in os.walk('.'):
             pathsToProcess.append(os.path.join(root, filename))
 
 try:
-    pool = multiprocessing.Pool(
-        int(configer.configOptionValue('Hardware', 'multiprocessing_limit')))
+    # pool = multiprocessing.Pool(
+    #     int(configer.configOptionValue('Hardware', 'multiprocessing_limit')))
 
     procs = []
     manager = multiprocessing.Manager()
@@ -240,9 +240,10 @@ plotter = MECOPlotting(commandLineArgs.testing)
 try:
     plotter.plotReadingAndMeterCounts(databaseName)
     msg = "\nPlot is attached.\n"
-except:
-    # @todo What exception is thrown?
+except Exception, e:
     msg = "\nFailed to generate plot.\n"
+    logger.log('An exception occurred: Failed to generate plot. %s' % e,
+               'error')
 
 msgBody += msg
 
