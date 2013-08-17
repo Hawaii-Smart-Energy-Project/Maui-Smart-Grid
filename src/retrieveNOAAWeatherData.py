@@ -211,12 +211,15 @@ if __name__ == '__main__':
     retriever.fileList = retriever.weatherUtil.fileList
     retriever.dateList = retriever.weatherUtil.dateList
 
+    multiprocessingLimit = configer.configOptionValue('Hardware',
+                                                      'multiprocessing_limit')
+
     LAST_DATE_TESTING = False
     if not LAST_DATE_TESTING:
         if retriever.fileList:
             print "Performing primary retrieval."
 
-            retriever.pool = multiprocessing.Pool(4)
+            retriever.pool = multiprocessing.Pool(multiprocessingLimit)
             results = retriever.pool.map(performDownloading, retriever.fileList)
             retriever.pool.close()
             retriever.pool.join()
@@ -234,7 +237,7 @@ if __name__ == '__main__':
     if keepList:
         print "Performing secondary retrieval."
 
-        retriever.pool = multiprocessing.Pool(4)
+        retriever.pool = multiprocessing.Pool(multiprocessingLimit)
         results = retriever.pool.map(performDownloadingWithForcedDownload,
                                      keepList)
         retriever.pool.close()
