@@ -219,7 +219,7 @@ if __name__ == '__main__':
         if retriever.fileList:
             print "Performing primary retrieval."
 
-            retriever.pool = multiprocessing.Pool(multiprocessingLimit)
+            retriever.pool = multiprocessing.Pool(int(multiprocessingLimit))
             results = retriever.pool.map(performDownloading, retriever.fileList)
             retriever.pool.close()
             retriever.pool.join()
@@ -237,7 +237,7 @@ if __name__ == '__main__':
     if keepList:
         print "Performing secondary retrieval."
 
-        retriever.pool = multiprocessing.Pool(multiprocessingLimit)
+        retriever.pool = multiprocessing.Pool(int(multiprocessingLimit))
         results = retriever.pool.map(performDownloadingWithForcedDownload,
                                      keepList)
         retriever.pool.close()
