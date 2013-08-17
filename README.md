@@ -71,31 +71,43 @@ The reference template can be found in `config/sample-dot-msg-data-operations.cf
     limit_commits=False
     
     [Data Paths]
-    plot_path=${MSG_PLOT_PATH}
+    plot_path=${PLOT_PATH}
     
     [Executable Paths]
-    bin_path=${MSG_BIN_DIR}
+    bin_path=${MECO_BIN_DIR}
     
     [Notifications]
-    email_fromaddr=${EMAIL_FROM_ADDRESS}
-    email_username=${SMTP_USERNAME}
-    email_password=${EMAIL_SEND_PASSWORD}
-    email_recipients=${LIST_OF_EMAIL_RECIPIENTS}
-    testing_email_recipients=${LIST_OF_TESTING_EMAIL_RECIPIENTS}
-    email_smtp_server=${SMTP_SERVER_ADDRESS}
-
+    email_fromaddr=${EMAIL_ADDRESS}
+    email_username=${EMAIL_USERNAME}
+    email_password=${EMAIL_PASSWORD}
+    email_recipients=${COMMA_SEPARATED_EMAIL_RECIPIENTS}
+    testing_email_recipients=${COMMA_SEPARATED_EMAIL_RECIPIENTS}
+    email_smtp_server=${SMTP_SERVER_AND_PORT}
+    
     [Weather Data]
+    
+    ## Example URL: http://cdo.ncdc.noaa.gov/qclcd_ascii/
     weather_data_url=${WEATHER_DATA_URL}
-    weather_data_pattern=${WEATHER_DATA_MATCHING_PATTERN}
-    weather_data_path=${LOCAL_WEATHER_DATA_PATH}
-
+    
+    ## Example pattern: <A HREF=".*?">(QCLCD(201208|201209|201210|201211|201212|2013).*?)</A>
+    weather_data_pattern=${WEATHER_DATA_PATTERN}
+    
+    weather_data_path=${WEATHER_DATA_PATH}
+    
     [Database]
     db_password=${PASSWORD}
     db_host=${IP_ADDRESS_OR_HOSTNAME}
-    db_name=${DB_NAME}
     db_port=${DB_PORT}
     db_username=${DB_USERNAME}
+
+    ## The name of the database that will be used by automated operations.
+    db_name=${DB_NAME}
+    
+    ## The name of the databased used for testing operations.
     testing_db_name=${TESTING_DB_NAME}
+    
+    [Hardware]
+    multiprocessing_limit = ${MULTIPROCESSING_LIMIT}
     
 ## Database Configuration
 
