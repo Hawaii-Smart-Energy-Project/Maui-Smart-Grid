@@ -51,9 +51,12 @@ class MSGDBConnector(object):
 
 
     def connectDB(self):
+
         """
         Make the DB connection.
         """
+
+        # @todo Make this method private since the init makes the connection.
 
         conn = None
 
