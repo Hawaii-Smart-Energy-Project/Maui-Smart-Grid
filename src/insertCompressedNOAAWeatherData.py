@@ -69,11 +69,11 @@ if commandLineArgs.testing:
     logger.log("Testing mode is ON.\n", 'info')
     connector = MSGDBConnector(True)
 else:
-    connector = MSGDBConnector()
+    connector = MSGDBConnector(testing = commandLineArgs.testing)
 if commandLineArgs.email:
     logger.log("Email will be sent.\n", 'info')
 
-conn = connector.connectDB()
+conn = connector.conn
 
 msg = ''
 databaseName = ''
@@ -121,6 +121,8 @@ for root, dirnames, filenames in os.walk('.'):
         weatherUtil = MSGWeatherDataUtil()
         keepList = weatherUtil.getKeepList(weatherUtil.fileList,
                                            connector.conn.cursor())
+
+        print "keep list = %s" % keepList
 
         keepDates = [weatherUtil.datePart(filename = k) for k in keepList]
         hourlyNames = [k + 'hourly.txt.gz' for k in keepDates]
