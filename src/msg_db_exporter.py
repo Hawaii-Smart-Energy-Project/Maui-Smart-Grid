@@ -11,6 +11,7 @@ from msg_logger import MSGLogger
 from msg_time_util import MSGTimeUtil
 import subprocess
 from msg_configer import MSGConfiger
+import gzip
 
 
 class MSGDBExporter(object):
@@ -26,7 +27,7 @@ class MSGDBExporter(object):
         self.timeUtil = MSGTimeUtil()
         self.configer = MSGConfiger()
 
-    def exportDB(self, databases):
+    def exportDB(self, databases = None):
         """
         Export a DB to local storage.
 
@@ -34,12 +35,13 @@ class MSGDBExporter(object):
 
         pg_dump -s -h ${HOST} ${DB_NAME} > ${DUMP_TIMESTAMP}_{DB_NAME}.sql
 
-        :param: databases: List of database names.
+        :param databases: List of database names.
         """
 
         host = self.configer.configOptionValue('Database', 'db_host')
 
         for db in databases:
+            self.logger.log('Exporting %s.' % db)
             conciseNow = self.timeUtil.conciseNow()
             dumpName = "%s_%s" % (conciseNow, db)
             command = """pg_dump -h %s %s > %s/%s.sql""" % (host, db,
@@ -53,9 +55,24 @@ class MSGDBExporter(object):
             except subprocess.CalledProcessError, e:
                 self.logger.log("An exception occurred: %s", e)
 
+            print "Compressing %s using gzip." % db
+            self.gzipCompressFile('%s.sql' % dumpName)
+
+    def gzipCompressFile(self, filename):
+        """
+        @todo Test valid compression.
+        :param filename
+        """
+
+        f_in = open(filename, 'rb')
+        f_out = gzip.open(filename + ".gz", 'wb')
+        f_out.writelines(f_in)
+        f_out.close()
+        f_in.close()
 
 if __name__ == '__main__':
     exporter = MSGDBExporter()
+
     exporter.exportDB(
         [exporter.configer.configOptionValue('Export', 'dbs_to_export')])
 
