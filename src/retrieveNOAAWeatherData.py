@@ -115,7 +115,7 @@ def unzipWorker(filename, forceDownload = False):
                 filename = originalName) + "hourly.txt"
 
             if fileExists(hourlyName):
-                print "Hourly file exists"
+                print "Hourly file exists. Compressing the hourly file with gzip."
                 gzipCompressFile(hourlyName)
             else:
                 print "Hourly file not found."
