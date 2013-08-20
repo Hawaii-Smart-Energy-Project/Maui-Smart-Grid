@@ -42,7 +42,8 @@ class MSGTimeUtil(object):
 
         myDates = set()
         for day in datetimes:
-            assert type(day) is dt.datetime, "Day should be type datetime."
+            self.logger.log('Processing day %s.' % day)
+            # assert type(day) is dt.datetime, "Day should be type datetime."
             myDates.add(day.date())
 
         datetimeList = list(myDates)
@@ -64,7 +65,6 @@ class MSGTimeUtil(object):
         """
 
         return dt.strftime(dt.now(), '%Y-%m-%d_%H%m%S')
-
 
 
 # For debugging
