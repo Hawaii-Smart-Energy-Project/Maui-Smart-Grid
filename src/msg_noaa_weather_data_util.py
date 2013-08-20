@@ -10,6 +10,7 @@ from msg_logger import MSGLogger
 from msg_configer import MSGConfiger
 import datetime as dt
 from dateutil.relativedelta import relativedelta
+import calendar
 
 
 class MSGWeatherDataUtil(object):
@@ -81,9 +82,9 @@ class MSGWeatherDataUtil(object):
 
     def getKeepList(self, fileList, cursor):
         """
-        The Keep List is the list of filenames of containing data that are
-        within the
-        month of the last loaded date or are beyond the last loaded date.
+        The Keep List is the list of filenames of files containing data that are
+        within the month of the last loaded date or are beyond the last loaded
+        date.
 
         :param: fileList: A list of files containing weather data.
         :param: DB cursor.
@@ -93,10 +94,22 @@ class MSGWeatherDataUtil(object):
         keepList = []
         i = 0
         for date in fileList:
+            self.logger.log('Examining date %s.' % date)
+
+            # The list date should be the last day of the month.
+
             listDate = dt.datetime.strptime(self.datePart(filename = date),
                                             "%Y%m")
+            lastDay = calendar.monthrange(listDate.year, listDate.month)[1]
+            listDate = dt.datetime.strptime(
+                '%s-%s-%s' % (listDate.year, listDate.month, lastDay),
+                "%Y-%m-%d")
+            self.logger.log('List date = %s.' % listDate)
             lastDate = self.getLastDateLoaded(cursor)
-            if lastDate < listDate:
+
+            self.logger.log('last date = %s' % lastDate)
+
+            if lastDate <= listDate:
                 keepList.append((i, listDate))
             i += 1
 
