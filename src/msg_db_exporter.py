@@ -12,6 +12,7 @@ from msg_time_util import MSGTimeUtil
 import subprocess
 from msg_configer import MSGConfiger
 import gzip
+import os
 
 
 class MSGDBExporter(object):
@@ -58,10 +59,18 @@ class MSGDBExporter(object):
             print "Compressing %s using gzip." % db
             self.gzipCompressFile('%s.sql' % dumpName)
 
+            # Remove the uncompressed file.
+            try:
+                os.remove('%s.sql' % dumpName)
+            except OSError, e:
+                self.logger.log(
+                    'Exception while removing %s.sql: %s.' % (dumpName, e))
+
     def gzipCompressFile(self, filename):
         """
         @todo Test valid compression.
-        :param filename
+
+        :param filename: Filename of file to be compressed.
         """
 
         f_in = open(filename, 'rb')
@@ -69,6 +78,7 @@ class MSGDBExporter(object):
         f_out.writelines(f_in)
         f_out.close()
         f_in.close()
+
 
 if __name__ == '__main__':
     exporter = MSGDBExporter()
