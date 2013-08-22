@@ -72,6 +72,17 @@ CREATE TABLE "CircuitData" (
 ALTER TABLE public."CircuitData" OWNER TO sepgroup;
 
 --
+-- Name: TABLE "CircuitData"; Type: COMMENT; Schema: public; Owner: sepgroup
+--
+
+COMMENT ON TABLE "CircuitData" IS 'Data from extract from MECO
+1517 = Maui Meadows and 1518 = Makena. 
+amp_a, b, c = amps
+mvar = 1,000,000 VARS (volt-ampere reactive) 
+MW is 1,000,000 watts and is a measure of active or real power';
+
+
+--
 -- Name: Event; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -463,7 +474,8 @@ CREATE TABLE "PVServicePointIDs" (
     state character varying,
     zip integer,
     month_installed integer,
-    year_installed integer
+    year_installed integer,
+    notes character varying
 );
 
 
@@ -563,6 +575,16 @@ CREATE TABLE "TransformerData" (
 
 
 ALTER TABLE public."TransformerData" OWNER TO sepgroup;
+
+--
+-- Name: TABLE "TransformerData"; Type: COMMENT; Schema: public; Owner: sepgroup
+--
+
+COMMENT ON TABLE "TransformerData" IS 'Data from MECO scada data extract (comes with circuit data and irradiance data)
+vlt_a, vlt_b, and vlt_c = kV (1,000 volts) measured phase to neutral
+volt (e.g. 121.5) = reference voltage measurement (measured in volts) for the load tap changer
+';
+
 
 --
 -- Name: WeatherNOAA; Type: TABLE; Schema: public; Owner: daniel; Tablespace: 
@@ -1335,7 +1357,7 @@ ALTER TABLE public.registers OWNER TO daniel;
 -- Name: VIEW registers; Type: COMMENT; Schema: public; Owner: daniel
 --
 
-COMMENT ON VIEW registers IS 'Being used for development. @author Daniel Zhang (張道博)';
+COMMENT ON VIEW registers IS 'This is being used for development. @author Daniel Zhang (張道博)';
 
 
 --
@@ -1818,6 +1840,7 @@ REVOKE ALL ON FUNCTION zero_to_null(real) FROM daniel;
 GRANT ALL ON FUNCTION zero_to_null(real) TO daniel;
 GRANT ALL ON FUNCTION zero_to_null(real) TO PUBLIC;
 GRANT ALL ON FUNCTION zero_to_null(real) TO sepgroup;
+GRANT ALL ON FUNCTION zero_to_null(real) TO sepgroupreadonly;
 
 
 --
@@ -1827,6 +1850,7 @@ GRANT ALL ON FUNCTION zero_to_null(real) TO sepgroup;
 REVOKE ALL ON TABLE "CircuitData" FROM PUBLIC;
 REVOKE ALL ON TABLE "CircuitData" FROM sepgroup;
 GRANT ALL ON TABLE "CircuitData" TO sepgroup;
+GRANT SELECT ON TABLE "CircuitData" TO sepgroupreadonly;
 
 
 --
@@ -1836,6 +1860,7 @@ GRANT ALL ON TABLE "CircuitData" TO sepgroup;
 REVOKE ALL ON TABLE "Event" FROM PUBLIC;
 REVOKE ALL ON TABLE "Event" FROM sepgroup;
 GRANT ALL ON TABLE "Event" TO sepgroup;
+GRANT SELECT ON TABLE "Event" TO sepgroupreadonly;
 
 
 --
@@ -1845,6 +1870,7 @@ GRANT ALL ON TABLE "Event" TO sepgroup;
 REVOKE ALL ON TABLE "EventData" FROM PUBLIC;
 REVOKE ALL ON TABLE "EventData" FROM sepgroup;
 GRANT ALL ON TABLE "EventData" TO sepgroup;
+GRANT SELECT ON TABLE "EventData" TO sepgroupreadonly;
 
 
 --
@@ -1854,6 +1880,7 @@ GRANT ALL ON TABLE "EventData" TO sepgroup;
 REVOKE ALL ON TABLE "Interval" FROM PUBLIC;
 REVOKE ALL ON TABLE "Interval" FROM sepgroup;
 GRANT ALL ON TABLE "Interval" TO sepgroup;
+GRANT SELECT ON TABLE "Interval" TO sepgroupreadonly;
 
 
 --
@@ -1863,6 +1890,7 @@ GRANT ALL ON TABLE "Interval" TO sepgroup;
 REVOKE ALL ON TABLE "IntervalReadData" FROM PUBLIC;
 REVOKE ALL ON TABLE "IntervalReadData" FROM sepgroup;
 GRANT ALL ON TABLE "IntervalReadData" TO sepgroup;
+GRANT SELECT ON TABLE "IntervalReadData" TO sepgroupreadonly;
 
 
 --
@@ -1872,6 +1900,7 @@ GRANT ALL ON TABLE "IntervalReadData" TO sepgroup;
 REVOKE ALL ON TABLE "IrradianceData" FROM PUBLIC;
 REVOKE ALL ON TABLE "IrradianceData" FROM sepgroup;
 GRANT ALL ON TABLE "IrradianceData" TO sepgroup;
+GRANT SELECT ON TABLE "IrradianceData" TO sepgroupreadonly;
 
 
 --
@@ -1881,6 +1910,7 @@ GRANT ALL ON TABLE "IrradianceData" TO sepgroup;
 REVOKE ALL ON TABLE "IrradianceSensorInfo" FROM PUBLIC;
 REVOKE ALL ON TABLE "IrradianceSensorInfo" FROM sepgroup;
 GRANT ALL ON TABLE "IrradianceSensorInfo" TO sepgroup;
+GRANT SELECT ON TABLE "IrradianceSensorInfo" TO sepgroupreadonly;
 
 
 --
@@ -1890,6 +1920,7 @@ GRANT ALL ON TABLE "IrradianceSensorInfo" TO sepgroup;
 REVOKE ALL ON TABLE "LocationRecords" FROM PUBLIC;
 REVOKE ALL ON TABLE "LocationRecords" FROM sepgroup;
 GRANT ALL ON TABLE "LocationRecords" TO sepgroup;
+GRANT SELECT ON TABLE "LocationRecords" TO sepgroupreadonly;
 
 
 --
@@ -1900,6 +1931,7 @@ REVOKE ALL ON TABLE "MSG_PV_Data" FROM PUBLIC;
 REVOKE ALL ON TABLE "MSG_PV_Data" FROM eileen;
 GRANT ALL ON TABLE "MSG_PV_Data" TO eileen;
 GRANT ALL ON TABLE "MSG_PV_Data" TO sepgroup;
+GRANT SELECT ON TABLE "MSG_PV_Data" TO sepgroupreadonly;
 
 
 --
@@ -1909,6 +1941,7 @@ GRANT ALL ON TABLE "MSG_PV_Data" TO sepgroup;
 REVOKE ALL ON TABLE "MeterData" FROM PUBLIC;
 REVOKE ALL ON TABLE "MeterData" FROM sepgroup;
 GRANT ALL ON TABLE "MeterData" TO sepgroup;
+GRANT SELECT ON TABLE "MeterData" TO sepgroupreadonly;
 
 
 --
@@ -1919,6 +1952,7 @@ REVOKE ALL ON TABLE "MeterLocationHistory" FROM PUBLIC;
 REVOKE ALL ON TABLE "MeterLocationHistory" FROM daniel;
 GRANT ALL ON TABLE "MeterLocationHistory" TO daniel;
 GRANT ALL ON TABLE "MeterLocationHistory" TO sepgroup;
+GRANT SELECT ON TABLE "MeterLocationHistory" TO sepgroupreadonly;
 
 
 --
@@ -1928,6 +1962,7 @@ GRANT ALL ON TABLE "MeterLocationHistory" TO sepgroup;
 REVOKE ALL ON TABLE "MeterRecords" FROM PUBLIC;
 REVOKE ALL ON TABLE "MeterRecords" FROM sepgroup;
 GRANT ALL ON TABLE "MeterRecords" TO sepgroup;
+GRANT SELECT ON TABLE "MeterRecords" TO sepgroupreadonly;
 
 
 --
@@ -1937,6 +1972,7 @@ GRANT ALL ON TABLE "MeterRecords" TO sepgroup;
 REVOKE ALL ON TABLE "PVServicePointIDs" FROM PUBLIC;
 REVOKE ALL ON TABLE "PVServicePointIDs" FROM sepgroup;
 GRANT ALL ON TABLE "PVServicePointIDs" TO sepgroup;
+GRANT SELECT ON TABLE "PVServicePointIDs" TO sepgroupreadonly;
 
 
 --
@@ -1946,6 +1982,7 @@ GRANT ALL ON TABLE "PVServicePointIDs" TO sepgroup;
 REVOKE ALL ON TABLE "Reading" FROM PUBLIC;
 REVOKE ALL ON TABLE "Reading" FROM sepgroup;
 GRANT ALL ON TABLE "Reading" TO sepgroup;
+GRANT SELECT ON TABLE "Reading" TO sepgroupreadonly;
 
 
 --
@@ -1955,6 +1992,7 @@ GRANT ALL ON TABLE "Reading" TO sepgroup;
 REVOKE ALL ON TABLE "Register" FROM PUBLIC;
 REVOKE ALL ON TABLE "Register" FROM sepgroup;
 GRANT ALL ON TABLE "Register" TO sepgroup;
+GRANT SELECT ON TABLE "Register" TO sepgroupreadonly;
 
 
 --
@@ -1964,6 +2002,7 @@ GRANT ALL ON TABLE "Register" TO sepgroup;
 REVOKE ALL ON TABLE "RegisterData" FROM PUBLIC;
 REVOKE ALL ON TABLE "RegisterData" FROM sepgroup;
 GRANT ALL ON TABLE "RegisterData" TO sepgroup;
+GRANT SELECT ON TABLE "RegisterData" TO sepgroupreadonly;
 
 
 --
@@ -1973,6 +2012,7 @@ GRANT ALL ON TABLE "RegisterData" TO sepgroup;
 REVOKE ALL ON TABLE "RegisterRead" FROM PUBLIC;
 REVOKE ALL ON TABLE "RegisterRead" FROM sepgroup;
 GRANT ALL ON TABLE "RegisterRead" TO sepgroup;
+GRANT SELECT ON TABLE "RegisterRead" TO sepgroupreadonly;
 
 
 --
@@ -1982,6 +2022,7 @@ GRANT ALL ON TABLE "RegisterRead" TO sepgroup;
 REVOKE ALL ON TABLE "Tier" FROM PUBLIC;
 REVOKE ALL ON TABLE "Tier" FROM sepgroup;
 GRANT ALL ON TABLE "Tier" TO sepgroup;
+GRANT SELECT ON TABLE "Tier" TO sepgroupreadonly;
 
 
 --
@@ -1991,6 +2032,7 @@ GRANT ALL ON TABLE "Tier" TO sepgroup;
 REVOKE ALL ON TABLE "TransformerData" FROM PUBLIC;
 REVOKE ALL ON TABLE "TransformerData" FROM sepgroup;
 GRANT ALL ON TABLE "TransformerData" TO sepgroup;
+GRANT SELECT ON TABLE "TransformerData" TO sepgroupreadonly;
 
 
 --
@@ -2001,6 +2043,7 @@ REVOKE ALL ON TABLE "WeatherNOAA" FROM PUBLIC;
 REVOKE ALL ON TABLE "WeatherNOAA" FROM daniel;
 GRANT ALL ON TABLE "WeatherNOAA" TO daniel;
 GRANT ALL ON TABLE "WeatherNOAA" TO sepgroup;
+GRANT SELECT ON TABLE "WeatherNOAA" TO sepgroupreadonly;
 
 
 --
@@ -2011,6 +2054,7 @@ REVOKE ALL ON TABLE cd_meter_ids_for_houses_with_pv_with_locations FROM PUBLIC;
 REVOKE ALL ON TABLE cd_meter_ids_for_houses_with_pv_with_locations FROM eileen;
 GRANT ALL ON TABLE cd_meter_ids_for_houses_with_pv_with_locations TO eileen;
 GRANT ALL ON TABLE cd_meter_ids_for_houses_with_pv_with_locations TO sepgroup;
+GRANT SELECT ON TABLE cd_meter_ids_for_houses_with_pv_with_locations TO sepgroupreadonly;
 
 
 --
@@ -2021,6 +2065,7 @@ REVOKE ALL ON TABLE readings_unfiltered FROM PUBLIC;
 REVOKE ALL ON TABLE readings_unfiltered FROM postgres;
 GRANT ALL ON TABLE readings_unfiltered TO postgres;
 GRANT ALL ON TABLE readings_unfiltered TO sepgroup;
+GRANT SELECT ON TABLE readings_unfiltered TO sepgroupreadonly;
 
 
 --
@@ -2031,6 +2076,7 @@ REVOKE ALL ON TABLE cd_energy_voltages_for_houses_with_pv FROM PUBLIC;
 REVOKE ALL ON TABLE cd_energy_voltages_for_houses_with_pv FROM postgres;
 GRANT ALL ON TABLE cd_energy_voltages_for_houses_with_pv TO postgres;
 GRANT ALL ON TABLE cd_energy_voltages_for_houses_with_pv TO sepgroup;
+GRANT SELECT ON TABLE cd_energy_voltages_for_houses_with_pv TO sepgroupreadonly;
 
 
 --
@@ -2041,6 +2087,7 @@ REVOKE ALL ON TABLE readings_by_meter_location_history FROM PUBLIC;
 REVOKE ALL ON TABLE readings_by_meter_location_history FROM postgres;
 GRANT ALL ON TABLE readings_by_meter_location_history TO postgres;
 GRANT ALL ON TABLE readings_by_meter_location_history TO sepgroup;
+GRANT SELECT ON TABLE readings_by_meter_location_history TO sepgroupreadonly;
 
 
 --
@@ -2051,6 +2098,7 @@ REVOKE ALL ON TABLE cd_readings_channel_as_columns_by_service_point FROM PUBLIC;
 REVOKE ALL ON TABLE cd_readings_channel_as_columns_by_service_point FROM eileen;
 GRANT ALL ON TABLE cd_readings_channel_as_columns_by_service_point TO eileen;
 GRANT ALL ON TABLE cd_readings_channel_as_columns_by_service_point TO sepgroup;
+GRANT SELECT ON TABLE cd_readings_channel_as_columns_by_service_point TO sepgroupreadonly;
 
 
 --
@@ -2061,6 +2109,7 @@ REVOKE ALL ON TABLE cd_monthly_summary_1 FROM PUBLIC;
 REVOKE ALL ON TABLE cd_monthly_summary_1 FROM eileen;
 GRANT ALL ON TABLE cd_monthly_summary_1 TO eileen;
 GRANT ALL ON TABLE cd_monthly_summary_1 TO sepgroup;
+GRANT SELECT ON TABLE cd_monthly_summary_1 TO sepgroupreadonly;
 
 
 --
@@ -2071,6 +2120,7 @@ REVOKE ALL ON TABLE cd_monthly_summary_2 FROM PUBLIC;
 REVOKE ALL ON TABLE cd_monthly_summary_2 FROM eileen;
 GRANT ALL ON TABLE cd_monthly_summary_2 TO eileen;
 GRANT ALL ON TABLE cd_monthly_summary_2 TO sepgroup;
+GRANT SELECT ON TABLE cd_monthly_summary_2 TO sepgroupreadonly;
 
 
 --
@@ -2081,6 +2131,7 @@ REVOKE ALL ON TABLE count_of_event_duplicates FROM PUBLIC;
 REVOKE ALL ON TABLE count_of_event_duplicates FROM daniel;
 GRANT ALL ON TABLE count_of_event_duplicates TO daniel;
 GRANT ALL ON TABLE count_of_event_duplicates TO sepgroup;
+GRANT SELECT ON TABLE count_of_event_duplicates TO sepgroupreadonly;
 
 
 --
@@ -2091,6 +2142,7 @@ REVOKE ALL ON TABLE count_of_meters_not_in_mlh FROM PUBLIC;
 REVOKE ALL ON TABLE count_of_meters_not_in_mlh FROM postgres;
 GRANT ALL ON TABLE count_of_meters_not_in_mlh TO postgres;
 GRANT ALL ON TABLE count_of_meters_not_in_mlh TO sepgroup;
+GRANT SELECT ON TABLE count_of_meters_not_in_mlh TO sepgroupreadonly;
 
 
 --
@@ -2101,6 +2153,7 @@ REVOKE ALL ON TABLE readings_after_uninstall FROM PUBLIC;
 REVOKE ALL ON TABLE readings_after_uninstall FROM postgres;
 GRANT ALL ON TABLE readings_after_uninstall TO postgres;
 GRANT ALL ON TABLE readings_after_uninstall TO sepgroup;
+GRANT SELECT ON TABLE readings_after_uninstall TO sepgroupreadonly;
 
 
 --
@@ -2111,6 +2164,7 @@ REVOKE ALL ON TABLE readings_before_install FROM PUBLIC;
 REVOKE ALL ON TABLE readings_before_install FROM postgres;
 GRANT ALL ON TABLE readings_before_install TO postgres;
 GRANT ALL ON TABLE readings_before_install TO sepgroup;
+GRANT SELECT ON TABLE readings_before_install TO sepgroupreadonly;
 
 
 --
@@ -2121,6 +2175,7 @@ REVOKE ALL ON TABLE count_of_non_mlh_readings FROM PUBLIC;
 REVOKE ALL ON TABLE count_of_non_mlh_readings FROM postgres;
 GRANT ALL ON TABLE count_of_non_mlh_readings TO postgres;
 GRANT ALL ON TABLE count_of_non_mlh_readings TO sepgroup;
+GRANT SELECT ON TABLE count_of_non_mlh_readings TO sepgroupreadonly;
 
 
 --
@@ -2131,6 +2186,7 @@ REVOKE ALL ON TABLE count_of_readings_and_meters_by_day FROM PUBLIC;
 REVOKE ALL ON TABLE count_of_readings_and_meters_by_day FROM postgres;
 GRANT ALL ON TABLE count_of_readings_and_meters_by_day TO postgres;
 GRANT ALL ON TABLE count_of_readings_and_meters_by_day TO sepgroup;
+GRANT SELECT ON TABLE count_of_readings_and_meters_by_day TO sepgroupreadonly;
 
 
 --
@@ -2141,6 +2197,7 @@ REVOKE ALL ON TABLE count_of_register_duplicates FROM PUBLIC;
 REVOKE ALL ON TABLE count_of_register_duplicates FROM daniel;
 GRANT ALL ON TABLE count_of_register_duplicates TO daniel;
 GRANT ALL ON TABLE count_of_register_duplicates TO sepgroup;
+GRANT SELECT ON TABLE count_of_register_duplicates TO sepgroupreadonly;
 
 
 --
@@ -2151,6 +2208,7 @@ REVOKE ALL ON TABLE deprecated_dz_pv_readings FROM PUBLIC;
 REVOKE ALL ON TABLE deprecated_dz_pv_readings FROM postgres;
 GRANT ALL ON TABLE deprecated_dz_pv_readings TO postgres;
 GRANT ALL ON TABLE deprecated_dz_pv_readings TO sepgroup;
+GRANT SELECT ON TABLE deprecated_dz_pv_readings TO sepgroupreadonly;
 
 
 --
@@ -2161,6 +2219,7 @@ REVOKE ALL ON TABLE nonpv_mlh FROM PUBLIC;
 REVOKE ALL ON TABLE nonpv_mlh FROM postgres;
 GRANT ALL ON TABLE nonpv_mlh TO postgres;
 GRANT ALL ON TABLE nonpv_mlh TO sepgroup;
+GRANT SELECT ON TABLE nonpv_mlh TO sepgroupreadonly;
 
 
 --
@@ -2171,6 +2230,7 @@ REVOKE ALL ON TABLE deprecated_dz_pv_readings_without_pv_service_point_ids FROM 
 REVOKE ALL ON TABLE deprecated_dz_pv_readings_without_pv_service_point_ids FROM postgres;
 GRANT ALL ON TABLE deprecated_dz_pv_readings_without_pv_service_point_ids TO postgres;
 GRANT ALL ON TABLE deprecated_dz_pv_readings_without_pv_service_point_ids TO sepgroup;
+GRANT SELECT ON TABLE deprecated_dz_pv_readings_without_pv_service_point_ids TO sepgroupreadonly;
 
 
 --
@@ -2181,6 +2241,7 @@ REVOKE ALL ON TABLE deprecated_meter_ids_for_houses_without_pv FROM PUBLIC;
 REVOKE ALL ON TABLE deprecated_meter_ids_for_houses_without_pv FROM postgres;
 GRANT ALL ON TABLE deprecated_meter_ids_for_houses_without_pv TO postgres;
 GRANT ALL ON TABLE deprecated_meter_ids_for_houses_without_pv TO sepgroup;
+GRANT SELECT ON TABLE deprecated_meter_ids_for_houses_without_pv TO sepgroupreadonly;
 
 
 --
@@ -2191,6 +2252,7 @@ REVOKE ALL ON TABLE dz_energy_voltages_for_houses_without_pv FROM PUBLIC;
 REVOKE ALL ON TABLE dz_energy_voltages_for_houses_without_pv FROM postgres;
 GRANT ALL ON TABLE dz_energy_voltages_for_houses_without_pv TO postgres;
 GRANT ALL ON TABLE dz_energy_voltages_for_houses_without_pv TO sepgroup;
+GRANT SELECT ON TABLE dz_energy_voltages_for_houses_without_pv TO sepgroupreadonly;
 
 
 --
@@ -2201,6 +2263,7 @@ REVOKE ALL ON TABLE nonpv_service_point_ids FROM PUBLIC;
 REVOKE ALL ON TABLE nonpv_service_point_ids FROM postgres;
 GRANT ALL ON TABLE nonpv_service_point_ids TO postgres;
 GRANT ALL ON TABLE nonpv_service_point_ids TO sepgroup;
+GRANT SELECT ON TABLE nonpv_service_point_ids TO sepgroupreadonly;
 
 
 --
@@ -2211,6 +2274,7 @@ REVOKE ALL ON TABLE dz_monthly_energy_summary_for_nonpv_service_points FROM PUBL
 REVOKE ALL ON TABLE dz_monthly_energy_summary_for_nonpv_service_points FROM postgres;
 GRANT ALL ON TABLE dz_monthly_energy_summary_for_nonpv_service_points TO postgres;
 GRANT ALL ON TABLE dz_monthly_energy_summary_for_nonpv_service_points TO sepgroup;
+GRANT SELECT ON TABLE dz_monthly_energy_summary_for_nonpv_service_points TO sepgroupreadonly;
 
 
 --
@@ -2221,6 +2285,7 @@ REVOKE ALL ON TABLE dz_pv_interval_ids FROM PUBLIC;
 REVOKE ALL ON TABLE dz_pv_interval_ids FROM postgres;
 GRANT ALL ON TABLE dz_pv_interval_ids TO postgres;
 GRANT ALL ON TABLE dz_pv_interval_ids TO sepgroup;
+GRANT SELECT ON TABLE dz_pv_interval_ids TO sepgroupreadonly;
 
 
 --
@@ -2231,6 +2296,7 @@ REVOKE ALL ON TABLE dz_pv_readings_in_nonpv_mlh FROM PUBLIC;
 REVOKE ALL ON TABLE dz_pv_readings_in_nonpv_mlh FROM postgres;
 GRANT ALL ON TABLE dz_pv_readings_in_nonpv_mlh TO postgres;
 GRANT ALL ON TABLE dz_pv_readings_in_nonpv_mlh TO sepgroup;
+GRANT SELECT ON TABLE dz_pv_readings_in_nonpv_mlh TO sepgroupreadonly;
 
 
 --
@@ -2241,6 +2307,7 @@ REVOKE ALL ON TABLE dz_summary_pv_readings_in_nonpv_mlh FROM PUBLIC;
 REVOKE ALL ON TABLE dz_summary_pv_readings_in_nonpv_mlh FROM postgres;
 GRANT ALL ON TABLE dz_summary_pv_readings_in_nonpv_mlh TO postgres;
 GRANT ALL ON TABLE dz_summary_pv_readings_in_nonpv_mlh TO sepgroup;
+GRANT SELECT ON TABLE dz_summary_pv_readings_in_nonpv_mlh TO sepgroupreadonly;
 
 
 --
@@ -2250,6 +2317,7 @@ GRANT ALL ON TABLE dz_summary_pv_readings_in_nonpv_mlh TO sepgroup;
 REVOKE ALL ON SEQUENCE event_data_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE event_data_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE event_data_id_seq TO sepgroup;
+GRANT SELECT ON SEQUENCE event_data_id_seq TO sepgroupreadonly;
 
 
 --
@@ -2259,6 +2327,7 @@ GRANT ALL ON SEQUENCE event_data_id_seq TO sepgroup;
 REVOKE ALL ON SEQUENCE event_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE event_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE event_id_seq TO sepgroup;
+GRANT SELECT ON SEQUENCE event_id_seq TO sepgroupreadonly;
 
 
 --
@@ -2269,6 +2338,7 @@ REVOKE ALL ON TABLE event_table_view FROM PUBLIC;
 REVOKE ALL ON TABLE event_table_view FROM eileen;
 GRANT ALL ON TABLE event_table_view TO eileen;
 GRANT ALL ON TABLE event_table_view TO sepgroup;
+GRANT SELECT ON TABLE event_table_view TO sepgroupreadonly;
 
 
 --
@@ -2278,6 +2348,7 @@ GRANT ALL ON TABLE event_table_view TO sepgroup;
 REVOKE ALL ON SEQUENCE interval_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE interval_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE interval_id_seq TO sepgroup;
+GRANT SELECT ON SEQUENCE interval_id_seq TO sepgroupreadonly;
 
 
 --
@@ -2287,6 +2358,7 @@ GRANT ALL ON SEQUENCE interval_id_seq TO sepgroup;
 REVOKE ALL ON SEQUENCE intervalreaddata_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE intervalreaddata_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE intervalreaddata_id_seq TO sepgroup;
+GRANT SELECT ON SEQUENCE intervalreaddata_id_seq TO sepgroupreadonly;
 
 
 --
@@ -2297,6 +2369,7 @@ REVOKE ALL ON TABLE irradiance_data FROM PUBLIC;
 REVOKE ALL ON TABLE irradiance_data FROM eileen;
 GRANT ALL ON TABLE irradiance_data TO eileen;
 GRANT ALL ON TABLE irradiance_data TO sepgroup;
+GRANT SELECT ON TABLE irradiance_data TO sepgroupreadonly;
 
 
 --
@@ -2307,6 +2380,7 @@ REVOKE ALL ON TABLE locations_with_pv_service_points_ids FROM PUBLIC;
 REVOKE ALL ON TABLE locations_with_pv_service_points_ids FROM postgres;
 GRANT ALL ON TABLE locations_with_pv_service_points_ids TO postgres;
 GRANT ALL ON TABLE locations_with_pv_service_points_ids TO sepgroup;
+GRANT SELECT ON TABLE locations_with_pv_service_points_ids TO sepgroupreadonly;
 
 
 --
@@ -2317,6 +2391,7 @@ REVOKE ALL ON TABLE meter_ids_for_service_points_without_pv FROM PUBLIC;
 REVOKE ALL ON TABLE meter_ids_for_service_points_without_pv FROM postgres;
 GRANT ALL ON TABLE meter_ids_for_service_points_without_pv TO postgres;
 GRANT ALL ON TABLE meter_ids_for_service_points_without_pv TO sepgroup;
+GRANT SELECT ON TABLE meter_ids_for_service_points_without_pv TO sepgroupreadonly;
 
 
 --
@@ -2327,6 +2402,7 @@ REVOKE ALL ON TABLE meter_read_dates FROM PUBLIC;
 REVOKE ALL ON TABLE meter_read_dates FROM eileen;
 GRANT ALL ON TABLE meter_read_dates TO eileen;
 GRANT ALL ON TABLE meter_read_dates TO sepgroup;
+GRANT SELECT ON TABLE meter_read_dates TO sepgroupreadonly;
 
 
 --
@@ -2336,6 +2412,7 @@ GRANT ALL ON TABLE meter_read_dates TO sepgroup;
 REVOKE ALL ON SEQUENCE meterdata_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE meterdata_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE meterdata_id_seq TO sepgroup;
+GRANT SELECT ON SEQUENCE meterdata_id_seq TO sepgroupreadonly;
 
 
 --
@@ -2346,6 +2423,7 @@ REVOKE ALL ON TABLE monthly_energy_summary_all_meters FROM PUBLIC;
 REVOKE ALL ON TABLE monthly_energy_summary_all_meters FROM eileen;
 GRANT ALL ON TABLE monthly_energy_summary_all_meters TO eileen;
 GRANT ALL ON TABLE monthly_energy_summary_all_meters TO sepgroup;
+GRANT SELECT ON TABLE monthly_energy_summary_all_meters TO sepgroupreadonly;
 
 
 --
@@ -2356,6 +2434,7 @@ REVOKE ALL ON TABLE monthly_energy_summary_houses_with_pv FROM PUBLIC;
 REVOKE ALL ON TABLE monthly_energy_summary_houses_with_pv FROM eileen;
 GRANT ALL ON TABLE monthly_energy_summary_houses_with_pv TO eileen;
 GRANT ALL ON TABLE monthly_energy_summary_houses_with_pv TO sepgroup;
+GRANT SELECT ON TABLE monthly_energy_summary_houses_with_pv TO sepgroupreadonly;
 
 
 --
@@ -2366,6 +2445,7 @@ REVOKE ALL ON TABLE name_address_service_point_id FROM PUBLIC;
 REVOKE ALL ON TABLE name_address_service_point_id FROM eileen;
 GRANT ALL ON TABLE name_address_service_point_id TO eileen;
 GRANT ALL ON TABLE name_address_service_point_id TO sepgroup;
+GRANT SELECT ON TABLE name_address_service_point_id TO sepgroupreadonly;
 
 
 --
@@ -2376,6 +2456,7 @@ REVOKE ALL ON TABLE pv_service_points_specifications_view FROM PUBLIC;
 REVOKE ALL ON TABLE pv_service_points_specifications_view FROM eileen;
 GRANT ALL ON TABLE pv_service_points_specifications_view TO eileen;
 GRANT ALL ON TABLE pv_service_points_specifications_view TO sepgroup;
+GRANT SELECT ON TABLE pv_service_points_specifications_view TO sepgroupreadonly;
 
 
 --
@@ -2386,6 +2467,7 @@ REVOKE ALL ON TABLE raw_meter_readings FROM PUBLIC;
 REVOKE ALL ON TABLE raw_meter_readings FROM postgres;
 GRANT ALL ON TABLE raw_meter_readings TO postgres;
 GRANT ALL ON TABLE raw_meter_readings TO sepgroup;
+GRANT SELECT ON TABLE raw_meter_readings TO sepgroupreadonly;
 
 
 --
@@ -2395,6 +2477,7 @@ GRANT ALL ON TABLE raw_meter_readings TO sepgroup;
 REVOKE ALL ON SEQUENCE reading_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE reading_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE reading_id_seq TO sepgroup;
+GRANT SELECT ON SEQUENCE reading_id_seq TO sepgroupreadonly;
 
 
 --
@@ -2405,6 +2488,7 @@ REVOKE ALL ON TABLE readings_not_referenced_by_mlh FROM PUBLIC;
 REVOKE ALL ON TABLE readings_not_referenced_by_mlh FROM postgres;
 GRANT ALL ON TABLE readings_not_referenced_by_mlh TO postgres;
 GRANT ALL ON TABLE readings_not_referenced_by_mlh TO sepgroup;
+GRANT SELECT ON TABLE readings_not_referenced_by_mlh TO sepgroupreadonly;
 
 
 --
@@ -2415,6 +2499,7 @@ REVOKE ALL ON TABLE readings_with_pv_service_point_id FROM PUBLIC;
 REVOKE ALL ON TABLE readings_with_pv_service_point_id FROM postgres;
 GRANT ALL ON TABLE readings_with_pv_service_point_id TO postgres;
 GRANT ALL ON TABLE readings_with_pv_service_point_id TO sepgroup;
+GRANT SELECT ON TABLE readings_with_pv_service_point_id TO sepgroupreadonly;
 
 
 --
@@ -2424,6 +2509,7 @@ GRANT ALL ON TABLE readings_with_pv_service_point_id TO sepgroup;
 REVOKE ALL ON SEQUENCE register_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE register_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE register_id_seq TO sepgroup;
+GRANT SELECT ON SEQUENCE register_id_seq TO sepgroupreadonly;
 
 
 --
@@ -2433,6 +2519,7 @@ GRANT ALL ON SEQUENCE register_id_seq TO sepgroup;
 REVOKE ALL ON SEQUENCE registerdata_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE registerdata_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE registerdata_id_seq TO sepgroup;
+GRANT SELECT ON SEQUENCE registerdata_id_seq TO sepgroupreadonly;
 
 
 --
@@ -2442,6 +2529,7 @@ GRANT ALL ON SEQUENCE registerdata_id_seq TO sepgroup;
 REVOKE ALL ON SEQUENCE registerread_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE registerread_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE registerread_id_seq TO sepgroup;
+GRANT SELECT ON SEQUENCE registerread_id_seq TO sepgroupreadonly;
 
 
 --
@@ -2452,6 +2540,7 @@ REVOKE ALL ON TABLE registers FROM PUBLIC;
 REVOKE ALL ON TABLE registers FROM daniel;
 GRANT ALL ON TABLE registers TO daniel;
 GRANT ALL ON TABLE registers TO sepgroup;
+GRANT SELECT ON TABLE registers TO sepgroupreadonly;
 
 
 --
@@ -2461,6 +2550,7 @@ GRANT ALL ON TABLE registers TO sepgroup;
 REVOKE ALL ON SEQUENCE tier_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE tier_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE tier_id_seq TO sepgroup;
+GRANT SELECT ON SEQUENCE tier_id_seq TO sepgroupreadonly;
 
 
 --
