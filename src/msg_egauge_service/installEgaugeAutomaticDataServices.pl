@@ -13,6 +13,8 @@
 
 use strict;
 
+# @todo Make directories if they don't already exist.
+
 my $binDest = "/usr/local/msg-egauge-service/bin";
 my $libDest = "/usr/local/lib/perl5";
 my $configDest = "/usr/local/msg-egauge-service/config";
