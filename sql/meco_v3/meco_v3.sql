@@ -83,6 +83,32 @@ MW is 1,000,000 watts and is a measure of active or real power';
 
 
 --
+-- Name: EgaugeEnergyAutoload; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "EgaugeEnergyAutoload" (
+    house_id integer NOT NULL,
+    datetime timestamp(6) without time zone NOT NULL,
+    use_kw double precision,
+    gen_kw double precision,
+    grid_kw double precision,
+    ac_kw double precision,
+    fan_kw double precision,
+    dhw_kw double precision,
+    stove_kw double precision,
+    dryer_kw double precision,
+    clotheswasher_kw double precision,
+    dishwasher_kw double precision,
+    solarpump_kw double precision,
+    upload_date timestamp(6) without time zone,
+    microwave_kw double precision,
+    acplus_kw double precision
+);
+
+
+ALTER TABLE public."EgaugeEnergyAutoload" OWNER TO sepgroup;
+
+--
 -- Name: Event; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -1460,6 +1486,14 @@ ALTER TABLE ONLY "CircuitData"
 
 
 --
+-- Name: EgaugeEnergyAutoload_pkey; Type: CONSTRAINT; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+ALTER TABLE ONLY "EgaugeEnergyAutoload"
+    ADD CONSTRAINT "EgaugeEnergyAutoload_pkey" PRIMARY KEY (house_id, datetime);
+
+
+--
 -- Name: EventData_pkey; Type: CONSTRAINT; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -1705,6 +1739,13 @@ CREATE UNIQUE INDEX "Tier_tier_id_key" ON "Tier" USING btree (tier_id);
 --
 
 CREATE UNIQUE INDEX device_util_id_index ON "LocationRecords" USING btree (device_util_id);
+
+
+--
+-- Name: idx_primary_key; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE INDEX idx_primary_key ON "EgaugeEnergyAutoload" USING btree (house_id, datetime);
 
 
 --
