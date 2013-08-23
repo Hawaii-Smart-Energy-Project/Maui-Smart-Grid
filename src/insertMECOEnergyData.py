@@ -109,7 +109,6 @@ def insertDataWrapper(fullPath):
     myLog = ''
     myLog += "\n"
     myLog += fullPath
-    # print msg
     myLog += "\n"
     startTime = time.time()
     myLog += inserter.insertData(fullPath, testing = commandLineArgs.testing,
@@ -125,9 +124,6 @@ def insertDataWrapper(fullPath):
 
 def worker(path, returnDict):
     result = insertDataWrapper(path)
-    # sys.stderr.write("result\n")
-    # sys.stderr.write(result)
-    # sys.stderr.write("\n")
     pattern = 'Process-(\d+),'
     jobString = str(multiprocessing.current_process())
     match = re.search(pattern, jobString)
@@ -203,9 +199,6 @@ for root, dirnames, filenames in os.walk('.'):
             pathsToProcess.append(os.path.join(root, filename))
 
 try:
-    # pool = multiprocessing.Pool(
-    #     int(configer.configOptionValue('Hardware', 'multiprocessing_limit')))
-
     procs = []
     manager = multiprocessing.Manager()
     returnDict = manager.dict()
