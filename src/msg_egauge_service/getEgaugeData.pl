@@ -97,10 +97,13 @@ foreach my $g (@egauges) {
         = DZSEPLib::getLastUnixTimestampForMSGEnergyAutoloadGauge($g);
     print STDERR "last datetime = $lastUnixTimestamp\n";
 
+    my $username = $CONFIG{egauge_user};
+    my $password = $CONFIG{egauge_password};
+    
     my $retrieveCommand
         = sprintf(
-        "wget \"http://%s.egaug.es/cgi-bin/egauge-show?m&c&C&w=$lastUnixTimestamp\" -O $filename",
-        lc($g) );
+        "wget --user $username --password $password \"http://%s.egaug.es/cgi-bin/egauge-show?m&c&C&w=$lastUnixTimestamp\" -O $filename",
+        lc("egauge" . $g) );
     print "\tcommand=$retrieveCommand\n";
     `$retrieveCommand`;
 
