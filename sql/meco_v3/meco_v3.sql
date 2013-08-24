@@ -87,7 +87,7 @@ MW is 1,000,000 watts and is a measure of active or real power';
 --
 
 CREATE TABLE "EgaugeEnergyAutoload" (
-    house_id integer NOT NULL,
+    egauge_id integer NOT NULL,
     datetime timestamp(6) without time zone NOT NULL,
     use_kw double precision,
     gen_kw double precision,
@@ -102,7 +102,20 @@ CREATE TABLE "EgaugeEnergyAutoload" (
     solarpump_kw double precision,
     upload_date timestamp(6) without time zone,
     microwave_kw double precision,
-    acplus_kw double precision
+    acplus_kw double precision,
+    dryer_usage_kw double precision,
+    garage_ac_kw double precision,
+    garage_ac_usage_kw double precision,
+    large_ac_kw double precision,
+    large_ac_usage_kw double precision,
+    oven_kw double precision,
+    oven_usage_kw double precision,
+    range_kw double precision,
+    range_usage_kw double precision,
+    refrigerator_kw double precision,
+    refrigerator_usage_kw double precision,
+    rest_of_house_usage_kw double precision,
+    clotheswasher_usage_kw double precision
 );
 
 
@@ -1040,6 +1053,23 @@ COMMENT ON VIEW dz_summary_pv_readings_in_nonpv_mlh IS 'Summary of service point
 
 
 --
+-- Name: egauge_energy_autoload_dates; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW egauge_energy_autoload_dates AS
+    SELECT "EgaugeEnergyAutoload".egauge_id, min("EgaugeEnergyAutoload".datetime) AS "E Start Date", max("EgaugeEnergyAutoload".datetime) AS "E Latest Date", ((count(*) / 60) / 24) AS "Days of Data" FROM "EgaugeEnergyAutoload" GROUP BY "EgaugeEnergyAutoload".egauge_id ORDER BY "EgaugeEnergyAutoload".egauge_id;
+
+
+ALTER TABLE public.egauge_energy_autoload_dates OWNER TO postgres;
+
+--
+-- Name: VIEW egauge_energy_autoload_dates; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW egauge_energy_autoload_dates IS 'Used by the MSG eGauge Service. @author Daniel Zhang (張道博)';
+
+
+--
 -- Name: event_data_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
 --
 
@@ -1490,7 +1520,7 @@ ALTER TABLE ONLY "CircuitData"
 --
 
 ALTER TABLE ONLY "EgaugeEnergyAutoload"
-    ADD CONSTRAINT "EgaugeEnergyAutoload_pkey" PRIMARY KEY (house_id, datetime);
+    ADD CONSTRAINT "EgaugeEnergyAutoload_pkey" PRIMARY KEY (egauge_id, datetime);
 
 
 --
@@ -1745,7 +1775,7 @@ CREATE UNIQUE INDEX device_util_id_index ON "LocationRecords" USING btree (devic
 -- Name: idx_primary_key; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
-CREATE INDEX idx_primary_key ON "EgaugeEnergyAutoload" USING btree (house_id, datetime);
+CREATE INDEX idx_primary_key ON "EgaugeEnergyAutoload" USING btree (egauge_id, datetime);
 
 
 --
