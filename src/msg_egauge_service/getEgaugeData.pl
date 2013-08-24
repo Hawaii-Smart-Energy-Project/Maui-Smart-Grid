@@ -43,7 +43,7 @@ DZSEPLib::connectDatabase(
 );
 
 #my $houseMappingRef = DZSEPLib::mapEgaugeNumbersToHouseID();
-my $dataDirName     = DZSEPLib::getDateString();
+my $dataDirName = DZSEPLib::getDateString();
 
 print "New data will be added to $dataDirName.\n";
 
@@ -73,14 +73,14 @@ else {
 foreach my $g (@egauges) {
 
     #$house = "egauge" . $house;
-    
+
     print "\tRetrieving data for eGauge $g.\n";
 
     my $filename = lc($g) . ".csv";
 
     #my $egaugeNumber = $house;
     #my $houseNumber  = 0;
-    
+
     # @todo eliminate redundant use of egauge number
     if ( $g =~ /(\d+)$/ ) {
         $g = $1;
@@ -88,7 +88,7 @@ foreach my $g (@egauges) {
     }
 
     #if ( $houseMappingRef->{$egaugeNumber} ) {
-        #$houseNumber = $houseMappingRef->{$egaugeNumber};
+    #$houseNumber = $houseMappingRef->{$egaugeNumber};
     #}
 
     #print STDERR "\thouse number = $houseNumber\n";
@@ -99,11 +99,11 @@ foreach my $g (@egauges) {
 
     my $username = $CONFIG{egauge_user};
     my $password = $CONFIG{egauge_password};
-    
+
     my $retrieveCommand
         = sprintf(
         "wget --user $username --password $password \"http://%s.egaug.es/cgi-bin/egauge-show?m&c&C&w=$lastUnixTimestamp\" -O $filename",
-        lc("egauge" . $g) );
+        lc( "egauge" . $g ) );
     print "\tcommand=$retrieveCommand\n";
     `$retrieveCommand`;
 
@@ -131,3 +131,4 @@ if ( $FOUND_INVALID_DATA == 1 ) {
 }
 
 exit(0);
+
