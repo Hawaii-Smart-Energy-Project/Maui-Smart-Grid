@@ -149,17 +149,17 @@ sub getLastUnixTimestampForEnergyAutoloadHouse {
 ###
 # Get last unix timestamp where energy_autoload data was retrieved.
 #
-# @param house ID
-# @return unix timestamp or 0 if nothing was found
+# @param eGauge ID
+# @return Unix timestamp or 0 if nothing was found.
 ##
 sub getLastUnixTimestampForMSGEnergyAutoloadGauge {
     my ($egaugeID) = @_;
 
-    my $tableName = "EgaugeEnergyAutoload"; # @todo remove hardcoding
+    my $tableName = "egauge_energy_autoload_dates"; # @todo remove hardcoding
 
     # Convert postgres timestamps to unix timestamps.
     my $sql
-        = "SELECT egauge_id, date_part('epoch',\"E Latest Date\") as unix_timestamp FROM $tableName";
+        = "SELECT egauge_id, date_part('epoch',\"E Latest Date\") as unix_timestamp FROM \"$tableName\"";
     my $sth    = $DBH->prepare($sql);
     my $result = $sth->execute;
 
