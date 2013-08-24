@@ -70,7 +70,7 @@ sub connectDatabase {
 ##
 sub mapEgaugeNumbersToHouseID {
 
-    # Grab house data and make a hash that maps the house numbers to eGauge IDs.
+  # Grab house data and make a hash that maps the house numbers to eGauge IDs.
     my $sql            = "SELECT house_id, egauge_no FROM house";
     my $sth            = $DBH->prepare($sql);
     my $result         = $sth->execute;
@@ -95,25 +95,36 @@ sub mapCSVColumnsToDatabaseColumns {
 
     # column associations
     $colAssoc{"Date & Time"} = "datetime";
-    $colAssoc{"use [kW]"}    = "use_kw";
-    $colAssoc{"gen [kW]"}    = "gen_kw";
 
     # some have whole house, others have grid
     $colAssoc{"Whole House [kW]"} = "grid_kw";
     $colAssoc{"Grid [kW]"}        = "grid_kw";
 
-    $colAssoc{"Fan [kW]"}    = "fan_kw";
-    $colAssoc{"AC [kW]"}     = "ac_kw";
-    $colAssoc{"AC+ [kW]"}    = "acplus_kw";
-    $colAssoc{"DHW [kW]"}    = "dhw_kw";
-    $colAssoc{"Stove [kW]"}  = "stove_kw";
-    $colAssoc{"Dryer [kW]"}  = "dryer_kw";
-    $colAssoc{"Washer [kW]"} = "clotheswasher_kw";
-
-    $colAssoc{"Dishwasher [kW]"} = "dishwasher_kw";
-
-    $colAssoc{"Solar [kW]"}      = "solarpump_kw";
-    $colAssoc{"Solar Pump [kW]"} = "solarpump_kw";
+    $colAssoc{"AC [kW]"}                  = "ac_kw";
+    $colAssoc{"AC+ [kW]"}                 = "acplus_kw";
+    $colAssoc{"DHW [kW]"}                 = "dhw_kw";
+    $colAssoc{"Dishwasher [kW]"}          = "dishwasher_kw";
+    $colAssoc{"Dryer [kW]"}               = "dryer_kw";
+    $colAssoc{"Dryer.Usage [kW]"}         = "dryer_usage_kw";
+    $colAssoc{"Fan [kW]"}                 = "fan_kw";
+    $colAssoc{"Garage AC [kW]"}           = "garage_ac_kw";
+    $colAssoc{"Garage AC.Usage [kW]"}     = "garage_ac_usage_kw";
+    $colAssoc{"gen [kW]"}                 = "gen_kw";
+    $colAssoc{"Large AC [kW]"}            = "large_ac_kw";
+    $colAssoc{"Large AC.Usage [kW]"}      = "large_ac_usage_kw";
+    $colAssoc{"Oven [kW]"}                = "oven_kw";
+    $colAssoc{"Oven.Usage [kW]"}          = "oven_usage_kw";
+    $colAssoc{"Range [kW]"}               = "range_kw";
+    $colAssoc{"Range.Usage [kW]"}         = "range_usage_kw";
+    $colAssoc{"Refrigerator [kW]"}        = "refrigerator_kw";
+    $colAssoc{"Refrigerator.Usage [kW]"}  = "refrigerator_usage_kw";
+    $colAssoc{"Rest of House.Usage [kW]"} = "rest_of_house_usage_kw";
+    $colAssoc{"Solar [kW]"}               = "solarpump_kw";
+    $colAssoc{"Solar Pump [kW]"}          = "solarpump_kw";
+    $colAssoc{"Stove [kW]"}               = "stove_kw";
+    $colAssoc{"use [kW]"}                 = "use_kw";
+    $colAssoc{"Washer [kW]"}              = "clotheswasher_kw";
+    $colAssoc{"Washer.Usage [kW]"}        = "clotheswasher_usage_kw";
 
     #$colAssoc{""} = "microwave_kw"; # only one house has microwave data
 
@@ -129,7 +140,7 @@ sub mapCSVColumnsToDatabaseColumns {
 sub getLastUnixTimestampForEnergyAutoloadHouse {
     my ($houseID) = @_;
 
-    my $tableName = "energy_autoload_new_dates"; # @todo remove hardcoding
+    my $tableName = "energy_autoload_new_dates";    # @todo remove hardcoding
 
     # convert postgres timestamps to unix timestamps
     my $sql
@@ -155,7 +166,7 @@ sub getLastUnixTimestampForEnergyAutoloadHouse {
 sub getLastUnixTimestampForMSGEnergyAutoloadGauge {
     my ($egaugeID) = @_;
 
-    my $tableName = "egauge_energy_autoload_dates"; # @todo remove hardcoding
+    my $tableName = "egauge_energy_autoload_dates";  # @todo remove hardcoding
 
     # Convert postgres timestamps to unix timestamps.
     my $sql
