@@ -1,6 +1,7 @@
 ###
 # DZ Smart Energy Project Library for Perl
 # This module provides data processing functions for the
+# Forest City Military Community Energy Audit and the
 # Maui Smart Grid project.
 #
 # @author Daniel Zhang (張道博)
@@ -63,11 +64,13 @@ sub connectDatabase {
 #
 #     $egaugeHouseMap->{EGAUGE_NUMBER}
 #
+# This is not used in the MSG eGauge Service.
+#
 # @return hash reference
 ##
 sub mapEgaugeNumbersToHouseID {
 
-    # grab house data and make a hash mapping house numbers to egauge ids
+    # Grab house data and make a hash that maps the house numbers to eGauge IDs.
     my $sql            = "SELECT house_id, egauge_no FROM house";
     my $sth            = $DBH->prepare($sql);
     my $result         = $sth->execute;
@@ -81,7 +84,7 @@ sub mapEgaugeNumbersToHouseID {
 }
 
 ###
-# Map header columns to db columns for eGauge energy data.
+# Map header columns to DB columns for eGauge energy data.
 #
 # Data header columns are matched to $colAssoc->{HEADER_NAME}
 #
@@ -137,6 +140,32 @@ sub getLastUnixTimestampForEnergyAutoloadHouse {
     # process each row
     while ( my $row = $sth->fetchrow_hashref ) {
         if ( $row->{house_id} eq $houseID ) {
+            return $row->{unix_timestamp};
+        }
+    }
+    return 0;
+}
+
+###
+# Get last unix timestamp where energy_autoload data was retrieved.
+#
+# @param house ID
+# @return unix timestamp or 0 if nothing was found
+##
+sub getLastUnixTimestampForMSGEnergyAutoloadGauge {
+    my ($egaugeID) = @_;
+
+    my $tableName = "EgaugeEnergyAutoload"; # @todo remove hardcoding
+
+    # Convert postgres timestamps to unix timestamps.
+    my $sql
+        = "SELECT egauge_id, date_part('epoch',\"E Latest Date\") as unix_timestamp FROM $tableName";
+    my $sth    = $DBH->prepare($sql);
+    my $result = $sth->execute;
+
+    # Process each row.
+    while ( my $row = $sth->fetchrow_hashref ) {
+        if ( $row->{egauge_id} eq $egaugeID ) {
             return $row->{unix_timestamp};
         }
     }

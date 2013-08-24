@@ -25,9 +25,9 @@ my %CONFIG = $conf->getall;
 
 my $FOUND_INVALID_DATA = 0;
 
-my @houses = @{ $CONFIG{egauge} };
+my @egauges = @{ $CONFIG{egauge} };
 
-my $dataDir = $CONFIG{data_dir};    # root location for data downloads
+my $dataDir = $CONFIG{data_dir};    # Root location for data downloads.
 
 if ( chdir($dataDir) ) {
     print "Changed to $dataDir.\n";
@@ -42,7 +42,7 @@ DZSEPLib::connectDatabase(
     $CONFIG{db_user},   $CONFIG{db_pass}
 );
 
-my $houseMappingRef = DZSEPLib::mapEgaugeNumbersToHouseID();
+#my $houseMappingRef = DZSEPLib::mapEgaugeNumbersToHouseID();
 my $dataDirName     = DZSEPLib::getDateString();
 
 print "New data will be added to $dataDirName.\n";
@@ -70,37 +70,37 @@ else {
 #     c = return output in CSV format
 #     C = return delta compressed data
 #     w = return data only new than the timestamp
-foreach my $house (@houses) {
+foreach my $g (@egauges) {
 
-    $house = "egauge" . $house;
+    #$house = "egauge" . $house;
     
-    print "\tRetrieving data for $house.\n";
+    print "\tRetrieving data for eGauge $g.\n";
 
-    my $filename = lc($house) . ".csv";
+    my $filename = lc($g) . ".csv";
 
-    my $egaugeNumber = $house;
-    my $houseNumber  = 0;
+    #my $egaugeNumber = $house;
+    #my $houseNumber  = 0;
     
     # @todo eliminate redundant use of egauge number
-    if ( $egaugeNumber =~ /(\d+)$/ ) {
-        $egaugeNumber = $1;
-        print STDERR "\tegauge number = $egaugeNumber\n";
+    if ( $g =~ /(\d+)$/ ) {
+        $g = $1;
+        print STDERR "\tegauge number = $g\n";
     }
 
-    if ( $houseMappingRef->{$egaugeNumber} ) {
-        $houseNumber = $houseMappingRef->{$egaugeNumber};
-    }
+    #if ( $houseMappingRef->{$egaugeNumber} ) {
+        #$houseNumber = $houseMappingRef->{$egaugeNumber};
+    #}
 
-    print STDERR "\thouse number = $houseNumber\n";
+    #print STDERR "\thouse number = $houseNumber\n";
 
     my $lastUnixTimestamp
-        = DZSEPLib::getLastUnixTimestampForEnergyAutoloadHouse($houseNumber);
+        = DZSEPLib::getLastUnixTimestampForMSGEnergyAutoloadGauge($g);
     print STDERR "last datetime = $lastUnixTimestamp\n";
 
     my $retrieveCommand
         = sprintf(
         "wget \"http://%s.egaug.es/cgi-bin/egauge-show?m&c&C&w=$lastUnixTimestamp\" -O $filename",
-        lc($house) );
+        lc($g) );
     print "\tcommand=$retrieveCommand\n";
     `$retrieveCommand`;
 
@@ -111,7 +111,7 @@ foreach my $house (@houses) {
     }
 }
 
-# move invalid data to invalid data dir and exit with an error
+# Move invalid data to the invalid data directory and exit with an error.
 if ( $FOUND_INVALID_DATA == 1 ) {
     if ( chdir($dataDir) ) {
         print "\tChanged to $dataDir.\n";
@@ -128,4 +128,3 @@ if ( $FOUND_INVALID_DATA == 1 ) {
 }
 
 exit(0);
-
