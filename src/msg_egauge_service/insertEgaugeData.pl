@@ -185,11 +185,11 @@ sub insertDataInDataDirectory {
     foreach my $f ( sort @{$filesRef} ) {    # For each data file...
         my $cmd = "";
 
-        print "\negauge number = ";
-        print getEgaugeNumber($f);
+		$egaugeNumber = getEgaugeNumber($f);
+        print "\negauge number = $egaugeNumber\n";
+
         #print ", house id = ";
         #print $egMap{ getEgaugeNumber($f) };
-        print "\n";
 
         # Read the data in the file.
 
@@ -230,7 +230,7 @@ sub insertDataInDataDirectory {
         $sql .= ") VALUES (";
 
         my $sqlFront = $sql;
-        my $sqlBack  = "";
+        my $sqlBack  = ""; # Declaraction and assignment to empty string.
         #my $houseId  = $egMap{ getEgaugeNumber($f) };
 
         # Data is processed by file by file.
@@ -248,7 +248,7 @@ sub insertDataInDataDirectory {
             foreach my $line (@data) {
 
 				# Start building the end of the SQL statement where the data values are located, the SQL Back.
-                $sqlBack           = "";
+                $sqlBack           = "$egaugeNumber,";
                 $currentDataColumn = 0;
 
                 if ( $cnt > 0 ) {    # skip header
@@ -294,8 +294,6 @@ sub insertDataInDataDirectory {
 
                 if ($lineCanBeInserted) {
                     print "sql = $sql\n" if $DEBUG;
-
-					exit;
 
                     $sth = $DBH->prepare($sql);
 
