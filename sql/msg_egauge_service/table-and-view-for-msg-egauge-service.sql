@@ -13,7 +13,7 @@ CREATE TABLE "EgaugeEnergyAutoload" (
     "ac_kw" float8,
     "acplus_kw" float8,
     "clotheswasher_kw" float8,
-    "clotheswasher_usage_kw" float8
+    "clotheswasher_usage_kw" float8,
     "dhw_kw" float8,
     "dishwasher_kw" float8,
     "dryer_kw" float8,
@@ -33,7 +33,7 @@ CREATE TABLE "EgaugeEnergyAutoload" (
     "rest_of_house_usage_kw" float8,
     "solarpump_kw" float8,
     "stove_kw" float8,
-    "upload_date" timestamp(6) NULL,
+    "upload_date" timestamp(6) NULL
 )
 WITH (OIDS=FALSE);
 ALTER TABLE "EgaugeEnergyAutoload" OWNER TO "sepgroup";
