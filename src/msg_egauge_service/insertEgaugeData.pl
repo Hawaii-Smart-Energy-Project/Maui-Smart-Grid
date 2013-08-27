@@ -66,9 +66,10 @@ my $idCol = "egauge_id";
 ##
 sub getEgaugeNumber {
     my ($filename) = @_;
+	#print "filename = $filename\n" if $DEBUG;
     #if ( $filename =~ m/(.*)\/egauge(.*)\.csv/i ) {
-	if ( $filename =~ m/^(\d+)\.csv/i) {
-        return $1;
+	if ( $filename =~ m/^(.*)\/(\d+)\.csv/i) {
+        return $2;
     }
 }
 
@@ -100,9 +101,9 @@ sub readHeader {
         } # critical: need to remove quote symbols in order to match hash items
 
         if ($DEBUG) {
-            print "colAssoc = ";
-            print %colAssoc;
-            print "\n";
+            #print "colAssoc = ";
+            #print %colAssoc;
+            #print "\n";
         }
 
         print "item = $item\n" if $DEBUG;
@@ -197,8 +198,6 @@ sub insertDataInDataDirectory {
         @data = <FILE>;
         close(FILE);
 
-		exit;
-
         $validHeader = 0;
         my $headerColumnCount = 0;
         @columnsToInsert = ();
@@ -286,7 +285,7 @@ sub insertDataInDataDirectory {
                 $sql = "$sqlFront$sqlBack";
 
                 # Check if the record exists.
-                if (DZSEPLib::energyRecordExists(
+                if (DZSEPLib::msgEnergyRecordExists(
                         $insertTable, $egaugeNumber, $currentDatetime
                     ))
                 {
@@ -295,6 +294,8 @@ sub insertDataInDataDirectory {
 
                 if ($lineCanBeInserted) {
                     print "sql = $sql\n" if $DEBUG;
+
+					exit;
 
                     $sth = $DBH->prepare($sql);
 

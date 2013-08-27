@@ -249,6 +249,24 @@ sub energyRecordExists {
     return 0;
 }
 
+sub msgEnergyRecordExists {
+    my ( $tableName, $egaugeID, $datetime ) = @_;
+    my $sql
+        = "select egauge_id, datetime from $tableName where egauge_id = ? and datetime = to_timestamp(?)";
+    my $sth = $DBH->prepare($sql);
+
+    my $result = $sth->execute( $egaugeID, $datetime );
+
+    if ( $result eq "0E0" ) {
+        return 0;
+    }
+    if ( $result == 1 ) {
+        return 1;
+    }
+    return 0;
+}
+
+
 ###
 # Perform moving of a directory in a reliable way.
 #
@@ -326,4 +344,3 @@ sub verifyData {
 }
 
 1;
-
