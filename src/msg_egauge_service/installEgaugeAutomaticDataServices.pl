@@ -21,4 +21,4 @@ my $configDest = "/usr/local/msg-egauge-service/config";
 
 `cp getEgaugeData.pl $binDest`;
 `cp insertEgaugeData.pl $binDest`;
-#`cp DZSEPLib.pm $libDest`;
+`cp DZSEPLib.pm $libDest`;
