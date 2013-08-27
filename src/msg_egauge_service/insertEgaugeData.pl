@@ -33,26 +33,27 @@ my $DEBUG = 1;
 # Configuration variables.
 my $dataDir = $CONFIG{data_dir};    # The path containing the source data.
 my $insertTable
-    = $CONFIG{insert_table};    # The table into which data should be inserted.
+    = $CONFIG{insert_table};   # The table into which data should be inserted.
 
 # Process each data file in a directory.
 # Insert data to a PostgreSQL DB.
 
-my %colAssoc = (); # Hash for mapping between DB columns and CSV columns.
-my %egMap;         # Hash for mapping between egauge numbers and house numbers.
+my %colAssoc = ();    # Hash for mapping between DB columns and CSV columns.
+my %egMap;    # Hash for mapping between egauge numbers and house numbers.
 
-my @files;         # Array to hold the data files that are going to be read.
-my $dbname;        # Name of the database.
-my $DBH;           # Global database handle used by DBI.
+my @files;    # Array to hold the data files that are going to be read.
+my $dbname;   # Name of the database.
+my $DBH;      # Global database handle used by DBI.
 my @headerItems     = ();    # An array of the columns in the header.
 my @columnsToInsert = ();    # SQL columns to be inserted
 my $sql             = "";    # Holds the SQL statement.
-my $validHeader; # Flag for indicating that the source data has a valid header.
-my $sth;         # DBI statement handle.
+my $validHeader
+    ;    # Flag for indicating that the source data has a valid header.
+my $sth; # DBI statement handle.
 my $dateDataColumn
-    = -1;        # Index for data column containing the date of the record.
+    = -1;    # Index for data column containing the date of the record.
 my $houseIDColumn = -1;
-my $idCol = "egauge_id";
+my $idCol         = "egauge_id";
 
 ######################################################################
 # END VARIABLES                                                      #
@@ -66,9 +67,10 @@ my $idCol = "egauge_id";
 ##
 sub getEgaugeNumber {
     my ($filename) = @_;
-	#print "filename = $filename\n" if $DEBUG;
+
+    #print "filename = $filename\n" if $DEBUG;
     #if ( $filename =~ m/(.*)\/egauge(.*)\.csv/i ) {
-	if ( $filename =~ m/^(.*)\/(\d+)\.csv/i) {
+    if ( $filename =~ m/^(.*)\/(\d+)\.csv/i ) {
         return $2;
     }
 }
@@ -101,6 +103,7 @@ sub readHeader {
         } # critical: need to remove quote symbols in order to match hash items
 
         if ($DEBUG) {
+
             #print "colAssoc = ";
             #print %colAssoc;
             #print "\n";
@@ -135,15 +138,14 @@ sub checkRecordExists {
 }
 
 sub filteredEgaugeNumber {
-	my ($filename) = @_;
-	if ($filename =~ /^(\d+)$/) {
-		return $1;
-	}
-	else {
-		return "MISSING";
-	}
+    my ($filename) = @_;
+    if ( $filename =~ /^(\d+)$/ ) {
+        return $1;
+    }
+    else {
+        return "MISSING";
+    }
 }
-
 
 ######################################################################
 # END SUBROUTINES                                                    #
@@ -153,8 +155,11 @@ sub filteredEgaugeNumber {
 # ***   START OF DATA PROCESSING                                                   ***
 # ************************************************************************************
 
-$DBH      = DZSEPLib::connectDatabase( $CONFIG{fc_dbname}, $CONFIG{db_host},
-                                      $CONFIG{db_port}, $CONFIG{db_user}, $CONFIG{db_pass} );
+$DBH = DZSEPLib::connectDatabase(
+    $CONFIG{fc_dbname}, $CONFIG{db_host}, $CONFIG{db_port},
+    $CONFIG{db_user},   $CONFIG{db_pass}
+);
+
 #%egMap    = %{ DZSEPLib::mapEgaugeNumbersToHouseID() };
 %colAssoc = %{ DZSEPLib::mapCSVColumnsToDatabaseColumns() };
 
@@ -185,7 +190,7 @@ sub insertDataInDataDirectory {
     foreach my $f ( sort @{$filesRef} ) {    # For each data file...
         my $cmd = "";
 
-		$egaugeNumber = getEgaugeNumber($f);
+        $egaugeNumber = getEgaugeNumber($f);
         print "\negauge number = $egaugeNumber\n";
 
         #print ", house id = ";
@@ -230,12 +235,12 @@ sub insertDataInDataDirectory {
         $sql .= ") VALUES (";
 
         my $sqlFront = $sql;
-        my $sqlBack  = ""; # Declaraction and assignment to empty string.
-        #my $houseId  = $egMap{ getEgaugeNumber($f) };
+        my $sqlBack  = "";     # Declaraction and assignment to empty string.
+                               #my $houseId  = $egMap{ getEgaugeNumber($f) };
 
-        # Data is processed by file by file.
-        #
-        # If there's a valid header then the data can be inserted into the database.
+  # Data is processed by file by file.
+  #
+  # If there's a valid header then the data can be inserted into the database.
         if ($validHeader) {
 
             my $cnt = 0;
@@ -257,13 +262,12 @@ sub insertDataInDataDirectory {
                     # Do something with the line of data.
                     my @dataColumns = split( /,/, $line );
                     foreach my $value (@dataColumns) {
-                        if ( $value =~ s/\R//g ) { }    # remove linefeed
+                        if ( $value =~ s/\R//g ) { }    # Remove linefeed.
 
                         # The datetime column is handled differently.
                         # It contains the timestamp for the data record.
                         if ( $currentDataColumn == $dateDataColumn ) {
-                            $sqlBack .= "to_timestamp($value),"
-                                ;    # Change to PostgreSQL timestamp.
+                            $sqlBack .= "to_timestamp($value),";    # Change to PostgreSQL timestamp.
                             $currentDatetime = $value;
                         }
                         else {
@@ -276,9 +280,8 @@ sub insertDataInDataDirectory {
 
                 $cnt++;
 
-        		# This is a timestamp for when a record is inserted into the database.
-                $sqlBack .= "to_timestamp("
-                    . time() . ") ";
+				# This is a timestamp for when a record is inserted into the database.
+                $sqlBack .= "to_timestamp(" . time() . ") ";
 
                 $sqlBack .= ");";    # End of the SQL statement.
 
@@ -287,7 +290,8 @@ sub insertDataInDataDirectory {
                 # Check if the record exists.
                 if (DZSEPLib::msgEnergyRecordExists(
                         $insertTable, $egaugeNumber, $currentDatetime
-                    ))
+                    )
+                    )
                 {
                     $lineCanBeInserted = 0;
                 }
@@ -356,7 +360,7 @@ insertDataInDataDirectory( \@files );
 
 # Data has now been successfully inserted because the insertion routine fails on all errors.
 # Therefore, move the data files to the loaded data directory.
-if ( ! chdir( $CONFIG{data_dir} ) ) {
+if ( !chdir( $CONFIG{data_dir} ) ) {
     die "Couldnt change to data dir " . $CONFIG{data_dir} . "\n";
 }
 
