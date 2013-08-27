@@ -28,30 +28,31 @@ my $conf
 if ( !$conf ) { die "ERROR: Invalid config" }
 my %CONFIG = $conf->getall;
 
-my $DEBUG = 0;
+my $DEBUG = 1;
 
-# config vars
-my $dataDir = $CONFIG{data_dir};    # the path containing the source data
+# Configuration variables.
+my $dataDir = $CONFIG{data_dir};    # The path containing the source data.
 my $insertTable
-    = $CONFIG{insert_table};    # the table into which data should be inserted
+    = $CONFIG{insert_table};    # The table into which data should be inserted.
 
 # Process each data file in a directory.
-# Insert data to a postgres db.
+# Insert data to a PostgreSQL DB.
 
-my %colAssoc = (); # hash for mapping between db cols and csv cols
-my %egMap;         # hash for mapping between egauge numbers and house numbers
+my %colAssoc = (); # Hash for mapping between DB columns and CSV columns.
+my %egMap;         # Hash for mapping between egauge numbers and house numbers.
 
-my @files;         # array to hold the data files that are going to be read
-my $dbname;        # name of the database
-my $DBH;           # global database handle used by DBI
-my @headerItems     = ();    # an array of the columns in the header
+my @files;         # Array to hold the data files that are going to be read.
+my $dbname;        # Name of the database.
+my $DBH;           # Global database handle used by DBI.
+my @headerItems     = ();    # An array of the columns in the header.
 my @columnsToInsert = ();    # SQL columns to be inserted
-my $sql             = "";    # holds the SQL statement
-my $validHeader; # flag for indicating that the source data has a valid header
-my $sth;         # DBI statement handle
+my $sql             = "";    # Holds the SQL statement.
+my $validHeader; # Flag for indicating that the source data has a valid header.
+my $sth;         # DBI statement handle.
 my $dateDataColumn
-    = -1;        # index for data column containing the date of the record
+    = -1;        # Index for data column containing the date of the record.
 my $houseIDColumn = -1;
+my $idCol = "egauge_id";
 
 ######################################################################
 # END VARIABLES                                                      #
@@ -65,8 +66,9 @@ my $houseIDColumn = -1;
 ##
 sub getEgaugeNumber {
     my ($filename) = @_;
-    if ( $filename =~ m/(.*)\/egauge(.*)\.csv/i ) {
-        return $2;
+    #if ( $filename =~ m/(.*)\/egauge(.*)\.csv/i ) {
+	if ( $filename =~ m/^(\d+)\.csv/i) {
+        return $1;
     }
 }
 
@@ -106,7 +108,7 @@ sub readHeader {
         print "item = $item\n" if $DEBUG;
         if ( defined( $colAssoc{$item} ) ) {
             push( @columnsToInsert, $colAssoc{$item} );
-        }    # if it doesnt match dont do anything
+        }    # If it doesn't match, then don't do anything.
         else {
             print "ERROR: nonmatching column: ";
             print $colAssoc{$item};
@@ -125,11 +127,22 @@ sub readHeader {
 sub checkRecordExists {
     my ( $house_id, $datetime ) = @_;
     my $sql
-        = "select house_id, datetime from $insertTable where house_id = ? AND datetime = ?";
+        = "select $idCol, datetime from $insertTable where $idCol = ? AND datetime = ?";
     my $sth    = $DBH->prepare($sql);
     my $result = $sth->execute();
     print "result = $result\n" if $DEBUG;
 }
+
+sub filteredEgaugeNumber {
+	my ($filename) = @_;
+	if ($filename =~ /^(\d+)$/) {
+		return $1;
+	}
+	else {
+		return "MISSING";
+	}
+}
+
 
 ######################################################################
 # END SUBROUTINES                                                    #
@@ -141,7 +154,7 @@ sub checkRecordExists {
 
 $DBH      = DZSEPLib::connectDatabase( $CONFIG{fc_dbname}, $CONFIG{db_host},
                                       $CONFIG{db_port}, $CONFIG{db_user}, $CONFIG{db_pass} );
-%egMap    = %{ DZSEPLib::mapEgaugeNumbersToHouseID() };
+#%egMap    = %{ DZSEPLib::mapEgaugeNumbersToHouseID() };
 %colAssoc = %{ DZSEPLib::mapCSVColumnsToDatabaseColumns() };
 
 my @data = ();
@@ -150,13 +163,16 @@ my $currentDataColumn;
 my $dataLine;
 my $lineCanBeInserted;
 
-my $checkHouseId;     # used for checking the existence of a record
-my $checkDatetime;    # used for checking the existence of a record
+my $checkHouseId;     # Used for checking the existence of a record.
+my $checkDatetime;    # Used for checking the existence of a record.
 
 my $currentDatetime;
 my $currentHouseID;
+my $currentEgaugeID;
 
 my $FATAL_ERROR = 0;
+
+my $egaugeNumber;
 
 ###
 # Iterate through each file containing data and insert the data into the database.
@@ -165,39 +181,41 @@ my $FATAL_ERROR = 0;
 ##
 sub insertDataInDataDirectory {
     my ($filesRef) = @_;
-    foreach my $f ( sort @{$filesRef} ) {    # for each data file
+    foreach my $f ( sort @{$filesRef} ) {    # For each data file...
         my $cmd = "";
 
         print "\negauge number = ";
         print getEgaugeNumber($f);
-        print ", house id = ";
-        print $egMap{ getEgaugeNumber($f) };
+        #print ", house id = ";
+        #print $egMap{ getEgaugeNumber($f) };
         print "\n";
 
         # Read the data in the file.
 
-        print STDERR "reading file $f...\n";
+        print STDERR "Reading file $f...\n";
         open( FILE, "<$f" );
         @data = <FILE>;
         close(FILE);
+
+		exit;
 
         $validHeader = 0;
         my $headerColumnCount = 0;
         @columnsToInsert = ();
         my $sql = "INSERT INTO $insertTable (";
 
-        $sql .= "house_id, ";
+        $sql .= "$idCol, ";
 
         # Process the header in the data file.
         @columnsToInsert = ();
         $validHeader
-            = readHeader( $data[0] );    # check the header of the data file
-        $dateDataColumn = -1;            # initalize
+            = readHeader( $data[0] );    # Check the header of the data file.
+        $dateDataColumn = -1;            # Initalize the date column.
 
         # Load each column into the SQL statement.
         for my $col ( 0 .. $#columnsToInsert ) {
             if ( $columnsToInsert[$col] eq "datetime" ) {
-                $dateDataColumn = $col;    # found a datetime column
+                $dateDataColumn = $col;    # Found a datetime column.
             }
 
             $sql .= "$columnsToInsert[$col]";
@@ -214,7 +232,7 @@ sub insertDataInDataDirectory {
 
         my $sqlFront = $sql;
         my $sqlBack  = "";
-        my $houseId  = $egMap{ getEgaugeNumber($f) };
+        #my $houseId  = $egMap{ getEgaugeNumber($f) };
 
         # Data is processed by file by file.
         #
@@ -227,9 +245,11 @@ sub insertDataInDataDirectory {
             # Use the SQL statements to insert the data.
             $dataLine = 0;
 
-            # Now, we are processing the individual lines of a data file.
+            # Now, the individual lines of a data file are being processed.
             foreach my $line (@data) {
-                $sqlBack           = "$houseId,";
+
+				# Start building the end of the SQL statement where the data values are located, the SQL Back.
+                $sqlBack           = "";
                 $currentDataColumn = 0;
 
                 if ( $cnt > 0 ) {    # skip header
@@ -240,11 +260,11 @@ sub insertDataInDataDirectory {
                     foreach my $value (@dataColumns) {
                         if ( $value =~ s/\R//g ) { }    # remove linefeed
 
-                        # datetime column differently handled differently
-                        # it contains the timestamp for the data record
+                        # The datetime column is handled differently.
+                        # It contains the timestamp for the data record.
                         if ( $currentDataColumn == $dateDataColumn ) {
                             $sqlBack .= "to_timestamp($value),"
-                                ;    # change to postgres timestamp
+                                ;    # Change to PostgreSQL timestamp.
                             $currentDatetime = $value;
                         }
                         else {
@@ -253,21 +273,21 @@ sub insertDataInDataDirectory {
 
                         $currentDataColumn++;
                     }
-                }    # end if
+                }    # End if.
 
                 $cnt++;
 
-        		# this is a timestamp for when a record is inserted into the database
+        		# This is a timestamp for when a record is inserted into the database.
                 $sqlBack .= "to_timestamp("
                     . time() . ") ";
 
-                $sqlBack .= ");";    # end of SQL statement
+                $sqlBack .= ");";    # End of the SQL statement.
 
                 $sql = "$sqlFront$sqlBack";
 
-                # check if record exists
+                # Check if the record exists.
                 if (DZSEPLib::energyRecordExists(
-                        $insertTable, $houseId, $currentDatetime
+                        $insertTable, $egaugeNumber, $currentDatetime
                     ))
                 {
                     $lineCanBeInserted = 0;
@@ -295,14 +315,14 @@ sub insertDataInDataDirectory {
                     }
                 }
                 $dataLine++;
-            }    # end foreach
+            }    # End foreach.
         }
         $DBH->commit();
         print "finished processing file.\n";
-    }    # end foreach
+    }    # End foreach.
 }
 
-# get all directories having data that needs to be loaded
+# Get all directories having data that needs to be loaded.
 my @dirs = ();
 if ( -d $dataDir ) {
     print "valid directory\n";
@@ -315,7 +335,7 @@ if ($DEBUG) {
     print "\n";
 }
 
-# go through each dir and push the files to be processed into an array
+# Go through each dir and push the files to be processed into an array.
 foreach my $d (@dirs) {
     print $d;
     print "\n";
@@ -335,8 +355,8 @@ foreach my $d (@dirs) {
 # Iterate through each directory and file containing data in the data directory.
 insertDataInDataDirectory( \@files );
 
-# data has now been successfully inserted because the insertion routine fails on all errors.
-# therefore, move the data files to the loaded data directory
+# Data has now been successfully inserted because the insertion routine fails on all errors.
+# Therefore, move the data files to the loaded data directory.
 if ( ! chdir( $CONFIG{data_dir} ) ) {
     die "Couldnt change to data dir " . $CONFIG{data_dir} . "\n";
 }
