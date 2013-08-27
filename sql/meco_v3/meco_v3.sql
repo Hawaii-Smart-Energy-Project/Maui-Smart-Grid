@@ -93,21 +93,19 @@ CREATE TABLE "EgaugeEnergyAutoload" (
     gen_kw double precision,
     grid_kw double precision,
     ac_kw double precision,
-    fan_kw double precision,
-    dhw_kw double precision,
-    stove_kw double precision,
-    dryer_kw double precision,
-    clotheswasher_kw double precision,
-    dishwasher_kw double precision,
-    solarpump_kw double precision,
-    upload_date timestamp(6) without time zone,
-    microwave_kw double precision,
     acplus_kw double precision,
+    clotheswasher_kw double precision,
+    clotheswasher_usage_kw double precision,
+    dhw_kw double precision,
+    dishwasher_kw double precision,
+    dryer_kw double precision,
     dryer_usage_kw double precision,
+    fan_kw double precision,
     garage_ac_kw double precision,
     garage_ac_usage_kw double precision,
     large_ac_kw double precision,
     large_ac_usage_kw double precision,
+    microwave_kw double precision,
     oven_kw double precision,
     oven_usage_kw double precision,
     range_kw double precision,
@@ -115,7 +113,9 @@ CREATE TABLE "EgaugeEnergyAutoload" (
     refrigerator_kw double precision,
     refrigerator_usage_kw double precision,
     rest_of_house_usage_kw double precision,
-    clotheswasher_usage_kw double precision
+    solarpump_kw double precision,
+    stove_kw double precision,
+    upload_date timestamp(6) without time zone
 );
 
 
@@ -1925,6 +1925,16 @@ GRANT SELECT ON TABLE "CircuitData" TO sepgroupreadonly;
 
 
 --
+-- Name: EgaugeEnergyAutoload; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE "EgaugeEnergyAutoload" FROM PUBLIC;
+REVOKE ALL ON TABLE "EgaugeEnergyAutoload" FROM sepgroup;
+GRANT ALL ON TABLE "EgaugeEnergyAutoload" TO sepgroup;
+GRANT SELECT ON TABLE "EgaugeEnergyAutoload" TO sepgroupreadonly;
+
+
+--
 -- Name: Event; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -2379,6 +2389,17 @@ REVOKE ALL ON TABLE dz_summary_pv_readings_in_nonpv_mlh FROM postgres;
 GRANT ALL ON TABLE dz_summary_pv_readings_in_nonpv_mlh TO postgres;
 GRANT ALL ON TABLE dz_summary_pv_readings_in_nonpv_mlh TO sepgroup;
 GRANT SELECT ON TABLE dz_summary_pv_readings_in_nonpv_mlh TO sepgroupreadonly;
+
+
+--
+-- Name: egauge_energy_autoload_dates; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE egauge_energy_autoload_dates FROM PUBLIC;
+REVOKE ALL ON TABLE egauge_energy_autoload_dates FROM postgres;
+GRANT ALL ON TABLE egauge_energy_autoload_dates TO postgres;
+GRANT ALL ON TABLE egauge_energy_autoload_dates TO sepgroup;
+GRANT SELECT ON TABLE egauge_energy_autoload_dates TO sepgroupreadonly;
 
 
 --
