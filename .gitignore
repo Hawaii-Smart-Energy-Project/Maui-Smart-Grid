@@ -40,3 +40,5 @@ _gsdata_/*
 /not-synchronized/
 temp_*
 /weather-data/
+/src/queueExample.py
+/src/msg_egauge_service/temp
