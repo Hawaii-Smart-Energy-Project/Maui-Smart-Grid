@@ -61,6 +61,7 @@ class MSGWeatherDataRetriever(object):
 
 
     def fileExists(self, filename):
+        # @todo Move to external module.
         try:
             with open(filename):
                 return True
@@ -74,6 +75,7 @@ class MSGWeatherDataRetriever(object):
 # ********** End Class **********
 
 def fileExists(filename):
+    # @todo Move to external module.
     try:
         with open(filename):
             return True
@@ -125,6 +127,7 @@ def unzipWorker(filename, forceDownload = False):
 
 
 def gzipCompressFile(filename):
+    # @todo Move to external module.
     f_in = open(filename, 'rb')
     f_out = gzip.open(filename + ".gz", 'wb')
     f_out.writelines(f_in)
