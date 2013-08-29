@@ -490,6 +490,25 @@ CREATE TABLE "MeterRecords" (
 ALTER TABLE public."MeterRecords" OWNER TO sepgroup;
 
 --
+-- Name: NotificationHistory; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE "NotificationHistory" (
+    "notificationType" character(1),
+    "notificationTime" timestamp without time zone
+);
+
+
+ALTER TABLE public."NotificationHistory" OWNER TO postgres;
+
+--
+-- Name: TABLE "NotificationHistory"; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE "NotificationHistory" IS 'This is for the purpose of tracking automatic notifications. @author Daniel Zhang (張道博)';
+
+
+--
 -- Name: PVServicePointIDs; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -2044,6 +2063,17 @@ REVOKE ALL ON TABLE "MeterRecords" FROM PUBLIC;
 REVOKE ALL ON TABLE "MeterRecords" FROM sepgroup;
 GRANT ALL ON TABLE "MeterRecords" TO sepgroup;
 GRANT SELECT ON TABLE "MeterRecords" TO sepgroupreadonly;
+
+
+--
+-- Name: NotificationHistory; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE "NotificationHistory" FROM PUBLIC;
+REVOKE ALL ON TABLE "NotificationHistory" FROM postgres;
+GRANT ALL ON TABLE "NotificationHistory" TO postgres;
+GRANT ALL ON TABLE "NotificationHistory" TO sepgroup;
+GRANT SELECT ON TABLE "NotificationHistory" TO sepgroupreadonly;
 
 
 --
