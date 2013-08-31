@@ -960,6 +960,23 @@ COMMENT ON VIEW deprecated_meter_ids_for_houses_without_pv IS 'Meter IDs for hou
 
 
 --
+-- Name: deprecated_nonpv_service_point_ids; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW deprecated_nonpv_service_point_ids AS
+    SELECT "MeterLocationHistory".service_point_id, "MeterLocationHistory".meter_name, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled FROM "MeterLocationHistory" WHERE (NOT (EXISTS (SELECT "PVServicePointIDs".pv_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".pv_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text))));
+
+
+ALTER TABLE public.deprecated_nonpv_service_point_ids OWNER TO postgres;
+
+--
+-- Name: VIEW deprecated_nonpv_service_point_ids; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW deprecated_nonpv_service_point_ids IS 'Service Point IDs, in the MLH,  that are not PV Service Point IDs. @author Daniel Zhang (張道博)';
+
+
+--
 -- Name: dz_energy_voltages_for_houses_without_pv; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -994,20 +1011,20 @@ COMMENT ON VIEW dz_monthly_energy_summary_double_pv_meter IS 'Monthly energy sum
 
 
 --
--- Name: nonpv_service_point_ids_v2; Type: VIEW; Schema: public; Owner: postgres
+-- Name: nonpv_service_point_ids; Type: VIEW; Schema: public; Owner: postgres
 --
 
-CREATE VIEW nonpv_service_point_ids_v2 AS
+CREATE VIEW nonpv_service_point_ids AS
     SELECT "MeterLocationHistory".service_point_id, "MeterLocationHistory".meter_name, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled FROM "MeterLocationHistory" WHERE ((NOT (EXISTS (SELECT "PVServicePointIDs".pv_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".pv_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text)))) OR (NOT (EXISTS (SELECT "PVServicePointIDs".house_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".house_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text)))));
 
 
-ALTER TABLE public.nonpv_service_point_ids_v2 OWNER TO postgres;
+ALTER TABLE public.nonpv_service_point_ids OWNER TO postgres;
 
 --
--- Name: VIEW nonpv_service_point_ids_v2; Type: COMMENT; Schema: public; Owner: postgres
+-- Name: VIEW nonpv_service_point_ids; Type: COMMENT; Schema: public; Owner: postgres
 --
 
-COMMENT ON VIEW nonpv_service_point_ids_v2 IS 'Service Point IDs, in the MLH,  that are not PV Service Point IDs. @author Daniel Zhang (張道博)';
+COMMENT ON VIEW nonpv_service_point_ids IS 'Service Point IDs, in the MLH,  that are not PV Service Point IDs. @author Daniel Zhang (張道博)';
 
 
 --
@@ -1015,7 +1032,7 @@ COMMENT ON VIEW nonpv_service_point_ids_v2 IS 'Service Point IDs, in the MLH,  t
 --
 
 CREATE VIEW dz_monthly_energy_summary_for_nonpv_service_points AS
-    SELECT max((readings_by_meter_location_history.service_point_id)::text) AS service_point_id, sum(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_energy_to_house_kwh, sum(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_energy_from_house_kwh, sum(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_net_energy_kwh, avg(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS avg, to_char(date_trunc('month'::text, readings_by_meter_location_history.end_time), 'yyyy-mm'::text) AS service_month, max(readings_by_meter_location_history.service_point_latitude) AS sp_latitude, max(readings_by_meter_location_history.service_point_longitude) AS sp_longitude, max((readings_by_meter_location_history.location)::text) AS location_id, max((readings_by_meter_location_history.address)::text) AS address, max(readings_by_meter_location_history.latitude) AS location_latitude, max(readings_by_meter_location_history.longitude) AS location_longitude, ((count(readings_by_meter_location_history.end_time) / 4) / 24) AS count_day FROM (readings_by_meter_location_history JOIN nonpv_service_point_ids_v2 ON (((readings_by_meter_location_history.service_point_id)::text = (nonpv_service_point_ids_v2.service_point_id)::text))) GROUP BY readings_by_meter_location_history.service_point_id, to_char(date_trunc('month'::text, readings_by_meter_location_history.end_time), 'yyyy-mm'::text);
+    SELECT max((readings_by_meter_location_history.service_point_id)::text) AS service_point_id, sum(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_energy_to_house_kwh, sum(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_energy_from_house_kwh, sum(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_net_energy_kwh, avg(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS avg, to_char(date_trunc('month'::text, readings_by_meter_location_history.end_time), 'yyyy-mm'::text) AS service_month, max(readings_by_meter_location_history.service_point_latitude) AS sp_latitude, max(readings_by_meter_location_history.service_point_longitude) AS sp_longitude, max((readings_by_meter_location_history.location)::text) AS location_id, max((readings_by_meter_location_history.address)::text) AS address, max(readings_by_meter_location_history.latitude) AS location_latitude, max(readings_by_meter_location_history.longitude) AS location_longitude, ((count(readings_by_meter_location_history.end_time) / 4) / 24) AS count_day FROM (readings_by_meter_location_history JOIN nonpv_service_point_ids nonpv_service_point_ids_v2 ON (((readings_by_meter_location_history.service_point_id)::text = (nonpv_service_point_ids_v2.service_point_id)::text))) GROUP BY readings_by_meter_location_history.service_point_id, to_char(date_trunc('month'::text, readings_by_meter_location_history.end_time), 'yyyy-mm'::text);
 
 
 ALTER TABLE public.dz_monthly_energy_summary_for_nonpv_service_points OWNER TO postgres;
@@ -1227,11 +1244,28 @@ CREATE VIEW locations_with_pv_service_points_ids AS
 ALTER TABLE public.locations_with_pv_service_points_ids OWNER TO postgres;
 
 --
+-- Name: nonpv_mlh_v2; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW nonpv_mlh_v2 AS
+    SELECT "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_height, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".notes, "MeterLocationHistory".longitude, "MeterLocationHistory".latitude, "MeterLocationHistory".city, "MeterLocationHistory".address, "MeterLocationHistory".location, "MeterLocationHistory".uninstalled, "MeterLocationHistory".installed, "MeterLocationHistory".mac_address, "MeterLocationHistory".meter_name FROM "MeterLocationHistory" WHERE (NOT (EXISTS (SELECT "PVServicePointIDs".pv_service_point_id FROM "PVServicePointIDs" WHERE ((("PVServicePointIDs".pv_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text) OR (("PVServicePointIDs".house_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text)))));
+
+
+ALTER TABLE public.nonpv_mlh_v2 OWNER TO postgres;
+
+--
+-- Name: VIEW nonpv_mlh_v2; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW nonpv_mlh_v2 IS 'This is the Meter Location History for nonPV service points. @author Daniel Zhang (張道博)';
+
+
+--
 -- Name: meter_ids_for_service_points_without_pv; Type: VIEW; Schema: public; Owner: postgres
 --
 
 CREATE VIEW meter_ids_for_service_points_without_pv AS
-    SELECT nonpv_mlh.meter_name, nonpv_mlh.uninstalled, nonpv_mlh.installed FROM nonpv_mlh;
+    SELECT nonpv_mlh_v2.meter_name, nonpv_mlh_v2.uninstalled, nonpv_mlh_v2.installed FROM nonpv_mlh_v2;
 
 
 ALTER TABLE public.meter_ids_for_service_points_without_pv OWNER TO postgres;
@@ -1303,23 +1337,6 @@ CREATE VIEW name_address_service_point_id AS
 
 
 ALTER TABLE public.name_address_service_point_id OWNER TO eileen;
-
---
--- Name: nonpv_service_point_ids; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW nonpv_service_point_ids AS
-    SELECT "MeterLocationHistory".service_point_id, "MeterLocationHistory".meter_name, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled FROM "MeterLocationHistory" WHERE (NOT (EXISTS (SELECT "PVServicePointIDs".pv_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".pv_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text))));
-
-
-ALTER TABLE public.nonpv_service_point_ids OWNER TO postgres;
-
---
--- Name: VIEW nonpv_service_point_ids; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON VIEW nonpv_service_point_ids IS 'Service Point IDs, in the MLH,  that are not PV Service Point IDs. @author Daniel Zhang (張道博)';
-
 
 --
 -- Name: pv_service_points_specifications_view; Type: VIEW; Schema: public; Owner: eileen
@@ -2386,6 +2403,17 @@ GRANT SELECT ON TABLE deprecated_meter_ids_for_houses_without_pv TO sepgroupread
 
 
 --
+-- Name: deprecated_nonpv_service_point_ids; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE deprecated_nonpv_service_point_ids FROM PUBLIC;
+REVOKE ALL ON TABLE deprecated_nonpv_service_point_ids FROM postgres;
+GRANT ALL ON TABLE deprecated_nonpv_service_point_ids TO postgres;
+GRANT ALL ON TABLE deprecated_nonpv_service_point_ids TO sepgroup;
+GRANT SELECT ON TABLE deprecated_nonpv_service_point_ids TO sepgroupreadonly;
+
+
+--
 -- Name: dz_energy_voltages_for_houses_without_pv; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -2408,14 +2436,14 @@ GRANT SELECT ON TABLE dz_monthly_energy_summary_double_pv_meter TO sepgroupreado
 
 
 --
--- Name: nonpv_service_point_ids_v2; Type: ACL; Schema: public; Owner: postgres
+-- Name: nonpv_service_point_ids; Type: ACL; Schema: public; Owner: postgres
 --
 
-REVOKE ALL ON TABLE nonpv_service_point_ids_v2 FROM PUBLIC;
-REVOKE ALL ON TABLE nonpv_service_point_ids_v2 FROM postgres;
-GRANT ALL ON TABLE nonpv_service_point_ids_v2 TO postgres;
-GRANT ALL ON TABLE nonpv_service_point_ids_v2 TO sepgroup;
-GRANT SELECT ON TABLE nonpv_service_point_ids_v2 TO sepgroupreadonly;
+REVOKE ALL ON TABLE nonpv_service_point_ids FROM PUBLIC;
+REVOKE ALL ON TABLE nonpv_service_point_ids FROM postgres;
+GRANT ALL ON TABLE nonpv_service_point_ids TO postgres;
+GRANT ALL ON TABLE nonpv_service_point_ids TO sepgroup;
+GRANT SELECT ON TABLE nonpv_service_point_ids TO sepgroupreadonly;
 
 
 --
@@ -2558,6 +2586,17 @@ GRANT SELECT ON TABLE locations_with_pv_service_points_ids TO sepgroupreadonly;
 
 
 --
+-- Name: nonpv_mlh_v2; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE nonpv_mlh_v2 FROM PUBLIC;
+REVOKE ALL ON TABLE nonpv_mlh_v2 FROM postgres;
+GRANT ALL ON TABLE nonpv_mlh_v2 TO postgres;
+GRANT ALL ON TABLE nonpv_mlh_v2 TO sepgroup;
+GRANT SELECT ON TABLE nonpv_mlh_v2 TO sepgroupreadonly;
+
+
+--
 -- Name: meter_ids_for_service_points_without_pv; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -2620,17 +2659,6 @@ REVOKE ALL ON TABLE name_address_service_point_id FROM eileen;
 GRANT ALL ON TABLE name_address_service_point_id TO eileen;
 GRANT ALL ON TABLE name_address_service_point_id TO sepgroup;
 GRANT SELECT ON TABLE name_address_service_point_id TO sepgroupreadonly;
-
-
---
--- Name: nonpv_service_point_ids; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE nonpv_service_point_ids FROM PUBLIC;
-REVOKE ALL ON TABLE nonpv_service_point_ids FROM postgres;
-GRANT ALL ON TABLE nonpv_service_point_ids TO postgres;
-GRANT ALL ON TABLE nonpv_service_point_ids TO sepgroup;
-GRANT SELECT ON TABLE nonpv_service_point_ids TO sepgroupreadonly;
 
 
 --
