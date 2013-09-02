@@ -390,6 +390,13 @@ CREATE TABLE "MeterData" (
 ALTER TABLE public."MeterData" OWNER TO sepgroup;
 
 --
+-- Name: TABLE "MeterData"; Type: COMMENT; Schema: public; Owner: sepgroup
+--
+
+COMMENT ON TABLE "MeterData" IS 'Root table for MECO energy data. This table is set to cascade delete so that deletions here are propagated through the MECO energy data branches. --Daniel Zhang (張道博)';
+
+
+--
 -- Name: COLUMN "MeterData".created; Type: COMMENT; Schema: public; Owner: sepgroup
 --
 
@@ -419,6 +426,13 @@ CREATE TABLE "MeterLocationHistory" (
 
 
 ALTER TABLE public."MeterLocationHistory" OWNER TO daniel;
+
+--
+-- Name: TABLE "MeterLocationHistory"; Type: COMMENT; Schema: public; Owner: daniel
+--
+
+COMMENT ON TABLE "MeterLocationHistory" IS 'Links meters to service points and provides a history of meter installations and uninstallations. --Daniel Zhang (張道博)';
+
 
 --
 -- Name: MeterRecords; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
@@ -545,6 +559,13 @@ CREATE TABLE "PVServicePointIDs" (
 
 
 ALTER TABLE public."PVServicePointIDs" OWNER TO sepgroup;
+
+--
+-- Name: TABLE "PVServicePointIDs"; Type: COMMENT; Schema: public; Owner: sepgroup
+--
+
+COMMENT ON TABLE "PVServicePointIDs" IS 'Contains service point data for one-meter and two-meter PV installations. --Daniel Zhang (張道博)';
+
 
 --
 -- Name: Reading; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
