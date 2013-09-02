@@ -122,6 +122,13 @@ CREATE TABLE "EgaugeEnergyAutoload" (
 ALTER TABLE public."EgaugeEnergyAutoload" OWNER TO sepgroup;
 
 --
+-- Name: TABLE "EgaugeEnergyAutoload"; Type: COMMENT; Schema: public; Owner: sepgroup
+--
+
+COMMENT ON TABLE "EgaugeEnergyAutoload" IS 'Data that is autoload by the MSG eGauge Service. @author Daniel Zhang (張道博)';
+
+
+--
 -- Name: Event; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -909,40 +916,6 @@ CREATE VIEW deprecated_dz_pv_readings AS
 ALTER TABLE public.deprecated_dz_pv_readings OWNER TO postgres;
 
 --
--- Name: nonpv_mlh; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW nonpv_mlh AS
-    SELECT "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_height, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".notes, "MeterLocationHistory".longitude, "MeterLocationHistory".latitude, "MeterLocationHistory".city, "MeterLocationHistory".address, "MeterLocationHistory".location, "MeterLocationHistory".uninstalled, "MeterLocationHistory".installed, "MeterLocationHistory".mac_address, "MeterLocationHistory".meter_name FROM "MeterLocationHistory" WHERE (NOT (EXISTS (SELECT "PVServicePointIDs".pv_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".pv_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text))));
-
-
-ALTER TABLE public.nonpv_mlh OWNER TO postgres;
-
---
--- Name: VIEW nonpv_mlh; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON VIEW nonpv_mlh IS 'This is the Meter Location History for nonPV service points. @author Daniel Zhang (張道博)';
-
-
---
--- Name: deprecated_dz_pv_readings_without_pv_service_point_ids; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW deprecated_dz_pv_readings_without_pv_service_point_ids AS
-    SELECT nonpv_mlh.meter_name, nonpv_mlh.service_point_id, dz_pv_readings.end_time, dz_pv_readings.channel, dz_pv_readings.value FROM (deprecated_dz_pv_readings dz_pv_readings JOIN nonpv_mlh ON ((dz_pv_readings.meter_name = (nonpv_mlh.meter_name)::bpchar)));
-
-
-ALTER TABLE public.deprecated_dz_pv_readings_without_pv_service_point_ids OWNER TO postgres;
-
---
--- Name: VIEW deprecated_dz_pv_readings_without_pv_service_point_ids; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON VIEW deprecated_dz_pv_readings_without_pv_service_point_ids IS 'Working on reporting PV readings without PV Service Point IDs. @author Daniel Zhang (張道博)';
-
-
---
 -- Name: deprecated_meter_ids_for_houses_without_pv; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -957,23 +930,6 @@ ALTER TABLE public.deprecated_meter_ids_for_houses_without_pv OWNER TO postgres;
 --
 
 COMMENT ON VIEW deprecated_meter_ids_for_houses_without_pv IS 'Meter IDs for houses that do not have PV. @author Daniel Zhang (張道博)';
-
-
---
--- Name: deprecated_nonpv_service_point_ids; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW deprecated_nonpv_service_point_ids AS
-    SELECT "MeterLocationHistory".service_point_id, "MeterLocationHistory".meter_name, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled FROM "MeterLocationHistory" WHERE (NOT (EXISTS (SELECT "PVServicePointIDs".pv_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".pv_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text))));
-
-
-ALTER TABLE public.deprecated_nonpv_service_point_ids OWNER TO postgres;
-
---
--- Name: VIEW deprecated_nonpv_service_point_ids; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON VIEW deprecated_nonpv_service_point_ids IS 'Service Point IDs, in the MLH,  that are not PV Service Point IDs. @author Daniel Zhang (張道博)';
 
 
 --
@@ -1059,6 +1015,23 @@ ALTER TABLE public.dz_monthly_energy_summary_single_pv_meter OWNER TO postgres;
 --
 
 COMMENT ON VIEW dz_monthly_energy_summary_single_pv_meter IS 'Monthly energy summary for service points that have PV but NO second PV meter. @author Daniel Zhang (張道博)';
+
+
+--
+-- Name: nonpv_mlh; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW nonpv_mlh AS
+    SELECT "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_height, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".notes, "MeterLocationHistory".longitude, "MeterLocationHistory".latitude, "MeterLocationHistory".city, "MeterLocationHistory".address, "MeterLocationHistory".location, "MeterLocationHistory".uninstalled, "MeterLocationHistory".installed, "MeterLocationHistory".mac_address, "MeterLocationHistory".meter_name FROM "MeterLocationHistory" WHERE (NOT (EXISTS (SELECT "PVServicePointIDs".pv_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".pv_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text))));
+
+
+ALTER TABLE public.nonpv_mlh OWNER TO postgres;
+
+--
+-- Name: VIEW nonpv_mlh; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW nonpv_mlh IS 'This is the Meter Location History for nonPV service points. @author Daniel Zhang (張道博)';
 
 
 --
@@ -2221,8 +2194,8 @@ GRANT SELECT ON TABLE "WeatherNOAA" TO sepgroupreadonly;
 
 REVOKE ALL ON TABLE cd_meter_ids_for_houses_with_pv_with_locations FROM PUBLIC;
 REVOKE ALL ON TABLE cd_meter_ids_for_houses_with_pv_with_locations FROM eileen;
-GRANT ALL ON TABLE cd_meter_ids_for_houses_with_pv_with_locations TO eileen;
-GRANT ALL ON TABLE cd_meter_ids_for_houses_with_pv_with_locations TO sepgroup;
+GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE ON TABLE cd_meter_ids_for_houses_with_pv_with_locations TO eileen;
+GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE ON TABLE cd_meter_ids_for_houses_with_pv_with_locations TO sepgroup;
 GRANT SELECT ON TABLE cd_meter_ids_for_houses_with_pv_with_locations TO sepgroupreadonly;
 
 
@@ -2370,28 +2343,6 @@ GRANT SELECT ON TABLE deprecated_dz_pv_readings TO sepgroupreadonly;
 
 
 --
--- Name: nonpv_mlh; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE nonpv_mlh FROM PUBLIC;
-REVOKE ALL ON TABLE nonpv_mlh FROM postgres;
-GRANT ALL ON TABLE nonpv_mlh TO postgres;
-GRANT ALL ON TABLE nonpv_mlh TO sepgroup;
-GRANT SELECT ON TABLE nonpv_mlh TO sepgroupreadonly;
-
-
---
--- Name: deprecated_dz_pv_readings_without_pv_service_point_ids; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE deprecated_dz_pv_readings_without_pv_service_point_ids FROM PUBLIC;
-REVOKE ALL ON TABLE deprecated_dz_pv_readings_without_pv_service_point_ids FROM postgres;
-GRANT ALL ON TABLE deprecated_dz_pv_readings_without_pv_service_point_ids TO postgres;
-GRANT ALL ON TABLE deprecated_dz_pv_readings_without_pv_service_point_ids TO sepgroup;
-GRANT SELECT ON TABLE deprecated_dz_pv_readings_without_pv_service_point_ids TO sepgroupreadonly;
-
-
---
 -- Name: deprecated_meter_ids_for_houses_without_pv; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -2400,17 +2351,6 @@ REVOKE ALL ON TABLE deprecated_meter_ids_for_houses_without_pv FROM postgres;
 GRANT ALL ON TABLE deprecated_meter_ids_for_houses_without_pv TO postgres;
 GRANT ALL ON TABLE deprecated_meter_ids_for_houses_without_pv TO sepgroup;
 GRANT SELECT ON TABLE deprecated_meter_ids_for_houses_without_pv TO sepgroupreadonly;
-
-
---
--- Name: deprecated_nonpv_service_point_ids; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE deprecated_nonpv_service_point_ids FROM PUBLIC;
-REVOKE ALL ON TABLE deprecated_nonpv_service_point_ids FROM postgres;
-GRANT ALL ON TABLE deprecated_nonpv_service_point_ids TO postgres;
-GRANT ALL ON TABLE deprecated_nonpv_service_point_ids TO sepgroup;
-GRANT SELECT ON TABLE deprecated_nonpv_service_point_ids TO sepgroupreadonly;
 
 
 --
@@ -2466,6 +2406,17 @@ REVOKE ALL ON TABLE dz_monthly_energy_summary_single_pv_meter FROM postgres;
 GRANT ALL ON TABLE dz_monthly_energy_summary_single_pv_meter TO postgres;
 GRANT ALL ON TABLE dz_monthly_energy_summary_single_pv_meter TO sepgroup;
 GRANT SELECT ON TABLE dz_monthly_energy_summary_single_pv_meter TO sepgroupreadonly;
+
+
+--
+-- Name: nonpv_mlh; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE nonpv_mlh FROM PUBLIC;
+REVOKE ALL ON TABLE nonpv_mlh FROM postgres;
+GRANT ALL ON TABLE nonpv_mlh TO postgres;
+GRANT ALL ON TABLE nonpv_mlh TO sepgroup;
+GRANT SELECT ON TABLE nonpv_mlh TO sepgroupreadonly;
 
 
 --
