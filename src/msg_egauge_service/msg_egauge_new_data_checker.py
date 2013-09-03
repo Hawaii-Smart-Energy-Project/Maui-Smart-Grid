@@ -12,9 +12,13 @@ from msg_db_util import MSGDBUtil
 from msg_configer import MSGConfiger
 from msg_notifier import MSGNotifier
 from msg_logger import MSGLogger
+from datetime import datetime as dt
 
 
-class MSGEguageNewDataChecker(object):
+NOTIFICATION_HISTORY_TABLE = "NotificationHistory"
+
+
+class MSGEgaugeNewDataChecker(object):
     """
     Provide notification of newly loaded data.
 
@@ -40,45 +44,72 @@ class MSGEguageNewDataChecker(object):
         new data was reported.
         """
 
-        tableName = 'EgaugeEnergyAutoload'
-        if self.lastReportDate():
-            lastTime = self.lastReportDate()
-        sql = """SELECT COUNT(*) FROM %s WHERE datetime > %s""" % (
-        tableName, self.lastReportDate())
-
-
-    def lastReportDate(self):
-        """
-        Get the last time a notification was reported.
-        """
-
         cursor = self.connector.conn.cursor()
-        sql = """SELECT MAX("notificationTime") FROM "NotificationHistory"
-        WHERE "notificationType" = 'MSG_EGAUGE_SERVICE'"""
+        tableName = 'EgaugeEnergyAutoload'
+        lastTime = self.lastReportDate('MSG_EGAUGE_SERVICE')
+        if lastTime is None:
+            lastTime  = '1900-01-01'
+        sql = """SELECT COUNT(*) FROM "%s" WHERE datetime > '%s'""" % (
+        tableName, lastTime)
 
         success = self.dbUtil.executeSQL(cursor, sql)
         if success:
             rows = cursor.fetchall()
-            print "rows = %s" % rows
 
-            if not rows[0]:
-                return None
+            if not rows[0][0]:
+                return 0
             else:
-                return rows[0]
+                return rows[0][0]
         else:
+            # @todo Raise an exception.
             return None
 
-    def sendNewDataNotification(self):
+
+    def lastReportDate(self, notificationType):
+        """
+        Get the last time a notification was reported.
+
+        :returns: datetime of last report date.
+        """
+
+        cursor = self.connector.conn.cursor()
+        sql = """SELECT MAX("notificationTime") FROM "%s" WHERE "notificationType" = '%s'""" % (NOTIFICATION_HISTORY_TABLE, notificationType)
+
+        success = self.dbUtil.executeSQL(cursor, sql)
+        if success:
+            rows = cursor.fetchall()
+
+            if not rows[0][0]:
+                return None
+            else:
+                return rows[0][0]
+        else:
+            # @todo Raise an exception.
+            return None
+
+    def sendNewDataNotification(self, testing = False):
         """
         Sending notification reporting on new data being available since the
         last time new data was reported.
         """
 
-        dbName = ''
-        msgBody = 'New MSG eGauge data has been loaded to %s.' % dbName
-        msgBody += ''
-        self.notifier.sendNotificationEmail(self, msgBody, testing = False)
+        lastReportDate = self.lastReportDate('MSG_EGAUGE_SERVICE')
+
+        if not lastReportDate:
+            lastReportDate = "never"
+
+        msgBody = 'New MSG eGauge data has been loaded to %s.' % self.connector.dbName
+        msgBody += '\n\n'
+        msgBody += 'The new data count is %s readings.' % self.newDataCount()
+        msgBody += '\n\n'
+        msgBody += 'The last report date was %s.' % lastReportDate
+        msgBody += '\n\n'
+        self.notifier.sendNotificationEmail(msgBody, testing = testing)
 
 
 if __name__ == '__main__':
-    pass
+    # For debugging.
+
+    checker = MSGEgaugeNewDataChecker()
+    print checker.lastReportDate('TEST')
+    print checker.newDataCount()
