@@ -515,8 +515,8 @@ ALTER TABLE public."MeterRecords" OWNER TO sepgroup;
 --
 
 CREATE TABLE "NotificationHistory" (
-    "notificationType" character(1),
-    "notificationTime" timestamp without time zone
+    "notificationType" character varying NOT NULL,
+    "notificationTime" timestamp without time zone NOT NULL
 );
 
 
@@ -1651,6 +1651,14 @@ ALTER TABLE ONLY "MeterRecords"
 
 
 --
+-- Name: NotificationHistory_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY "NotificationHistory"
+    ADD CONSTRAINT "NotificationHistory_pkey" PRIMARY KEY ("notificationType", "notificationTime");
+
+
+--
 -- Name: Reading_pkey; Type: CONSTRAINT; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -2216,7 +2224,7 @@ GRANT SELECT ON TABLE "WeatherNOAA" TO sepgroupreadonly;
 REVOKE ALL ON TABLE cd_meter_ids_for_houses_with_pv_with_locations FROM PUBLIC;
 REVOKE ALL ON TABLE cd_meter_ids_for_houses_with_pv_with_locations FROM eileen;
 GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE ON TABLE cd_meter_ids_for_houses_with_pv_with_locations TO eileen;
-GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE ON TABLE cd_meter_ids_for_houses_with_pv_with_locations TO sepgroup;
+GRANT ALL ON TABLE cd_meter_ids_for_houses_with_pv_with_locations TO sepgroup;
 GRANT SELECT ON TABLE cd_meter_ids_for_houses_with_pv_with_locations TO sepgroupreadonly;
 
 
