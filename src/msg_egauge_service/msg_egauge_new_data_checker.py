@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+@todo Separate the script and the class.
+"""
+
 __author__ = 'Daniel Zhang (張道博)'
 __copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
 __license__ = 'https://raw.github' \
@@ -129,8 +133,6 @@ class MSGEgaugeNewDataChecker(object):
 
 
 if __name__ == '__main__':
-    # For debugging.
 
     checker = MSGEgaugeNewDataChecker()
-    print checker.lastReportDate('TEST')
-    print checker.newDataCount()
+    checker.sendNewDataNotification()
