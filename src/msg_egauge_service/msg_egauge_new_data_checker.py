@@ -48,9 +48,9 @@ class MSGEgaugeNewDataChecker(object):
         tableName = 'EgaugeEnergyAutoload'
         lastTime = self.lastReportDate('MSG_EGAUGE_SERVICE')
         if lastTime is None:
-            lastTime  = '1900-01-01'
+            lastTime = '1900-01-01'
         sql = """SELECT COUNT(*) FROM "%s" WHERE datetime > '%s'""" % (
-        tableName, lastTime)
+            tableName, lastTime)
 
         success = self.dbUtil.executeSQL(cursor, sql)
         if success:
@@ -73,7 +73,9 @@ class MSGEgaugeNewDataChecker(object):
         """
 
         cursor = self.connector.conn.cursor()
-        sql = """SELECT MAX("notificationTime") FROM "%s" WHERE "notificationType" = '%s'""" % (NOTIFICATION_HISTORY_TABLE, notificationType)
+        sql = """SELECT MAX("notificationTime") FROM "%s" WHERE
+        "notificationType" = '%s'""" % (
+            NOTIFICATION_HISTORY_TABLE, notificationType)
 
         success = self.dbUtil.executeSQL(cursor, sql)
         if success:
@@ -87,6 +89,23 @@ class MSGEgaugeNewDataChecker(object):
             # @todo Raise an exception.
             return None
 
+
+    def saveNotificationTime(self):
+        """
+        Save the notification event to the notification history.
+        """
+
+        cursor = self.connector.conn.cursor()
+        sql = """INSERT INTO "%s" ("notificationType", "notificationTime")
+        VALUES ('MSG_EGAUGE_SERVICE', NOW())""" % NOTIFICATION_HISTORY_TABLE
+        success = self.dbUtil.executeSQL(cursor, sql)
+        self.connector.conn.commit()
+        if not success:
+            # @todo Raise an exception.
+            self.logger.log(
+                'An error occurred while saving the notification time.')
+
+
     def sendNewDataNotification(self, testing = False):
         """
         Sending notification reporting on new data being available since the
@@ -98,13 +117,15 @@ class MSGEgaugeNewDataChecker(object):
         if not lastReportDate:
             lastReportDate = "never"
 
-        msgBody = 'New MSG eGauge data has been loaded to %s.' % self.connector.dbName
+        msgBody = '\nNew MSG eGauge data has been loaded to %s.' % self \
+            .connector.dbName
         msgBody += '\n\n'
         msgBody += 'The new data count is %s readings.' % self.newDataCount()
         msgBody += '\n\n'
         msgBody += 'The last report date was %s.' % lastReportDate
         msgBody += '\n\n'
         self.notifier.sendNotificationEmail(msgBody, testing = testing)
+        self.saveNotificationTime()
 
 
 if __name__ == '__main__':
