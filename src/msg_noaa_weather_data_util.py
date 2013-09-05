@@ -17,6 +17,9 @@ from dateutil.relativedelta import relativedelta
 import calendar
 
 
+WEATHER_DATA_TABLE = "WeatherNOAA"
+
+
 class MSGWeatherDataUtil(object):
     """
     Utility methods for working with weather data.
@@ -42,9 +45,10 @@ class MSGWeatherDataUtil(object):
         self.fillFileListAndDateList()
         self.dbUtil = MSGDBUtil()
 
+
     def fillFileListAndDateList(self):
         """
-        Return a list of weather files used in processing weather data.
+        Return a list of weather files obtained from the remote server used in processing weather data.
         """
 
         response = urllib2.urlopen(self.url).read()
@@ -57,10 +61,12 @@ class MSGWeatherDataUtil(object):
     def datePart(self, filename = None, datetime = None):
         """
         Return the date part of a NOAA weather data filename.
+
         :param: The filename.
         :param: A datetime object.
         :returns: The date part of the given parameter.
         """
+
         assert filename == None or datetime == None, "One argument is allowed."
         if filename:
             newName = filename.replace("QCLCD", '')
@@ -72,11 +78,12 @@ class MSGWeatherDataUtil(object):
     def getLastDateLoaded(self, cursor):
         """
         Return the last date of loaded weather data.
+
         :returns: Last date.
         """
 
-        sql = """select wban, datetime, record_type from "WeatherNOAA"
-                 ORDER BY datetime desc limit 1"""
+        sql = """select wban, datetime, record_type from "%s"
+                 ORDER BY datetime desc limit 1""" % WEATHER_DATA_TABLE
 
         self.dbUtil.executeSQL(cursor, sql)
         row = cursor.fetchone()

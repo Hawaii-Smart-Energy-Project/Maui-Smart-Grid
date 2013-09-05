@@ -31,6 +31,9 @@ weatherDataPath = ''
 retriever = None
 downloadCount = 0
 
+WEATHER_DATA_PATH = ''
+
+# @todo Remove use of global weather data path.
 
 class MSGWeatherDataRetriever(object):
     """
@@ -170,7 +173,18 @@ def performDownloading(filename, forceDownload = False):
 
     logger.log('')
 
+    if WEATHER_DATA_PATH == '':
+        print "Working directory has not been given."
+        return False
+
     success = True
+
+
+    # Change working directory to download location.
+    os.chdir(WEATHER_DATA_PATH)
+    if os.getcwd() != WEATHER_DATA_PATH:
+        print "Working directory does not match."
+
     if not fileExists(filename) or forceDownload:
         print "Performing download on " + filename
         fp = open(weatherDataPath + "/" + filename, "wb")
@@ -220,6 +234,7 @@ def cleanUpTxtFiles():
 
 
 if __name__ == '__main__':
+
     dbConnector = MSGDBConnector()
     cursor = dbConnector.conn.cursor()
     weatherUtil = MSGWeatherDataUtil()
@@ -230,6 +245,7 @@ if __name__ == '__main__':
 
     retriever = MSGWeatherDataRetriever()
     configer = MSGConfiger()
+    WEATHER_DATA_PATH = configer.configOptionValue('Weather Data', 'weather_data_path')
 
     print "Using URL %s." % weatherDataURL
     print "Using pattern %s." % weatherDataPattern
