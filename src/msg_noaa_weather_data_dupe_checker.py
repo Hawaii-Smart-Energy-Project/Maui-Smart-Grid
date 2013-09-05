@@ -10,6 +10,7 @@ __license__ = 'https://raw.github' \
 from msg_logger import MSGLogger
 from msg_db_util import MSGDBUtil
 
+
 class MSGWeatherDataDupeChecker(object):
     """
     Determine if a duplicate record exists based on the tuple
@@ -17,9 +18,11 @@ class MSGWeatherDataDupeChecker(object):
     (WBAN, Date, Time, StationType).
     """
 
-    def __init__(self,testing=False):
+    def __init__(self, testing = False):
         """
         Constructor.
+
+        :param testing: Flag for testing mode.
         """
 
         self.logger = MSGLogger(__name__, 'debug')
@@ -44,7 +47,7 @@ class MSGWeatherDataDupeChecker(object):
 
         self.logger.log("sql=%s" % sql, 'debug')
         self.logger.log("wban=%s, datetime=%s, record_type=%s" % (
-        wban, datetime, recordType), 'debug')
+            wban, datetime, recordType), 'debug')
 
         self.dbUtil.executeSQL(dbCursor, sql)
         rows = dbCursor.fetchall()

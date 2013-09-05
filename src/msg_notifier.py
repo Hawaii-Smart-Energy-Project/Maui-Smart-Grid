@@ -23,6 +23,8 @@ from msg_logger import MSGLogger
 class MSGNotifier(object):
     """
     Provides notification service functionality for MSG data processing.
+
+    Email settings are stored in the local configuration.
     """
 
     def __init__(self):

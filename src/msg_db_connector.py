@@ -15,7 +15,7 @@ from msg_logger import MSGLogger
 
 class MSGDBConnector(object):
     """
-    Manage a connection to a MECO database.
+    Manage a connection to an MSG database.
     """
 
     def __init__(self, testing = False, logLevel = 'silent'):

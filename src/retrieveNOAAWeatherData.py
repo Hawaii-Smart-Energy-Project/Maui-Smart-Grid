@@ -88,6 +88,13 @@ def fileExists(filename):
 
 
 def unzipWorker(filename, forceDownload = False):
+    """
+    Perform decompression of downloaded files.
+
+    :param filename
+    :param forceDownload: A flag indicating that the download should override the default behavior of the script.
+    """
+
     originalName = filename
 
     hourlyGzName = retriever.weatherUtil.datePart(
@@ -127,6 +134,12 @@ def unzipWorker(filename, forceDownload = False):
 
 
 def gzipCompressFile(filename):
+    """
+    Perform gzip compression on a given file.
+
+    :param filename
+    """
+
     # @todo Move to external module.
     f_in = open(filename, 'rb')
     f_out = gzip.open(filename + ".gz", 'wb')
@@ -136,10 +149,25 @@ def gzipCompressFile(filename):
 
 
 def unzipFile(filename, forceDownload = False):
+    """
+    Unzip a given file.
+
+    :param filename
+    :param forceDownload
+    """
+
     unzipWorker(filename, forceDownload)
 
 
 def performDownloading(filename, forceDownload = False):
+    """
+    Perform downloading of weather data file with a given filename.
+
+    :param filename
+    :param forceDownload
+    :returns: True for success, False otherwise.
+    """
+
     logger.log('')
 
     success = True
@@ -178,7 +206,7 @@ def performDownloadingWithForcedDownload(filename):
 
 def cleanUpTxtFiles():
     """
-    Clean up unused txt files.
+    Clean up unused txt files by deleting them from local storage.
     """
 
     patterns = ['*hourly.txt', '*daily.txt', '*monthly.txt', '*precip.txt',

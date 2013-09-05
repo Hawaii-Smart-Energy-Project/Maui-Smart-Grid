@@ -24,7 +24,7 @@ NOTIFICATION_HISTORY_TABLE = "NotificationHistory"
 
 class MSGEgaugeNewDataChecker(object):
     """
-    Provide notification of newly loaded data.
+    Provide notification of newly loaded MSG eGauge data.
 
     This uses notification type MSG_EGAUGE_SERVICE.
     """
@@ -73,6 +73,7 @@ class MSGEgaugeNewDataChecker(object):
         """
         Get the last time a notification was reported.
 
+        :param notificationType: A string indicating the type of the notification. It is stored in the event history.
         :returns: datetime of last report date.
         """
 
@@ -114,6 +115,8 @@ class MSGEgaugeNewDataChecker(object):
         """
         Sending notification reporting on new data being available since the
         last time new data was reported.
+
+        :param testing: Use testing mode flag.
         """
 
         lastReportDate = self.lastReportDate('MSG_EGAUGE_SERVICE')
