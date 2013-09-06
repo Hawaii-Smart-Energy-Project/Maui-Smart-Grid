@@ -92,8 +92,9 @@ msg = "Recursively inserting NOAA weather data to the database named %s." % \
 print msg
 msgBody += msg + "\n"
 
-startingDirectory = os.getcwd()
-msg = "Starting in %s." % startingDirectory
+os.chdir(configer.configOptionValue('Weather Data', 'weather_data_path'))
+
+msg = "Starting in %s." % os.getcwd()
 print msg
 msgBody += msg + "\n"
 
