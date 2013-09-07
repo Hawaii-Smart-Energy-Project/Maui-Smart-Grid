@@ -96,6 +96,10 @@ class Inserter(object):
 
 
 def processCommandLineArguments():
+    """
+    Create command line arguments and parse them.
+    """
+
     global parser, commandLineArgs
     parser = argparse.ArgumentParser(
         description = 'Perform insertion of data contained in a single file to '

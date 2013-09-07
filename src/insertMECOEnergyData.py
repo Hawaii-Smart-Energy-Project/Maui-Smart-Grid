@@ -6,12 +6,12 @@ Usage:
 
 time python -u ${PATH}/insertMECOEnergyData.py > ${LOG_FILE}
 
-From the *current directory*, recursively descend into every existing folder and
-insert all data that is found.
+From the *current working directory*, recursively descend into every existing folder and
+insert all data that is found using multiprocessing.
 
 This script makes use of insertSingleMECOEnergyDataFile.py.
 
-This script only supports processing of *.xml.gz files.
+This script only supports processing of gzip-compressed XML (*.xml.gz) files.
 """
 
 __author__ = 'Daniel Zhang (張道博)'
@@ -67,6 +67,8 @@ def processCommandLineArguments():
 def makePlotAttachments():
     """
     Make data plots.
+
+    :returns: List of attachments.
     """
 
     plotPath = configer.configOptionValue("Data Paths", "plot_path")
@@ -85,6 +87,8 @@ def makePlotAttachments():
 def logLegend():
     """
     Output a legend describing the concise report format.
+
+    :returns: String containing the legend.
     """
 
     legend = "Log Legend: #: = process ID, {} = dupes, () = element group, " \
@@ -98,6 +102,8 @@ def logLegend():
 def insertDataWrapper(fullPath):
     """
     A wrapper for data insertion multiprocessing.
+
+    :param fullPath: Path of data to be processed.
     :returns: Log of parsing along with performance results.
     """
 
@@ -123,6 +129,11 @@ def insertDataWrapper(fullPath):
 
 
 def worker(path, returnDict):
+    """
+    :param path
+    :param returnDict
+    """
+
     result = insertDataWrapper(path)
     pattern = 'Process-(\d+),'
     jobString = str(multiprocessing.current_process())

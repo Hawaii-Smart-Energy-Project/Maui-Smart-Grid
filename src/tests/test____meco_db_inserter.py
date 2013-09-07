@@ -37,8 +37,10 @@ class TestMECODBInserter(unittest.TestCase):
         localInserter = MECODBInserter()
         self.assertIsInstance(self.i, type(localInserter))
 
+
     def testInsertionToMeterDataTable(self):
-        """Data can be written to the Meter Data table.
+        """
+        Data can be written to the Meter Data table.
         """
 
         # Insert some values.
@@ -55,9 +57,18 @@ class TestMECODBInserter(unittest.TestCase):
                                        self.keyName, self.lastSeqVal)
         self.assertEqual(row[self.keyName], self.lastSeqVal)
 
+
     def test_fkey_value_is_correct(self):
-        """Verify that the fkey value used during insertion is correct.
         """
+        Verify that the fkey value used during insertion is correct.
+        """
+
+
+    def testInsertionsSums(self):
+        """
+        """
+
+        pass
 
     def tearDown(self):
         # Delete the record that was inserted.

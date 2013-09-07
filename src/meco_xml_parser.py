@@ -73,7 +73,6 @@ class MECOXMLParser(object):
         self.channelProcessed = {}
 
         self.initChannelProcessed()
-        # self.processingReadingsNow = False
 
         # Tables to be inserted to.
         self.insertTables = self.configer.insertTables
@@ -104,6 +103,7 @@ class MECOXMLParser(object):
         self.readingInsertCount = 0
         self.registerInsertCount = 0
         self.eventInsertCount = 0
+
 
     def parseXML(self, fileObject, insert = False, jobID = ''):
         """
@@ -278,6 +278,9 @@ class MECOXMLParser(object):
 
     def generateConciseLogEntries(self, jobID = ''):
         """
+        Create log entries in the concise log.
+
+        :param jobID: Identifier used to distinguish multiprocessing jobs.
         :returns: A concatenated string of log entries.
         """
 
@@ -314,6 +317,10 @@ class MECOXMLParser(object):
                                     element):
         """
         Perform operations that are based on the current table.
+
+        :param columnsAndValues
+        :param currentTableName
+        :param element
         """
 
         if currentTableName == "MeterData":
@@ -334,6 +341,7 @@ class MECOXMLParser(object):
         Walk an XML tree from its root node.
 
         :param root: The root node of an XML tree.
+        :param jobID: Identifier used to distinguish multiprocessing jobs.
         :returns: String containing a concise log of parsing activity.
         """
 
