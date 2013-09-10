@@ -82,10 +82,10 @@ class MSGNotifier(object):
                         senddate, fromaddr, toaddr, subject)
 
         msgBody = "This is a message from the Hawaii Smart Energy Project " \
-                  "MECO Project notification system.\n\n" + msgBody
+                  "MSG Project notification system.\n\n" + msgBody
 
-        msgBody += '\nThis email account is not monitored so don\'t send ' \
-                   'messages to it with the expectation of a reply.'
+        msgBody += '\nThis email account is not monitored. No replies will ' \
+                   'originate from this account.'
 
         msgBody += '\n\nYou are receiving this message because you are on the' \
                    ' recipient list for notifications for the Hawaii Smart ' \
