@@ -162,6 +162,7 @@ class MECOXMLParser(object):
         :param fKeyValue: The value of the foreign key.
         :param parseLog: String containing a concise log of operations.
         :param pkeyCol: Column name for the primary key.
+        :param jobID: Identifier for multiprocessing process.
         :returns: A string containing the parse log.
         """
 
@@ -373,10 +374,10 @@ class MECOXMLParser(object):
                 self.processForInsertElementCount += 1
 
                 if self.debug:
-                    print
-                    print "Processing table %s, next is %s." % (
-                        currentTableName, nextTableName)
-                    print "--------------------------------"
+                    # print
+                    self.logger.log("Processing table %s, next is %s." % (
+                        currentTableName, nextTableName), 'debug')
+                    # print "--------------------------------"
 
                 # Get the column name for the primary key.
                 pkeyCol = self.mapper.dbColumnsForTable(currentTableName)[
@@ -393,16 +394,18 @@ class MECOXMLParser(object):
                     pass
 
                 if self.debug:
-                    print "foreign key col (fkey) = %s" % fkeyCol
-                    print "primary key col (pkey) = %s" % pkeyCol
-                    print columnsAndValues
+                    self.logger.log("foreign key col (fkey) = %s" % fkeyCol,
+                                    'debug')
+                    self.logger.log("primary key col (pkey) = %s" % pkeyCol,
+                                    'debug')
+                    self.logger.log(columnsAndValues, 'debug')
 
                 if fkeyCol is not None:
                     # Get the foreign key value.
                     fKeyValue = self.fkDeterminer.pkValforCol[fkeyCol]
 
                 if self.debug:
-                    print "fKeyValue = %s" % fKeyValue
+                    self.logger.log("fKeyValue = %s" % fKeyValue, 'debug')
 
                 self.performTableBasedOperations(columnsAndValues,
                                                  currentTableName, element)
@@ -416,13 +419,14 @@ class MECOXMLParser(object):
                                                             jobID = jobID)
 
                 if self.debug:
-                    print "lastSeqVal = ", self.lastSeqVal
+                    self.logger.log("lastSeqVal = ", self.lastSeqVal)
 
                 if self.lastReading(currentTableName, nextTableName):
                     # The last reading set has been reached.
 
                     if self.debug:
-                        print "----- last reading found -----"
+                        self.logger.log("----- last reading found -----",
+                                        'debug')
 
                     parseLog += self.generateConciseLogEntries(jobID = jobID)
                     self.resetGroupCounters()
@@ -435,7 +439,8 @@ class MECOXMLParser(object):
                     # The last register set has been reached.
 
                     if self.debug:
-                        print "----- last register found -----"
+                        self.logger.log("----- last register found -----",
+                                        'debug')
 
 
         # Initial commit.
