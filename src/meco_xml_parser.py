@@ -19,8 +19,15 @@ import sys
 from itertools import tee, islice, izip_longest
 from meco_dupe_check import MECODupeChecker
 from msg_logger import MSGLogger
+from enum import Enum
 
 # DEBUG = 0 # print debugging info if 1
+
+# def enum(**enums):
+#     return type('Enum', (), enums)
+#
+#
+# reportType = enum(INTERMEDIARY = 1, FINAL = 2)
 
 
 class MECOXMLParser(object):
@@ -103,6 +110,9 @@ class MECOXMLParser(object):
         self.readingInsertCount = 0
         self.registerInsertCount = 0
         self.eventInsertCount = 0
+        self.totalReadingInsertCount = 0
+        self.totalRegisterInsertCount = 0
+        self.totalEventInsertCount = 0
 
 
     def parseXML(self, fileObject, insert = False, jobID = ''):
@@ -221,10 +231,13 @@ class MECOXMLParser(object):
 
             if currentTableName == "Reading":
                 self.readingInsertCount += 1
+                self.totalReadingInsertCount += 1
             elif currentTableName == "Register":
                 self.registerInsertCount += 1
+                self.totalRegisterInsertCount += 1
             elif currentTableName == "Event":
                 self.eventInsertCount += 1
+                self.totalEventInsertCount += 1
 
         else: # Don't insert into Reading or Register table if a dupe exists.
 
@@ -277,7 +290,7 @@ class MECOXMLParser(object):
 
         return parseLog
 
-    def generateConciseLogEntries(self, jobID = ''):
+    def generateConciseLogEntries(self, jobID = '', reportType = None):
         """
         Create log entries in the concise log.
 
@@ -285,20 +298,26 @@ class MECOXMLParser(object):
         :returns: A concatenated string of log entries.
         """
 
-        log = self.logger.logAndWrite(
-            "%s:{%srd,%sre,%sev}" % (
-                jobID,
-                self.readingDupeOnInsertCount, self.registerDupeOnInsertCount,
-                self.eventDupeOnInsertCount))
-        log += self.logger.logAndWrite("(%s)" % self.commitCount)
-        log += self.logger.logAndWrite(
-            "[%s]" % self.processForInsertElementCount)
-        log += self.logger.logAndWrite(
-            "<%srd,%sre,%sev,%s,%s>" % (
-                self.readingInsertCount, self.registerInsertCount,
-                self.eventInsertCount,
-                self.insertCount,
-                self.cumulativeInsertCount))
+        log = ''
+        if reportType == 'FINAL':
+            self.logger.log('Final report', 'info')
+        elif reportType == 'INTERMEDIARY':
+
+            log = self.logger.logAndWrite(
+                "%s:{%srd,%sre,%sev}" % (
+                    jobID,
+                    self.readingDupeOnInsertCount,
+                    self.registerDupeOnInsertCount,
+                    self.eventDupeOnInsertCount))
+            log += self.logger.logAndWrite("(%s)" % self.commitCount)
+            log += self.logger.logAndWrite(
+                "[%s]" % self.processForInsertElementCount)
+            log += self.logger.logAndWrite(
+                "<%srd,%sre,%sev,%s,%s>" % (
+                    self.readingInsertCount, self.registerInsertCount,
+                    self.eventInsertCount,
+                    self.insertCount,
+                    self.cumulativeInsertCount))
         return log
 
     def resetGroupCounters(self):
@@ -428,7 +447,9 @@ class MECOXMLParser(object):
                         self.logger.log("----- last reading found -----",
                                         'debug')
 
-                    parseLog += self.generateConciseLogEntries(jobID = jobID)
+                    parseLog += self.generateConciseLogEntries(jobID = jobID,
+                                                               reportType =
+                                                               'INTERMEDIARY')
                     self.resetGroupCounters()
 
                     parseLog += self.logger.logAndWrite("*")
@@ -445,12 +466,15 @@ class MECOXMLParser(object):
 
         # Initial commit.
         if self.commitCount == 0:
-            parseLog += self.generateConciseLogEntries(jobID = jobID)
+            parseLog += self.generateConciseLogEntries(jobID = jobID,
+                                                       reportType =
+                                                       'INTERMEDIARY')
         self.resetGroupCounters()
 
         # Final commit.
         parseLog += self.logger.logAndWrite("---")
-        parseLog += self.generateConciseLogEntries(jobID = jobID)
+        parseLog += self.generateConciseLogEntries(jobID = jobID,
+                                                   reportType = 'FINAL')
         self.resetGroupCounters()
 
         parseLog += self.logger.logAndWrite("*")
