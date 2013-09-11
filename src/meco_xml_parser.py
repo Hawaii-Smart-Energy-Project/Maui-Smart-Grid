@@ -19,15 +19,6 @@ import sys
 from itertools import tee, islice, izip_longest
 from meco_dupe_check import MECODupeChecker
 from msg_logger import MSGLogger
-from enum import Enum
-
-# DEBUG = 0 # print debugging info if 1
-
-# def enum(**enums):
-#     return type('Enum', (), enums)
-#
-#
-# reportType = enum(INTERMEDIARY = 1, FINAL = 2)
 
 
 class MECOXMLParser(object):
@@ -298,6 +289,8 @@ class MECOXMLParser(object):
         :returns: A concatenated string of log entries.
         """
 
+        # @todo Change report type to enum type.
+
         log = ''
         if reportType == 'FINAL':
             self.logger.log('Final report', 'info')
@@ -560,5 +553,3 @@ class MECOXMLParser(object):
         for i, var in enumerate(rows):
             if i == len(rows) - 1:
                 return var
-
-
