@@ -104,6 +104,9 @@ class MECOXMLParser(object):
         self.totalReadingInsertCount = 0
         self.totalRegisterInsertCount = 0
         self.totalEventInsertCount = 0
+        self.totalReadingDupeOnInsertCount = 0
+        self.totalRegisterDupeOnInsertCount = 0
+        self.totalEventDupeOnInsertCount = 0
 
 
     def parseXML(self, fileObject, insert = False, jobID = ''):
@@ -234,6 +237,7 @@ class MECOXMLParser(object):
 
             if (self.channelDupeExists):
                 self.readingDupeOnInsertCount += 1
+                self.totalReadingDupeOnInsertCount += 1
                 if self.readingDupeOnInsertCount > 0 and self \
                     .readingDupeOnInsertCount < 2:
                     parseLog += self.logger.logAndWrite(
@@ -257,6 +261,7 @@ class MECOXMLParser(object):
 
             elif (self.numberDupeExists):
                 self.registerDupeOnInsertCount += 1
+                self.totalRegisterDupeOnInsertCount += 1
                 if self.registerDupeOnInsertCount > 0 and self \
                     .registerDupeOnInsertCount < 2:
                     parseLog += self.logger.logAndWrite(
@@ -266,6 +271,7 @@ class MECOXMLParser(object):
 
             elif (self.eventTimeDupeExists):
                 self.eventDupeOnInsertCount += 1
+                self.totalEventDupeOnInsertCount += 1
                 if self.eventDupeOnInsertCount > 0 and self \
                     .eventDupeOnInsertCount < 2:
                     parseLog += self.logger.logAndWrite(
@@ -298,9 +304,9 @@ class MECOXMLParser(object):
             log = self.logger.logAndWrite(
                 "%s:{%srd,%sre,%sev}" % (
                     jobID,
-                    self.readingDupeOnInsertCount,
-                    self.registerDupeOnInsertCount,
-                    self.eventDupeOnInsertCount))
+                    self.totalReadingDupeOnInsertCount,
+                    self.totalRegisterDupeOnInsertCount,
+                    self.totalEventDupeOnInsertCount))
             log += self.logger.logAndWrite("(%s)" % self.commitCount)
             log += self.logger.logAndWrite(
                 "[%s]" % self.processForInsertElementCount)
@@ -308,7 +314,7 @@ class MECOXMLParser(object):
                 "<%srd,%sre,%sev,%s,%s>" % (
                     self.totalReadingInsertCount, self.totalRegisterInsertCount,
                     self.totalEventInsertCount,
-                    self.insertCount,
+                    "NA",
                     self.cumulativeInsertCount))
 
         elif reportType == 'INTERMEDIARY':
