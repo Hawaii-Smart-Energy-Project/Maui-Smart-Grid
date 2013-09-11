@@ -294,6 +294,23 @@ class MECOXMLParser(object):
         log = ''
         if reportType == 'FINAL':
             self.logger.log('Final report', 'info')
+
+            log = self.logger.logAndWrite(
+                "%s:{%srd,%sre,%sev}" % (
+                    jobID,
+                    self.readingDupeOnInsertCount,
+                    self.registerDupeOnInsertCount,
+                    self.eventDupeOnInsertCount))
+            log += self.logger.logAndWrite("(%s)" % self.commitCount)
+            log += self.logger.logAndWrite(
+                "[%s]" % self.processForInsertElementCount)
+            log += self.logger.logAndWrite(
+                "<%srd,%sre,%sev,%s,%s>" % (
+                    self.totalReadingInsertCount, self.totalRegisterInsertCount,
+                    self.totalEventInsertCount,
+                    self.insertCount,
+                    self.cumulativeInsertCount))
+
         elif reportType == 'INTERMEDIARY':
 
             log = self.logger.logAndWrite(
