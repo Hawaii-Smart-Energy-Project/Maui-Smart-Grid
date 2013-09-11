@@ -7,6 +7,17 @@ Parallelized weather retrieval and processing.
 
 @todo Convert fully to class versus the current hybrid implementation.
 
+There are two types of retrieval, Primary and Secondary.
+
+Primary retrieval makes use of a list of files matching a pattern given in
+the configuration.
+
+Secondary retrieval makes use of something that I am calling the Keep List.
+It is intended for re-downloading files that already exist to get updated
+data from the last insertion time.
+
+This can involve, in regular use, re-downloading the previous month of data
+and the current month of data.
 """
 
 __author__ = 'Daniel Zhang (張道博)'
@@ -95,7 +106,8 @@ def unzipWorker(filename, forceDownload = False):
     Perform decompression of downloaded files.
 
     :param filename
-    :param forceDownload: A flag indicating that the download should override the default behavior of the script.
+    :param forceDownload: A flag indicating that the download should override
+     the default behavior of the script.
     """
 
     originalName = filename
@@ -127,7 +139,8 @@ def unzipWorker(filename, forceDownload = False):
                 filename = originalName) + "hourly.txt"
 
             if fileExists(hourlyName):
-                print "Hourly file exists. Compressing the hourly file with gzip."
+                print "Hourly file exists. Compressing the hourly file with " \
+                      "gzip."
                 gzipCompressFile(hourlyName)
             else:
                 print "Hourly file not found."
@@ -165,6 +178,7 @@ def unzipFile(filename, forceDownload = False):
 def performDownloading(filename, forceDownload = False):
     """
     Perform downloading of weather data file with a given filename.
+    Existing files will not be retrieved.
 
     :param filename
     :param forceDownload
@@ -245,7 +259,8 @@ if __name__ == '__main__':
 
     retriever = MSGWeatherDataRetriever()
     configer = MSGConfiger()
-    WEATHER_DATA_PATH = configer.configOptionValue('Weather Data', 'weather_data_path')
+    WEATHER_DATA_PATH = configer.configOptionValue('Weather Data',
+                                                   'weather_data_path')
 
     print "Using URL %s." % weatherDataURL
     print "Using pattern %s." % weatherDataPattern
@@ -261,19 +276,16 @@ if __name__ == '__main__':
     multiprocessingLimit = configer.configOptionValue('Hardware',
                                                       'multiprocessing_limit')
 
-    LAST_DATE_TESTING = False
-    if not LAST_DATE_TESTING:
-        if retriever.fileList:
-            print "Performing primary retrieval."
+    if retriever.fileList:
+        print "Performing primary retrieval."
 
-            retriever.pool = multiprocessing.Pool(int(multiprocessingLimit))
-            results = retriever.pool.map(performDownloading, retriever.fileList)
-            retriever.pool.close()
-            retriever.pool.join()
+        retriever.pool = multiprocessing.Pool(int(multiprocessingLimit))
+        results = retriever.pool.map(performDownloading, retriever.fileList)
+        retriever.pool.close()
+        retriever.pool.join()
 
-            if False in results:
-                print "An error occurred during primary retrieval."
-                # print results
+        if False in results:
+            print "An error occurred during primary retrieval."
 
     # Force download on intermediate dates between last loaded date and now.
     # If a date is less than the last loaded date, remove it from the list,
