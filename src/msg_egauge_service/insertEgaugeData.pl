@@ -156,7 +156,7 @@ sub filteredEgaugeNumber {
 # ************************************************************************************
 
 $DBH = DZSEPLib::connectDatabase(
-    $CONFIG{fc_dbname}, $CONFIG{db_host}, $CONFIG{db_port},
+    $CONFIG{msg_dbname}, $CONFIG{db_host}, $CONFIG{db_port},
     $CONFIG{db_user},   $CONFIG{db_pass}
 );
 
