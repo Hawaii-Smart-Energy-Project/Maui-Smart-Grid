@@ -94,7 +94,7 @@ class MSGWeatherDataUtil(object):
     def getKeepList(self, fileList, cursor):
         """
         The Keep List is the list of filenames of files containing data that are
-        within the month of the last loaded date or are beyond the last loaded
+        *within* the month of the last loaded date or are beyond the last loaded
         date.
 
         :param: fileList: A list of files containing weather data.
@@ -108,6 +108,7 @@ class MSGWeatherDataUtil(object):
             self.logger.log('Examining date %s.' % date)
 
             # The list date should be the last day of the month.
+            # It is the date that is compared against the last retrieved date.
 
             listDate = dt.datetime.strptime(self.datePart(filename = date),
                                             "%Y%m")
@@ -122,17 +123,19 @@ class MSGWeatherDataUtil(object):
 
             if lastDate <= listDate:
                 keepList.append((i, listDate))
+
             i += 1
 
         if keepList:
             keepList.sort()
 
-            # Also retrieve one month less than the earliest date in the keep
-            #  list.
-            keepList.append(
-                (
-                    keepList[0][0] - 1,
-                    keepList[0][1] - relativedelta(months = 1)))
+            # Also retrieve one month less than the earliest date in the keep list.
+            # This produces extra overlap to ensure that no data is missed.
+            
+            # keepList.append(
+            #     (
+            #         keepList[0][0] - 1,
+            #         keepList[0][1] - relativedelta(months = 1)))
 
         return [fileList[d[0]] for d in keepList]
 
