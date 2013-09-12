@@ -109,6 +109,27 @@ The reference template can be found in `config/sample-dot-msg-data-operations.cf
     [Hardware]
     multiprocessing_limit = ${MULTIPROCESSING_LIMIT}
     
+### MSG eGauge Service Configuration
+
+The following is an example of the configuration file used for configuring the MSG eGauge Service. This file is installed at `/usr/local/msg-egauge-service/config/egauge-automatic-data-services.config`.
+
+    msg_dbname = "${DATABASE_NAME}"
+    data_dir = "${DATA_DOWNLOAD_PATH}"
+    insert_table = "\"${TABLE_NAME}\""
+    loaded_data_dir = "${DATA_ALREADY_LOADED_PATH}"
+    invalid_data_dir = "${DATA_PATH_FOR_INVALID_DATA_STORAGE}"
+    db_pass = "${DB_PASSWORD}"
+    db_user = "${DB_USERNAME}"
+    db_host = "${DB_HOST}"
+    db_port = "${DB_PORT}"
+    
+    egauge_user = "${EGAUGE_USERNAME}"
+    egauge_password = "${EGAUGE_PASSWORD}"
+    
+    egauge = ${EGAUGE_ID_1}
+    egauge = ${EGAUGE_ID_2}
+    egauge = ${EGAUGE_ID_3}
+    
 ## Database Configuration
 
 The database schema can be installed using the following command form where `${DATABASE_NAME}` is a valid database.
