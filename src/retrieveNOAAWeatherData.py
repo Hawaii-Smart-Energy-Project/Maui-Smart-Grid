@@ -43,6 +43,7 @@ retriever = None
 downloadCount = 0
 
 WEATHER_DATA_PATH = ''
+MSG_BODY = ''
 
 # @todo Remove use of global weather data path.
 
@@ -110,25 +111,35 @@ def unzipWorker(filename, forceDownload = False):
      the default behavior of the script.
     """
 
+    global MSG_BODY
     originalName = filename
 
     hourlyGzName = retriever.weatherUtil.datePart(
         filename = filename) + "hourly.txt.gz"
     if fileExists(hourlyGzName) and not forceDownload:
-        print "%s already exists." % hourlyGzName
+        msg = "%s already exists." % hourlyGzName
+        print msg
+        MSG_BODY += '%s\n' % msg
         return
 
     if (fileExists(filename)):
-        print "Unzipping %s." % filename
+        msg = "Unzipping %s." % filename
+        print msg
+        MSG_BODY += '%s\n' % msg
         try:
 
             zfile = zipfile.ZipFile(filename)
             for name in zfile.namelist():
                 (dirname, filename) = os.path.split(name)
                 if not dirname == '':
-                    print "Decompressing " + filename + " into " + dirname + "."
+                    msg = "Decompressing " + filename + " into " + dirname + "."
+                    print msg
+                    MSG_BODY += '%s\n' % msg
                 else:
-                    print "Decompressing " + filename + "."
+                    msg = "Decompressing " + filename + "."
+                    print msg
+                    MSG_BODY += '%s\n' % msg
+
                 if not os.path.exists(dirname) and not dirname == '':
                     os.mkdir(dirname)
                 fd = open(name, "w")
@@ -139,14 +150,21 @@ def unzipWorker(filename, forceDownload = False):
                 filename = originalName) + "hourly.txt"
 
             if fileExists(hourlyName):
-                print "Hourly file exists. Compressing the hourly file with " \
+                msg = "Hourly file exists. Compressing the hourly file with " \
                       "gzip."
+                print msg
+                MSG_BODY += '%s\n' % msg
+
                 gzipCompressFile(hourlyName)
             else:
-                print "Hourly file not found."
+                msg = "Hourly file not found."
+                print msg
+                MSG_BODY += '%s\n' % msg
+
         except zipfile.BadZipfile:
-            print "Bad zipfile %s." % originalName
-            pass
+            msg = "Bad zipfile %s." % originalName
+            print msg
+            MSG_BODY += '%s\n' % msg
 
 
 def gzipCompressFile(filename):
@@ -184,11 +202,13 @@ def performDownloading(filename, forceDownload = False):
     :param forceDownload
     :returns: True for success, False otherwise.
     """
-
+    global MSG_BODY
     logger.log('')
 
     if WEATHER_DATA_PATH == '':
-        print "Working directory has not been given."
+        msg = "Working directory has not been given."
+        print msg
+        MSG_BODY += '%s\n' % msg
         return False
 
     success = True
@@ -197,10 +217,15 @@ def performDownloading(filename, forceDownload = False):
     # Change working directory to download location.
     os.chdir(WEATHER_DATA_PATH)
     if os.getcwd() != WEATHER_DATA_PATH:
-        print "Working directory does not match."
+        msg = "Working directory does not match."
+        print msg
+        MSG_BODY += '%s\n' % msg
 
     if not fileExists(filename) or forceDownload:
-        print "Performing download on " + filename
+        msg = "Performing download on " + filename
+        print msg
+        MSG_BODY += '%s\n' % msg
+
         fp = open(weatherDataPath + "/" + filename, "wb")
         curl = pycurl.Curl()
         curl.setopt(pycurl.URL, weatherDataURL + "/" + filename)
@@ -209,8 +234,11 @@ def performDownloading(filename, forceDownload = False):
             curl.perform()
         except pycurl.error, e:
             errorCode, errorText = e.args
-            logger.log('Error during retrieval: code: %s, text: %s.' % (
-                errorCode, errorText))
+            msg = 'Error during retrieval: code: %s, text: %s.' % (
+                errorCode, errorText)
+            logger.log(msg)
+            MSG_BODY += '%s\n' % msg
+
             success = False
         curl.close()
         fp.close()
@@ -237,6 +265,7 @@ def cleanUpTxtFiles():
     Clean up unused txt files by deleting them from local storage.
     """
 
+    global MSG_BODY
     patterns = ['*hourly.txt', '*daily.txt', '*monthly.txt', '*precip.txt',
                 '*remarks.txt', '*station.txt']
     for root, dirs, filenames in os.walk(
@@ -244,7 +273,21 @@ def cleanUpTxtFiles():
         for pat in patterns:
             for filename in fnmatch.filter(filenames, pat):
                 os.remove(filename)
-                print "Removed %s." % filename
+                msg = "Removed %s." % filename
+                print msg
+                MSG_BODY += '%s\n' % msg
+
+
+def saveRetrievalResults():
+    """
+    Save retrieval results stored in a global string.
+    """
+
+    global MSG_BODY
+    global WEATHER_DATA_PATH
+    fp = open('%s/retrieval-results.txt' % WEATHER_DATA_PATH, 'wb')
+    fp.write(MSG_BODY)
+    fp.close()
 
 
 if __name__ == '__main__':
@@ -253,17 +296,27 @@ if __name__ == '__main__':
     cursor = dbConnector.conn.cursor()
     weatherUtil = MSGWeatherDataUtil()
 
-    print "Downloading NOAA weather data."
-    print "Last loaded date is %s." % weatherUtil.datePart(
+    msg = "Downloading NOAA weather data."
+    print msg
+    MSG_BODY = '%s\n' % msg
+
+    msg = "Last loaded date is %s." % weatherUtil.datePart(
         datetime = weatherUtil.getLastDateLoaded(cursor))
+    print msg
+    MSG_BODY += '%s\n' % msg
 
     retriever = MSGWeatherDataRetriever()
     configer = MSGConfiger()
     WEATHER_DATA_PATH = configer.configOptionValue('Weather Data',
                                                    'weather_data_path')
 
-    print "Using URL %s." % weatherDataURL
-    print "Using pattern %s." % weatherDataPattern
+    msg = "Using URL %s." % weatherDataURL
+    print msg
+    MSG_BODY += '%s\n' % msg
+
+    msg = "Using pattern %s." % weatherDataPattern
+    print msg
+    MSG_BODY += '%s\n' % msg
 
     global logger
     logger = MSGLogger(__name__)
@@ -277,7 +330,9 @@ if __name__ == '__main__':
                                                       'multiprocessing_limit')
 
     if retriever.fileList:
-        print "Performing primary retrieval."
+        msg = "Performing primary retrieval."
+        print msg
+        MSG_BODY += '%s\n' % msg
 
         retriever.pool = multiprocessing.Pool(int(multiprocessingLimit))
         results = retriever.pool.map(performDownloading, retriever.fileList)
@@ -285,7 +340,10 @@ if __name__ == '__main__':
         retriever.pool.join()
 
         if False in results:
-            print "An error occurred during primary retrieval."
+            msg = "An error occurred during primary retrieval."
+            print msg
+            MSG_BODY += '%s\n' % msg
+
 
     # Force download on intermediate dates between last loaded date and now.
     # If a date is less than the last loaded date, remove it from the list,
@@ -294,7 +352,9 @@ if __name__ == '__main__':
     # Get the keep list.
     keepList = weatherUtil.getKeepList(retriever.fileList, cursor)
     if keepList:
-        print "Performing secondary retrieval."
+        msg = "Performing secondary retrieval."
+        print msg
+        MSG_BODY += '%s\n' % msg
 
         retriever.pool = multiprocessing.Pool(int(multiprocessingLimit))
         results = retriever.pool.map(performDownloadingWithForcedDownload,
@@ -303,7 +363,9 @@ if __name__ == '__main__':
         retriever.pool.join()
 
         if False in results:
-            print "An error occurred during secondary retrieval."
+            msg = "An error occurred during secondary retrieval."
+            print msg
+            MSG_BODY += '%s\n' % msg
 
 
     # Just retrieve the last set if nothing else was retrieved.
@@ -312,5 +374,9 @@ if __name__ == '__main__':
         retriever.dateList.sort()
         performDownloading(retriever.fileList[-1], forceDownload = True)
 
-    print "downloadCount = %s." % downloadCount
+    msg = "downloadCount = %s." % downloadCount
+    print msg
+    MSG_BODY += '%s\n' % msg
+
     cleanUpTxtFiles()
+    saveRetrievalResults()

@@ -131,7 +131,7 @@ class MSGWeatherDataUtil(object):
 
             # Also retrieve one month less than the earliest date in the keep list.
             # This produces extra overlap to ensure that no data is missed.
-            
+
             # keepList.append(
             #     (
             #         keepList[0][0] - 1,
