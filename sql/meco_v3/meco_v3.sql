@@ -927,16 +927,6 @@ COMMENT ON VIEW count_of_register_duplicates IS 'Count of duplicates in the Regi
 
 
 --
--- Name: deprecated_dz_pv_readings; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW deprecated_dz_pv_readings AS
-    SELECT readings_unfiltered.end_time, readings_unfiltered.meter_name, readings_unfiltered.channel, readings_unfiltered.value, readings_unfiltered.meter_data_id FROM readings_unfiltered WHERE ((readings_unfiltered.channel = (2)::smallint) AND (readings_unfiltered.value > (0)::real));
-
-
-ALTER TABLE public.deprecated_dz_pv_readings OWNER TO postgres;
-
---
 -- Name: deprecated_meter_ids_for_houses_without_pv; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -2358,17 +2348,6 @@ REVOKE ALL ON TABLE count_of_register_duplicates FROM daniel;
 GRANT ALL ON TABLE count_of_register_duplicates TO daniel;
 GRANT ALL ON TABLE count_of_register_duplicates TO sepgroup;
 GRANT SELECT ON TABLE count_of_register_duplicates TO sepgroupreadonly;
-
-
---
--- Name: deprecated_dz_pv_readings; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE deprecated_dz_pv_readings FROM PUBLIC;
-REVOKE ALL ON TABLE deprecated_dz_pv_readings FROM postgres;
-GRANT ALL ON TABLE deprecated_dz_pv_readings TO postgres;
-GRANT ALL ON TABLE deprecated_dz_pv_readings TO sepgroup;
-GRANT SELECT ON TABLE deprecated_dz_pv_readings TO sepgroupreadonly;
 
 
 --
