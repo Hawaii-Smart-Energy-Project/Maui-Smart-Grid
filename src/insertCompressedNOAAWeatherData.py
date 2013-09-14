@@ -67,6 +67,29 @@ def processCommandLineArguments():
     commandLineArgs = argParser.parse_args()
 
 
+def previousRetrievalResults():
+    """
+    Return previous retrieval results.
+    """
+
+    fullPath = '%s/retrieval-results.txt' % configer.configOptionValue(
+        'Weather Data', 'weather_data_path')
+    if fileExists(fullPath):
+        fp = open(fullPath, 'rU')
+        results = fp.read()
+        fp.close()
+        return "\n%s\n" % results
+    return '\nNo previous retrieval results are available.\n'
+
+
+def fileExists(fullPath):
+    try:
+        with open(fullPath):
+            return True
+    except IOError, e:
+        return False
+
+
 processCommandLineArguments()
 
 if commandLineArgs.testing:
@@ -92,6 +115,8 @@ msg = "Recursively inserting NOAA weather data to the database named %s." % \
 print msg
 msgBody += msg + "\n"
 
+msgBody += previousRetrievalResults()
+
 os.chdir(configer.configOptionValue('Weather Data', 'weather_data_path'))
 
 msg = "Starting in %s." % os.getcwd()
@@ -104,6 +129,7 @@ setOfAllDays = set()
 for root, dirnames, filenames in os.walk('.'):
 
     if commandLineArgs.alldata:
+
         # Load ALL data.
         for filename in fnmatch.filter(filenames, '*hourly.txt.gz'):
             fullPath = os.path.join(root, filename)
