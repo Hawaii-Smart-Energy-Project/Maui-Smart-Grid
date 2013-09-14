@@ -37,6 +37,7 @@ import gzip
 from msg_noaa_weather_data_util import MSGWeatherDataUtil
 from msg_db_connector import MSGDBConnector
 import fnmatch
+from msg_time_util import MSGTimeUtil
 
 weatherDataPath = ''
 retriever = None
@@ -295,8 +296,9 @@ if __name__ == '__main__':
     dbConnector = MSGDBConnector()
     cursor = dbConnector.conn.cursor()
     weatherUtil = MSGWeatherDataUtil()
+    timeUtil = MSGTimeUtil()
 
-    msg = "Downloading NOAA weather data."
+    msg = "Downloading NOAA weather data (%s)." % timeUtil.conciseNow()
     print msg
     MSG_BODY = '%s\n' % msg
 
