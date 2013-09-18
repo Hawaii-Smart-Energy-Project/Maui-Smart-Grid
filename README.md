@@ -58,11 +58,15 @@ v4 (Development)
 ![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/diagrams/2013-07-29_ReadingAndMeterCounts.png)
 Plot of readings per meter counts and meter counts per day loaded to meco_v3.
 
+## Installation
+
 ## Configuration
+
+All of the site-specific options are intended to be held in text-based configuration files. 
 
 The software is configured through a text configuration file contained in the user's home directory. The file is named `~/.msg-data-operations.cfg`. Permissions should be limited to owner read/write only. It is read by the `ConfigParser` module. 
 
-### Example Configuration File Content
+### Example Main Configuration File Content
 
 The reference template can be found in `config/sample-dot-msg-data-operations.cfg.`
 
@@ -148,27 +152,42 @@ in the directory where the data files are contained. The use of `time` is for in
 
 #### Sample Output of Data Insertion
 
-    ~/msg-data/2013_02_25_download$ time python -u ~/dzmbp-maui-smart-grid/src/insertData.py > insert-run.log 
-    Inserting data to database meco_v2.
-    parsing xml in ./20130225-91a9f952-5ef4-46bb-ac33-5fd9f82c3264-1-1.xml.gz
-    {0}[0](6868){0}[1](17380){0}[2](20815){0}[3](24250){0}[4](31286){0}[5](34716){0}[6](38146){dupe on insert-->}{1536}[7](46938){0}[8](50374)
-    parsing xml in ./20130225-91a9f952-5ef4-46bb-ac33-5fd9f82c3264-2-1.xml.gz
-    {0}[0](57257){0}[1](60692){0}[2](67716){0}[3](71151){0}[4](74586){0}[5](78021){0}[6](88336){0}[7](91766){dupe on insert-->}{3136}[8](112881)
-    real    4m16.162s
-    user    0m58.716s
-    sys     0m30.186s
+MECO data is inserted using
 
-The numbers in brackets correspond to {dropped duplicates (in the reading branch)}, [reading group index], and (element count). The duplicate count is discrete by group. The element count is cumulative over the data set. Dropped duplicates are the duplicate entries---determined by meter name, interval end time, and channel number---that are present in the source data. The reading group index is an integer count of the distinct groups of energy readings (MeterData record sets) in the source data. The element count refers to the individual elements within the source data.
+    $ insertMECOEnergyData.py --email > insert-run.log 
+
+The output looks like the following and is the concise log output for data loading.
+    
+    Inserting data to database meco_v3.
+    
+    3:{0rd,0re,0ev}(0)[3440]<2688rd,56re,0ev,3440,3440>*3:{0rd,0re,0ev}(1)[6880]<2688rd,56re,0ev,
+    3440,6880>*3:{0rd,0re,0ev}(2)[10320]<2688rd,56re,0ev,3440,10320>*3:{0rd,0re,0ev}(3)[13760]<2688rd,
+    56re,0ev,3440,13760>*3:{0rd,0re,0ev}(4)[20651]<5376rd,112re,10ev,6891,20651>*3:{0rd,0re,0ev}(5)
+    [24091]<2688rd,56re,0ev,3440,24091>*3:{0rd,0re,0ev}(6)[27531]<2688rd,56re,0ev,3440,27531>*3:{0rd,0re,
+    0ev}(7)[30971]<2688rd,56re,0ev,3440,30971>*3:{0rd,0re,0ev}(8)[37854]<5376rd,112re,2ev,6883,37854>*3:{0rd,
+    0re,0ev}(9)[41294]<2688rd,56re,0ev,3440,41294>*3:{0rd,0re,0ev}(10)[44734]<2688rd,56re,0ev,3440,44734>*
+    ...
+    ---3:{0rd,0re,0ev}(44)[166400]<129024rd,2891re,1019ev,NA,166400>*
+
+Individual processes are denoted by a number and a colon. The numbers in brackets correspond to {dropped duplicates in the reading branch, register branch or the event branch)}, (reading group index), and [element count]. The duplicate count is discrete by group. The element count is cumulative over the data set. 
+
+Dropped reading duplicates are the duplicate entries---determined by meter name, interval end time, and channel number---that are present in the source data. The reading group index is an integer count of the distinct groups of energy readings (MeterData record sets) in the source data. The element count refers to the individual elements within the source data.
+
+Angled brackets contain counts of actual records inserted for each of the branches. They also contain group counts as well as a cumulative count.
+
+A final summary report is followed by `---`.
 
 Parallel data loading is supported since loading is performed atomically, database commits are made after data verification including taking duplicate records into account.
   
-### Inserting Location and Meter Records
+### Inserting Location and Meter Records (DEPRECATED)
 
 Location and meter records are stored in separate tab-separated files and are inserted using separate scripts.
 
     $ insertLocationRecords.py ${FILENAME}
 
     $ insertMeterRecords.py ${FILENAME}
+    
+These scripts and their associated data are deprecated in favor of the Meter Location History (MLH).
 
 ### Inserting NOAA Weather Data (Kahului Airport Station WBAN 22516)
 
@@ -182,7 +201,7 @@ Insertion is performed using
 
     $ insertCompressedNOAAWeatherData.py --email
     
-and supports recursive data processing of a set of files from the current directory.
+and supports recursive data processing of a set of files from the current directory. Weather data loading supports notifications.
 
 ### Utility Scripts
 
