@@ -175,6 +175,8 @@ Dropped reading duplicates are the duplicate entries---determined by meter name,
 
 Angled brackets contain counts of actual records inserted for each of the branches. They also contain group counts as well as a cumulative count.
 
+The stars (*) indicate when commits are performed.
+
 A final summary report is followed by `---`.
 
 Parallel data loading is supported since loading is performed atomically, database commits are made after data verification including taking duplicate records into account.
