@@ -18,7 +18,12 @@ setup(name = 'MauiSmartGrid',
       description = 'Data Processing and Data Operations for the Maui Smart '
                     'Grid Project.',
       author = 'Daniel Zhang (張道博)',
+      author_email= 'Daniel Zhang',
       url = 'https://github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid',
+      license = 'BSD',
+      platforms = 'OS X, Linux',
+
+      package_dir = {'': 'src'},
 
       py_modules = ['meco_db_delete',
                     'meco_db_insert',
@@ -32,7 +37,7 @@ setup(name = 'MauiSmartGrid',
                     'msg_configer',
                     'msg_db_connector',
                     'msg_db_exporter',
-                    'msg_db_util.py',
+                    'msg_db_util',
                     'msg_logger',
                     'msg_noaa_weather_data_dupe_checker',
                     'msg_noaa_weather_data_inserter',
@@ -41,10 +46,10 @@ setup(name = 'MauiSmartGrid',
                     'msg_notifier',
                     'msg_time_util'
       ],
-      
-      scripts = ['insertLocationRecords',
-                 'insertMECOEnergyData',
-                 'insertMECOMeterLocationHistoryData',
-                 'insertMeterRecords',
-                 'retrieveNOAAWeatherData']
+
+      scripts = ['insertLocationRecords.py',
+                 'insertMECOEnergyData.py',
+                 'insertMECOMeterLocationHistoryData.py',
+                 'insertMeterRecords.py',
+                 'retrieveNOAAWeatherData.py']
 )
