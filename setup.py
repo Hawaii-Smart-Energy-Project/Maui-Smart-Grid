@@ -2,7 +2,15 @@
 # -*- coding: utf-8 -*-
 
 """
-Test of applying distutils.
+Setup script for MSG Data Processing and Operations.
+
+The distribution archive is created using
+
+    python setup.py sdist
+
+Installation is performed using
+
+    python setup.py install
 """
 
 __author__ = 'Daniel Zhang (張道博)'
