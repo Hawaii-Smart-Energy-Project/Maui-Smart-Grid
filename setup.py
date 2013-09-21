@@ -12,7 +12,7 @@ Installation is performed using
 
     python setup.py install [--prefix=${LIBRARY_PATH} --exec-prefix=${BIN_PATH]
 
-where the path arguments within the square brackets is optional.
+where the path arguments within the square brackets are optional.
 """
 
 __author__ = 'Daniel Zhang (張道博)'
