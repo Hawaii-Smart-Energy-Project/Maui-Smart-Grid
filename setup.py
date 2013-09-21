@@ -44,7 +44,9 @@ setup(name = 'MauiSmartGrid',
       author = 'Daniel Zhang (張道博)',
       author_email = 'See https://github.com/dz1111',
       url = 'https://github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid',
-      license = 'BSD',
+      license = 'https://raw.github'
+                '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD'
+                '-LICENSE.txt',
       platforms = 'OS X, Linux',
 
       package_dir = {'': 'src'},
