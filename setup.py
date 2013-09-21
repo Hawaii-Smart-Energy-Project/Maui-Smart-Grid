@@ -10,7 +10,9 @@ The distribution archive is created using
 
 Installation is performed using
 
-    python setup.py install
+    python setup.py install [--prefix=${LIBRARY_PATH} --exec-prefix=${BIN_PATH]
+
+where the path arguments within the square brackets is optional.
 """
 
 __author__ = 'Daniel Zhang (張道博)'
@@ -25,8 +27,22 @@ setup(name = 'MauiSmartGrid',
       version = '1.0',
       description = 'Data Processing and Data Operations for the Maui Smart '
                     'Grid Project.',
+      long_description = 'The University of Hawaii at Manoa was tasked with '
+                         'maintaining a data repository for use by analysts '
+                         'for the Maui Smart Grid (http://www.mauismartgrid'
+                         '.com) energy sustainability project through the '
+                         'Hawaii Natural Energy Institute (http://www.hnei'
+                         '.hawaii.edu). This software provides the data '
+                         'processing and operational resources necessary to '
+                         'accomplish this task. Source data arrives in '
+                         'multiple formats including XML, tab-separated '
+                         'values, and comma-separated values. Issues for this'
+                         ' project are tracked at the Hawaii Smart Energy '
+                         'Project YouTRACK instance ('
+                         'http://smart-energy-project.myjetbrains'
+                         '.com/youtrack/rest/agile).',
       author = 'Daniel Zhang (張道博)',
-      author_email = 'Daniel Zhang',
+      author_email = 'See https://github.com/dz1111',
       url = 'https://github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid',
       license = 'BSD',
       platforms = 'OS X, Linux',
