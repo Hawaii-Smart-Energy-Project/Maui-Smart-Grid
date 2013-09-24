@@ -1,0 +1,3 @@
+include README.md
+include BSD-LICENSE.txt
+recursive-include src/msg_egauge_service *
