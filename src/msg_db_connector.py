@@ -55,7 +55,6 @@ class MSGDBConnector(object):
 
 
     def connectDB(self):
-
         """
         Make the DB connection.
         """
