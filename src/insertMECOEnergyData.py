@@ -6,7 +6,8 @@ Usage:
 
 time python -u ${PATH}/insertMECOEnergyData.py > ${LOG_FILE}
 
-From the *current working directory*, recursively descend into every existing folder and
+From the *current working directory*, recursively descend into every existing
+folder and
 insert all data that is found using multiprocessing.
 
 This script makes use of insertSingleMECOEnergyDataFile.py.
@@ -92,10 +93,13 @@ def logLegend():
     """
 
     legend = "Log Legend: #: = process ID, {} = dupes, () = element group, " \
-             "[] = process for insert elements, <> = <reading insert count, " \
-             "register insert count, event insert count, group insert count," \
-             "total insert count>, * = commit\nrd = reading, re = register, " \
-             "ev = event"
+             "[] = process for insert elements,\n"
+    legend += "    <> = <reading insert count, register insert count, " \
+              "event insert count, group insert count, total insert count>.\n"
+    legend += "Final summary after (---): <> = <reading insert count, " \
+              "register insert count, event insert count, total insert count>" \
+              ".\n"
+    legend += "Symbols: * = commit, rd = reading, re = register, ev = event.\n"
     return legend
 
 
@@ -120,8 +124,7 @@ def insertDataWrapper(fullPath):
     myLog += inserter.insertData(fullPath, testing = commandLineArgs.testing,
                                  jobID = match.group(1))
     myLog += "\n"
-    myLog += "\nWall time = {:.2f} seconds.\n".format(
-        time.time() - startTime)
+    myLog += "\nWall time = {:.2f} seconds.\n".format(time.time() - startTime)
 
     logger.log('myLog = %s' % myLog)
 
