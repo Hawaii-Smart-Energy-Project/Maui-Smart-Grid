@@ -296,17 +296,17 @@ class MECOXMLParser(object):
                 .registerDupeOnInsertCount > 0 or self.eventDupeOnInsertCount\
                     > 0:
                 log = self.logger.logAndWrite("%s:{%srd,%sre,%sev}" % (
-                jobID, self.totalReadingDupeOnInsertCount,
-                self.totalRegisterDupeOnInsertCount,
-                self.totalEventDupeOnInsertCount))
+                    jobID, self.totalReadingDupeOnInsertCount,
+                    self.totalRegisterDupeOnInsertCount,
+                    self.totalEventDupeOnInsertCount))
             else:
                 log = ''
             log += self.logger.logAndWrite("(%s)" % self.commitCount)
             log += self.logger.logAndWrite(
                 "[%s]" % self.processForInsertElementCount)
-            log += self.logger.logAndWrite("<%srd,%sre,%sev,%s,%s>" % (
+            log += self.logger.logAndWrite("<%srd,%sre,%sev,%s>" % (
                 self.totalReadingInsertCount, self.totalRegisterInsertCount,
-                self.totalEventInsertCount, "NA", self.cumulativeInsertCount))
+                self.totalEventInsertCount, self.cumulativeInsertCount))
 
         elif reportType == 'INTERMEDIARY':
 
