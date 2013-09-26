@@ -9,6 +9,8 @@ __license__ = 'https://raw.github' \
 
 from msg_logger import MSGLogger
 from msg_configer import MSGConfiger
+import os
+import fnmatch
 
 class MECODataAutoloader(object):
     """
@@ -30,7 +32,17 @@ class MECODataAutoloader(object):
         """
 
         autoloadPath = self.configer.configOptionValue('MECO Autoload', 'meco_new_data_path')
-
+        patterns = ['*.gz']
+        matchCnt = 0
+        for root, dirs, filenames in os.walk(autoloadPath):
+            for pat in patterns:
+                for filename in fnmatch.filter(filenames, pat):
+                    print filename
+                    matchCnt += 1
+        if matchCnt > 0:
+            return True
+        else:
+            return False
 
     def validDirectory(self, path):
         """
@@ -51,3 +63,9 @@ class MECODataAutoloader(object):
         Archive successfully loaded data.
         """
         pass
+
+
+if __name__ == '__main__':
+    autoloader = MECODataAutoloader()
+    print "Testing MECO Data Autoloading"
+    print "New data exists is %s" % autoloader.newDataExists()
