@@ -42,8 +42,7 @@ class MECOXMLParser(object):
 
         self.debug = False
         self.configer = MSGConfiger()
-        if self.configer.configOptionValue("Debugging",
-                                           'debug') == True:
+        if self.configer.configOptionValue("Debugging", 'debug') == True:
             self.debug = True
 
         self.util = MSGDBUtil()
@@ -58,12 +57,10 @@ class MECOXMLParser(object):
 
         # Count number of times sections in source data are encountered.
         self.tableNameCount = {'SSNExportDocument': 0, 'MeterData': 0,
-                               'RegisterData': 0, 'RegisterRead': 0,
-                               'Tier': 0, 'Register': 0,
-                               'IntervalReadData': 0, 'Interval': 0,
-                               'Reading': 0, 'IntervalStatus': 0,
-                               'ChannelStatus': 0, 'EventData': 0,
-                               'Event': 0}
+                               'RegisterData': 0, 'RegisterRead': 0, 'Tier': 0,
+                               'Register': 0, 'IntervalReadData': 0,
+                               'Interval': 0, 'Reading': 0, 'IntervalStatus': 0,
+                               'ChannelStatus': 0, 'EventData': 0, 'Event': 0}
 
         # Use this dictionary to track which channels were processed when
         # readings are being processed. this is to prevent duplicate channel
@@ -177,13 +174,9 @@ class MECOXMLParser(object):
         if currentTableName == "Reading":
             # Does a meter-endtime-channel tuple duplicate exist?
 
-            self.channelDupeExists \
-                = self.dupeChecker.readingBranchDupeExists(
-                self.conn,
-                self.currentMeterName,
-                self.currentIntervalEndTime,
-                columnsAndValues['Channel']
-            )
+            self.channelDupeExists = self.dupeChecker.readingBranchDupeExists(
+                self.conn, self.currentMeterName, self.currentIntervalEndTime,
+                columnsAndValues['Channel'])
             self.readingDupeCheckCount += 1
 
         if currentTableName == "Register":
@@ -205,8 +198,7 @@ class MECOXMLParser(object):
             # ***********************
             # ***** INSERT DATA *****
             # ***********************
-            cur = self.inserter.insertData(self.conn,
-                                           currentTableName,
+            cur = self.inserter.insertData(self.conn, currentTableName,
                                            columnsAndValues,
                                            fKeyVal = fKeyValue,
                                            withoutCommit = 1)
@@ -216,10 +208,9 @@ class MECOXMLParser(object):
 
             # Only attempt getting the last sequence value if an insertion
             # took place.
-            self.lastSeqVal \
-                = self.util.getLastSequenceID(self.conn,
-                                              currentTableName,
-                                              pkeyCol)
+            self.lastSeqVal = self.util.getLastSequenceID(self.conn,
+                                                          currentTableName,
+                                                          pkeyCol)
             # Store the primary key.
             self.fkDeterminer.pkValforCol[pkeyCol] = self.lastSeqVal
 
@@ -238,7 +229,7 @@ class MECOXMLParser(object):
             if (self.channelDupeExists):
                 self.readingDupeOnInsertCount += 1
                 self.totalReadingDupeOnInsertCount += 1
-                if self.readingDupeOnInsertCount > 0 and self \
+                if self.readingDupeOnInsertCount > 0 and self\
                     .readingDupeOnInsertCount < 2:
                     parseLog += self.logger.logAndWrite(
                         "%s:{rd-dupe==>}" % jobID)
@@ -262,7 +253,7 @@ class MECOXMLParser(object):
             elif (self.numberDupeExists):
                 self.registerDupeOnInsertCount += 1
                 self.totalRegisterDupeOnInsertCount += 1
-                if self.registerDupeOnInsertCount > 0 and self \
+                if self.registerDupeOnInsertCount > 0 and self\
                     .registerDupeOnInsertCount < 2:
                     parseLog += self.logger.logAndWrite(
                         "%s:{re-dupe==>}" % jobID)
@@ -272,7 +263,7 @@ class MECOXMLParser(object):
             elif (self.eventTimeDupeExists):
                 self.eventDupeOnInsertCount += 1
                 self.totalEventDupeOnInsertCount += 1
-                if self.eventDupeOnInsertCount > 0 and self \
+                if self.eventDupeOnInsertCount > 0 and self\
                     .eventDupeOnInsertCount < 2:
                     parseLog += self.logger.logAndWrite(
                         "%s:{ev-dupe==>}" % jobID)
@@ -301,39 +292,40 @@ class MECOXMLParser(object):
         if reportType == 'FINAL':
             self.logger.log('Final report', 'info')
 
-            log = self.logger.logAndWrite(
-                "%s:{%srd,%sre,%sev}" % (
-                    jobID,
-                    self.totalReadingDupeOnInsertCount,
-                    self.totalRegisterDupeOnInsertCount,
-                    self.totalEventDupeOnInsertCount))
+            if self.readingDupeOnInsertCount > 0 or self\
+                .registerDupeOnInsertCount > 0 or self.eventDupeOnInsertCount\
+                    > 0:
+                log = self.logger.logAndWrite("%s:{%srd,%sre,%sev}" % (
+                jobID, self.totalReadingDupeOnInsertCount,
+                self.totalRegisterDupeOnInsertCount,
+                self.totalEventDupeOnInsertCount))
+            else:
+                log = ''
             log += self.logger.logAndWrite("(%s)" % self.commitCount)
             log += self.logger.logAndWrite(
                 "[%s]" % self.processForInsertElementCount)
-            log += self.logger.logAndWrite(
-                "<%srd,%sre,%sev,%s,%s>" % (
-                    self.totalReadingInsertCount, self.totalRegisterInsertCount,
-                    self.totalEventInsertCount,
-                    "NA",
-                    self.cumulativeInsertCount))
+            log += self.logger.logAndWrite("<%srd,%sre,%sev,%s,%s>" % (
+                self.totalReadingInsertCount, self.totalRegisterInsertCount,
+                self.totalEventInsertCount, "NA", self.cumulativeInsertCount))
 
         elif reportType == 'INTERMEDIARY':
 
-            log = self.logger.logAndWrite(
-                "%s:{%srd,%sre,%sev}" % (
-                    jobID,
-                    self.readingDupeOnInsertCount,
+            if self.readingDupeOnInsertCount > 0 or self\
+                .registerDupeOnInsertCount > 0 or self.eventDupeOnInsertCount\
+                    > 0:
+                log = self.logger.logAndWrite("%s:{%srd,%sre,%sev}" % (
+                    jobID, self.readingDupeOnInsertCount,
                     self.registerDupeOnInsertCount,
                     self.eventDupeOnInsertCount))
+            else:
+                log = ''
             log += self.logger.logAndWrite("(%s)" % self.commitCount)
             log += self.logger.logAndWrite(
                 "[%s]" % self.processForInsertElementCount)
-            log += self.logger.logAndWrite(
-                "<%srd,%sre,%sev,%s,%s>" % (
-                    self.readingInsertCount, self.registerInsertCount,
-                    self.eventInsertCount,
-                    self.insertCount,
-                    self.cumulativeInsertCount))
+            log += self.logger.logAndWrite("<%srd,%sre,%sev,%s,%s>" % (
+                self.readingInsertCount, self.registerInsertCount,
+                self.eventInsertCount, self.insertCount,
+                self.cumulativeInsertCount))
         return log
 
     def resetGroupCounters(self):
@@ -557,8 +549,7 @@ class MECOXMLParser(object):
         Initialize the dictionary for channel processing.
         """
 
-        self.channelProcessed = {'1': False, '2': False, '3': False,
-                                 '4': False}
+        self.channelProcessed = {'1': False, '2': False, '3': False, '4': False}
 
 
     def getLastElement(self, rows):
