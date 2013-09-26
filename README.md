@@ -177,7 +177,7 @@ Angled brackets contain counts of actual records inserted for each of the branch
 
 The stars (*) indicate when commits are performed.
 
-A final summary report is followed by `---`.
+A final summary report follows the `---` symbol.
 
 Parallel data loading is supported since loading is performed atomically, database commits are made after data verification including taking duplicate records into account.
   
