@@ -11,6 +11,7 @@ from msg_logger import MSGLogger
 from msg_configer import MSGConfiger
 import os
 import fnmatch
+from msg_file_util import MSGFileUtil
 
 class MECODataAutoloader(object):
     """
@@ -24,14 +25,20 @@ class MECODataAutoloader(object):
 
         self.logger = MSGLogger(__name__)
         self.configer = MSGConfiger()
+        self.fileUtil = MSGFileUtil()
 
 
     def newDataExists(self):
         """
         Check the data autoload folder for the presence of new data.
+
+        :returns: True if new data exists.
         """
 
         autoloadPath = self.configer.configOptionValue('MECO Autoload', 'meco_new_data_path')
+        if not self.fileUtil.validDirectory(autoloadPath):
+            raise Exception('InvalidDirectory', '%s' % autoloadPath)
+
         patterns = ['*.gz']
         matchCnt = 0
         for root, dirs, filenames in os.walk(autoloadPath):
@@ -43,12 +50,6 @@ class MECODataAutoloader(object):
             return True
         else:
             return False
-
-    def validDirectory(self, path):
-        """
-        Verify that the path is a valid directory.
-        """
-        pass
 
 
     def loadNewData(self):
