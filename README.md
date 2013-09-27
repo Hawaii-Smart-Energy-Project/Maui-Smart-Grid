@@ -32,13 +32,19 @@ A SQL dump, produced by `pg_dump`, of the database schema is provided for refere
 
 The schema consists of the following components.
 
-1. Energy data
-    * Event data is not included in the schema (Event data is scheduled for inclusion in Version 3)
-2. Location Records
-3. Meter Records
-4. Weather Data (Kahalui Station)
+1. MECO Energy Data
+2. MECO Event Data
+3. MECO Location Records (deprecated)
+4. MECO Meter Records (deprecated)
+5. MECO Meter Location History
+9. MECO Egauge Energy Data
+6. NOAA Weather Data (Kahului Station)
+7. Circuit Data
+8. Transformer Data
+10. Irradiance Data
+11. PV Service Points
 
-A [helpful schema diagram](https://github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/raw/master/diagrams/meco-direct-derived-schema-v3.pdf) is provided in the repository and a version is displayed here.
+A [helpful schema diagram](https://github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/raw/master/diagrams/meco-direct-derived-schema-v3.pdf) is provided in the repository and a version is displayed here illustrating the portion of the schema derived from MECO export data.
 
 ![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/maui-smart-grid/master/diagrams/meco-direct-derived-schema-v3.png)
 
