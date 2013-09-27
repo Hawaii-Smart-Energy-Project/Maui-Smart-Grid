@@ -24,7 +24,7 @@ __license__ = 'https://raw.github' \
 import os
 import fnmatch
 import sys
-from subprocess import call
+#from subprocess import call
 from msg_configer import MSGConfiger
 import re
 from msg_notifier import MSGNotifier
@@ -46,7 +46,7 @@ global msgBody
 msgBody = ''
 notifier = MSGNotifier()
 
-USE_SCRIPT_METHOD = False
+#USE_SCRIPT_METHOD = False
 
 
 def processCommandLineArguments():
@@ -145,117 +145,119 @@ def worker(path, returnDict):
     returnDict[match.group(1)] = result
 
 
-processCommandLineArguments()
+if __name__ == '__main__':
 
-inserter = Inserter()
+    processCommandLineArguments()
 
-if commandLineArgs.testing:
-    logger.log("Testing mode is ON.\n", 'info')
-if commandLineArgs.email:
-    logger.log("Email will be sent.\n", 'info')
+    inserter = Inserter()
 
-msg = ''
-databaseName = ''
+    if commandLineArgs.testing:
+        logger.log("Testing mode is ON.\n", 'info')
+    if commandLineArgs.email:
+        logger.log("Email will be sent.\n", 'info')
 
-if commandLineArgs.testing:
-    databaseName = configer.configOptionValue("Database", "testing_db_name")
-else:
-    databaseName = configer.configOptionValue("Database", "db_name")
+    msg = ''
+    databaseName = ''
 
-msg = "Recursively inserting data to the database named %s." % databaseName
-print msg
-msgBody += msg + "\n"
+    if commandLineArgs.testing:
+        databaseName = configer.configOptionValue("Database", "testing_db_name")
+    else:
+        databaseName = configer.configOptionValue("Database", "db_name")
 
-startingDirectory = os.getcwd()
-msg = "Starting in %s." % startingDirectory
-print msg
-msgBody += msg + "\n"
+    msg = "Recursively inserting data to the database named %s." % databaseName
+    print msg
+    msgBody += msg + "\n"
 
-for root, dirnames, filenames in os.walk('.'):
+    startingDirectory = os.getcwd()
+    msg = "Starting in %s." % startingDirectory
+    print msg
+    msgBody += msg + "\n"
 
-    for filename in fnmatch.filter(filenames, '*.xml'):
-        fullPath = os.path.join(root, filename)
-        msg = fullPath
+    for root, dirnames, filenames in os.walk('.'):
+
+        for filename in fnmatch.filter(filenames, '*.xml'):
+            fullPath = os.path.join(root, filename)
+            msg = fullPath
+            print msg
+            msgBody += msg + "\n"
+            xmlCount += 1
+
+    if xmlCount != 0:
+        msg = "Found XML files that are not gzip compressed.\nUnable to proceed."
         print msg
         msgBody += msg + "\n"
-        xmlCount += 1
+        if (commandLineArgs.email):
+            notifier.sendNotificationEmail(msgBody, commandLineArgs.testing)
+        sys.exit(-1)
 
-if xmlCount != 0:
-    msg = "Found XML files that are not gzip compressed.\nUnable to proceed."
-    print msg
-    msgBody += msg + "\n"
-    if (commandLineArgs.email):
-        notifier.sendNotificationEmail(msgBody, commandLineArgs.testing)
-    sys.exit(-1)
-
-insertScript = "%s/insertSingleMECOEnergyDataFile.py" % binPath
-msg = "insertScript = %s" % insertScript
-print msg
-msgBody += msg + "\n"
-
-parseLog = ''
-
-try:
-    with open(insertScript):
-        pass
-except IOError:
-    msg = "Insert script %s not found." % insertScript
+    insertScript = "%s/insertSingleMECOEnergyDataFile.py" % binPath
+    msg = "insertScript = %s" % insertScript
     print msg
     msgBody += msg + "\n"
 
-startTime = 0
+    parseLog = ''
 
-pathsToProcess = []
-for root, dirnames, filenames in os.walk('.'):
-    for filename in fnmatch.filter(filenames, '*.xml.gz'):
-        if re.search('.*log\.xml', filename) is None: # Skip *log.xml files.
-            xmlGzCount += 1
-            pathsToProcess.append(os.path.join(root, filename))
+    try:
+        with open(insertScript):
+            pass
+    except IOError:
+        msg = "Insert script %s not found." % insertScript
+        print msg
+        msgBody += msg + "\n"
 
-try:
-    procs = []
-    manager = multiprocessing.Manager()
-    returnDict = manager.dict()
+    startTime = 0
 
-    for path in pathsToProcess:
-        procs.append(
-            multiprocessing.Process(target = worker, args = (path, returnDict)))
-        procs[-1].daemon = True
-        procs[-1].start()
+    pathsToProcess = []
+    for root, dirnames, filenames in os.walk('.'):
+        for filename in fnmatch.filter(filenames, '*.xml.gz'):
+            if re.search('.*log\.xml', filename) is None: # Skip *log.xml files.
+                xmlGzCount += 1
+                pathsToProcess.append(os.path.join(root, filename))
 
-    for proc in procs:
-        proc.join()
+    try:
+        procs = []
+        manager = multiprocessing.Manager()
+        returnDict = manager.dict()
 
-    for key in returnDict.keys():
-        sys.stderr.write("Process %s results:\n" % key)
-        sys.stderr.write(returnDict[key])
-        sys.stderr.write("\n")
-        msgBody += returnDict[key]
+        for path in pathsToProcess:
+            procs.append(
+                multiprocessing.Process(target = worker, args = (path, returnDict)))
+            procs[-1].daemon = True
+            procs[-1].start()
 
-except Exception, e:
-    logger.log('An exception occurred: %s' % e, 'error')
+        for proc in procs:
+            proc.join()
 
-msgBody += "\n" + logLegend() + "\n"
+        for key in returnDict.keys():
+            sys.stderr.write("Process %s results:\n" % key)
+            sys.stderr.write(returnDict[key])
+            sys.stderr.write("\n")
+            msgBody += returnDict[key]
 
-msg = "\nProcessed file count is %s.\n" % xmlGzCount
+    except Exception, e:
+        logger.log('An exception occurred: %s' % e, 'error')
 
-print msg
-msgBody += msg + "\n"
+    msgBody += "\n" + logLegend() + "\n"
 
-plotter = MECOPlotting(commandLineArgs.testing)
+    msg = "\nProcessed file count is %s.\n" % xmlGzCount
 
-try:
-    plotter.plotReadingAndMeterCounts(databaseName)
-    msg = "\nPlot is attached.\n"
-except Exception, e:
-    msg = "\nFailed to generate plot.\n"
-    logger.log('An exception occurred: Failed to generate plot. %s' % e,
-               'error')
+    print msg
+    msgBody += msg + "\n"
 
-msgBody += msg
+    plotter = MECOPlotting(commandLineArgs.testing)
 
-if commandLineArgs.email:
-    notifier.sendMailWithAttachments(msgBody, makePlotAttachments(),
-                                     commandLineArgs.testing)
+    try:
+        plotter.plotReadingAndMeterCounts(databaseName)
+        msg = "\nPlot is attached.\n"
+    except Exception, e:
+        msg = "\nFailed to generate plot.\n"
+        logger.log('An exception occurred: Failed to generate plot. %s' % e,
+                   'error')
 
-logger.log("msgBody = %s" % msgBody)
+    msgBody += msg
+
+    if commandLineArgs.email:
+        notifier.sendMailWithAttachments(msgBody, makePlotAttachments(),
+                                         commandLineArgs.testing)
+
+    logger.log("msgBody = %s" % msgBody)
