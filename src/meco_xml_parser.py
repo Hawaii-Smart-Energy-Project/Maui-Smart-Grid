@@ -142,7 +142,6 @@ class MECOXMLParser(object):
         :returns: table name
         """
 
-        name = ''
         try:
             name = re.search('\{.*\}(.*)', element.tag).group(1)
         except:
@@ -172,8 +171,6 @@ class MECOXMLParser(object):
         # Handle a special case for duplicate reading data.
         # Intercept the duplicate reading data before insert.
         if currentTableName == "Reading":
-            # Does a meter-endtime-channel tuple duplicate exist?
-
             self.channelDupeExists = self.dupeChecker.readingBranchDupeExists(
                 self.conn, self.currentMeterName, self.currentIntervalEndTime,
                 columnsAndValues['Channel'])
@@ -401,10 +398,8 @@ class MECOXMLParser(object):
                 self.processForInsertElementCount += 1
 
                 if self.debug:
-                    # print
                     self.logger.log("Processing table %s, next is %s." % (
                         currentTableName, nextTableName), 'debug')
-                    # print "--------------------------------"
 
                 # Get the column name for the primary key.
                 pkeyCol = self.mapper.dbColumnsForTable(currentTableName)[
