@@ -122,9 +122,12 @@ sub mapCSVColumnsToDatabaseColumns {
     $colAssoc{"Solar [kW]"}               = "solarpump_kw";
     $colAssoc{"Solar Pump [kW]"}          = "solarpump_kw";
     $colAssoc{"Stove [kW]"}               = "stove_kw";
+    $colAssoc{"Stove Top [kW]"}           = "stove_kw";
     $colAssoc{"use [kW]"}                 = "use_kw";
     $colAssoc{"Washer [kW]"}              = "clotheswasher_kw";
     $colAssoc{"Washer.Usage [kW]"}        = "clotheswasher_usage_kw";
+    $colAssoc{"Oven and Microwave [kW]"}  = "oven_and_microwave_kw";
+    $colAssoc{"Oven and Microwave+ [kW]"} = "oven_and_microwave_plus_kw";
 
     #$colAssoc{""} = "microwave_kw"; # only one house has microwave data
 
