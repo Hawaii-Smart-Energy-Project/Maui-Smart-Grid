@@ -216,6 +216,10 @@ and supports recursive data processing of a set of files from the current direct
 `grantAllPermissionsToDatabase.sh ${DATABASE}`
 : Set appropriate group permissions to databases.
 
+### MSG eGauge Service Operation
+#### Error Conditions
+Data downloads are not always able to be completed resulting in invalid data being saved. When this situation occurs, it may be necessary to manually intervene by manually pruning the invalid data. This condition can be recognized when there exists a mismatched number of data values to the data columns. Database operations will not be able to complete when the data is in this state. Data that is not able to be loaded is archived to the invalid data path. It is recommended that this storage be occassionally purged as invalid data only pertains to the data between that which was last loaded and the most recent data available.
+
 ## Notifications
 
 Notification of the results of data processing events is provided by the MSG Notification System. Notifications are distributed by email to a predefined recipient list contained in the configuration file.
