@@ -244,13 +244,29 @@ Notification of the results of data processing events is provided by the MSG Not
     
 The final group, after the '---', is a summary report of the operations performed.
 
-## Software Dependencies
-### Python Modules Not in the Standard Library
+## Installation
+
+### Software Dependencies
+#### Python Modules Not in the Standard Library
 * dateutil
 * matplotlib
 * psycopg2
 * pycurl
 * pylab
+
+### Python-Based Scripts and Modules
+__WARNING: The Python-based installer is not yet fully working.__
+
+The Python-based scripts and modules have their installer implemented through `distutils`. They can be installed using
+
+	$ python setup.py install
+
+### MSG eGauge Service
+The MSG eGauge Service is installed separately from the rest of the system and uses its own installer in `/src/msg-egauge-service`.
+
+Here's an example installation command.
+
+	$ sudo ./installEgaugeAutomaticDataServices.pl
 
 ## License
 
