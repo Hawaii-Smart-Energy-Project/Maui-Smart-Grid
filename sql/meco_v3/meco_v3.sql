@@ -115,7 +115,9 @@ CREATE TABLE "EgaugeEnergyAutoload" (
     rest_of_house_usage_kw double precision,
     solarpump_kw double precision,
     stove_kw double precision,
-    upload_date timestamp(6) without time zone
+    upload_date timestamp(6) without time zone,
+    oven_and_microwave_kw double precision,
+    oven_and_microwave_plus_kw double precision
 );
 
 
@@ -127,6 +129,19 @@ ALTER TABLE public."EgaugeEnergyAutoload" OWNER TO sepgroup;
 
 COMMENT ON TABLE "EgaugeEnergyAutoload" IS 'Data that is autoload by the MSG eGauge Service. @author Daniel Zhang (張道博)';
 
+
+--
+-- Name: EgaugeInfo; Type: TABLE; Schema: public; Owner: eileen; Tablespace: 
+--
+
+CREATE TABLE "EgaugeInfo" (
+    svc_pt_id character varying,
+    address character varying,
+    egauge character varying
+);
+
+
+ALTER TABLE public."EgaugeInfo" OWNER TO eileen;
 
 --
 -- Name: Event; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
@@ -631,6 +646,20 @@ CREATE TABLE "RegisterRead" (
 
 
 ALTER TABLE public."RegisterRead" OWNER TO sepgroup;
+
+--
+-- Name: TapData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "TapData" (
+    "timestamp" timestamp without time zone,
+    tap_setting real,
+    substation character varying(20),
+    transformer character varying(4)
+);
+
+
+ALTER TABLE public."TapData" OWNER TO sepgroup;
 
 --
 -- Name: Tier; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
@@ -2004,6 +2033,17 @@ GRANT SELECT ON TABLE "EgaugeEnergyAutoload" TO sepgroupreadonly;
 
 
 --
+-- Name: EgaugeInfo; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE "EgaugeInfo" FROM PUBLIC;
+REVOKE ALL ON TABLE "EgaugeInfo" FROM eileen;
+GRANT ALL ON TABLE "EgaugeInfo" TO eileen;
+GRANT ALL ON TABLE "EgaugeInfo" TO sepgroup;
+GRANT SELECT ON TABLE "EgaugeInfo" TO sepgroupreadonly;
+
+
+--
 -- Name: Event; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -2174,6 +2214,16 @@ REVOKE ALL ON TABLE "RegisterRead" FROM PUBLIC;
 REVOKE ALL ON TABLE "RegisterRead" FROM sepgroup;
 GRANT ALL ON TABLE "RegisterRead" TO sepgroup;
 GRANT SELECT ON TABLE "RegisterRead" TO sepgroupreadonly;
+
+
+--
+-- Name: TapData; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE "TapData" FROM PUBLIC;
+REVOKE ALL ON TABLE "TapData" FROM sepgroup;
+GRANT ALL ON TABLE "TapData" TO sepgroup;
+GRANT SELECT ON TABLE "TapData" TO sepgroupreadonly;
 
 
 --
