@@ -51,30 +51,34 @@ class MSGDBExporter(object):
                                                                 'Export',
                                                                 'db_export_path'),
                                                             dumpName)
+            fullPath = '%s/%s' % (
+                self.configer.configOptionValue('Export', 'db_export_path'),
+                dumpName)
+
             try:
                 subprocess.check_call(command, shell = True)
             except subprocess.CalledProcessError, e:
                 self.logger.log("An exception occurred: %s", e)
 
             print "Compressing %s using gzip." % db
-            self.gzipCompressFile('%s.sql' % dumpName)
+            self.gzipCompressFile(fullPath)
 
             # Remove the uncompressed file.
             try:
-                os.remove('%s.sql' % dumpName)
+                os.remove('%s.sql' % fullPath)
             except OSError, e:
                 self.logger.log(
-                    'Exception while removing %s.sql: %s.' % (dumpName, e))
+                    'Exception while removing %s.sql: %s.' % (fullPath, e))
 
-    def gzipCompressFile(self, filename):
+    def gzipCompressFile(self, fullPath):
         """
         @todo Test valid compression.
 
         :param filename: Filename of file to be compressed.
         """
 
-        f_in = open(filename, 'rb')
-        f_out = gzip.open(filename + ".gz", 'wb')
+        f_in = open(fullPath, 'rb')
+        f_out = gzip.open('%s.sql.gz' % fullPath, 'wb')
         f_out.writelines(f_in)
         f_out.close()
         f_in.close()
