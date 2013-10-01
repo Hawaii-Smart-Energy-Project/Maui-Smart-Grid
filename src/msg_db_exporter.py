@@ -77,7 +77,7 @@ class MSGDBExporter(object):
         :param filename: Filename of file to be compressed.
         """
 
-        f_in = open(fullPath, 'rb')
+        f_in = open('%s.sql' % fullPath, 'rb')
         f_out = gzip.open('%s.sql.gz' % fullPath, 'wb')
         f_out.writelines(f_in)
         f_out.close()
