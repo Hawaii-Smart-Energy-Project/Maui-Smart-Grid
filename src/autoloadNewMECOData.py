@@ -24,5 +24,7 @@ autoloader = MECODataAutoloader()
 if autoloader.newDataExists():
     logger.log('Loading new data.')
     autoloader.loadNewData()
+    logger.log('Archiving loaded data.')
+    autoloader.archiveLoadedData()
 else:
     logger.log('No new data was found.')

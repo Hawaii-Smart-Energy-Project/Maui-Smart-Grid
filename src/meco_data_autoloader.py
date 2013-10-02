@@ -73,7 +73,13 @@ class MECODataAutoloader(object):
         """
         Archive successfully loaded data.
         """
-        pass
+        autoloadPath = self.configer.configOptionValue('MECO Autoload', 'meco_new_data_path')
+        archivePath = self.configer.configOptionValue('MECO Autoload', 'meco_autoload_archive_path')
+        patterns = ['*.gz']
+        for root, dirs, filenames in os.walk(autoloadPath):
+            for pat in patterns:
+                for filename in fnmatch.filter(filenames, pat):
+                    os.rename('%s/%s' % (autoloadPath, filename), '%s/%s' % (archivePath, filename))
 
 
 if __name__ == '__main__':
