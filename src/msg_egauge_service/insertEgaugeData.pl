@@ -104,9 +104,9 @@ sub readHeader {
 
         if ($DEBUG) {
 
-            #print "colAssoc = ";
-            #print %colAssoc;
-            #print "\n";
+            print "colAssoc = ";
+            print %colAssoc;
+            print "\n";
         }
 
         print "item = $item\n" if $DEBUG;
