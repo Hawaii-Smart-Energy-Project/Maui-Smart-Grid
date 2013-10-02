@@ -12,6 +12,8 @@ from msg_configer import MSGConfiger
 import os
 import fnmatch
 from msg_file_util import MSGFileUtil
+import subprocess
+import os
 
 class MECODataAutoloader(object):
     """
@@ -56,7 +58,15 @@ class MECODataAutoloader(object):
         """
         Load new data contained in the new data path.
         """
-        pass
+
+        autoloadPath = self.configer.configOptionValue('MECO Autoload', 'meco_new_data_path')
+        command = self.configer.configOptionValue('MECO Autoload', 'data_load_command')
+        os.chdir(autoloadPath)
+
+        try:
+            subprocess.check_call(command, shell = True)
+        except subprocess.CalledProcessError, e:
+            self.logger.log("An exception occurred: %s", e)
 
 
     def archiveLoadedData(self):
