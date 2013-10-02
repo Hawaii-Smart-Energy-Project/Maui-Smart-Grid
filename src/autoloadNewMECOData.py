@@ -4,7 +4,7 @@
 """
 Check for new MECO data and load it if it is present.
 
-This script is intended to by run automatically.
+This script is intended to be run automatically.
 """
 
 
