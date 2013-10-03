@@ -25,6 +25,9 @@ import gzip
 import sys
 import argparse
 import os
+from filelock import FileLock
+from msg_logger import MSGLogger
+
 
 USE_SCRIPT_METHOD = False
 
@@ -42,6 +45,7 @@ class Inserter(object):
         :param testing: Flag indicating if testing mode is on.
         """
 
+        self.logger = MSGLogger(__name__)
         self.parser = MECOXMLParser(testing)
         self.configer = MSGConfiger()
 
@@ -79,6 +83,8 @@ class Inserter(object):
 
         fileObject = None
 
+
+
         # Open the file and process it.
         if re.search('.*\.xml$', filePath):
             fileObject = open(filePath, "rb")
@@ -86,12 +92,20 @@ class Inserter(object):
             fileObject = gzip.open(filePath, "rb")
         else:
             print "Error: %s is not an XML file." % filePath
-        i.parser.filename = filePath
 
-        # Obtain the log of the parsing.
-        parseLog += i.parser.parseXML(fileObject, True, jobID = jobID)
+        try:
+            with FileLock (filePath, timeout=2) as lock:
+                self.logger.log("Locking %s " % filePath)
+                i.parser.filename = filePath
 
-        fileObject.close()
+                # Obtain the log of the parsing.
+                parseLog += i.parser.parseXML(fileObject, True, jobID = jobID)
+
+                fileObject.close()
+        except TypeError:
+            self.logger.log('Type error occurred','error')
+
+
         return parseLog
 
 
