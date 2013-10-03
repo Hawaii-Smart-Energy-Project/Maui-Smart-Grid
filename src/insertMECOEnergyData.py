@@ -46,8 +46,6 @@ global msgBody
 msgBody = ''
 notifier = MSGNotifier()
 
-#USE_SCRIPT_METHOD = False
-
 
 def processCommandLineArguments():
     global parser, commandLineArgs
