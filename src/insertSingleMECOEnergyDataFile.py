@@ -69,13 +69,13 @@ class Inserter(object):
             print "Debugging is on"
 
         if testing:
-            parseMsg = "\nInserting data to database %s.\n" % i.configer \
+            parseMsg = "\nInserting data to database %s.\n" % i.configer\
                 .configOptionValue(
                 "Database", "testing_db_name")
             sys.stderr.write(parseMsg)
             parseLog += parseMsg
         else:
-            parseMsg += "\nInserting data to database %s.\n" % i.configer \
+            parseMsg += "\nInserting data to database %s.\n" % i.configer\
                 .configOptionValue(
                 "Database", "db_name")
             sys.stderr.write(parseMsg)
@@ -94,7 +94,7 @@ class Inserter(object):
             print "Error: %s is not an XML file." % filePath
 
         try:
-            with FileLock (filePath, timeout=2) as lock:
+            with FileLock(filePath, timeout = 2) as lock:
                 self.logger.log("Locking %s " % filePath)
                 i.parser.filename = filePath
 
@@ -103,8 +103,7 @@ class Inserter(object):
 
                 fileObject.close()
         except TypeError:
-            self.logger.log('Type error occurred','error')
-
+            self.logger.log('Type error occurred', 'error')
 
         return parseLog
 
@@ -149,12 +148,13 @@ if USE_SCRIPT_METHOD:
         print "Debugging is on"
 
     if commandLineArgs.testing:
-        sys.stderr.write("\nInserting data to database %s.\n" % \
-                         i.configer.configOptionValue("Database",
-                                                      "testing_db_name"))
+        sys.stderr.write(
+            "\nInserting data to database %s.\n" % i.configer.configOptionValue(
+                "Database", "testing_db_name"))
     else:
-        sys.stderr.write("\nInserting data to database %s.\n" % \
-                         i.configer.configOptionValue("Database", "db_name"))
+        sys.stderr.write(
+            "\nInserting data to database %s.\n" % i.configer.configOptionValue(
+                "Database", "db_name"))
 
     filename = os.path.basename(filepath)
     fileObject = None
