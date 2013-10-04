@@ -66,7 +66,7 @@ class MECODataAutoloader(object):
         try:
             subprocess.check_call(command, shell = True)
         except subprocess.CalledProcessError, e:
-            self.logger.log("An exception occurred: %s", e)
+            self.logger.log("An exception occurred: %s" % e, 'error')
 
 
     def archiveLoadedData(self):
