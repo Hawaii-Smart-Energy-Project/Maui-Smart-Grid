@@ -106,7 +106,7 @@ def insertDataWrapper(fullPath):
     A wrapper for data insertion multiprocessing.
 
     :param fullPath: Path of data to be processed.
-    :returns: Log of parsing along with performance results.
+    :returns: A log of parsing along with performance results.
     """
 
     pattern = 'Process-(\d+),'
@@ -131,8 +131,9 @@ def insertDataWrapper(fullPath):
 
 def worker(path, returnDict):
     """
-    :param path
-    :param returnDict
+    :param path: A path containing data to be inserted.
+    :param returnDict: Process results, in the form of a log, are returned to
+    the caller via this dictionary during multiprocessing.
     """
 
     result = insertDataWrapper(path)
@@ -181,7 +182,8 @@ if __name__ == '__main__':
             xmlCount += 1
 
     if xmlCount != 0:
-        msg = "Found XML files that are not gzip compressed.\nUnable to proceed."
+        msg = "Found XML files that are not gzip compressed.\nUnable to " \
+              "proceed."
         print msg
         msgBody += msg + "\n"
         if (commandLineArgs.email):
@@ -218,8 +220,8 @@ if __name__ == '__main__':
         returnDict = manager.dict()
 
         for path in pathsToProcess:
-            procs.append(
-                multiprocessing.Process(target = worker, args = (path, returnDict)))
+            procs.append(multiprocessing.Process(target = worker,
+                                                 args = (path, returnDict)))
             procs[-1].daemon = True
             procs[-1].start()
 
@@ -233,13 +235,14 @@ if __name__ == '__main__':
             msgBody += returnDict[key]
 
     except Exception, e:
-        logger.log('An exception occurred: %s' % e, 'error')
+        msg = "\nAn exception occurred: %s\n" % e
+        logger.log(msg, 'error')
+        msgBody += msg
 
     msgBody += "\n" + logLegend() + "\n"
 
     msg = "\nProcessed file count is %s.\n" % xmlGzCount
-
-    print msg
+    logger.log(msg)
     msgBody += msg + "\n"
 
     plotter = MECOPlotting(commandLineArgs.testing)
@@ -248,9 +251,8 @@ if __name__ == '__main__':
         plotter.plotReadingAndMeterCounts(databaseName)
         msg = "\nPlot is attached.\n"
     except Exception, e:
-        msg = "\nFailed to generate plot.\n"
-        logger.log('An exception occurred: Failed to generate plot. %s' % e,
-                   'error')
+        msg = "\nAn exception occurred: Failed to generate plot: %s\n" % e
+        logger.log(msg, 'error')
 
     msgBody += msg
 
