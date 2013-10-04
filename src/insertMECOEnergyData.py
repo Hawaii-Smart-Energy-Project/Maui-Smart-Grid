@@ -4,13 +4,15 @@
 """
 Usage:
 
-time python -u ${PATH}/insertMECOEnergyData.py > ${LOG_FILE}
+    time python -u ${PATH}/insertMECOEnergyData.py > ${LOG_FILE}
+
+Optional flags include `--testing` and `--email` that insert to the testing
+database and send email notifications, respectively.
 
 From the *current working directory*, recursively descend into every existing
-folder and
-insert all data that is found using multiprocessing.
+folder and insert all data that is found using multiprocessing.
 
-This script makes use of insertSingleMECOEnergyDataFile.py.
+This script makes use of `insertSingleMECOEnergyDataFile.py`.
 
 This script only supports processing of gzip-compressed XML (*.xml.gz) files.
 """
@@ -48,6 +50,11 @@ notifier = MSGNotifier()
 
 
 def processCommandLineArguments():
+    """
+    Generate command-line arguments. Load them into global variable
+    commandLineArgs.
+    """
+
     global parser, commandLineArgs
     parser = argparse.ArgumentParser(
         description = 'Perform recursive insertion of data contained in the '
@@ -131,6 +138,8 @@ def insertDataWrapper(fullPath):
 
 def worker(path, returnDict):
     """
+    This is a multiprocessing worker for inserting data.
+
     :param path: A path containing data to be inserted.
     :param returnDict: Process results, in the form of a log, are returned to
     the caller via this dictionary during multiprocessing.
