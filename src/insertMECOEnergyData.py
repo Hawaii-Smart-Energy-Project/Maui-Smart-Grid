@@ -9,7 +9,7 @@ Usage:
 Optional flags include `--testing` and `--email` that insert to the testing
 database and send email notifications, respectively.
 
-From the *current working directory*, recursively descend into every existing
+From the **current working directory**, recursively descend into every existing
 folder and insert all data that is found using multiprocessing.
 
 This script makes use of `insertSingleMECOEnergyDataFile.py`.

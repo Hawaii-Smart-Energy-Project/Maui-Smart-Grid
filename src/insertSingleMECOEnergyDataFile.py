@@ -4,10 +4,8 @@
 """
 Usage:
 
-time python -u ${PATH}/insertSingleMECOEnergyDataFile.py --filepath ${
-FILEPATH} [
---testing]
-    > ${LOG_FILE}
+    time python -u ${PATH}/insertSingleMECOEnergyDataFile.py --filepath \
+    ${FILEPATH} [--testing] > ${LOG_FILE}
 
 This script is used by insertMECOEnergyData.py.
 """
@@ -84,7 +82,6 @@ class Inserter(object):
         fileObject = None
 
 
-
         # Open the file and process it.
         if re.search('.*\.xml$', filePath):
             fileObject = open(filePath, "rb")
@@ -125,10 +122,9 @@ def processCommandLineArguments():
                                'specified in the local configuration file.')
     commandLineArgs = parser.parse_args()
 
-# @deprecated
-# The following script method is deprecated in favor of the object-based
-# method insertData. It should be rewritten to use that method for
-# single-file data insert processing.
+# @DEPRECATED
+# @todo Determine if this code is safe to remove.
+# @todo Remove this code.
 
 if USE_SCRIPT_METHOD:
 
