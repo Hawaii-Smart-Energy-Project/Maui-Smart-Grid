@@ -42,3 +42,5 @@ temp_*
 /weather-data/
 /src/queueExample.py
 /src/msg_egauge_service/temp
+/enum.py
+/queueExample.py
