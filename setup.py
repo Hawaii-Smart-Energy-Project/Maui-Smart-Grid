@@ -52,6 +52,8 @@ setup(name = 'MauiSmartGrid',
       package_dir = {'': 'src'},
 
       py_modules = [
+          'filelock.py',
+          'meco_data_autoloader.py',
           'meco_db_delete',
           'meco_db_insert',
           'meco_db_read',
@@ -65,6 +67,7 @@ setup(name = 'MauiSmartGrid',
           'msg_db_connector',
           'msg_db_exporter',
           'msg_db_util',
+          'msg_file_util',
           'msg_logger',
           'msg_noaa_weather_data_dupe_checker',
           'msg_noaa_weather_data_inserter',
@@ -75,10 +78,13 @@ setup(name = 'MauiSmartGrid',
       ],
 
       scripts = [
+          'src/autoloadNewMECOData.py',
+          'src/insertCompressedNOAAWeatherData.py',
           'src/insertLocationRecords.py',
           'src/insertMECOEnergyData.py',
           'src/insertMECOMeterLocationHistoryData.py',
           'src/insertMeterRecords.py',
+          'src/insertSingleMECOEnergyDataFile.py',
           'src/retrieveNOAAWeatherData.py'
       ]
 )
