@@ -66,6 +66,44 @@ Plot of readings per meter counts and meter counts per day loaded to meco_v3.
 
 ## Installation
 
+The software distribution archive is in tar gz format and can be extracted using
+
+    $ tar -zxvf Maui-Smart-Grid-1.0.tar.gz
+
+### Software Dependencies
+
+The software has the following dependencies and they can be satisfied through various methods. During development, `pip` was used to install third-party modules.
+
+#### Python Modules Not in the Standard Library
+* dateutil
+* matplotlib
+* psycopg2
+* pycurl
+* pylab
+
+### Python-Based Scripts and Modules
+> __WARNING: The Python-based installer is not yet fully working.__
+
+The Python-based scripts and modules have their installer implemented through `distutils`. They can be installed using
+
+	$ python setup.py install --home=~/Maui-Smart-Grid-1.0
+	
+This example demonstrates installing to a user directory which is sometimes preferred over installing to a system-wide path. For this example, the `PYTHONPATH` environment variable should be set using something like
+
+	$ export PYTHONPATH=~/Maui-Smart-Grid-1.0/lib/python
+	
+where this example is specific to bash or sh.
+
+### MSG eGauge Service
+The MSG eGauge Service is installed separately from the rest of the system and uses its own installer in `/src/msg-egauge-service`.
+
+Here's an example installation command.
+
+	$ sudo ./installEgaugeAutomaticDataServices.pl
+
+The install script, `/src/msg_egauge_service/installEgaugeAutomaticDataServices.pl`, should edited to set the install paths as the installer is not as sophisticated as the Python installer.
+
+
 ## Configuration
 
 All of the site-specific options are intended to be held in text-based configuration files. 
@@ -247,30 +285,6 @@ Notification of the results of data processing events is provided by the MSG Not
     Plot is attached.
     
 The final group, after the '---', is a summary report of the operations performed.
-
-## Installation
-
-### Software Dependencies
-#### Python Modules Not in the Standard Library
-* dateutil
-* matplotlib
-* psycopg2
-* pycurl
-* pylab
-
-### Python-Based Scripts and Modules
-__WARNING: The Python-based installer is not yet fully working.__
-
-The Python-based scripts and modules have their installer implemented through `distutils`. They can be installed using
-
-	$ python setup.py install
-
-### MSG eGauge Service
-The MSG eGauge Service is installed separately from the rest of the system and uses its own installer in `/src/msg-egauge-service`.
-
-Here's an example installation command.
-
-	$ sudo ./installEgaugeAutomaticDataServices.pl
 
 ## License
 
