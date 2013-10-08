@@ -52,8 +52,8 @@ setup(name = 'MauiSmartGrid',
       package_dir = {'': 'src'},
 
       py_modules = [
-          'filelock.py',
-          'meco_data_autoloader.py',
+          'filelock',
+          'meco_data_autoloader',
           'meco_db_delete',
           'meco_db_insert',
           'meco_db_read',
