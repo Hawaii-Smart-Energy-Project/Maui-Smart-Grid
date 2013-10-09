@@ -269,7 +269,6 @@ sub msgEnergyRecordExists {
     return 0;
 }
 
-
 ###
 # Perform moving of a directory in a reliable way.
 #
@@ -347,3 +346,4 @@ sub verifyData {
 }
 
 1;
+
