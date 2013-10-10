@@ -103,6 +103,11 @@ Here's an example installation command.
 
 The install script, `/src/msg_egauge_service/installEgaugeAutomaticDataServices.pl`, should edited to set the install paths as the installer is not as sophisticated as the Python installer.
 
+## Distribution
+
+The distribution archive is created using
+
+	$ python setup.py sdist
 
 ## Configuration
 
