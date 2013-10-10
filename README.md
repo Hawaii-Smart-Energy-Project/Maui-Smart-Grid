@@ -230,6 +230,9 @@ A final summary report follows the `---` symbol.
 
 Parallel data loading is supported since loading is performed atomically, database commits are made after data verification including taking duplicate records into account.
   
+### Testing Mode
+The database insertion scripts have a separate testing mode that can be activated using the `--testing` command-line option. When testing mode is enabled, database operations will be performed on the testing database as defined in the site configuration file. Additionally, operations such as notifications will be directed to their appropriate testing mode settings. For example, email notifications will be delivered to testing mode recipients instead of the primary distribution list.
+
 ### Inserting Location and Meter Records (DEPRECATED)
 
 Location and meter records are stored in separate tab-separated files and are inserted using separate scripts.
