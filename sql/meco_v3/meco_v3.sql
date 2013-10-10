@@ -65,7 +65,7 @@ CREATE TABLE "CircuitData" (
     amp_c integer,
     mvar double precision,
     mw double precision,
-    upload_date date DEFAULT now()
+    upload_date date
 );
 
 
@@ -685,7 +685,7 @@ CREATE TABLE "TransformerData" (
     vlt_b double precision,
     vlt_c double precision,
     volt double precision,
-    upload_date date DEFAULT now()
+    upload_date date
 );
 
 
@@ -761,6 +761,26 @@ ALTER TABLE public."WeatherNOAA" OWNER TO daniel;
 
 COMMENT ON COLUMN "WeatherNOAA".created IS 'Time that record was created.';
 
+
+--
+-- Name: cd_20130706-20130711; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW "cd_20130706-20130711" AS
+    SELECT "TransformerData".transformer, "TransformerData"."timestamp", "TransformerData".vlt_a FROM "TransformerData" WHERE (("TransformerData"."timestamp" >= '2013-07-06 17:03:00'::timestamp without time zone) AND ("TransformerData"."timestamp" <= '2013-07-11 14:32:00'::timestamp without time zone));
+
+
+ALTER TABLE public."cd_20130706-20130711" OWNER TO eileen;
+
+--
+-- Name: cd_20130709-20130710; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW "cd_20130709-20130710" AS
+    SELECT "TransformerData".transformer, "TransformerData"."timestamp", "TransformerData".vlt_a FROM "TransformerData" WHERE (("TransformerData"."timestamp" >= '2013-07-07 17:00:00'::timestamp without time zone) AND ("TransformerData"."timestamp" <= '2013-07-10 17:00:00'::timestamp without time zone));
+
+
+ALTER TABLE public."cd_20130709-20130710" OWNER TO eileen;
 
 --
 -- Name: cd_meter_ids_for_houses_with_pv_with_locations; Type: VIEW; Schema: public; Owner: eileen
@@ -2255,6 +2275,28 @@ REVOKE ALL ON TABLE "WeatherNOAA" FROM daniel;
 GRANT ALL ON TABLE "WeatherNOAA" TO daniel;
 GRANT ALL ON TABLE "WeatherNOAA" TO sepgroup;
 GRANT SELECT ON TABLE "WeatherNOAA" TO sepgroupreadonly;
+
+
+--
+-- Name: cd_20130706-20130711; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE "cd_20130706-20130711" FROM PUBLIC;
+REVOKE ALL ON TABLE "cd_20130706-20130711" FROM eileen;
+GRANT ALL ON TABLE "cd_20130706-20130711" TO eileen;
+GRANT ALL ON TABLE "cd_20130706-20130711" TO sepgroup;
+GRANT SELECT ON TABLE "cd_20130706-20130711" TO sepgroupreadonly;
+
+
+--
+-- Name: cd_20130709-20130710; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE "cd_20130709-20130710" FROM PUBLIC;
+REVOKE ALL ON TABLE "cd_20130709-20130710" FROM eileen;
+GRANT ALL ON TABLE "cd_20130709-20130710" TO eileen;
+GRANT ALL ON TABLE "cd_20130709-20130710" TO sepgroup;
+GRANT SELECT ON TABLE "cd_20130709-20130710" TO sepgroupreadonly;
 
 
 --
