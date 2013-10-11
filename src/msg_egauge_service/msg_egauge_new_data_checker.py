@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-@todo Separate the script and the class.
-"""
-
 __author__ = 'Daniel Zhang (張道博)'
 __copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
 __license__ = 'https://raw.github' \
@@ -16,7 +12,6 @@ from msg_db_util import MSGDBUtil
 from msg_configer import MSGConfiger
 from msg_notifier import MSGNotifier
 from msg_logger import MSGLogger
-from datetime import datetime as dt
 
 
 NOTIFICATION_HISTORY_TABLE = "NotificationHistory"
@@ -73,7 +68,8 @@ class MSGEgaugeNewDataChecker(object):
         """
         Get the last time a notification was reported.
 
-        :param notificationType: A string indicating the type of the notification. It is stored in the event history.
+        :param notificationType: A string indicating the type of the
+        notification. It is stored in the event history.
         :returns: datetime of last report date.
         """
 
@@ -116,7 +112,7 @@ class MSGEgaugeNewDataChecker(object):
         Sending notification reporting on new data being available since the
         last time new data was reported.
 
-        :param testing: Use testing mode flag.
+        :param testing: Use testing mode when True.
         """
 
         lastReportDate = self.lastReportDate('MSG_EGAUGE_SERVICE')
@@ -124,7 +120,7 @@ class MSGEgaugeNewDataChecker(object):
         if not lastReportDate:
             lastReportDate = "never"
 
-        msgBody = '\nNew MSG eGauge data has been loaded to %s.' % self \
+        msgBody = '\nNew MSG eGauge data has been loaded to %s.' % self\
             .connector.dbName
         msgBody += '\n\n'
         msgBody += 'The new data count is %s readings.' % self.newDataCount()
@@ -136,6 +132,5 @@ class MSGEgaugeNewDataChecker(object):
 
 
 if __name__ == '__main__':
-
     checker = MSGEgaugeNewDataChecker()
     checker.sendNewDataNotification()
