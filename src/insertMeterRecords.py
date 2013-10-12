@@ -33,7 +33,6 @@ cur = conn.cursor()
 dbUtil = MSGDBUtil()
 notifier = MSGNotifier()
 msgBody = ''
-msg = ''
 
 dbName = configer.configOptionValue("Database", "db_name")
 

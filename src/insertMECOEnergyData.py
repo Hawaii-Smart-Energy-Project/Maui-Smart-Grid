@@ -26,7 +26,6 @@ __license__ = 'https://raw.github' \
 import os
 import fnmatch
 import sys
-#from subprocess import call
 from msg_configer import MSGConfiger
 import re
 from msg_notifier import MSGNotifier
@@ -45,7 +44,6 @@ binPath = MSGConfiger.configOptionValue(configer, "Executable Paths",
                                         "bin_path")
 commandLineArgs = None
 global msgBody
-msgBody = ''
 notifier = MSGNotifier()
 
 

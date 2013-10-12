@@ -13,7 +13,6 @@ import os
 import fnmatch
 from msg_file_util import MSGFileUtil
 import subprocess
-import os
 
 class MECODataAutoloader(object):
     """

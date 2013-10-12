@@ -102,7 +102,6 @@ if commandLineArgs.email:
 
 conn = connector.conn
 
-msg = ''
 databaseName = ''
 
 if commandLineArgs.testing:

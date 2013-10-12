@@ -32,7 +32,6 @@ conn = connector.connectDB()
 cur = conn.cursor()
 dbUtil = MSGDBUtil()
 notifier = MSGNotifier()
-msg = ''
 msgBody = ''
 configer = MSGConfiger()
 

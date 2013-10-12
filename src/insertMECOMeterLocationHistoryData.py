@@ -27,8 +27,6 @@ import argparse
 
 commandLineArgs = None
 logger = MSGLogger(__name__, 'debug')
-filename = ''
-
 
 def processCommandLineArguments():
     global argParser, commandLineArgs, filename
@@ -61,7 +59,6 @@ conn = connector.connectDB()
 cur = conn.cursor()
 dbUtil = MSGDBUtil()
 notifier = MSGNotifier()
-msg = ''
 msgBody = ''
 configer = MSGConfiger()
 

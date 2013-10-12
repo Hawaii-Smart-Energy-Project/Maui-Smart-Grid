@@ -38,7 +38,7 @@ class MECODBInserter(object):
                    withoutCommit = 0):
         """
         Given a table name and a dictionary of column names and values,
-        insert them to the db.
+        insert them to the DB.
 
         :param conn: database connection
         :param tableName: name of the db table
@@ -68,20 +68,20 @@ class MECODBInserter(object):
             # private key is obtained from the predefined sequence.
             if col == '_pkey':
                 if VISUALIZE_DATA:
-                    print columnDict[col], # db col name
+                    print columnDict[col], # DB col name.
                     print 'DEFAULT'
                 dbColsAndVals[columnDict[col]] = 'DEFAULT'
 
             # For the foreign key, set the value from the given parameter.
             elif col == '_fkey':
                 if VISUALIZE_DATA:
-                    print columnDict[col], # db col name
+                    print columnDict[col], # DB col name.
                     print fKeyVal
                 dbColsAndVals[columnDict[col]] = fKeyVal
 
             else:
                 if VISUALIZE_DATA:
-                    print columnDict[col], # db col name
+                    print columnDict[col], # DB col name.
 
                 # The Register and Reading tables need to handle NULL
                 # values as a special case.
@@ -117,12 +117,8 @@ class MECODBInserter(object):
                 vals.append("'%s'" % dbColsAndVals[
                     col]) # Surround value with single quotes.
 
-        sql = 'insert into "' + tableName + '" (' + ','.join(
-            cols) + ')' + ' values (' + ','.join(
-            vals) + ')'
-
-        # if DEBUG:
-        #     print "sql=" + sql
+        sql = """INSERT INTO '%s' (%s) VALUES (%s)""" % (
+        tableName, ','.join(cols), ','.join(vals))
 
         self.dbUtil.executeSQL(cur, sql)
 
@@ -130,7 +126,7 @@ class MECODBInserter(object):
             try:
                 conn.commit()
             except:
-                self.logger.log("ERROR: Commit failed.",'debug')
+                self.logger.log("ERROR: Commit failed.", 'debug')
 
         return cur
 

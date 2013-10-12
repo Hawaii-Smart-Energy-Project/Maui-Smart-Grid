@@ -11,18 +11,19 @@ import psycopg2
 import psycopg2.extras
 from msg_db_util import MSGDBUtil
 
-class MECODBDeleter(object) :
+
+class MECODBDeleter(object):
     """
     Provide delete routines for MECO DB.
     """
 
-    def __init__(self) :
+    def __init__(self):
         """
         Constructor.
         """
         self.dbUtil = MSGDBUtil()
 
-    def deleteRecord(self, conn, tableName, idText, idValue) :
+    def deleteRecord(self, conn, tableName, idText, idValue):
         """
         Delete record from DB where record has an int-based serial number.
 
@@ -31,7 +32,8 @@ class MECODBDeleter(object) :
         param: idValue Value of the ID to be deleted
         """
 
-        sql = "delete from \"%s\" where %s = %s" % (tableName, idText, idValue)
+        sql = """delete from "%s" where %s = %s""" % (
+        tableName, idText, idValue)
         dictCur = conn.cursor(cursor_factory = psycopg2.extras.DictCursor)
         self.dbUtil.executeSQL(dictCur, sql)
         conn.commit()
