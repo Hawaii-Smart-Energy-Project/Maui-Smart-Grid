@@ -57,8 +57,10 @@ class TestMECODBUtil(unittest.TestCase):
                                                         self.columnName)
         print "lastSeqVal = %s" % self.lastSeqVal
 
-        sql = "select * from \"%s\" where %s = %s" % (
-            self.tableName, self.columnName, self.lastSeqVal)
+        #sql = "select * from \"%s\" where %s = %s" % (self.tableName,
+        # self.columnName, self.lastSeqVal)
+        sql = """SELECT * FROM "%s" WHERE %s = %s""" % (
+        self.tableName, self.columnName, self.lastSeqVal)
         dictCur = self.connector.dictCur
         self.dbUtil.executeSQL(dictCur, sql)
         row = dictCur.fetchone()

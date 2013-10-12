@@ -22,7 +22,7 @@ class TestMECOFKeys(unittest.TestCase):
     def test_init(self):
         self.assertIsInstance(self.fkeys, MECOFKDeterminer)
 
-    # @todo write foreign key tests\
+    # @todo Write foreign key tests.
     def test_foreign_keys(self):
         pass
 
