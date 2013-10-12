@@ -8,12 +8,14 @@ __license__ = 'https://raw.github' \
               '-LICENSE.txt'
 
 class MECOFKDeterminer(object) :
-    """Determine foreign key values and maintain storage of primary key values
+    """
+    Determine foreign key values and maintain storage of primary key values
     to be used as foreign key values.
     """
 
     def __init__(self) :
-        """Constructor
+        """
+        Constructor.
         """
 
         self.pkValforCol = {'meter_data_id':None,

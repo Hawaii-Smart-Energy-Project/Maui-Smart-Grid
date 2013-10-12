@@ -44,13 +44,14 @@ class MSGDBUtil(object):
             print "table name = %s" % tableName
             print "column name = %s" % columnName
 
-        sql = "select currval(pg_get_serial_sequence('\"%s\"','%s'))" % (
-            tableName, columnName)
+        # @todo Remove old version.
+        #sql = "select currval(pg_get_serial_sequence('\"%s\"','%s'))" % (
+        # tableName, columnName)
+        sql = """SELECT currval(pg_get_serial_sequence('"%s"','%s'))""" % (
+        tableName, columnName)
 
         cur = conn.cursor()
         self.executeSQL(cur, sql)
-
-        row = None
 
         try:
             row = cur.fetchone()
@@ -84,8 +85,7 @@ class MSGDBUtil(object):
         success = True
         try:
             cursor.execute(sql)
-            # if re.search('^.*insert', sql, flags = re.IGNORECASE):
-            #     self.logger.log("SQL:%s." % sql, 'debug')
+
         except Exception, e:
             success = False
             msg = "SQL execute failed using %s." % sql
@@ -118,7 +118,7 @@ class MSGDBUtil(object):
         if (not (self.configer.configOptionValue("Database",
                                                  "testing_db_name") ==
                      databaseName)):
-            print "Testing DB name doesn't match %s." % self.configer \
+            print "Testing DB name doesn't match %s." % self.configer\
                 .configOptionValue(
                 "Database", "testing_db_name")
             exit(-1)

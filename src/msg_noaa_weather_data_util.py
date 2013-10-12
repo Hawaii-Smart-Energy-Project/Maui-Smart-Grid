@@ -13,7 +13,6 @@ from msg_db_util import MSGDBUtil
 from msg_logger import MSGLogger
 from msg_configer import MSGConfiger
 import datetime as dt
-from dateutil.relativedelta import relativedelta
 import calendar
 
 
@@ -48,7 +47,8 @@ class MSGWeatherDataUtil(object):
 
     def fillFileListAndDateList(self):
         """
-        Return a list of weather files obtained from the remote server used in processing weather data.
+        Return a list of weather files obtained from the remote server used
+        in processing weather data.
         """
 
         response = urllib2.urlopen(self.url).read()
@@ -128,14 +128,6 @@ class MSGWeatherDataUtil(object):
 
         if keepList:
             keepList.sort()
-
-            # Also retrieve one month less than the earliest date in the keep list.
-            # This produces extra overlap to ensure that no data is missed.
-
-            # keepList.append(
-            #     (
-            #         keepList[0][0] - 1,
-            #         keepList[0][1] - relativedelta(months = 1)))
 
         return [fileList[d[0]] for d in keepList]
 

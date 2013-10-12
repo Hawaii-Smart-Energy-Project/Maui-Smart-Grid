@@ -7,9 +7,7 @@ __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
 
-from time import strptime
 from datetime import datetime as dt
-import sys
 from msg_logger import MSGLogger
 
 
@@ -43,7 +41,6 @@ class MSGTimeUtil(object):
         myDates = set()
         for day in datetimes:
             self.logger.log('Processing day %s.' % day)
-            # assert type(day) is dt.datetime, "Day should be type datetime."
             myDates.add(day.date())
 
         datetimeList = list(myDates)
@@ -67,7 +64,7 @@ class MSGTimeUtil(object):
         return dt.strftime(dt.now(), '%Y-%m-%d_%H%m%S')
 
 
-# For debugging
+# For debugging:
 # timeUtil = MSGTimeUtil()
 
 # testDays = set()

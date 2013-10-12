@@ -24,6 +24,7 @@ class MSGDBExporter(object):
         """
         Constructor.
         """
+
         self.logger = MSGLogger(__name__)
         self.timeUtil = MSGTimeUtil()
         self.configer = MSGConfiger()
@@ -73,6 +74,7 @@ class MSGDBExporter(object):
     def gzipCompressFile(self, fullPath):
         """
         @todo Test valid compression.
+        @todo Move to file utils.
 
         :param filename: Filename of file to be compressed.
         """

@@ -15,7 +15,7 @@ from msg_logger import MSGLogger
 class MSGNOAAWeatherDataParser(object):
     """
     Given a file object containing NOAA weather data, return a data structure
-     containing the data.
+    containing the data.
     """
 
     def __init__(self):
@@ -125,7 +125,6 @@ class MSGNOAAWeatherDataParser(object):
 
             # End for row
 
-        # print self.data
         return self.data
 
 

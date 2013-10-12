@@ -43,7 +43,8 @@ class MECODBReader(object):
         """
 
         print "selectRecord:"
-        sql = 'select * from \"%s\" where %s = %s' % (table, keyName, keyValue)
+        sql = """SELECT * FROM "%s" WHERE %s = %s""" % (
+        table, keyName, keyValue)
         dcur = conn.cursor(cursor_factory = psycopg2.extras.DictCursor)
         self.dbUtil.executeSQL(dcur, sql)
         row = dcur.fetchone()
@@ -56,8 +57,8 @@ class MECODBReader(object):
         :returns: Multiple lists containing the retrieved data.
         """
 
-        sql = """select "Day", "Reading Count",
-        "Meter Count" from count_of_readings_and_meters_by_day"""
+        sql = """SELECT "Day", "Reading Count",
+        "Meter Count" FROM count_of_readings_and_meters_by_day"""
         dcur = self.conn.cursor(cursor_factory = psycopg2.extras.DictCursor)
         self.dbUtil.executeSQL(dcur, sql)
         rows = dcur.fetchall()

@@ -18,6 +18,7 @@ data from the last insertion time.
 
 This can involve, in regular use, re-downloading the previous month of data
 and the current month of data.
+
 """
 
 __author__ = 'Daniel Zhang (張道博)'

@@ -28,9 +28,9 @@ class MECOMapper(object):
         map the tags in the source XML to the correct database column names.
 
         The following are special mapping cases:
-        _fkey
-        _pkey
-        Event_Content
+        * _fkey
+        * _pkey
+        * Event_Content
         """
 
         self.dbColsMeterData = {'_pkey': 'meter_data_id', 'MacID': 'mac_id',

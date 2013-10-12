@@ -46,7 +46,6 @@ class MSGLogger(object):
         else:
             self.loggerLevel = None
 
-        recordedLog = ''
 
     def logAndWrite(self, message):
         """
@@ -99,7 +98,6 @@ class MSGLogger(object):
         if loggerLevel != None:
             self.logger.log(loggerLevel, message)
             self.logger.removeHandler(self.streamHandler)
-            # self.streamHandler.flush()
 
     def startRecording(self):
         pass
