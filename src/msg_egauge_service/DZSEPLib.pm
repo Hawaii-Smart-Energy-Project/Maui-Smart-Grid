@@ -128,6 +128,7 @@ sub mapCSVColumnsToDatabaseColumns {
     $colAssoc{"Washer.Usage [kW]"}        = "clotheswasher_usage_kw";
     $colAssoc{"Oven and Microwave [kW]"}  = "oven_and_microwave_kw";
     $colAssoc{"Oven and Microwave+ [kW]"} = "oven_and_microwave_plus_kw";
+    $colAssoc{"House [kW]"}               = "house_kw";
 
     #$colAssoc{""} = "microwave_kw"; # only one house has microwave data
 
@@ -346,4 +347,3 @@ sub verifyData {
 }
 
 1;
-
