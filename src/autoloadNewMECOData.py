@@ -18,6 +18,8 @@ __license__ = 'https://raw.github' \
 from msg_logger import MSGLogger
 from meco_data_autoloader import MECODataAutoloader
 
+SUPPRESS_OUTPUT_FOR_NO_DATA = True
+
 logger = MSGLogger(__name__)
 autoloader = MECODataAutoloader()
 
@@ -27,4 +29,5 @@ if autoloader.newDataExists():
     logger.log('Archiving loaded data.')
     autoloader.archiveLoadedData()
 else:
-    logger.log('No new data was found.')
+    if not SUPPRESS_OUTPUT_FOR_NO_DATA:
+        logger.log('No new data was found.')
