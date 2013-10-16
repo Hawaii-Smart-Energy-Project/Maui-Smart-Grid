@@ -24,7 +24,7 @@ __license__ = 'https://raw.github' \
 from distutils.core import setup
 
 setup(name = 'MauiSmartGrid',
-      version = '1.0',
+      version = '1.0.0',
       description = 'Data Processing and Data Operations for the Maui Smart '
                     'Grid Project.',
       long_description = 'The University of Hawaii at Manoa was tasked with '
