@@ -47,11 +47,19 @@ if (   ( !-e $installRoot && !-d $installRoot )
     exit;
 }
 
-print "Copying files...\n";
+print "Copying files...\n\n";
 
-`cp getEgaugeData.pl $binDest`;
-`cp insertEgaugeData.pl $binDest`;
-`cp DZSEPLib.pm $libDest`;
+my $cmd;
 
-print "Finished.\n";
+my @cmds = (
+    "cp getEgaugeData.pl $binDest",
+    "cp insertEgaugeData.pl $binDest",
+    "cp DZSEPLib.pm $libDest"
+);
 
+foreach (@cmds) {
+    print "$_\n";
+    `$_`;
+}
+
+print "\nFinished.\n";
