@@ -127,7 +127,13 @@ def insertDataWrapper(fullPath):
     myLog += inserter.insertData(fullPath, testing = commandLineArgs.testing,
                                  jobID = match.group(1))
     myLog += "\n"
-    myLog += "\nWall time = {:.2f} seconds.\n".format(time.time() - startTime)
+
+    wallTime = time.time() - startTime
+    wallTimeMin = int(wallTime / 60.0)
+    wallTimeSec = (wallTime - wallTimeMin)
+
+    myLog += "\nWall time = {:d} min {:.2f} s.\n".format(wallTimeMin,
+                                                         wallTimeSec)
 
     logger.log('myLog = %s' % myLog)
 
@@ -163,6 +169,7 @@ if __name__ == '__main__':
         logger.log("Email will be sent.\n", 'info')
 
     msg = ''
+    msgBody = ''
     databaseName = ''
 
     if commandLineArgs.testing:
