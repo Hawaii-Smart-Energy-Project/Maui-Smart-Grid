@@ -117,7 +117,8 @@ CREATE TABLE "EgaugeEnergyAutoload" (
     stove_kw double precision,
     upload_date timestamp(6) without time zone,
     oven_and_microwave_kw double precision,
-    oven_and_microwave_plus_kw double precision
+    oven_and_microwave_plus_kw double precision,
+    house_kw double precision
 );
 
 
