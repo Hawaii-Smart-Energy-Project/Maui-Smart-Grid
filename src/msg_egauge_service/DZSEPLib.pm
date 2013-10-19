@@ -99,6 +99,7 @@ sub mapCSVColumnsToDatabaseColumns {
     # Some have whole house, others have grid.
     $colAssoc{"AC [kW]"}                  = "ac_kw";
     $colAssoc{"AC+ [kW]"}                 = "acplus_kw";
+    $colAssoc{"Addition [kW"}             = "addition_kw";
     $colAssoc{"DHW [kW]"}                 = "dhw_kw";
     $colAssoc{"Dishwasher [kW]"}          = "dishwasher_kw";
     $colAssoc{"Dryer [kW]"}               = "dryer_kw";
@@ -120,6 +121,7 @@ sub mapCSVColumnsToDatabaseColumns {
     $colAssoc{"Refrigerator [kW]"}        = "refrigerator_kw";
     $colAssoc{"Refrigerator.Usage [kW]"}  = "refrigerator_usage_kw"; # Likely duplicate.
     $colAssoc{"Rest of House.Usage [kW]"} = "rest_of_house_usage_kw"; # Likely duplicate.
+    $colAssoc{"Shop [kW]"}                = "shop_kw";
     $colAssoc{"Solar [kW]"}               = "solarpump_kw";
     $colAssoc{"Solar Pump [kW]"}          = "solarpump_kw";
     $colAssoc{"Stove [kW]"}               = "stove_kw";
