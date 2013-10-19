@@ -93,13 +93,10 @@ sub mapEgaugeNumbersToHouseID {
 sub mapCSVColumnsToDatabaseColumns {
     my %colAssoc = ();
 
-    # column associations
+    # Column associations.
     $colAssoc{"Date & Time"} = "datetime";
 
-    # some have whole house, others have grid
-    $colAssoc{"Whole House [kW]"} = "grid_kw";
-    $colAssoc{"Grid [kW]"}        = "grid_kw";
-
+    # Some have whole house, others have grid.
     $colAssoc{"AC [kW]"}                  = "ac_kw";
     $colAssoc{"AC+ [kW]"}                 = "acplus_kw";
     $colAssoc{"DHW [kW]"}                 = "dhw_kw";
@@ -108,27 +105,29 @@ sub mapCSVColumnsToDatabaseColumns {
     $colAssoc{"Dryer.Usage [kW]"}         = "dryer_usage_kw";
     $colAssoc{"Fan [kW]"}                 = "fan_kw";
     $colAssoc{"Garage AC [kW]"}           = "garage_ac_kw";
-    $colAssoc{"Garage AC.Usage [kW]"}     = "garage_ac_usage_kw";
+    $colAssoc{"Garage AC.Usage [kW]"}     = "garage_ac_usage_kw"; # Likely duplicate.
     $colAssoc{"gen [kW]"}                 = "gen_kw";
+    $colAssoc{"Grid [kW]"}                = "grid_kw";
+    $colAssoc{"House [kW]"}               = "house_kw";
     $colAssoc{"Large AC [kW]"}            = "large_ac_kw";
-    $colAssoc{"Large AC.Usage [kW]"}      = "large_ac_usage_kw";
+    $colAssoc{"Large AC.Usage [kW]"}      = "large_ac_usage_kw"; # Likely duplicate.
     $colAssoc{"Oven [kW]"}                = "oven_kw";
-    $colAssoc{"Oven.Usage [kW]"}          = "oven_usage_kw";
+    $colAssoc{"Oven and Microwave [kW]"}  = "oven_and_microwave_kw";
+    $colAssoc{"Oven and Microwave+ [kW]"} = "oven_and_microwave_plus_kw";
+    $colAssoc{"Oven.Usage [kW]"}          = "oven_usage_kw"; # Likely duplicate.
     $colAssoc{"Range [kW]"}               = "range_kw";
-    $colAssoc{"Range.Usage [kW]"}         = "range_usage_kw";
+    $colAssoc{"Range.Usage [kW]"}         = "range_usage_kw"; # Likely duplicate.
     $colAssoc{"Refrigerator [kW]"}        = "refrigerator_kw";
-    $colAssoc{"Refrigerator.Usage [kW]"}  = "refrigerator_usage_kw";
-    $colAssoc{"Rest of House.Usage [kW]"} = "rest_of_house_usage_kw";
+    $colAssoc{"Refrigerator.Usage [kW]"}  = "refrigerator_usage_kw"; # Likely duplicate.
+    $colAssoc{"Rest of House.Usage [kW]"} = "rest_of_house_usage_kw"; # Likely duplicate.
     $colAssoc{"Solar [kW]"}               = "solarpump_kw";
     $colAssoc{"Solar Pump [kW]"}          = "solarpump_kw";
     $colAssoc{"Stove [kW]"}               = "stove_kw";
     $colAssoc{"Stove Top [kW]"}           = "stove_kw";
     $colAssoc{"use [kW]"}                 = "use_kw";
     $colAssoc{"Washer [kW]"}              = "clotheswasher_kw";
-    $colAssoc{"Washer.Usage [kW]"}        = "clotheswasher_usage_kw";
-    $colAssoc{"Oven and Microwave [kW]"}  = "oven_and_microwave_kw";
-    $colAssoc{"Oven and Microwave+ [kW]"} = "oven_and_microwave_plus_kw";
-    $colAssoc{"House [kW]"}               = "house_kw";
+    $colAssoc{"Washer.Usage [kW]"}        = "clotheswasher_usage_kw"; # Likely duplicate.
+    $colAssoc{"Whole House [kW]"}         = "grid_kw";
 
     #$colAssoc{""} = "microwave_kw"; # only one house has microwave data
 
