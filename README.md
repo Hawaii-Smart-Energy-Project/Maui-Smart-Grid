@@ -1,12 +1,13 @@
-# Maui Smart Grid Project
+# Maui Smart Grid Project #
 
 [Daniel Zhang (張道博)](http://www.github.com/dz1111), Software Engineer
 
-## Overview
+## Overview ##
 
 The University of Hawaii at Manoa was tasked with maintaining a data repository for use by analysts for the [Maui Smart Grid](http://www.mauismartgrid.com) energy sustainability project through the [Hawaii Natural Energy Institute](http://www.hnei.hawaii.edu). This software provides the data processing and operational resources necessary to accomplish this task. Source data arrives in multiple formats including XML, tab-separated values, and comma-separated values. Issues for this project are tracked at the [Hawaii Smart Energy Project YouTRACK instance](http://smart-energy-project.myjetbrains.com/youtrack/rest/agile/).
 
-### Software Features
+### Software Features ###
+
 * Open-source (BSD license) code in Python 2.7x.
 * Parsing of source data is provided for multiple formats.
 * Insertion of data to a data store (PostgreSQL 9.1) is performed by executing a script from the command-line.
@@ -14,10 +15,11 @@ The University of Hawaii at Manoa was tasked with maintaining a data repository 
 * Unit testing of data processing operations is provided by a test suite implemented through Python's `unittest`.
 * Data operations are reported using email notifications including plots as graphic summaries.
 
-### Project Documentation
+### Project Documentation ###
+
 Documentation is maintained as docstrings within the source code files with the intention of conforming to the reStructuredText format. There is also a [GitHub-based wiki](https://github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/wiki).
 
-## Implementation
+## Implementation ##
 
 The code is written in Python 2.7x. It has a testing suite implemented through `unittest`.
 
@@ -27,7 +29,8 @@ Data parsing is performed by the ElementTree XML parser. Data store operations a
 
 Data processing involves inserting nested sets of data linked by their primary keys, generated as sequential integer values, of the preceding table. Foreign keys are determined by a separate class that holds the last primary key used for each table. The design for this feature is illustrated in `docs/fk-value-determiner.pdf`.
 
-### Database Schema
+### Database Schema ###
+
 A SQL dump, produced by `pg_dump`, of the database schema is provided for reference only.
 
 The schema consists of the following components.
@@ -48,7 +51,8 @@ A [helpful schema diagram](https://github.com/Hawaii-Smart-Energy-Project/Maui-S
 
 ![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/maui-smart-grid/master/diagrams/meco-direct-derived-schema-v3.png)
 
-#### Database Version History
+#### Database Version History ####
+
 v1
 : Initial data insertion from first exports. This version is deprecated.
 
@@ -64,24 +68,26 @@ v4 (Development)
 ![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/diagrams/2013-07-29_ReadingAndMeterCounts.png)
 Plot of readings per meter counts and meter counts per day loaded to meco_v3.
 
-## Installation
+## Installation ##
 
 The software distribution archive is in tar gz format and can be extracted using
 
     $ tar -zxvf Maui-Smart-Grid-1.0.tar.gz
 
-### Software Dependencies
+### Software Dependencies ###
 
 The software has the following dependencies and they can be satisfied through various methods. During development, `pip` was used to install third-party modules.
 
-#### Python Modules Not in the Standard Library
+#### Python Modules Not in the Standard Library ####
+
 * dateutil
 * matplotlib
 * psycopg2
 * pycurl
 * pylab
 
-### Python-Based Scripts and Modules
+### Python-Based Scripts and Modules ###
+
 > __WARNING: The Python-based installer is not yet fully working.__
 
 The Python-based scripts and modules have their installer implemented through `distutils`. They can be installed using
@@ -94,7 +100,7 @@ This example demonstrates installing to a user directory which is sometimes pref
 	
 where this example is specific to bash or sh.
 
-### MSG eGauge Service
+### MSG eGauge Service ###
 
 The MSG eGauge Service is installed separately from the rest of the system and uses its own installer in `/src/msg-egauge-service`.
 
@@ -104,19 +110,19 @@ Here's an example installation command.
 
 The install script, `/src/msg_egauge_service/installEgaugeAutomaticDataServices.pl`, should be edited to set the install paths as the installer is not as sophisticated as the Python installer. The installer will work if invoked from other paths and does not have to be run from the path containing the source files.
 
-## Distribution
+## Distribution ##
 
 The distribution archive is created using
 
 	$ python setup.py sdist
 
-## Configuration
+## Configuration ##
 
 All of the site-specific options are intended to be held in text-based configuration files. 
 
 The software is configured through a text configuration file contained in the user's home directory. The file is named `~/.msg-data-operations.cfg`. Permissions should be limited to owner read/write only. It is read by the `ConfigParser` module. 
 
-### Example Main Configuration File Content
+### Example Main Configuration File Content ###
 
 The reference template can be found in `config/sample-dot-msg-data-operations.cfg.`
 
@@ -162,8 +168,11 @@ The reference template can be found in `config/sample-dot-msg-data-operations.cf
     
     [Hardware]
     multiprocessing_limit = ${MULTIPROCESSING_LIMIT}
-    
-### MSG eGauge Service Configuration
+
+
+
+### MSG eGauge Service Configuration ###
+
 
 The following is an example of the configuration file used for configuring the MSG eGauge Service. This file is installed at `/usr/local/msg-egauge-service/config/egauge-automatic-data-services.config`.
 
@@ -183,16 +192,16 @@ The following is an example of the configuration file used for configuring the M
     egauge = ${EGAUGE_ID_1}
     egauge = ${EGAUGE_ID_2}
     egauge = ${EGAUGE_ID_3}
-    
-## Database Configuration
+
+### Database Configuration ###
 
 The database schema can be installed using the following command form where `${DATABASE_NAME}` is a valid database.
 
     $ psql ${DATABASE_NAME} < ${DATABASE_STRUCTURE}.sql
 
-## Software Operation
+## Software Operation ##
 
-### Inserting MECO Energy Data from Source XML
+### Inserting MECO Energy Data from Source XML ###
 
 The exported XML data files contain the energy data. Insertion to the database is performed by running
 
@@ -200,7 +209,7 @@ The exported XML data files contain the energy data. Insertion to the database i
     
 in the directory where the data files are contained. The use of `time` is for informational purposes only and is not necessary. Redirecting to `insert-log.txt` is also unneeded but reduces the output to the short form.
 
-#### Sample Output of Data Insertion
+#### Sample Output of Data Insertion ####
 
 MECO data is inserted using
 
@@ -234,7 +243,7 @@ Parallel data loading is supported since loading is performed atomically, databa
 ### Testing Mode
 The database insertion scripts have a separate testing mode that can be activated using the `--testing` command-line option. When testing mode is enabled, database operations will be performed on the testing database as defined in the site configuration file. Additionally, operations such as notifications will be directed to their appropriate testing mode settings. For example, email notifications will be delivered to testing mode recipients instead of the primary distribution list.
 
-### Inserting Location and Meter Records (DEPRECATED)
+### Inserting Location and Meter Records (DEPRECATED) ###
 
 Location and meter records are stored in separate tab-separated files and are inserted using separate scripts.
 
@@ -244,7 +253,7 @@ Location and meter records are stored in separate tab-separated files and are in
     
 These scripts and their associated data are deprecated in favor of the Meter Location History (MLH).
 
-### Inserting NOAA Weather Data (Kahului Airport Station WBAN 22516)
+### Inserting NOAA Weather Data (Kahului Airport Station WBAN 22516) ###
 
 Weather data loading is a two-stage process involving retrieval and insertion.
 
@@ -258,23 +267,24 @@ Insertion is performed using
     
 and supports recursive data processing of a set of files from the current directory. Weather data loading supports notifications.
 
-### Utility Scripts
+### Utility Scripts ###
 
 `grantAllPermissionsToDatabase.sh ${DATABASE}`
 : Set appropriate group permissions to databases.
 
-### MSG eGauge Service Operation
+### MSG eGauge Service Operation ###
 
 Initial loading of eGauge energy data can take a longer time than follow-up data loading. It is also more prone to error conditions as it is processing a much larger data set.
 
-#### Error Conditions
+#### Error Conditions ####
+
 Data downloads are not always able to be completed resulting in invalid data being saved. When this situation occurs, it may be necessary to manually intervene by manually pruning the invalid data. This condition can be recognized when there exists a mismatched number of data values to the data columns. Database operations will not be able to complete when the data is in this state. Data that is not able to be loaded is archived to the invalid data path. It is recommended that this storage be occassionally purged as invalid data only pertains to the data between that which was last loaded and the most recent data available.
 
-## Notifications
+## Notifications ##
 
 Notification of the results of data processing events is provided by the MSG Notification System. Notifications are distributed by email to a predefined recipient list contained in the configuration file.
 
-### Example Notification for Data Loading
+### Example Notification for Data Loading ###
 
     Recursively inserting data to the database named meco_v3.
     Starting in /msg-data/2013_07_10
@@ -296,9 +306,9 @@ Notification of the results of data processing events is provided by the MSG Not
     
     Plot is attached.
     
-The final group, after the '---', is a summary report of the operations performed.
+The final group, after the `---`, is a summary report of the operations performed.
 
-## License
+## License ##
 
 Copyright (c) 2013, University of Hawaii Smart Energy Project  
 All rights reserved.
