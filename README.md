@@ -95,13 +95,14 @@ This example demonstrates installing to a user directory which is sometimes pref
 where this example is specific to bash or sh.
 
 ### MSG eGauge Service
+
 The MSG eGauge Service is installed separately from the rest of the system and uses its own installer in `/src/msg-egauge-service`.
 
 Here's an example installation command.
 
-	$ sudo ./installEgaugeAutomaticDataServices.pl
+	$ sudo perl {$PATH_TO_INSTALLER}/installEgaugeAutomaticDataServices.pl
 
-The install script, `/src/msg_egauge_service/installEgaugeAutomaticDataServices.pl`, should edited to set the install paths as the installer is not as sophisticated as the Python installer.
+The install script, `/src/msg_egauge_service/installEgaugeAutomaticDataServices.pl`, should be edited to set the install paths as the installer is not as sophisticated as the Python installer. The installer will work if invoked from other paths and does not have to be run from the path containing the source files.
 
 ## Distribution
 
@@ -191,7 +192,7 @@ The database schema can be installed using the following command form where `${D
 
 ## Software Operation
 
-### Inserting Data from Source XML
+### Inserting MECO Energy Data from Source XML
 
 The exported XML data files contain the energy data. Insertion to the database is performed by running
 
@@ -263,6 +264,9 @@ and supports recursive data processing of a set of files from the current direct
 : Set appropriate group permissions to databases.
 
 ### MSG eGauge Service Operation
+
+Initial loading of eGauge energy data can take a longer time than follow-up data loading. It is also more prone to error conditions as it is processing a much larger data set.
+
 #### Error Conditions
 Data downloads are not always able to be completed resulting in invalid data being saved. When this situation occurs, it may be necessary to manually intervene by manually pruning the invalid data. This condition can be recognized when there exists a mismatched number of data values to the data columns. Database operations will not be able to complete when the data is in this state. Data that is not able to be loaded is archived to the invalid data path. It is recommended that this storage be occassionally purged as invalid data only pertains to the data between that which was last loaded and the most recent data available.
 
