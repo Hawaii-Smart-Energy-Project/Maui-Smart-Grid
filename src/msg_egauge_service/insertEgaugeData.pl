@@ -112,11 +112,11 @@ sub readHeader {
         print "item = $item\n" if $DEBUG;
         if ( defined( $colAssoc{$item} ) ) {
             push( @columnsToInsert, $colAssoc{$item} );
-        }    # If it doesn't match, then don't do anything.
+        }
         else {
+			# If it doesn't match, then don't do anything.
             print "ERROR: nonmatching column: ";
-            print $colAssoc{$item};
-            print " does not match\n";
+            print "$item does not match any predefined columns.\n";
             exit;
         }
     }
