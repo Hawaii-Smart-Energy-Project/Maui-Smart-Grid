@@ -93,11 +93,11 @@ The software has the following dependencies and they can be satisfied through va
 The Python-based scripts and modules have their installer implemented through `distutils`. They can be installed using
 
 	$ python setup.py install --home=~/Maui-Smart-Grid-1.0
-	
+
 This example demonstrates installing to a user directory which is sometimes preferred over installing to a system-wide path. For this example, the `PYTHONPATH` environment variable should be set using something like
 
 	$ export PYTHONPATH=~/Maui-Smart-Grid-1.0/lib/python
-	
+
 where this example is specific to bash or sh.
 
 ### MSG eGauge Service ###
@@ -172,7 +172,6 @@ The reference template can be found in `config/sample-dot-msg-data-operations.cf
 
 
 ### MSG eGauge Service Configuration ###
-
 
 The following is an example of the configuration file used for configuring the MSG eGauge Service. This file is installed at `/usr/local/msg-egauge-service/config/egauge-automatic-data-services.config`.
 
@@ -282,7 +281,7 @@ Data downloads are not always able to be completed resulting in invalid data bei
 
 ## Notifications ##
 
-Notification of the results of data processing events is provided by the MSG Notification System. Notifications are distributed by email to a predefined recipient list contained in the configuration file.
+Notification of the results of data processing events is provided by the **MSG Notification System**. Notifications are distributed by email to a predefined recipient list (comma-separated) contained in the configuration file.
 
 ### Example Notification for Data Loading ###
 
