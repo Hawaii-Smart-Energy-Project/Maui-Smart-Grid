@@ -1,7 +1,12 @@
 ###
-# DZ Smart Energy Project Library for Perl
+# DZ Smart Energy Project Library for Perl.
+#
 # This module provides data processing functions for the
-# Forest City Military Community Energy Audit and the
+#
+# Forest City Military Community Energy Audit
+#
+# and the
+#
 # Maui Smart Grid project.
 #
 # @author Daniel Zhang (張道博)
@@ -304,25 +309,26 @@ sub moveReliable {
         return 1;
     }
     else {
-        print "failed move\n";
+        print "Move failed.\n";
         return 0;
     }
 }
 
 ###
 # Verify that data is valid.
+#
 # If it is invalid move the file to an invalid data directory.
 #
 # @param filename
-# @return 0 if invalid
-# @return 1 if valid
+# @return 0 if invalid.
+# @return 1 if valid.
 ##
 sub verifyData {
     my ($filename) = @_;
 
     my $colCount      = 0;
     my $firstColCount = 0;
-    my $lineCnt       = 0;    # initial state
+    my $lineCnt       = 0;    # Initial state.
 
     print "\tverifying $filename\n";
 
@@ -342,15 +348,14 @@ sub verifyData {
             $colCount = scalar(@dataCols);
         }
         if ( $colCount != $firstColCount && $colCount != 0 ) {
-            return 0;    # mismatched column counts are NOT ok
+            return 0;    # Mismatched column counts are NOT valid.
         }
         $lineCnt++;
     }
     if ( $lineCnt > 0 ) {
         return 1;
     }
-    return 1;   # empty files are ok b/c they don't kill the insertion process
+    return 1;   # Empty files are accepted because they don't kill the insertion process.
 }
 
 1;
-
