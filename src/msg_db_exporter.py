@@ -13,11 +13,17 @@ import subprocess
 from msg_configer import MSGConfiger
 import gzip
 import os
+import httplib2
+from apiclient.discovery import build
+from apiclient.http import MediaFileUpload
+from oauth2client.client import OAuth2WebServerFlow
 
 
 class MSGDBExporter(object):
     """
     Export MSG DBs as SQL scripts.
+
+    Supports export to local storage and to cloud storage.
     """
 
     def __init__(self):
@@ -28,10 +34,17 @@ class MSGDBExporter(object):
         self.logger = MSGLogger(__name__)
         self.timeUtil = MSGTimeUtil()
         self.configer = MSGConfiger()
+        self.clientID = self.configer.configOptionValue('Google Drive',
+                                                        'client_id')
+        self.clientSecret = self.configer.configOptionValue('Google Drive',
+                                                            'client_secret')
+        self.oauthScope = 'https://www.googleapis.com/auth/drive'
+        self.oauthConsent = 'urn:ietf:wg:oauth:2.0:oob'
+        self.googleDriveCredentials = ''
 
-    def exportDB(self, databases = None):
+    def exportDBToLocalStorage(self, databases = None):
         """
-        Export a DB to local storage.
+        Export a set of DBs to local storage.
 
         Uses
 
@@ -71,6 +84,19 @@ class MSGDBExporter(object):
                 self.logger.log(
                     'Exception while removing %s.sql: %s.' % (fullPath, e))
 
+    def exportDBToCloudStorage(self, databases = None):
+        """
+        Export a set of DBs to cloud storage.
+        """
+        for db in databases:
+            self.logger.log('Exporting %s.' % db)
+            conciseNow = self.timeUtil.conciseNow()
+            dumpName = "%s_%s" % (conciseNow, db)
+
+    def retrieveCredentials(self):
+        pass
+
+
     def gzipCompressFile(self, fullPath):
         """
         @todo Test valid compression.
@@ -89,6 +115,6 @@ class MSGDBExporter(object):
 if __name__ == '__main__':
     exporter = MSGDBExporter()
 
-    exporter.exportDB(
+    exporter.exportDBToLocalStorage(
         [exporter.configer.configOptionValue('Export', 'dbs_to_export')])
 
