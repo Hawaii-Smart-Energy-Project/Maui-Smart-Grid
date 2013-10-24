@@ -8,7 +8,7 @@ The University of Hawaii at Manoa was tasked with maintaining a data repository 
 
 ### Software Features ###
 
-* Open-source (BSD license) code in Python 2.7x.
+* Open-source (BSD license) code in Python 2.7x and Perl 5.x.
 * Parsing of source data is provided for multiple formats.
 * Insertion of data to a data store (PostgreSQL 9.1) is performed automatically.
 * Source files to recreate the structure of the data store are available.
