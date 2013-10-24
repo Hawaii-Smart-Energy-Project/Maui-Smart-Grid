@@ -330,7 +330,7 @@ sub verifyData {
     my $firstColCount = 0;
     my $lineCnt       = 0;    # Initial state.
 
-    print "\tverifying $filename\n";
+    print "\tVerifying $filename\n";
 
     open( FILE, "<$filename" );
     my @data = <FILE>;

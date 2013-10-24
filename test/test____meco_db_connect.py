@@ -13,7 +13,7 @@ import msg_db_connector
 
 class TestMECODBConnect(unittest.TestCase):
     """
-    These tests require a database connection be available.
+    These tests require a database connection to be available.
     """
 
     def setUp(self):
