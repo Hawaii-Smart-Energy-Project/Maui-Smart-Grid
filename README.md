@@ -120,7 +120,7 @@ The distribution archive is created using
 
 All of the site-specific options are intended to be held in text-based configuration files. 
 
-The software is configured through a text configuration file contained in the user's home directory. The file is named `~/.msg-data-operations.cfg`. Permissions should be limited to owner read/write only. It is read by the `ConfigParser` module. 
+The software is configured through a text configuration file contained in the user's home directory. The file is named `~/.msg-data-operations.cfg`. Permissions should be limited to owner read/write only. It is read by the `ConfigParser` module.
 
 ### Example Main Configuration File Content ###
 
@@ -168,8 +168,6 @@ The reference template can be found in `config/sample-dot-msg-data-operations.cf
     
     [Hardware]
     multiprocessing_limit = ${MULTIPROCESSING_LIMIT}
-
-
 
 ### MSG eGauge Service Configuration ###
 
@@ -275,9 +273,17 @@ and supports recursive data processing of a set of files from the current direct
 
 Initial loading of eGauge energy data can take a longer time than follow-up data loading. It is also more prone to error conditions as it is processing a much larger data set.
 
-#### Error Conditions ####
+Data exists in three possible states:
 
-Data downloads are not always able to be completed resulting in invalid data being saved. When this situation occurs, it may be necessary to manually intervene by manually pruning the invalid data. This condition can be recognized when there exists a mismatched number of data values to the data columns. Database operations will not be able to complete when the data is in this state. Data that is not able to be loaded is archived to the invalid data path. It is recommended that this storage be occassionally purged as invalid data only pertains to the data between that which was last loaded and the most recent data available.
+1. Data that has been downloaded but not yet loaded.
+2. Valid data that has been loaded.
+3. Invalid data that cannot be loaded.
+
+There are three corresponding directories that are used to maintain the files for the data in these different states. The paths for these directories are defined in the MSG eGauge Service Configuration.
+
+#### Invalid Data ####
+
+Data downloads are not always able to be completed resulting in invalid data being saved. When this situation occurs, it may be necessary to manually intervene by manually pruning the invalid data. This condition can be recognized when there exists a mismatched number of data values to the data columns. Database operations will not be able to complete when the data is in this state. Data that is not able to be loaded is archived to the invalid data path. It is recommended that this storage be occassionally purged as **invalid data only pertains to the time period between that which was last loaded and the most recent data available.** It is not automatically deleted in case it is needed for reference.
 
 ## Notifications ##
 
