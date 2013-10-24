@@ -10,7 +10,7 @@ The University of Hawaii at Manoa was tasked with maintaining a data repository 
 
 * Open-source (BSD license) code in Python 2.7x.
 * Parsing of source data is provided for multiple formats.
-* Insertion of data to a data store (PostgreSQL 9.1) is performed by executing a script from the command-line.
+* Insertion of data to a data store (PostgreSQL 9.1) is performed automatically.
 * Source files to recreate the structure of the data store are available.
 * Unit testing of data processing operations is provided by a test suite implemented through Python's `unittest`.
 * Data operations are reported using email notifications including plots as graphic summaries.
