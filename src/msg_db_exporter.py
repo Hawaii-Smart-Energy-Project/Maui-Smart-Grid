@@ -14,9 +14,27 @@ from msg_configer import MSGConfiger
 import gzip
 import os
 import httplib2
+import pprint
 from apiclient.discovery import build
 from apiclient.http import MediaFileUpload
 from oauth2client.client import OAuth2WebServerFlow
+import argparse
+
+commandLineArgs = None
+
+
+def processCommandLineArguments():
+    """
+    Generate command-line arguments. Load them into global variable
+    commandLineArgs.
+    """
+
+    global parser, commandLineArgs
+    parser = argparse.ArgumentParser(description = '')
+    parser.add_argument('--dbname', help = 'Database file to be uploaded.')
+    parser.add_argument('--fullpath',
+                        help = 'Full path to database file to be uploaded.')
+    commandLineArgs = parser.parse_args()
 
 
 class MSGDBExporter(object):
@@ -34,15 +52,18 @@ class MSGDBExporter(object):
         self.logger = MSGLogger(__name__)
         self.timeUtil = MSGTimeUtil()
         self.configer = MSGConfiger()
-        self.clientID = self.configer.configOptionValue('Google Drive',
-                                                        'client_id')
-        self.clientSecret = self.configer.configOptionValue('Google Drive',
-                                                            'client_secret')
+
+        # Google Drive parameters.
+        self.clientID = self.configer.configOptionValue('Export',
+                                                        'google_drive_client_id')
+        self.clientSecret = self.configer.configOptionValue('Export',
+                                                            'google_drive_client_secret')
         self.oauthScope = 'https://www.googleapis.com/auth/drive'
         self.oauthConsent = 'urn:ietf:wg:oauth:2.0:oob'
         self.googleDriveCredentials = ''
 
-    def exportDBToLocalStorage(self, databases = None):
+
+    def exportDB(self, databases = None, toCloud = False):
         """
         Export a set of DBs to local storage.
 
@@ -51,6 +72,8 @@ class MSGDBExporter(object):
         pg_dump -s -h ${HOST} ${DB_NAME} > ${DUMP_TIMESTAMP}_{DB_NAME}.sql
 
         :param databases: List of database names.
+        :param toCloud: If set to True, then export will also be copied to
+        cloud storage.
         """
 
         host = self.configer.configOptionValue('Database', 'db_host')
@@ -77,6 +100,10 @@ class MSGDBExporter(object):
             print "Compressing %s using gzip." % db
             self.gzipCompressFile(fullPath)
 
+            if toCloud:
+                self.uploadDBToCloudStorage('%s.sql.gz' % dumpName,
+                                            '%s.sql.gz' % fullPath)
+
             # Remove the uncompressed file.
             try:
                 os.remove('%s.sql' % fullPath)
@@ -84,17 +111,46 @@ class MSGDBExporter(object):
                 self.logger.log(
                     'Exception while removing %s.sql: %s.' % (fullPath, e))
 
-    def exportDBToCloudStorage(self, databases = None):
+
+    def uploadDBToCloudStorage(self, dbName = '', fullPath = ''):
         """
-        Export a set of DBs to cloud storage.
+        Export a DB to cloud storage.
+
+        :param dbName
+        :param fullPath
         """
-        for db in databases:
-            self.logger.log('Exporting %s.' % db)
-            conciseNow = self.timeUtil.conciseNow()
-            dumpName = "%s_%s" % (conciseNow, db)
+
+        print "Retrieving credentials."
+        self.retrieveCredentials()
+
+        print "Authorizing credentials."
+        http = httplib2.Http()
+        http = self.googleDriveCredentials.authorize(http)
+
+        drive_service = build('drive', 'v2', http = http)
+
+        media_body = MediaFileUpload(fullPath,
+                                     mimetype = 'application/gzip-compressed',
+                                     resumable = True)
+        body = {'title': dbName,
+                'description': 'Hawaii Smart Energy Project gzip compressed '
+                               'DB export.',
+                'mimeType': 'application/gzip-compressed'}
+
+        file = drive_service.files().insert(body = body,
+                                            media_body = media_body).execute()
+        print "Uploading %s." % dbName
+        pprint.pprint(file)
+        print "Finished."
+
 
     def retrieveCredentials(self):
-        pass
+        flow = OAuth2WebServerFlow(self.clientID, self.clientSecret,
+                                   self.oauthScope, self.oauthConsent)
+        authorize_url = flow.step1_get_authorize_url()
+        print 'Go to the following link in your browser: ' + authorize_url
+        code = raw_input('Enter verification code: ').strip()
+        self.googleDriveCredentials = flow.step2_exchange(code)
 
 
     def gzipCompressFile(self, fullPath):
@@ -102,7 +158,7 @@ class MSGDBExporter(object):
         @todo Test valid compression.
         @todo Move to file utils.
 
-        :param filename: Filename of file to be compressed.
+        :param fullPath: Full path of the file to be compressed.
         """
 
         f_in = open('%s.sql' % fullPath, 'rb')
@@ -113,8 +169,12 @@ class MSGDBExporter(object):
 
 
 if __name__ == '__main__':
+    processCommandLineArguments()
     exporter = MSGDBExporter()
 
-    exporter.exportDBToLocalStorage(
-        [exporter.configer.configOptionValue('Export', 'dbs_to_export')])
+    #exporter.exportDB(
+    #    [exporter.configer.configOptionValue('Export', 'dbs_to_export')],
+    #    toCloud = True)
 
+    exporter.uploadDBToCloudStorage(commandLineArgs.dbname,
+                                    commandLineArgs.fullpath)
