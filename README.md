@@ -13,7 +13,7 @@ The University of Hawaii at Manoa was tasked with maintaining a data repository 
 * Insertion of data to a data store (PostgreSQL 9.1) is performed automatically.
 * Source files to recreate the structure of the data store are available.
 * Unit testing of data processing operations is provided by a test suite implemented through Python's `unittest`.
-* Data operations are reported using email notifications including plots as graphic summaries.
+* Data operations are reported using **email notifications including plots as graphic summaries**.
 
 ### Project Documentation ###
 
@@ -284,6 +284,10 @@ There are three corresponding directories that are used to maintain the files fo
 #### Invalid Data ####
 
 Data downloads are not always able to be completed resulting in invalid data being saved. When this situation occurs, it may be necessary to manually intervene by manually pruning the invalid data. This condition can be recognized when there exists a mismatched number of data values to the data columns. Database operations will not be able to complete when the data is in this state. Data that is not able to be loaded is archived to the invalid data path. It is recommended that this storage be occassionally purged as **invalid data only pertains to the time period between that which was last loaded and the most recent data available.** It is not automatically deleted in case it is needed for reference.
+
+### Database Exports ###
+
+Exports of MSG databases and other databases occur according to a predefined schedule. The exports consist of gzip compressed SQL scripts that are stored both on local storage and cloud storage.
 
 ## Notifications ##
 
