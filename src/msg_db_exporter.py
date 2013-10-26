@@ -57,9 +57,9 @@ class MSGDBExporter(object):
 
         # Google Drive parameters.
         self.clientID = self.configer.configOptionValue('Export',
-                                                        'google_drive_client_id')
+                                                        'google_api_client_id')
         self.clientSecret = self.configer.configOptionValue('Export',
-                                                            'google_drive_client_secret')
+                                                            'google_api_client_secret')
         self.oauthScope = 'https://www.googleapis.com/auth/drive'
         self.oauthConsent = 'urn:ietf:wg:oauth:2.0:oob'
         self.googleAPICredentials = ''
@@ -124,11 +124,12 @@ class MSGDBExporter(object):
         dbName = os.path.basename(fullPath)
 
         storage = Storage('google_api_credentials')
-        self.googleAPICredentials = storage.get()
 
-        #print "Retrieving credentials."
+        #self.logger.log("Retrieving credentials.")
         #self.retrieveCredentials()
         #storage.put(self.googleAPICredentials)
+
+        self.googleAPICredentials = storage.get()
 
         self.logger.log("Authorizing credentials.")
         http = httplib2.Http()
@@ -199,8 +200,8 @@ if __name__ == '__main__':
     processCommandLineArguments()
     exporter = MSGDBExporter()
 
-    #exporter.exportDB(
-    #    [exporter.configer.configOptionValue('Export', 'dbs_to_export')],
-    #    toCloud = True)
+    exporter.exportDB(
+        [exporter.configer.configOptionValue('Export', 'dbs_to_export')],
+        toCloud = True)
 
-    exporter.uploadDBToCloudStorage(commandLineArgs.fullpath)
+    #exporter.uploadDBToCloudStorage(commandLineArgs.fullpath)
