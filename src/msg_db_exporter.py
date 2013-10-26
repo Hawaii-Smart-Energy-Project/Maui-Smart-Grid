@@ -19,6 +19,8 @@ from apiclient.discovery import build
 from apiclient.http import MediaFileUpload
 from oauth2client.client import OAuth2WebServerFlow
 import argparse
+from oauth2client.file import Storage
+from apiclient import errors
 
 commandLineArgs = None
 
@@ -60,7 +62,7 @@ class MSGDBExporter(object):
                                                             'google_drive_client_secret')
         self.oauthScope = 'https://www.googleapis.com/auth/drive'
         self.oauthConsent = 'urn:ietf:wg:oauth:2.0:oob'
-        self.googleDriveCredentials = ''
+        self.googleAPICredentials = ''
 
 
     def exportDB(self, databases = None, toCloud = False):
@@ -101,8 +103,7 @@ class MSGDBExporter(object):
             self.gzipCompressFile(fullPath)
 
             if toCloud:
-                self.uploadDBToCloudStorage('%s.sql.gz' % dumpName,
-                                            '%s.sql.gz' % fullPath)
+                self.uploadDBToCloudStorage('%s.sql.gz' % fullPath)
 
             # Remove the uncompressed file.
             try:
@@ -112,45 +113,71 @@ class MSGDBExporter(object):
                     'Exception while removing %s.sql: %s.' % (fullPath, e))
 
 
-    def uploadDBToCloudStorage(self, dbName = '', fullPath = ''):
+    def uploadDBToCloudStorage(self, fullPath = ''):
         """
         Export a DB to cloud storage.
 
-        :param dbName
         :param fullPath
         """
 
-        print "Retrieving credentials."
-        self.retrieveCredentials()
+        success = True
+        dbName = os.path.basename(fullPath)
 
-        print "Authorizing credentials."
+        storage = Storage('google_api_credentials')
+        self.googleAPICredentials = storage.get()
+
+        #print "Retrieving credentials."
+        #self.retrieveCredentials()
+        #storage.put(self.googleAPICredentials)
+
+        self.logger.log("Authorizing credentials.")
         http = httplib2.Http()
-        http = self.googleDriveCredentials.authorize(http)
+        http = self.googleAPICredentials.authorize(http)
+
+        self.logger.log("Authorized.")
+
+        self.logger.log("Uploading %s." % dbName)
 
         drive_service = build('drive', 'v2', http = http)
 
-        media_body = MediaFileUpload(fullPath,
-                                     mimetype = 'application/gzip-compressed',
-                                     resumable = True)
-        body = {'title': dbName,
-                'description': 'Hawaii Smart Energy Project gzip compressed '
-                               'DB export.',
-                'mimeType': 'application/gzip-compressed'}
+        try:
 
-        file = drive_service.files().insert(body = body,
-                                            media_body = media_body).execute()
-        print "Uploading %s." % dbName
-        pprint.pprint(file)
-        print "Finished."
+            media_body = MediaFileUpload(fullPath,
+                                         mimetype =
+                                         'application/gzip-compressed',
+                                         resumable = True)
+            body = {'title': dbName,
+                    'description': 'Hawaii Smart Energy Project gzip '
+                                   'compressed DB export.',
+                    'mimeType': 'application/gzip-compressed'}
+
+            file = drive_service.files().insert(body = body,
+                                                media_body = media_body)\
+                .execute()
+
+            pprint.pprint(file)
+        except (errors.ResumableUploadError):
+            self.logger.log("Cannot initiate upload of %s." % dbName, 'error')
+            success = False
+
+        if success:
+            self.logger.log("Finished.")
 
 
     def retrieveCredentials(self):
+        """
+        Perform authorization at the server.
+        """
+
         flow = OAuth2WebServerFlow(self.clientID, self.clientSecret,
                                    self.oauthScope, self.oauthConsent)
         authorize_url = flow.step1_get_authorize_url()
         print 'Go to the following link in your browser: ' + authorize_url
         code = raw_input('Enter verification code: ').strip()
-        self.googleDriveCredentials = flow.step2_exchange(code)
+        self.googleAPICredentials = flow.step2_exchange(code)
+
+        print "refresh_token = %s" % self.googleAPICredentials.refresh_token
+        print "expiry = %s" % self.googleAPICredentials.token_expiry
 
 
     def gzipCompressFile(self, fullPath):
@@ -176,5 +203,4 @@ if __name__ == '__main__':
     #    [exporter.configer.configOptionValue('Export', 'dbs_to_export')],
     #    toCloud = True)
 
-    exporter.uploadDBToCloudStorage(commandLineArgs.dbname,
-                                    commandLineArgs.fullpath)
+    exporter.uploadDBToCloudStorage(commandLineArgs.fullpath)
