@@ -293,7 +293,9 @@ Exports of MSG databases and other databases occur according to a predefined sch
 
 Notification of the results of data processing events is provided by the **MSG Notification System**. Notifications are distributed by email to a predefined recipient list (comma-separated) contained in the configuration file.
 
-### Example Notification for Data Loading ###
+### MECO Energy Data Loading ###
+
+#### Example Notification for Data Loading ####
 
     Recursively inserting data to the database named meco_v3.
     Starting in /msg-data/2013_07_10
