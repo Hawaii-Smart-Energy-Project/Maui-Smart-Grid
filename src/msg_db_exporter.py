@@ -122,8 +122,9 @@ class MSGDBExporter(object):
 
         success = True
         dbName = os.path.basename(fullPath)
+        credentialPath = os.path.dirname(fullPath)
 
-        storage = Storage('google_api_credentials')
+        storage = Storage('%s/google_api_credentials' % credentialPath)
 
         #self.logger.log("Retrieving credentials.")
         #self.retrieveCredentials()
