@@ -61,10 +61,11 @@ class MSGLogger(object):
             self.loggerLevel = None
 
         # Messages equal to and above the logging level will be logged.
-        #
+        # @todo Test that logging level is used.
         self.logger.setLevel(self.loggerLevel)
 
-        self.recording = []
+        self.recordingBuffer = []
+        self.recording = ''
         self.shouldRecord = False
         self.logCounter = 0
 
@@ -100,11 +101,6 @@ class MSGLogger(object):
         :params level: (optional) Logging level.
         """
 
-        #for handler in self.logger.handlers:
-        #    handler.flush()
-        #    self.logger.removeHandler(handler)
-
-
         self.logger.addHandler(self.streamHandlerStdErr)
         self.logger.addHandler(self.streamHandlerString)
 
@@ -125,20 +121,22 @@ class MSGLogger(object):
                 loggerLevel = self.loggerLevel
 
         if loggerLevel != None:
-            #print '%d: %s' % (self.logCounter, message)
 
             self.logger.log(loggerLevel, message)
 
             if self.shouldRecord:
-                self.recording.append('%s' % (self.ioStream.getvalue()))
+                self.recordingBuffer.append('%s' % (self.ioStream.getvalue()))
+                self.recording = self.recordingBuffer[-1]
 
             for handler in self.logger.handlers:
-                # The flushes here apparently don't have any effect on the logger.
+                # The flushes here apparently don't have any effect on the
+                # logger.
                 handler.flush()
                 self.ioStream.flush()
                 self.logger.removeHandler(handler)
 
             self.logCounter += 1
+
 
     def startRecording(self):
         self.shouldRecord = True

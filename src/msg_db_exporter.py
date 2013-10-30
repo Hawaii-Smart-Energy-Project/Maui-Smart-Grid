@@ -211,7 +211,7 @@ if __name__ == '__main__':
         [exporter.configer.configOptionValue('Export', 'dbs_to_export')],
         toCloud = True, testing = True)
 
-    print 'Recording:\n%s' % exporter.logger.recording[-1]
+    print 'Recording:\n%s' % exporter.logger.recording
 
     #exporter.uploadDBToCloudStorage(commandLineArgs.fullpath)
 
