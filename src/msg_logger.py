@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Provide logging services for the MSG Data Operations Project.
+
+Setting self.shouldRecord=True provides a way of collecting all logging output
+for the instantiated logger into self.recording.
+"""
+
 __author__ = 'Daniel Zhang (張道博)'
 __copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
 __license__ = 'https://raw.github' \
@@ -125,6 +132,8 @@ class MSGLogger(object):
             self.logger.log(loggerLevel, message)
 
             if self.shouldRecord:
+                # The recording buffer is a cumulative copy of the logging output.
+                # At each iteration, the buffer plus the new output is appended to the list.
                 self.recordingBuffer.append('%s' % (self.ioStream.getvalue()))
                 self.recording = self.recordingBuffer[-1]
 

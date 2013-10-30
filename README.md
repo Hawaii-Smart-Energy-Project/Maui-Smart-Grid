@@ -40,7 +40,7 @@ The schema consists of the following components.
 3. MECO Location Records (deprecated)
 4. MECO Meter Records (deprecated)
 5. MECO Meter Location History
-9. MECO Egauge Energy Data
+9. MECO eGauge Energy Data
 6. NOAA Weather Data (Kahului Station)
 7. Circuit Data
 8. Transformer Data
