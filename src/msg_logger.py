@@ -41,7 +41,7 @@ class MSGLogger(object):
         formatterStdErr = logging.Formatter(
             u'%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         formatterString = logging.Formatter(
-            u'string: %(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            u'%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
         self.streamHandlerStdErr.setFormatter(formatterStdErr)
         self.streamHandlerString.setFormatter(formatterString)
