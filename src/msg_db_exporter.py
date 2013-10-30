@@ -66,7 +66,7 @@ class MSGDBExporter(object):
         self.googleAPICredentials = ''
 
 
-    def exportDB(self, databases = None, toCloud = False):
+    def exportDB(self, databases = None, toCloud = False, testing = False):
         """
         Export a set of DBs to local storage.
 
@@ -96,14 +96,16 @@ class MSGDBExporter(object):
                 dumpName)
 
             try:
-                subprocess.check_call(command, shell = True)
+                if not testing:
+                    subprocess.check_call(command, shell = True)
             except subprocess.CalledProcessError, e:
                 self.logger.log("An exception occurred: %s", e)
 
-            print "Compressing %s using gzip." % db
-            self.gzipCompressFile(fullPath)
+            self.logger.log("Compressing %s using gzip." % db)
+            if not testing:
+                self.gzipCompressFile(fullPath)
 
-            if toCloud:
+            if toCloud and not testing:
                 self.uploadDBToCloudStorage('%s.sql.gz' % fullPath)
 
             # Remove the uncompressed file.
@@ -198,8 +200,6 @@ class MSGDBExporter(object):
         f_in.close()
 
 
-
-
 if __name__ == '__main__':
     processCommandLineArguments()
 
@@ -209,9 +209,9 @@ if __name__ == '__main__':
 
     exporter.exportDB(
         [exporter.configer.configOptionValue('Export', 'dbs_to_export')],
-        toCloud = True)
+        toCloud = True, testing = True)
 
-    print 'Recording: %s' % exporter.logger.recording
+    print 'Recording:\n%s' % exporter.logger.recording[-1]
 
     #exporter.uploadDBToCloudStorage(commandLineArgs.fullpath)
 

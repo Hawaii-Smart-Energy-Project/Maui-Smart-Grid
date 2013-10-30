@@ -9,7 +9,7 @@ __license__ = 'https://raw.github' \
 
 import sys
 import logging
-import StringIO
+from io import StringIO
 
 
 class MSGLogger(object):
@@ -27,19 +27,27 @@ class MSGLogger(object):
         @todo Provide enumeration type.
         """
 
+        print "Initializing logger for %s." % caller
+
         self.logger = logging.getLogger(caller)
 
-        # Messages equal to and above the logging level will be logged.
-        self.logger.setLevel(logging.DEBUG)
-        self.ioStream = StringIO.StringIO()
-        self.streamHandlerStdErr = logging.StreamHandler(sys.stderr)
+        self.ioStream = StringIO()
+
+        #self.streamHandlerStdErr = logging.StreamHandler(sys.stderr)
         self.streamHandlerString = logging.StreamHandler(self.ioStream)
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        self.streamHandlerStdErr.setFormatter(formatter)
-        self.streamHandlerString.setFormatter(formatter)
+        #self.streamHandlerStdErr.setLevel(logging.DEBUG)
+        self.streamHandlerString.setLevel(logging.DEBUG)
+
+        formatterStdErr = logging.Formatter(
+            u'%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatterString = logging.Formatter(
+            u'string: %(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+        #self.streamHandlerStdErr.setFormatter(formatterStdErr)
+        self.streamHandlerString.setFormatter(formatterString)
 
         self.loggerLevel = None
+
         level = level.lower()
         if level == 'info':
             self.loggerLevel = logging.INFO
@@ -52,8 +60,14 @@ class MSGLogger(object):
         else:
             self.loggerLevel = None
 
-        self.recording = ''
+        # Messages equal to and above the logging level will be logged.
+        #
+        # Override the given level for testing.
+        self.logger.setLevel(logging.DEBUG)
+
+        self.recording = []
         self.shouldRecord = False
+        self.logCounter = 0
 
 
     def logAndWrite(self, message):
@@ -71,6 +85,7 @@ class MSGLogger(object):
         sys.stderr.write(message)
         return message
 
+
     def log(self, message, level = None):
         """
         Write a log message.
@@ -86,7 +101,12 @@ class MSGLogger(object):
         :params level: (optional) Logging level.
         """
 
-        self.logger.addHandler(self.streamHandlerStdErr)
+        #for handler in self.logger.handlers:
+        #    handler.flush()
+        #    self.logger.removeHandler(handler)
+
+
+        #self.logger.addHandler(self.streamHandlerStdErr)
         self.logger.addHandler(self.streamHandlerString)
 
         if not level:
@@ -106,11 +126,31 @@ class MSGLogger(object):
                 loggerLevel = self.loggerLevel
 
         if loggerLevel != None:
+            #print '%d: %s' % (self.logCounter, message)
+
             self.logger.log(loggerLevel, message)
+
             if self.shouldRecord:
-                self.recording += self.ioStream.getvalue()
-            self.logger.removeHandler(self.streamHandlerStdErr)
-            self.logger.removeHandler(self.streamHandlerString)
+                #self.logger.removeHandler(self.streamHandlerString)
+                #self.streamHandlerString.flush()
+
+                print u'%d -----> %s' % (
+                self.logCounter, self.ioStream.getvalue())
+
+                for handler in self.logger.handlers:
+                    handler.flush()
+                    self.ioStream.flush()
+                    self.logger.removeHandler(handler)
+
+                #self.recording += '%d:%s' % (
+                #self.logCounter, self.ioStream.getvalue())
+
+                self.recording.append(
+                    '%d:%s' % (self.logCounter, self.ioStream.getvalue()))
+
+                pass
+
+            self.logCounter += 1
 
     def startRecording(self):
         self.shouldRecord = True
