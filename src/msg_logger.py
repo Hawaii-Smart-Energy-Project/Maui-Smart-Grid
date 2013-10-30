@@ -9,6 +9,7 @@ __license__ = 'https://raw.github' \
 
 import sys
 import logging
+import StringIO
 
 
 class MSGLogger(object):
@@ -21,17 +22,22 @@ class MSGLogger(object):
         Constructor.
 
         :params caller: Calling class.
+        :params level: An enumerated type detailing the level of the logging.
+
+        @todo Provide enumeration type.
         """
 
         self.logger = logging.getLogger(caller)
 
         # Messages equal to and above the logging level will be logged.
         self.logger.setLevel(logging.DEBUG)
-
-        self.streamHandler = logging.StreamHandler(sys.stderr)
+        self.ioStream = StringIO.StringIO()
+        self.streamHandlerStdErr = logging.StreamHandler(sys.stderr)
+        self.streamHandlerString = logging.StreamHandler(self.ioStream)
         formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        self.streamHandler.setFormatter(formatter)
+        self.streamHandlerStdErr.setFormatter(formatter)
+        self.streamHandlerString.setFormatter(formatter)
 
         self.loggerLevel = None
         level = level.lower()
@@ -45,6 +51,9 @@ class MSGLogger(object):
             self.loggerLevel = logging.DEBUG
         else:
             self.loggerLevel = None
+
+        self.recording = ''
+        self.shouldRecord = False
 
 
     def logAndWrite(self, message):
@@ -77,7 +86,8 @@ class MSGLogger(object):
         :params level: (optional) Logging level.
         """
 
-        self.logger.addHandler(self.streamHandler)
+        self.logger.addHandler(self.streamHandlerStdErr)
+        self.logger.addHandler(self.streamHandlerString)
 
         if not level:
             loggerLevel = self.loggerLevel
@@ -97,10 +107,13 @@ class MSGLogger(object):
 
         if loggerLevel != None:
             self.logger.log(loggerLevel, message)
-            self.logger.removeHandler(self.streamHandler)
+            if self.shouldRecord:
+                self.recording += self.ioStream.getvalue()
+            self.logger.removeHandler(self.streamHandlerStdErr)
+            self.logger.removeHandler(self.streamHandlerString)
 
     def startRecording(self):
-        pass
+        self.shouldRecord = True
 
     def endRecording(self):
-        pass
+        self.shouldRecord = False

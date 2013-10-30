@@ -21,6 +21,7 @@ from oauth2client.client import OAuth2WebServerFlow
 import argparse
 from oauth2client.file import Storage
 from apiclient import errors
+from msg_notifier import MSGNotifier
 
 commandLineArgs = None
 
@@ -197,12 +198,20 @@ class MSGDBExporter(object):
         f_in.close()
 
 
+
+
 if __name__ == '__main__':
     processCommandLineArguments()
+
     exporter = MSGDBExporter()
+    notifier = MSGNotifier()
+    exporter.logger.shouldRecord = True
 
     exporter.exportDB(
         [exporter.configer.configOptionValue('Export', 'dbs_to_export')],
         toCloud = True)
 
+    print 'Recording: %s' % exporter.logger.recording
+
     #exporter.uploadDBToCloudStorage(commandLineArgs.fullpath)
+
