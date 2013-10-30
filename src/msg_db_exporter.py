@@ -209,7 +209,7 @@ if __name__ == '__main__':
 
     exporter.exportDB(
         [exporter.configer.configOptionValue('Export', 'dbs_to_export')],
-        toCloud = True, testing = True)
+        toCloud = True, testing = False)
 
     print 'Recording:\n%s' % exporter.logger.recording
 
