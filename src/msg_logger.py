@@ -27,15 +27,15 @@ class MSGLogger(object):
         @todo Provide enumeration type.
         """
 
-        print "Initializing logger for %s." % caller
+        #print "Initializing logger for %s." % caller
 
         self.logger = logging.getLogger(caller)
 
         self.ioStream = StringIO()
 
-        #self.streamHandlerStdErr = logging.StreamHandler(sys.stderr)
+        self.streamHandlerStdErr = logging.StreamHandler(sys.stderr)
         self.streamHandlerString = logging.StreamHandler(self.ioStream)
-        #self.streamHandlerStdErr.setLevel(logging.DEBUG)
+        self.streamHandlerStdErr.setLevel(logging.DEBUG)
         self.streamHandlerString.setLevel(logging.DEBUG)
 
         formatterStdErr = logging.Formatter(
@@ -43,7 +43,7 @@ class MSGLogger(object):
         formatterString = logging.Formatter(
             u'string: %(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-        #self.streamHandlerStdErr.setFormatter(formatterStdErr)
+        self.streamHandlerStdErr.setFormatter(formatterStdErr)
         self.streamHandlerString.setFormatter(formatterString)
 
         self.loggerLevel = None
@@ -62,8 +62,7 @@ class MSGLogger(object):
 
         # Messages equal to and above the logging level will be logged.
         #
-        # Override the given level for testing.
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(self.loggerLevel)
 
         self.recording = []
         self.shouldRecord = False
@@ -106,7 +105,7 @@ class MSGLogger(object):
         #    self.logger.removeHandler(handler)
 
 
-        #self.logger.addHandler(self.streamHandlerStdErr)
+        self.logger.addHandler(self.streamHandlerStdErr)
         self.logger.addHandler(self.streamHandlerString)
 
         if not level:
@@ -131,24 +130,13 @@ class MSGLogger(object):
             self.logger.log(loggerLevel, message)
 
             if self.shouldRecord:
-                #self.logger.removeHandler(self.streamHandlerString)
-                #self.streamHandlerString.flush()
+                self.recording.append('%s' % (self.ioStream.getvalue()))
 
-                print u'%d -----> %s' % (
-                self.logCounter, self.ioStream.getvalue())
-
-                for handler in self.logger.handlers:
-                    handler.flush()
-                    self.ioStream.flush()
-                    self.logger.removeHandler(handler)
-
-                #self.recording += '%d:%s' % (
-                #self.logCounter, self.ioStream.getvalue())
-
-                self.recording.append(
-                    '%d:%s' % (self.logCounter, self.ioStream.getvalue()))
-
-                pass
+            for handler in self.logger.handlers:
+                # The flushes here apparently don't have any effect on the logger.
+                handler.flush()
+                self.ioStream.flush()
+                self.logger.removeHandler(handler)
 
             self.logCounter += 1
 
