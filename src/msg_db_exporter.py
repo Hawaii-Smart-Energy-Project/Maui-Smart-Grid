@@ -188,7 +188,6 @@ class MSGDBExporter(object):
         return driveService
 
 
-
     def retrieveCredentials(self):
         """
         Perform authorization at the server.
@@ -218,6 +217,20 @@ class MSGDBExporter(object):
         f_out.writelines(f_in)
         f_out.close()
         f_in.close()
+
+
+    def freeSpace(self, driveService):
+        """
+        Get free space from the drive service.
+
+        :param driveService: Object for the drive service.
+        :returns: Free space on the drive service.
+        """
+
+        aboutData = driveService.about().get().execute()
+        return int(aboutData['quotaBytesTotal']) - int(
+            aboutData['quotaBytesUsed']) - int(
+            aboutData['quotaBytesUsedInTrash'])
 
 
 if __name__ == '__main__':
