@@ -37,6 +37,8 @@ def processCommandLineArguments():
     parser.add_argument('--dbname', help = 'Database file to be uploaded.')
     parser.add_argument('--fullpath',
                         help = 'Full path to database file to be uploaded.')
+    parser.add_argument('--testing', action = 'store_true', default = False)
+
     commandLineArgs = parser.parse_args()
 
 
@@ -105,8 +107,9 @@ class MSGDBExporter(object):
             if not testing:
                 self.gzipCompressFile(fullPath)
 
-            if toCloud and not testing:
-                self.uploadDBToCloudStorage('%s.sql.gz' % fullPath)
+            if toCloud:
+                self.uploadDBToCloudStorage('%s.sql.gz' % fullPath,
+                                            testing = commandLineArgs.testing)
 
             # Remove the uncompressed file.
             try:
@@ -116,7 +119,7 @@ class MSGDBExporter(object):
                     'Exception while removing %s.sql: %s.' % (fullPath, e))
 
 
-    def uploadDBToCloudStorage(self, fullPath = ''):
+    def uploadDBToCloudStorage(self, fullPath = '', testing = False):
         """
         Export a DB to cloud storage.
 
@@ -125,7 +128,46 @@ class MSGDBExporter(object):
 
         success = True
         dbName = os.path.basename(fullPath)
-        credentialPath = os.path.dirname(fullPath)
+
+        driveService = self.driveService(os.path.dirname(fullPath))
+
+        self.logger.log("Uploading %s." % dbName)
+
+        try:
+
+            if not testing:
+                media_body = MediaFileUpload(fullPath,
+                                             mimetype =
+                                             'application/gzip-compressed',
+                                             resumable = True)
+                body = {'title': dbName,
+                        'description': 'Hawaii Smart Energy Project gzip '
+                                       'compressed DB export.',
+                        'mimeType': 'application/gzip-compressed'}
+
+                file = driveService.files().insert(body = body,
+                                                   media_body = media_body)\
+                    .execute()
+
+                pprint.pprint(file)
+            else:
+                self.logger.log("Called upload with testing flag on.")
+
+        except (errors.ResumableUploadError):
+            self.logger.log("Cannot initiate upload of %s." % dbName, 'error')
+            success = False
+
+        if success:
+            self.logger.log("Finished.")
+
+
+    def driveService(self, credentialPath = ''):
+        """
+        Connect to the cloud service.
+
+        :param credentialPath: Path containing credentials.
+        :returns: Drive service object.
+        """
 
         storage = Storage('%s/google_api_credentials' % credentialPath)
 
@@ -141,32 +183,10 @@ class MSGDBExporter(object):
 
         self.logger.log("Authorized.")
 
-        self.logger.log("Uploading %s." % dbName)
+        driveService = build('drive', 'v2', http = http)
 
-        drive_service = build('drive', 'v2', http = http)
+        return driveService
 
-        try:
-
-            media_body = MediaFileUpload(fullPath,
-                                         mimetype =
-                                         'application/gzip-compressed',
-                                         resumable = True)
-            body = {'title': dbName,
-                    'description': 'Hawaii Smart Energy Project gzip '
-                                   'compressed DB export.',
-                    'mimeType': 'application/gzip-compressed'}
-
-            file = drive_service.files().insert(body = body,
-                                                media_body = media_body)\
-                .execute()
-
-            pprint.pprint(file)
-        except (errors.ResumableUploadError):
-            self.logger.log("Cannot initiate upload of %s." % dbName, 'error')
-            success = False
-
-        if success:
-            self.logger.log("Finished.")
 
 
     def retrieveCredentials(self):
@@ -209,7 +229,7 @@ if __name__ == '__main__':
 
     exporter.exportDB(
         [exporter.configer.configOptionValue('Export', 'dbs_to_export')],
-        toCloud = True, testing = False)
+        toCloud = True, testing = commandLineArgs.testing)
 
     print 'Recording:\n%s' % exporter.logger.recording
 
