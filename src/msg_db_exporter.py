@@ -22,6 +22,7 @@ import argparse
 from oauth2client.file import Storage
 from apiclient import errors
 from msg_notifier import MSGNotifier
+import time
 
 commandLineArgs = None
 
@@ -149,7 +150,7 @@ class MSGDBExporter(object):
                                                    media_body = media_body)\
                     .execute()
 
-                pprint.pprint(file)
+                #pprint.pprint(file)
             else:
                 self.logger.log("Called upload with testing flag on.")
 
@@ -233,6 +234,14 @@ class MSGDBExporter(object):
             aboutData['quotaBytesUsedInTrash'])
 
 
+    def uploadWasSuccessful(self, file):
+        """
+        Determine upload success.
+        """
+        success = False
+        return success
+
+
 if __name__ == '__main__':
     processCommandLineArguments()
 
@@ -240,11 +249,17 @@ if __name__ == '__main__':
     notifier = MSGNotifier()
     exporter.logger.shouldRecord = True
 
+    startTime = time.time()
     exporter.exportDB(
         [exporter.configer.configOptionValue('Export', 'dbs_to_export')],
         toCloud = True, testing = commandLineArgs.testing)
+    wallTime = time.time() - startTime
+    wallTimeMin = int(wallTime / 60.0)
+    wallTimeSec = (wallTime - wallTimeMin)
 
-    print 'Recording:\n%s' % exporter.logger.recording
+    exporter.logger.log(
+        'Wall time: {:d} min {:.2f} s.'.format(wallTimeMin, wallTimeSec))
 
-    #exporter.uploadDBToCloudStorage(commandLineArgs.fullpath)
+    #print 'Recording:\n%s' % exporter.logger.recording
+
 
