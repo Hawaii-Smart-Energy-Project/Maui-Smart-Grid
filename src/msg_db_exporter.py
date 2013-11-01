@@ -55,7 +55,7 @@ class MSGDBExporter(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__)
+        self.logger = MSGLogger(__name__, 'debug')
         self.timeUtil = MSGTimeUtil()
         self.configer = MSGConfiger()
 
@@ -67,6 +67,12 @@ class MSGDBExporter(object):
         self.oauthScope = 'https://www.googleapis.com/auth/drive'
         self.oauthConsent = 'urn:ietf:wg:oauth:2.0:oob'
         self.googleAPICredentials = ''
+        self.exportPath = self.configer.configOptionValue('Export',
+                                                          'db_export_path')
+        self.credentialPath = self.exportPath
+        self.credentialStorage = Storage(
+            '%s/google_api_credentials' % self.credentialPath)
+        self.driveService = None
 
 
     def exportDB(self, databases = None, toCloud = False, testing = False):
@@ -85,7 +91,7 @@ class MSGDBExporter(object):
         host = self.configer.configOptionValue('Database', 'db_host')
 
         for db in databases:
-            self.logger.log('Exporting %s.' % db)
+            self.logger.log('Exporting %s.' % db, 'info')
             conciseNow = self.timeUtil.conciseNow()
             dumpName = "%s_%s" % (conciseNow, db)
             command = """pg_dump -h %s %s > %s/%s.sql""" % (host, db,
@@ -104,7 +110,7 @@ class MSGDBExporter(object):
             except subprocess.CalledProcessError, e:
                 self.logger.log("An exception occurred: %s", e)
 
-            self.logger.log("Compressing %s using gzip." % db)
+            self.logger.log("Compressing %s using gzip." % db, 'info')
             if not testing:
                 self.gzipCompressFile(fullPath)
 
@@ -130,7 +136,8 @@ class MSGDBExporter(object):
         success = True
         dbName = os.path.basename(fullPath)
 
-        driveService = self.driveService(os.path.dirname(fullPath))
+        self.logger.log('full path %s' % os.path.dirname(fullPath), 'debug')
+        self.startDriveService(os.path.dirname(fullPath))
 
         self.logger.log("Uploading %s." % dbName)
 
@@ -146,7 +153,7 @@ class MSGDBExporter(object):
                                        'compressed DB export.',
                         'mimeType': 'application/gzip-compressed'}
 
-                file = driveService.files().insert(body = body,
+                file = self.driveService.files().insert(body = body,
                                                    media_body = media_body)\
                     .execute()
 
@@ -162,13 +169,14 @@ class MSGDBExporter(object):
             self.logger.log("Finished.")
 
 
-    def driveService(self, credentialPath = ''):
+    def startDriveService(self, credentialPath = ''):
         """
         Connect to the cloud service.
 
         :param credentialPath: Path containing credentials.
         :returns: Drive service object.
         """
+        self.logger.log('', 'debug')
 
         storage = Storage('%s/google_api_credentials' % credentialPath)
 
@@ -178,15 +186,13 @@ class MSGDBExporter(object):
 
         self.googleAPICredentials = storage.get()
 
-        self.logger.log("Authorizing credentials.")
+        self.logger.log("Authorizing credentials.", 'info')
         http = httplib2.Http()
         http = self.googleAPICredentials.authorize(http)
 
-        self.logger.log("Authorized.")
+        self.logger.log("Authorized.", 'info')
 
-        driveService = build('drive', 'v2', http = http)
-
-        return driveService
+        self.driveService = build('drive', 'v2', http = http)
 
 
     def retrieveCredentials(self):
@@ -220,7 +226,7 @@ class MSGDBExporter(object):
         f_in.close()
 
 
-    def freeSpace(self, driveService):
+    def freeSpace(self):
         """
         Get free space from the drive service.
 
@@ -228,10 +234,14 @@ class MSGDBExporter(object):
         :returns: Free space on the drive service.
         """
 
-        aboutData = driveService.about().get().execute()
-        return int(aboutData['quotaBytesTotal']) - int(
-            aboutData['quotaBytesUsed']) - int(
-            aboutData['quotaBytesUsedInTrash'])
+        if not self.driveService:
+            self.startDriveService(self.credentialPath)
+        if self.driveService:
+            aboutData = self.driveService.about().get().execute()
+            return int(aboutData['quotaBytesTotal']) - int(
+                aboutData['quotaBytesUsed']) - int(
+                aboutData['quotaBytesUsedInTrash'])
+        return None
 
 
     def uploadWasSuccessful(self, file):
@@ -256,6 +266,8 @@ if __name__ == '__main__':
     wallTime = time.time() - startTime
     wallTimeMin = int(wallTime / 60.0)
     wallTimeSec = (wallTime - wallTimeMin)
+
+    exporter.logger.log('Free space remaining: %d' % exporter.freeSpace())
 
     exporter.logger.log(
         'Wall time: {:d} min {:.2f} s.'.format(wallTimeMin, wallTimeSec))
