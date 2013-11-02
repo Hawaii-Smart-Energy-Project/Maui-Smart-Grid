@@ -41,7 +41,7 @@ The schema consists of the following components.
 4. MECO Meter Records (deprecated)
 5. MECO Meter Location History
 9. MECO eGauge Energy Data
-6. NOAA Weather Data (Kahului Station)
+6. NOAA Weather Data (Kahului Airport Station)
 7. Circuit Data
 8. Transformer Data
 10. Irradiance Data
@@ -81,6 +81,7 @@ The software has the following dependencies and they can be satisfied through va
 #### Python Modules Not in the Standard Library ####
 
 * dateutil
+* google-api-python-client
 * matplotlib
 * psycopg2
 * pycurl
@@ -287,7 +288,7 @@ Data downloads are not always able to be completed resulting in invalid data bei
 
 ### Database Exports ###
 
-Exports of MSG databases and other databases occur according to a predefined schedule. The exports consist of gzip compressed SQL scripts that are stored both on local storage and cloud storage.
+Exports of MSG databases and other databases occur according to a predefined schedule. The exports consist of gzip compressed SQL scripts that are stored both on local storage and cloud storage. Storage to the Google Drive service is supported at this time.
 
 ## Notifications ##
 
