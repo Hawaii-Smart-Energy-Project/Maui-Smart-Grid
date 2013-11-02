@@ -18,11 +18,12 @@ import pprint
 from apiclient.discovery import build
 from apiclient.http import MediaFileUpload
 from oauth2client.client import OAuth2WebServerFlow
-import argparse
 from oauth2client.file import Storage
 from apiclient import errors
 from msg_notifier import MSGNotifier
 import time
+import datetime
+import argparse
 
 commandLineArgs = None
 
@@ -107,7 +108,6 @@ class MSGDBExporter(object):
         self._cloudFiles = None
 
 
-
     def exportDB(self, databases = None, toCloud = False, testing = False):
         """
         Export a set of DBs to local storage.
@@ -141,7 +141,7 @@ class MSGDBExporter(object):
                 if not testing:
                     subprocess.check_call(command, shell = True)
             except subprocess.CalledProcessError, e:
-                self.logger.log("An exception occurred: %s", e)
+                self.logger.log("An exception occurred: %s" % e)
 
             self.logger.log("Compressing %s using gzip." % db, 'info')
             if not testing:
@@ -187,8 +187,8 @@ class MSGDBExporter(object):
                         'mimeType': 'application/gzip-compressed'}
 
                 file = self.driveService.files().insert(body = body,
-                                                   media_body = media_body)\
-                    .execute()
+                                                        media_body =
+                                                        media_body).execute()
 
                 #pprint.pprint(file)
             else:
@@ -255,8 +255,32 @@ class MSGDBExporter(object):
         return success
 
 
-    def deleteFile(self,file):
-        pass
+    def deleteFile(self, fileID = ''):
+        """
+        Delete the file with ID fileID.
+
+        :param fileID: Googe API file ID.
+        """
+
+        #self.logger.log('http: %s', self.driveService._http)
+        self.logger.log('File ID: %s' % fileID, 'debug')
+
+        try:
+            self.driveService.files().delete(fileId = fileID).execute()
+
+        except errors.HttpError, error:
+            self.logger.log('An error occurred: %s' % error, 'error')
+
+
+    def deleteOutdatedFiles(self):
+        for item in self.cloudFiles['items']:
+            t1 = datetime.datetime.strptime(item['createdDate'],
+                                            "%Y-%m-%dT%H:%M:%S.%fZ")
+            t2 = datetime.datetime.now()
+            tdelta = t2 - t1
+
+            if tdelta > datetime.timedelta(days = 1):
+                self.deleteFile(fileID = item['id'])
 
 
     def sendNotificationOfFiles(self):
