@@ -13,7 +13,8 @@ The University of Hawaii at Manoa was tasked with maintaining a data repository 
 * Insertion of data to a data store (PostgreSQL 9.1) is performed automatically.
 * Source files to recreate the structure of the data store are available.
 * Unit testing of data processing operations is provided by a test suite implemented through Python's `unittest`.
-* Data operations are reported using **email notifications including plots as graphic summaries**.
+* Results of data operations are reported using **email notifications including plots as graphic summaries**.
+* Automatic export of live databases to cloud storage for multiple days saved independently.
 
 ### Project Documentation ###
 
@@ -236,7 +237,9 @@ The stars (*) indicate when commits are performed.
 
 A final summary report follows the `---` symbol.
 
-Parallel data loading is supported since loading is performed atomically, database commits are made after data verification including taking duplicate records into account.
+Parallel data loading is supported since loading is performed atomically, database commits are made after data verification including taking duplicate records into account. The default data loading mode is parallel loading of multiple files. Duplicate files can be problematic because of this and should, therefore, be eliminated prior to passing data to the autoload.
+
+
   
 ### Testing Mode
 The database insertion scripts have a separate testing mode that can be activated using the `--testing` command-line option. When testing mode is enabled, database operations will be performed on the testing database as defined in the site configuration file. Additionally, operations such as notifications will be directed to their appropriate testing mode settings. For example, email notifications will be delivered to testing mode recipients instead of the primary distribution list.
