@@ -18,7 +18,7 @@ The University of Hawaii at Manoa was tasked with maintaining a data repository 
 
 ### Project Documentation ###
 
-Documentation is maintained as docstrings within the source code files with the intention of conforming to the reStructuredText format. There is also a [GitHub-based wiki](https://github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/wiki).
+This README file is the primary documentation for this software project. Further documentation is also maintained as docstrings within the source code files with the intention of conforming to the reStructuredText format. There is also a [GitHub-based wiki](https://github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/wiki).
 
 ## Implementation ##
 
