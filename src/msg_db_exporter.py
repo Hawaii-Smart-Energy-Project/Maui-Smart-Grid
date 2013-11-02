@@ -50,6 +50,36 @@ class MSGDBExporter(object):
     Supports export to local storage and to cloud storage.
     """
 
+    @property
+    def cloudFiles(self):
+        self._cloudFiles = self.driveService.files().list().execute()
+        return self._cloudFiles
+
+    @property
+    def driveService(self):
+        if self._driveService:
+            return self._driveService
+
+        if not self.credentialPath:
+            raise Exception("Credential path is required.")
+        storage = Storage('%s/google_api_credentials' % self.credentialPath)
+
+        #self.logger.log("Retrieving credentials.")
+        #self.retrieveCredentials()
+        #storage.put(self.googleAPICredentials)
+
+        self.googleAPICredentials = storage.get()
+
+        self.logger.log("Authorizing credentials.", 'info')
+        http = httplib2.Http()
+        http = self.googleAPICredentials.authorize(http)
+
+        self.logger.log("Authorized.", 'info')
+
+        self._driveService = build('drive', 'v2', http = http)
+        return self._driveService
+
+
     def __init__(self):
         """
         Constructor.
@@ -72,7 +102,10 @@ class MSGDBExporter(object):
         self.credentialPath = self.exportPath
         self.credentialStorage = Storage(
             '%s/google_api_credentials' % self.credentialPath)
-        self.driveService = None
+
+        self._driveService = None
+        self._cloudFiles = None
+
 
 
     def exportDB(self, databases = None, toCloud = False, testing = False):
@@ -137,7 +170,7 @@ class MSGDBExporter(object):
         dbName = os.path.basename(fullPath)
 
         self.logger.log('full path %s' % os.path.dirname(fullPath), 'debug')
-        self.startDriveService(os.path.dirname(fullPath))
+        #self.startDriveService(os.path.dirname(fullPath))
 
         self.logger.log("Uploading %s." % dbName)
 
@@ -167,32 +200,6 @@ class MSGDBExporter(object):
 
         if success:
             self.logger.log("Finished.")
-
-
-    def startDriveService(self, credentialPath = ''):
-        """
-        Connect to the cloud service.
-
-        :param credentialPath: Path containing credentials.
-        :returns: Drive service object.
-        """
-        self.logger.log('', 'debug')
-
-        storage = Storage('%s/google_api_credentials' % credentialPath)
-
-        #self.logger.log("Retrieving credentials.")
-        #self.retrieveCredentials()
-        #storage.put(self.googleAPICredentials)
-
-        self.googleAPICredentials = storage.get()
-
-        self.logger.log("Authorizing credentials.", 'info')
-        http = httplib2.Http()
-        http = self.googleAPICredentials.authorize(http)
-
-        self.logger.log("Authorized.", 'info')
-
-        self.driveService = build('drive', 'v2', http = http)
 
 
     def retrieveCredentials(self):
@@ -234,14 +241,10 @@ class MSGDBExporter(object):
         :returns: Free space on the drive service.
         """
 
-        if not self.driveService:
-            self.startDriveService(self.credentialPath)
-        if self.driveService:
-            aboutData = self.driveService.about().get().execute()
-            return int(aboutData['quotaBytesTotal']) - int(
-                aboutData['quotaBytesUsed']) - int(
-                aboutData['quotaBytesUsedInTrash'])
-        return None
+        aboutData = self.driveService.about().get().execute()
+        return int(aboutData['quotaBytesTotal']) - int(
+            aboutData['quotaBytesUsed']) - int(
+            aboutData['quotaBytesUsedInTrash'])
 
 
     def uploadWasSuccessful(self, file):
@@ -250,6 +253,14 @@ class MSGDBExporter(object):
         """
         success = False
         return success
+
+
+    def deleteFile(self,file):
+        pass
+
+
+    def sendNotificationOfFiles(self):
+        pass
 
 
 if __name__ == '__main__':
