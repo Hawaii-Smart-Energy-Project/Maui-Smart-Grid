@@ -295,7 +295,7 @@ class MSGDBExporter(object):
     def verifyMD5Sum(self, localFilePath, remoteFileID):
 
         # Get the md5sum for the local file.
-        localMD5Sum = hashlib.md5(localFilePath).hexdigest
+        localMD5Sum = hashlib.md5(localFilePath).hexdigest()
         self.logger.log('local md5: %s' % localMD5Sum, 'DEBUG')
 
         # Get the md5sum for the remote file.
