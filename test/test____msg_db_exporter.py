@@ -14,10 +14,10 @@ class MSGDBExporterTester(unittest.TestCase):
         self.exporter = MSGDBExporter()
 
     def testListRemoteFiles(self):
-        title=''
-        id=''
+        title = ''
+        id = ''
         for item in self.exporter.cloudFiles['items']:
-            title=item['title']
+            title = item['title']
             print title
             id = item['id']
             print id
@@ -30,7 +30,15 @@ class MSGDBExporterTester(unittest.TestCase):
             print item['title']
             md5sum = item['md5Checksum']
             print md5sum
-        self.assertEquals(len(md5sum),32)
+        self.assertEquals(len(md5sum), 32)
+
+    # @todo Upload file for testing.
+    def testGetFileIDForFilename(self):
+        fileID = self.exporter.fileIDForFileName(
+            '2013-11-01_021138_meco_v3.sql.gz')
+        print "file id = %s" % fileID
+        self.assertIsNotNone(fileID)
+
 
 if __name__ == '__main__':
     unittest.main()
