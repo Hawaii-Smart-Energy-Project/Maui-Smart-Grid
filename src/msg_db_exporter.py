@@ -14,7 +14,7 @@ from msg_configer import MSGConfiger
 import gzip
 import os
 import httplib2
-import pprint
+#import pprint
 from apiclient.discovery import build
 from apiclient.http import MediaFileUpload
 from oauth2client.client import OAuth2WebServerFlow
@@ -24,6 +24,7 @@ from msg_notifier import MSGNotifier
 import time
 import datetime
 import argparse
+import hashlib
 
 commandLineArgs = None
 
@@ -163,7 +164,7 @@ class MSGDBExporter(object):
         """
         Export a DB to cloud storage.
 
-        :param fullPath
+        :param fullPath of DB file to be exported.
         """
 
         success = True
@@ -196,6 +197,10 @@ class MSGDBExporter(object):
 
         except (errors.ResumableUploadError):
             self.logger.log("Cannot initiate upload of %s." % dbName, 'error')
+            success = False
+
+        if not self.verifyMD5Sum(fullPath, self.fileIDForFileName(dbName)):
+            self.logger.log('Failed MD5 checksum verification.', 'INFO')
             success = False
 
         if success:
@@ -285,6 +290,35 @@ class MSGDBExporter(object):
 
     def sendNotificationOfFiles(self):
         pass
+
+
+    def verifyMD5Sum(self, localFilePath, remoteFileID):
+
+        # Get the md5sum for the local file.
+        localMD5Sum = hashlib.md5(localFilePath).hexdigest
+        self.logger.log('local md5: %s' % localMD5Sum, 'DEBUG')
+
+        # Get the md5sum for the remote file.
+        for item in self.cloudFiles['items']:
+            if (item['id'] == remoteFileID):
+                self.logger.log('remote md5: %s' % item['md5Checksum'], 'DEBUG')
+                if localMD5Sum == item['md5Checksum']:
+                    return True
+                else:
+                    return False
+        return False
+
+
+    def fileIDForFileName(self, filename):
+        """
+        Get the file ID for the given filename.
+        """
+
+        for item in self.cloudFiles['items']:
+            self.logger.log('title: %s' % item['title'], 'DEBUG')
+            if (item['title'] == filename):
+                return item['id']
+        return None
 
 
 if __name__ == '__main__':
