@@ -168,8 +168,8 @@ if __name__ == '__main__':
     if commandLineArgs.email:
         logger.log("Email will be sent.\n", 'info')
 
-    msg = ''
-    msgBody = ''
+    msg = '' # Used for the notification message.
+    msgBody = '' # Used for the notification message.
     databaseName = ''
 
     if commandLineArgs.testing:
@@ -211,6 +211,7 @@ if __name__ == '__main__':
 
     parseLog = ''
 
+    # Verify the existence of the insert script.
     try:
         with open(insertScript):
             pass

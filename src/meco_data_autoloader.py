@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
 __author__ = 'Daniel Zhang (張道博)'
 __copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
 __license__ = 'https://raw.github' \
@@ -16,7 +17,7 @@ import subprocess
 
 class MECODataAutoloader(object):
     """
-    Provide automated loading of MECO energy data from exports in gzip-compressed XML.
+    Provide automated loading of MECO energy data from exports in gzip-compressed XML source data.
     """
 
     def __init__(self):
@@ -72,6 +73,7 @@ class MECODataAutoloader(object):
         """
         Archive successfully loaded data.
         """
+
         autoloadPath = self.configer.configOptionValue('MECO Autoload', 'meco_new_data_path')
         archivePath = self.configer.configOptionValue('MECO Autoload', 'meco_autoload_archive_path')
         patterns = ['*.gz']
