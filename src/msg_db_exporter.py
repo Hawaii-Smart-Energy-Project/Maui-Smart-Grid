@@ -160,6 +160,8 @@ class MSGDBExporter(object):
                 self.logger.log(
                     'Exception while removing %s.sql: %s.' % (fullPath, e))
 
+        self.deleteOutdatedFiles(minAge = datetime.timedelta(days = 1))
+
 
     def uploadDBToCloudStorage(self, fullPath = '', testing = False):
         """
@@ -281,15 +283,22 @@ class MSGDBExporter(object):
             self.logger.log('An error occurred: %s' % error, 'error')
 
 
-    def deleteOutdatedFiles(self):
+    def deleteOutdatedFiles(self, minAge = datetime.timedelta(days = 1),
+                            maxAge = datetime.timedelta(weeks = 9999999)):
+        deleteCnt = 0
         for item in self.cloudFiles['items']:
             t1 = datetime.datetime.strptime(item['createdDate'],
                                             "%Y-%m-%dT%H:%M:%S.%fZ")
             t2 = datetime.datetime.now()
             tdelta = t2 - t1
 
-            if tdelta > datetime.timedelta(days = 1):
+            self.logger.log('tdelta: %s' % tdelta, 'DEBUG')
+
+            if tdelta > minAge and tdelta < maxAge:
+                deleteCnt += 1
                 self.deleteFile(fileID = item['id'])
+
+        return deleteCnt
 
 
     def sendNotificationOfFiles(self):
