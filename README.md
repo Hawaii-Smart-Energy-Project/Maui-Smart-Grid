@@ -291,7 +291,7 @@ Data downloads are not always able to be completed resulting in invalid data bei
 
 ### Database Exports ###
 
-Exports of MSG databases and other databases occur according to a predefined schedule. The exports consist of gzip compressed SQL scripts that are stored both on local storage and cloud storage. Storage to the Google Drive service is supported at this time.
+Exports of MSG databases and other databases occur according to a predefined schedule. The exports consist of gzip compressed SQL scripts that are stored both on local storage and cloud storage. Storage to the Google Drive service is supported at this time. Database exports are verified by their MD5 checksums.
 
 ## Notifications ##
 
