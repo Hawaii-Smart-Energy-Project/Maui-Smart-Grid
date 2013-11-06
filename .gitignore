@@ -45,3 +45,5 @@ temp_*
 /enum.py
 /queueExample.py
 /MANIFEST
+/src/test.py
+/src/sample.py
