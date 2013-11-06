@@ -6,6 +6,10 @@ __author__ = 'Daniel Zhang (張道博)'
 import unittest
 from msg_logger import MSGLogger
 from msg_db_exporter import MSGDBExporter
+import hashlib
+import os
+import httplib2
+from apiclient import http
 
 
 class MSGDBExporterTester(unittest.TestCase):
@@ -38,6 +42,40 @@ class MSGDBExporterTester(unittest.TestCase):
             '2013-11-01_021138_meco_v3.sql.gz')
         print "file id = %s" % fileID
         self.assertIsNotNone(fileID)
+
+    def testUploadTestData(self):
+        """
+        Upload a test data file for unit testing of DB export.
+        """
+
+        self.logger.log("Uploading test data.")
+
+        filePath = "../test-data/db-export/meco_v3.sql.gz"
+        print hashlib.md5(filePath).hexdigest()
+
+        #for i in range(3):
+        uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
+
+        for item in self.exporter.cloudFiles['items']:
+            print 'item: %s' % item['title']
+            print 'md5: %s' % item['md5Checksum']
+
+        deleteSuccessful = True
+
+        # Keep deleting until there is no more to delete.
+        while deleteSuccessful:
+            try:
+                fileIDToDelete = self.exporter.fileIDForFileName(
+                    'meco_v3.sql.gz')
+                self.logger.log("file ID to delete: %s" % fileIDToDelete,
+                                'DEBUG')
+                self.exporter.driveService.files().delete(
+                    fileId = '%s' % fileIDToDelete).execute()
+            except (TypeError, http.HttpError) as e:
+                self.logger.log('Delete not successful: %s' % e, 'DEBUG')
+                break
+
+        self.assertTrue(uploadResult)
 
 
 if __name__ == '__main__':
