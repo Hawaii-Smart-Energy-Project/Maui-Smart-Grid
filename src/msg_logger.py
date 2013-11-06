@@ -19,6 +19,10 @@ import logging
 from io import StringIO
 
 
+def enum(**enums):
+    return type('Enum', (), enums)
+
+
 class MSGLogger(object):
     """
     This class provides logging functionality.
@@ -55,7 +59,12 @@ class MSGLogger(object):
 
         self.loggerLevel = None
 
+        # @todo Test use of enum.
+        self.LogLevels = enum(INFO = 1, ERROR = 2, DEBUG = 3)
+
         level = level.lower()
+        logLevel = level
+
         if level == 'info':
             self.loggerLevel = logging.INFO
         elif level == 'error':
@@ -67,9 +76,16 @@ class MSGLogger(object):
         else:
             self.loggerLevel = None
 
+
+        #if logLevel == self.LogLevels.INFO:
+        #    pass
+        #if logLevel == self.LogLevels.ERROR:
+        #    pass
+
+
         # Messages equal to and above the logging level will be logged.
-        # @todo Test that logging level is used.
-        self.logger.setLevel(self.loggerLevel)
+
+        #self.logger.setLevel(self.loggerLevel)
 
         self.recordingBuffer = []
         self.recording = ''
@@ -123,17 +139,24 @@ class MSGLogger(object):
             elif level == 'error':
                 loggerLevel = logging.ERROR
             elif level == 'silent':
-                loggerLevel = None
+                loggerLevel = logging.NOTSET
             else:
-                loggerLevel = self.loggerLevel
+                loggerLevel = logging.INFO # Default logger level.
+
+        # @todo Assert that logger level is never None.
+
+        if loggerLevel == logging.NOTSET:
+            return
 
         if loggerLevel != None:
 
             self.logger.log(loggerLevel, message)
 
             if self.shouldRecord:
-                # The recording buffer is a cumulative copy of the logging output.
-                # At each iteration, the buffer plus the new output is appended to the list.
+                # The recording buffer is a cumulative copy of the logging
+                # output.
+                # At each iteration, the buffer plus the new output is
+                # appended to the list.
                 self.recordingBuffer.append('%s' % (self.ioStream.getvalue()))
                 self.recording = self.recordingBuffer[-1]
 
@@ -152,3 +175,5 @@ class MSGLogger(object):
 
     def endRecording(self):
         self.shouldRecord = False
+
+
