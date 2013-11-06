@@ -10,6 +10,7 @@ import hashlib
 import os
 import httplib2
 from apiclient import http
+import datetime
 
 
 class MSGDBExporterTester(unittest.TestCase):
@@ -76,6 +77,22 @@ class MSGDBExporterTester(unittest.TestCase):
                 break
 
         self.assertTrue(uploadResult)
+
+    def testDeleteOutdatedFiles(self):
+        # @todo Prevent deleting files uploaded today.
+
+        self.logger.log("Test deleting outdated files.")
+
+        self.logger.log("Uploading test data.")
+
+        filePath = "../test-data/db-export/meco_v3.sql.gz"
+
+        uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
+
+        cnt = self.exporter.deleteOutdatedFiles(
+            minAge = datetime.timedelta(days = -2),
+            maxAge = datetime.timedelta(days = 0))
+        self.assertGreater(cnt, 0)
 
 
 if __name__ == '__main__':
