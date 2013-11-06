@@ -166,6 +166,7 @@ class MSGDBExporter(object):
         Export a DB to cloud storage.
 
         :param fullPath of DB file to be exported.
+        :returns: True on verified on upload; False if verification fails.
         """
 
         success = True
@@ -205,7 +206,9 @@ class MSGDBExporter(object):
             success = False
 
         if success:
+            self.logger.log('Verification by MD5 checksum succeeded.', 'INFO')
             self.logger.log("Finished.")
+        return success
 
 
     def retrieveCredentials(self):
