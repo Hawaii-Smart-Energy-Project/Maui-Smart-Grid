@@ -25,6 +25,7 @@ import time
 import datetime
 import argparse
 import hashlib
+from functools import partial
 
 commandLineArgs = None
 
@@ -268,7 +269,7 @@ class MSGDBExporter(object):
         """
 
         #self.logger.log('http: %s', self.driveService._http)
-        self.logger.log('File ID: %s' % fileID, 'debug')
+        self.logger.log('Deleting File ID: %s' % fileID, 'debug')
 
         try:
             self.driveService.files().delete(fileId = fileID).execute()
@@ -294,8 +295,15 @@ class MSGDBExporter(object):
 
     def verifyMD5Sum(self, localFilePath, remoteFileID):
 
+        self.logger.log('local file path: %s' % localFilePath)
         # Get the md5sum for the local file.
-        localMD5Sum = hashlib.md5(localFilePath).hexdigest()
+        f = open(localFilePath, mode = 'rb')
+        fContent = hashlib.md5()
+        for buf in iter(partial(f.read, 128), b''):
+            fContent.update(buf)
+        localMD5Sum = fContent.hexdigest()
+        f.close()
+
         self.logger.log('local md5: %s' % localMD5Sum, 'DEBUG')
 
         # Get the md5sum for the remote file.
@@ -334,12 +342,14 @@ if __name__ == '__main__':
         toCloud = True, testing = commandLineArgs.testing)
     wallTime = time.time() - startTime
     wallTimeMin = int(wallTime / 60.0)
-    wallTimeSec = (wallTime - wallTimeMin)
+    wallTimeSec = (wallTime - wallTimeMin * 60.0)
 
-    exporter.logger.log('Free space remaining: %d' % exporter.freeSpace())
+    exporter.logger.log('Free space remaining: %d' % exporter.freeSpace(),
+                        'info')
 
     exporter.logger.log(
-        'Wall time: {:d} min {:.2f} s.'.format(wallTimeMin, wallTimeSec))
+        'Wall time: {:d} min {:.2f} s.'.format(wallTimeMin, wallTimeSec),
+        'info')
 
     #print 'Recording:\n%s' % exporter.logger.recording
 
