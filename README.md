@@ -285,9 +285,13 @@ Data exists in three possible states:
 
 There are three corresponding directories that are used to maintain the files for the data in these different states. The paths for these directories are defined in the MSG eGauge Service Configuration.
 
+#### Permissions ####
+
+The eGauge data download directory should be group writable if running the MSG eGauge Service from a user account.
+
 #### Invalid Data ####
 
-Data downloads are not always able to be completed resulting in invalid data being saved. When this situation occurs, it may be necessary to manually intervene by manually pruning the invalid data. This condition can be recognized when there exists a mismatched number of data values to the data columns. Database operations will not be able to complete when the data is in this state. Data that is not able to be loaded is archived to the invalid data path. It is recommended that this storage be occassionally purged as **invalid data only pertains to the time period between that which was last loaded and the most recent data available.** It is not automatically deleted in case it is needed for reference.
+When invalid data exists, all other data is not loaded. This is a limitation of the eGauge service in its present form. Manual intervention is required to resolve this problem. This condition can be caused when there exists a mismatched number of data values to the data columns. Database operations will not be able to complete when the data is in this state. Data that is not able to be loaded is archived to the invalid data path. It is recommended that this storage be occassionally purged as **invalid data only pertains to the time period between that which was last loaded and the most recent data available.** It is not automatically deleted in case it is needed for reference.
 
 ### Database Exports ###
 
