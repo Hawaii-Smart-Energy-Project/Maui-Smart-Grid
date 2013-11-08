@@ -16,9 +16,13 @@ class MSGLoggerTester(unittest.TestCase):
         self.logger = MSGLogger(__name__)
 
     def testInit(self):
+        self.logger.log('Testing init.')
+
         self.assertIsNotNone(self.logger)
 
     def testLogRecording(self):
+        self.logger.log('Testing log recording.')
+
         msg = "Recording test."
 
         self.logger.startRecording()
@@ -27,7 +31,18 @@ class MSGLoggerTester(unittest.TestCase):
         self.logger.log("This should not be logged.", INFO)
 
         self.assertEqual(self.logger.recording, msg)
-        
+
+    def testSilentLogging(self):
+        self.logger.log('Testing silent logging.')
+
+        msg = "Recording test."
+
+        self.logger.startRecording()
+        self.logger.log(msg, 'silent')
+        self.logger.endRecording()
+
+        self.assertEqual(self.logger.recording, '')
+
 
 if __name__ == '__main__':
     unittest.main()
