@@ -33,7 +33,7 @@ class MSGLogger(object):
         Constructor.
 
         :params caller: Calling class.
-        :params level: An enumerated type detailing the level of the logging.
+        :params level: Logging level of the Logger.
 
         @todo Provide enumeration type.
         """
@@ -60,10 +60,10 @@ class MSGLogger(object):
         self.loggerLevel = None
 
         # @todo Test use of enum.
-        self.LogLevels = enum(INFO = 1, ERROR = 2, DEBUG = 3)
+        #self.LogLevels = enum(INFO = 1, ERROR = 2, DEBUG = 3)
 
         level = level.lower()
-        logLevel = level
+        #logLevel = level
 
         if level == 'info':
             self.loggerLevel = logging.INFO
@@ -82,10 +82,10 @@ class MSGLogger(object):
         #if logLevel == self.LogLevels.ERROR:
         #    pass
 
-
         # Messages equal to and above the logging level will be logged.
 
-        #self.logger.setLevel(self.loggerLevel)
+        # Setting the level here is essential to get output from the logger.
+        self.logger.setLevel(self.loggerLevel)
 
         self.recordingBuffer = []
         self.recording = ''
@@ -127,29 +127,33 @@ class MSGLogger(object):
         self.logger.addHandler(self.streamHandlerStdErr)
         self.logger.addHandler(self.streamHandlerString)
 
-        if not level:
-            loggerLevel = self.loggerLevel
+        #if not level:
+        #    loggerLevel = self.loggerLevel
 
+        #else:
+
+        level = level.lower()
+
+        #loggerLevel = None
+        if level == 'info':
+            loggerLevel = logging.INFO
+        elif level == 'debug':
+            loggerLevel = logging.DEBUG
+        elif level == 'error':
+            loggerLevel = logging.ERROR
+        elif level == 'silent':
+            loggerLevel = logging.NOTSET
         else:
-            loggerLevel = None
-            if level == 'info':
-                loggerLevel = logging.INFO
-            elif level == 'debug':
-                loggerLevel = logging.DEBUG
-            elif level == 'error':
-                loggerLevel = logging.ERROR
-            elif level == 'silent':
-                loggerLevel = logging.NOTSET
-            else:
-                loggerLevel = logging.INFO # Default logger level.
+            loggerLevel = logging.INFO # Default logger level.
 
         # @todo Assert that logger level is never None.
 
-        if loggerLevel == logging.NOTSET:
-            return
+        #if loggerLevel == logging.NOTSET:
+        #    return
 
         if loggerLevel != None:
 
+            print 'message: %s, logger level: %s' % (message, loggerLevel)
             self.logger.log(loggerLevel, message)
 
             if self.shouldRecord:
