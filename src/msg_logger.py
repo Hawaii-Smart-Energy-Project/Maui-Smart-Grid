@@ -62,6 +62,12 @@ class MSGLogger(object):
         # @todo Test use of enum.
         #self.LogLevels = enum(INFO = 1, ERROR = 2, DEBUG = 3)
 
+        #The log level that is set here provides the cut-off point for future
+        # calls to log that are responsible for the actual log messages.
+
+        # The log level here has a slightly different meaning than the log
+        # level used in the call to self.logger.log().
+
         level = level.lower()
         #logLevel = level
 
@@ -70,17 +76,18 @@ class MSGLogger(object):
         elif level == 'error':
             self.loggerLevel = logging.ERROR
         elif level == 'silent':
-            self.loggerLevel = None
+            self.loggerLevel = logging.NOTSET
         elif level == 'debug':
             self.loggerLevel = logging.DEBUG
         else:
-            self.loggerLevel = None
+            self.loggerLevel = logging.INFO
 
 
         #if logLevel == self.LogLevels.INFO:
         #    pass
         #if logLevel == self.LogLevels.ERROR:
         #    pass
+
 
         # Messages equal to and above the logging level will be logged.
 
@@ -132,7 +139,8 @@ class MSGLogger(object):
 
         #else:
 
-        level = level.lower()
+        if level:
+            level = level.lower()
 
         #loggerLevel = None
         if level == 'info':
@@ -152,14 +160,13 @@ class MSGLogger(object):
         #    return
 
         if loggerLevel != None:
-
-            print 'message: %s, logger level: %s' % (message, loggerLevel)
+            # For debugging:
+            #print 'message: %s, logger level: %s' % (message, loggerLevel)
             self.logger.log(loggerLevel, message)
 
             if self.shouldRecord:
                 # The recording buffer is a cumulative copy of the logging
-                # output.
-                # At each iteration, the buffer plus the new output is
+                # output. At each iteration, the buffer plus the new output is
                 # appended to the list.
                 self.recordingBuffer.append('%s' % (self.ioStream.getvalue()))
                 self.recording = self.recordingBuffer[-1]
@@ -172,6 +179,9 @@ class MSGLogger(object):
                 self.logger.removeHandler(handler)
 
             self.logCounter += 1
+        else:
+            # @todo Add assert for invalid log level.
+            print "Invalid logger level."
 
 
     def startRecording(self):
