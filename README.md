@@ -73,11 +73,11 @@ Plot of readings per meter counts and meter counts per day loaded to meco_v3.
 
 The software distribution archive is in tar gz format and can be extracted using
 
-    $ tar -zxvf Maui-Smart-Grid-1.0.tar.gz
+    $ tar -zxvf Maui-Smart-Grid-1.0.0.tar.gz
 
 ### Software Dependencies ###
 
-The software has the following dependencies and they can be satisfied through various methods. During development, `pip` was used to install third-party modules.
+The software has the following dependencies and they can be satisfied through various methods. During development, `pip` was used to install third-party modules. Other options exist for installing the necessary dependencies.
 
 #### Python Modules Not in the Standard Library ####
 
@@ -94,13 +94,14 @@ The software has the following dependencies and they can be satisfied through va
 
 The Python-based scripts and modules have their installer implemented through `distutils`. They can be installed using
 
-	$ python setup.py install --home=~/Maui-Smart-Grid-1.0
+	$ cd dist/MauiSmartGrid-1.0.0
+	$ python setup.py install --home=~/Maui-Smart-Grid-1.0.0
 
 This example demonstrates installing to a user directory which is sometimes preferred over installing to a system-wide path. For this example, the `PYTHONPATH` environment variable should be set using something like
 
-	$ export PYTHONPATH=~/Maui-Smart-Grid-1.0/lib/python
+	$ export PYTHONPATH=~/Maui-Smart-Grid-1.0.0/lib/python
 
-where this example is specific to bash or sh.
+where this example is specific to bash or sh. This can be placed in a startup configuration file such as `.bashrc` or `.bash_profile`, as necessary.
 
 ### MSG eGauge Service ###
 
@@ -116,13 +117,25 @@ The install script, `/src/msg_egauge_service/installEgaugeAutomaticDataServices.
 
 The distribution archive is created using
 
+	cd ${MAUI_SMART_GRID_SOURCE_CODE_ROOT_PATH}
 	$ python setup.py sdist
+
+## Uninstallation ##
+
+It is safe to complete remove the directory to which the software was installed for the purpose of replacing the software while preserving an existing configuration. The configuration settings are not stored in the software installation path and must be removed separately if complete removal is desired.
 
 ## Configuration ##
 
 All of the site-specific options are intended to be held in text-based configuration files. 
 
-The software is configured through a text configuration file contained in the user's home directory. The file is named `~/.msg-data-operations.cfg`. Permissions should be limited to owner read/write only. It is read by the `ConfigParser` module.
+The software is configured through a text configuration file contained in the user's home directory. The file is named `~/.msg-data-operations.cfg`. Permissions should be limited to owner read/write only. It is read by the `ConfigParser` module. 
+
+In summary, the configuration files are:
+
+* `~/.msg-data-operations.cfg`
+* `/usr/local/msg-egauge-service/config/egauge-automatic-data-services.config`
+
+The contents of these files are detailed in the following sections.
 
 ### Example Main Configuration File Content ###
 
@@ -197,6 +210,10 @@ The following is an example of the configuration file used for configuring the M
 The database schema can be installed using the following command form where `${DATABASE_NAME}` is a valid database.
 
     $ psql ${DATABASE_NAME} < ${DATABASE_STRUCTURE}.sql
+
+### Crontab Setup ###
+
+This software system makes use of `cron` for automatic operation scheduling. It is capable of running under a properly configured user-based crontab.
 
 ## Software Operation ##
 
