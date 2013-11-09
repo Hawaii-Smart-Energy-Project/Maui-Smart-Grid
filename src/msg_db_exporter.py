@@ -14,14 +14,13 @@ from msg_configer import MSGConfiger
 import gzip
 import os
 import httplib2
-#import pprint
 from apiclient.discovery import build
 from apiclient.http import MediaFileUpload
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.file import Storage
 from apiclient import errors
-from msg_notifier import MSGNotifier
-import time
+#from msg_notifier import MSGNotifier
+#import time
 import datetime
 import argparse
 import hashlib
@@ -151,7 +150,7 @@ class MSGDBExporter(object):
 
             if toCloud:
                 self.uploadDBToCloudStorage('%s.sql.gz' % fullPath,
-                                            testing = commandLineArgs.testing)
+                                            testing = testing)
 
             # Remove the uncompressed file.
             try:
@@ -341,28 +340,5 @@ class MSGDBExporter(object):
         return None
 
 
-if __name__ == '__main__':
-    processCommandLineArguments()
-
-    exporter = MSGDBExporter()
-    notifier = MSGNotifier()
-    exporter.logger.shouldRecord = True
-
-    startTime = time.time()
-    exporter.exportDB(
-        [exporter.configer.configOptionValue('Export', 'dbs_to_export')],
-        toCloud = True, testing = commandLineArgs.testing)
-    wallTime = time.time() - startTime
-    wallTimeMin = int(wallTime / 60.0)
-    wallTimeSec = (wallTime - wallTimeMin * 60.0)
-
-    exporter.logger.log('Free space remaining: %d' % exporter.freeSpace(),
-                        'info')
-
-    exporter.logger.log(
-        'Wall time: {:d} min {:.2f} s.'.format(wallTimeMin, wallTimeSec),
-        'info')
-
-    #print 'Recording:\n%s' % exporter.logger.recording
 
 
