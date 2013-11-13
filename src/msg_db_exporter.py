@@ -159,7 +159,8 @@ class MSGDBExporter(object):
                 self.logger.log(
                     'Exception while removing %s.sql: %s.' % (fullPath, e))
 
-        self.deleteOutdatedFiles(minAge = datetime.timedelta(days = 1))
+        self.deleteOutdatedFiles(minAge = datetime.timedelta(
+            days = self.configer.configOptionValue('Export', 'days_to_keep')))
 
 
     def uploadDBToCloudStorage(self, fullPath = '', testing = False):
@@ -282,9 +283,23 @@ class MSGDBExporter(object):
             self.logger.log('An error occurred: %s' % error, 'error')
 
 
-    def deleteOutdatedFiles(self, minAge = datetime.timedelta(days = 1),
+    def deleteOutdatedFiles(self, minAge = datetime.timedelta(days = 0),
                             maxAge = datetime.timedelta(weeks = 9999999)):
+        """
+        :param minAge: Minimum age before a file is considered outdated.
+        :param maxAge: Maximum age to consider for a file.
+        :returns: Count of deleted items.
+        """
+
         deleteCnt = 0
+
+        self.logger.log('minAge: %d' % minAge, 'DEBUG')
+        self.logger.log(
+            'datetime.timedelta(days = 0)' % datetime.timedelta(days = 0),
+            'DEBUG')
+        if minAge == datetime.timedelta(days = 0):
+            return 0
+
         for item in self.cloudFiles['items']:
             t1 = datetime.datetime.strptime(item['createdDate'],
                                             "%Y-%m-%dT%H:%M:%S.%fZ")
