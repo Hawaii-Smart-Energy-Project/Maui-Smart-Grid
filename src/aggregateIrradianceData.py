@@ -19,6 +19,7 @@ import argparse
 
 NEXT_MINUTE_CROSSING = 0
 
+
 def processCommandLineArguments():
     """
     Create command line arguments and parse them.
@@ -71,7 +72,7 @@ def isNumber(s):
     try:
         float(s)
         return True
-    except ValueError:
+    except (TypeError, ValueError):
         return False
 
 
@@ -102,6 +103,7 @@ for i in range(4):
     cnt[i] = 0
 
 rowCnt = 0
+finalTimestamp = None
 
 for row in rows:
 
@@ -110,6 +112,7 @@ for row in rows:
         sum[row[0] - 1] += row[1]
 
     minute = row[2].timetuple()[4]
+    finalTimestamp = row[2]
 
     if rowCnt == 0:
         if minute < 15:
@@ -134,3 +137,6 @@ for row in rows:
             cnt[i] = 0
 
     rowCnt += 1
+
+# Handle end case.
+emitAverage(sum, cnt, finalTimestamp)
