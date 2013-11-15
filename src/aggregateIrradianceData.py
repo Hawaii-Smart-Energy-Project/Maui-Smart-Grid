@@ -16,8 +16,6 @@ from msg_db_connector import MSGDBConnector
 from msg_logger import MSGLogger
 from msg_db_util import MSGDBUtil
 import argparse
-import psycopg2
-import datetime
 
 NEXT_MINUTE_CROSSING = 0
 
@@ -88,28 +86,22 @@ sql = """SELECT sensor_id, irradiance_w_per_m2, timestamp FROM
 "IrradianceData" where timestamp BETWEEN '%s' AND '%s'""" % (
     commandLineArgs.startDate, commandLineArgs.endDate)
 
-logger.log('sql: %s' % sql, 'DEBUG')
-
 cursor = conn.cursor()
 dbUtil.executeSQL(cursor, sql)
 
-try:
-    row = cursor.fetchone()
-except psycopg2.ProgrammingError, e:
-    logger.log("Failed to retrieve the value. Exception is %s" % e)
-
 rows = cursor.fetchall()
 sum = list()
+
 for i in range(4):
     sum.append(list())
     sum[i] = 0
-
-rowCnt = 0
 
 cnt = list()
 for i in range(4):
     cnt.append(list())
     cnt[i] = 0
+
+rowCnt = 0
 
 for row in rows:
 
