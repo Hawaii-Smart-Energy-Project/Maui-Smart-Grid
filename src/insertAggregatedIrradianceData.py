@@ -11,14 +11,6 @@ from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 import csv
 
-
-def replaceNull(s):
-    if s == 'NULL':
-        return 'NULL'
-    else:
-        return s
-
-
 connector = MSGDBConnector()
 conn = connector.connectDB()
 dbUtil = MSGDBUtil()
@@ -43,8 +35,6 @@ for file in files:
                 ','.join("'" + item.strip() + "'" for item in row))
 
             sql = sql.replace("'NULL'", 'NULL')
-
-            #print 'sql: %s' % sql
 
             dbUtil.executeSQL(cursor, sql)
 
