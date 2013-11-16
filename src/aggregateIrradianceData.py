@@ -4,6 +4,8 @@
 """
 Generates aggregated (average) irradiance data for 15-min intervals starting at
 minute zero.
+
+Provides intervals where the timestamp represents the end of the interval.
 """
 
 __author__ = 'Daniel Zhang (張道博)'
@@ -18,7 +20,6 @@ from msg_db_util import MSGDBUtil
 import argparse
 
 NEXT_MINUTE_CROSSING = 0
-
 
 def processCommandLineArguments():
     """
@@ -141,4 +142,4 @@ for row in rows:
     rowCnt += 1
 
 # Handle end case.
-emitAverage(sum, cnt, finalTimestamp)
+#emitAverage(sum, cnt, finalTimestamp)
