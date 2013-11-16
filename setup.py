@@ -78,8 +78,11 @@ setup(name = 'MauiSmartGrid',
       ],
 
       scripts = [
+          'src/aggregate-irradiance-data.sh',
+          'src/aggregateIrradianceData.py',
           'src/autoloadNewMECOData.py',
           'src/exportDBsToCloud.py',
+          'src/insertAggregatedIrradianceData.py',
           'src/insertCompressedNOAAWeatherData.py',
           'src/insertLocationRecords.py',
           'src/insertMECOEnergyData.py',
