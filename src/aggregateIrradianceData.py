@@ -83,8 +83,10 @@ connector = MSGDBConnector()
 conn = connector.connectDB()
 dbUtil = MSGDBUtil()
 
-sql = """SELECT sensor_id, irradiance_w_per_m2, timestamp FROM
-"IrradianceData" where timestamp BETWEEN '%s' AND '%s'""" % (
+sql = """SELECT sensor_id, irradiance_w_per_m2, timestamp
+         FROM "IrradianceData"
+         WHERE timestamp BETWEEN '%s' AND '%s'
+         ORDER BY timestamp""" % (
     commandLineArgs.startDate, commandLineArgs.endDate)
 
 cursor = conn.cursor()
