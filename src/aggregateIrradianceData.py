@@ -106,7 +106,7 @@ for i in range(4):
     cnt[i] = 0
 
 rowCnt = 0
-finalTimestamp = None
+#finalTimestamp = None
 
 for row in rows:
 
@@ -115,7 +115,7 @@ for row in rows:
         sum[row[0] - 1] += row[1]
 
     minute = row[2].timetuple()[4]
-    finalTimestamp = row[2]
+    #finalTimestamp = row[2]
 
     if rowCnt == 0:
         if minute < 15:
