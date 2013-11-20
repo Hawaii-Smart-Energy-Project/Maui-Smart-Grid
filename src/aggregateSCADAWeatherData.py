@@ -11,6 +11,8 @@ Usage:
 
     python aggregateSCADAWeatherData.py
 
+Output is comma-separated data to STDOUT.
+
 """
 
 __author__ = 'Daniel Zhang (張道博)'
@@ -131,4 +133,3 @@ for row in rows:
             cnt.append(0)
 
     rowCnt += 1
-
