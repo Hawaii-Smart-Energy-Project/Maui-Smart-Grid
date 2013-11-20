@@ -4,7 +4,7 @@
 
 ## Overview ##
 
-The University of Hawaii at Manoa was tasked with maintaining a data repository for use by analysts for the [Maui Smart Grid](http://www.mauismartgrid.com) energy sustainability project through the [Hawaii Natural Energy Institute](http://www.hnei.hawaii.edu). This software provides the data processing and operational resources necessary to accomplish this task. Source data arrives in multiple formats including XML, tab-separated values, and comma-separated values. Issues for this project are tracked at the [Hawaii Smart Energy Project YouTRACK instance](http://smart-energy-project.myjetbrains.com/youtrack/rest/agile/).
+The University of Hawaii at Manoa was tasked with maintaining a data science repository for use by analysts of the [Maui Smart Grid](http://www.mauismartgrid.com) energy sustainability project through the [Hawaii Natural Energy Institute](http://www.hnei.hawaii.edu). This software provides the data acquisition, processing and operational resources necessary to accomplish this task. Source data is acquired in multiple formats including XML, tab-separated values, and comma-separated values. Issues for this project are tracked at the [Hawaii Smart Energy Project YouTRACK instance](http://smart-energy-project.myjetbrains.com/youtrack/rest/agile/).
 
 ### Software Features ###
 
@@ -22,7 +22,7 @@ This README file is the primary documentation for this software project. Further
 
 ## Implementation ##
 
-The code is written in Python 2.7x. It has a testing suite implemented through `unittest`.
+The Python code is written in Python 2.7x. It has a testing suite implemented through `unittest`. Python 3 will not be supported until there is a demonstrated need and all dependencies are reviewed.
 
 The database schema is illustrated in `docs/meco-direct-derived-schema-v3.pdf`.
 
@@ -97,11 +97,11 @@ The Python-based scripts and modules have their installer implemented through `d
 	$ cd dist/MauiSmartGrid-1.0.0
 	$ python setup.py install --home=~/Maui-Smart-Grid-1.0.0
 
-This example demonstrates installing to a user directory which is sometimes preferred over installing to a system-wide path. For this example, the `PYTHONPATH` environment variable should be set using something like
+This example demonstrates installing to a user directory (user-based install) which is sometimes preferred over installing to a system-wide path. For this example, the `PYTHONPATH` environment variable should be set using something like
 
 	$ export PYTHONPATH=~/Maui-Smart-Grid-1.0.0/lib/python
 
-where this example is specific to bash or sh. This can be placed in a startup configuration file such as `.bashrc` or `.bash_profile`, as necessary.
+where this example is specific to bash or sh. This can be placed in a startup configuration file such as `.bashrc`, `.bash_profile` or crontab, as necessary.
 
 ### MSG eGauge Service ###
 
@@ -215,6 +215,8 @@ The database schema can be installed using the following command form where `${D
 
 This software system makes use of `cron` for automatic operation scheduling. It is capable of running under a properly configured user-based crontab.
 
+#### User-Based Crontab ####
+
 ## Software Operation ##
 
 ### Inserting MECO Energy Data from Source XML ###
@@ -285,11 +287,6 @@ Insertion is performed using
     
 and supports recursive data processing of a set of files from the current directory. Weather data loading supports notifications.
 
-### Utility Scripts ###
-
-`grantAllPermissionsToDatabase.sh ${DATABASE}`
-: Set appropriate group permissions to databases.
-
 ### MSG eGauge Service Operation ###
 
 Initial loading of eGauge energy data can take a longer time than follow-up data loading. It is also more prone to error conditions as it is processing a much larger data set.
@@ -313,6 +310,13 @@ When invalid data exists, all other data is not loaded. This is a limitation of 
 ### Database Exports ###
 
 Exports of MSG databases and other databases occur according to a predefined schedule. The exports consist of gzip compressed SQL scripts that are stored both on local storage and cloud storage. Storage to the Google Drive service is supported at this time. Database exports are verified by their MD5 checksums.
+
+### Utility Scripts ###
+
+These scripts are site-dependent.
+
+`grantAllPermissionsToDatabase.sh ${DATABASE}`
+: Set appropriate group permissions to databases.
 
 ## Notifications ##
 
