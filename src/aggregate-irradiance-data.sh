@@ -2,6 +2,10 @@
 
 # Generate aggregated irradiance data in half-year portions.
 #
+# Usage:
+#
+#   aggregate-irradiance-data.sh
+#
 # @author Daniel Zhang (張道博)
 
 time python aggregateIrradianceData.py --startDate "2012-01-01 00:00:00" --endDate "2012-06-30 11:45:00" > avg-irradiance-15-min-2012-first-half.csv

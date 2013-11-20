@@ -6,6 +6,11 @@ Generates aggregated (average) irradiance data for 15-min intervals starting at
 minute zero.
 
 Provides intervals where the timestamp represents the end of the interval.
+
+Usage:
+
+This script is called by aggregate-irradiance-data.sh.
+
 """
 
 __author__ = 'Daniel Zhang (張道博)'
