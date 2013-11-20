@@ -215,8 +215,6 @@ The database schema can be installed using the following command form where `${D
 
 This software system makes use of `cron` for automatic operation scheduling. It is capable of running under a properly configured user-based crontab.
 
-#### User-Based Crontab ####
-
 ## Software Operation ##
 
 ### Inserting MECO Energy Data from Source XML ###
