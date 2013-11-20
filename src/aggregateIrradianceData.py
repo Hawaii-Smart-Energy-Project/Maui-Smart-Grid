@@ -23,6 +23,7 @@ from msg_db_connector import MSGDBConnector
 from msg_logger import MSGLogger
 from msg_db_util import MSGDBUtil
 import argparse
+from msg_math_util import MSGMathUtil
 
 NEXT_MINUTE_CROSSING = 0
 
@@ -73,21 +74,13 @@ def intervalCrossed(minute):
 
     return False
 
-
-def isNumber(s):
-    try:
-        float(s)
-        return True
-    except (TypeError, ValueError):
-        return False
-
-
 processCommandLineArguments()
 
 logger = MSGLogger(__name__, 'INFO')
 connector = MSGDBConnector()
 conn = connector.connectDB()
 dbUtil = MSGDBUtil()
+mUtil = MSGMathUtil()
 
 sql = """SELECT sensor_id, irradiance_w_per_m2, timestamp
          FROM "IrradianceData"
@@ -111,16 +104,14 @@ for i in range(4):
     cnt[i] = 0
 
 rowCnt = 0
-#finalTimestamp = None
 
 for row in rows:
 
-    if isNumber(row[1]):
+    if mUtil.isNumber(row[1]):
         cnt[row[0] - 1] += 1
         sum[row[0] - 1] += row[1]
 
     minute = row[2].timetuple()[4]
-    #finalTimestamp = row[2]
 
     if rowCnt == 0:
         if minute < 15:
@@ -146,5 +137,3 @@ for row in rows:
 
     rowCnt += 1
 
-# Handle end case.
-#emitAverage(sum, cnt, finalTimestamp)
