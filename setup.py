@@ -88,6 +88,7 @@ setup(name = 'MauiSmartGrid',
           'src/insertMECOEnergyData.py',
           'src/insertMECOMeterLocationHistoryData.py',
           'src/insertMeterRecords.py',
+          'src/insertSCADAWeatherData.py',
           'src/insertSingleMECOEnergyDataFile.py',
           'src/retrieveNOAAWeatherData.py'
       ]
