@@ -2,6 +2,8 @@
 -- data usin 15 min intervals. The intervals are created from the first
 -- data point up to 1 year + 1 day past the last data point.
 --
+-- This script is superseded by /sql/table-creation/create_irradiance_intervals_with_sensor_ids.sql.
+--
 -- @author Daniel Zhang (張道博)
 
 CREATE TABLE "_IrradianceFifteenMinIntervals" AS
