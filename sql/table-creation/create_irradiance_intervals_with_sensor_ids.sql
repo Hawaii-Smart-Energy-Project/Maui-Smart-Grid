@@ -9,7 +9,7 @@
 -- @author Daniel Zhang (張道博)
 
 DROP VIEW "public"."dz_average_temp_noaa_weather_per_15_min_irradiance_interval";
-DROP TABLE "_IrradianceFifteenMinIntervals";
+DROP TABLE "_IrradianceFifteenMinIntervals" CASCADE;
 
 CREATE TABLE "_IrradianceFifteenMinIntervals" AS (
         WITH intervals AS (
@@ -18,7 +18,7 @@ CREATE TABLE "_IrradianceFifteenMinIntervals" AS (
                     (
                         SELECT
                 (
-                    MIN("IrradianceData"."timestamp" - INTERVAL '1' DAY)
+                    MIN("IrradianceData"."timestamp")
                 ) :: DATE AS MIN
                         FROM
                             "IrradianceData"
