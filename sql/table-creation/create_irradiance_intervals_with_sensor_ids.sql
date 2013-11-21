@@ -18,7 +18,7 @@ CREATE TABLE "_IrradianceFifteenMinIntervals" AS (
                     (
                         SELECT
                 (
-                    MIN("IrradianceData"."timestamp")
+                    MIN("IrradianceData"."timestamp" - INTERVAL '1' DAY)
                 ) :: DATE AS MIN
                         FROM
                             "IrradianceData"
