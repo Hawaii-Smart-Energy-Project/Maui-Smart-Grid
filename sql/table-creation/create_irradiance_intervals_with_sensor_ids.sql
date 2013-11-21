@@ -8,7 +8,7 @@
 --
 -- @author Daniel Zhang (張道博)
 
-DROP VIEW "public"."dz_average_temp_noaa_weather_per_15_min_irradiance_interval";
+DROP VIEW "public"."dz_irradiance_uniform_15_min_intervals_null_as_zero";
 DROP TABLE "_IrradianceFifteenMinIntervals" CASCADE;
 
 CREATE TABLE "_IrradianceFifteenMinIntervals" AS (
@@ -55,7 +55,7 @@ CREATE TABLE "_IrradianceFifteenMinIntervals" AS (
         FROM
             intervals);
 
-CREATE VIEW "public"."dz_average_temp_noaa_weather_per_15_min_irradiance_interval" AS
+CREATE VIEW "public"."dz_irradiance_uniform_15_min_intervals_null_as_zero" AS
     SELECT
         i.start_time,
         AVG(
@@ -82,4 +82,4 @@ CREATE VIEW "public"."dz_average_temp_noaa_weather_per_15_min_irradiance_interva
         i.start_time
     ORDER BY
         i.start_time;
-COMMENT ON VIEW "public"."dz_average_temp_noaa_weather_per_15_min_irradiance_interval" IS NULL;
+COMMENT ON VIEW "public"."dz_irradiance_uniform_15_min_intervals_null_as_zero" IS NULL;
