@@ -11,7 +11,7 @@ DROP VIEW "public"."dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero
 
 DROP VIEW "public"."dz_count_of_fifteen_min_irradiance_intervals";
 
-DROP VIEW "public"."_dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero";
+DROP VIEW "public"."z_dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero";
 
 DROP TABLE "_IrradianceFifteenMinIntervals" CASCADE;
 
@@ -58,7 +58,7 @@ CREATE TABLE "_IrradianceFifteenMinIntervals" AS (
 		intervals
 );
 
-CREATE VIEW "public"."_dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero" AS SELECT
+CREATE VIEW "public"."z_dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero" AS SELECT
 	"_IrradianceFifteenMinIntervals".end_time,
 	"_IrradianceFifteenMinIntervals".sensor_id,
 	CASE
@@ -118,13 +118,13 @@ ORDER BY
 	"_IrradianceFifteenMinIntervals".end_time,
 	"_IrradianceFifteenMinIntervals".sensor_id;
 
-COMMENT ON VIEW "public"."_dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero" IS NULL;
+COMMENT ON VIEW "public"."z_dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero" IS 'Used internally. @author Daniel Zhang (張道博)';
 
 CREATE VIEW "dz_count_of_fifteen_min_irradiance_intervals" AS SELECT
 	COUNT (*) / 4 AS cnt,
 	date_trunc('day', end_time) AS DAY
 FROM
-	"_dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero"
+	"z_dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero"
 GROUP BY
 	DAY;
 
