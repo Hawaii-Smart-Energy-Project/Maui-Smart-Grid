@@ -7,6 +7,10 @@
 -- Create aggregated temperature view using NOAA weather data.
 --
 -- @author Daniel Zhang (張道博)
+DROP VIEW "public"."dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero";
+
+DROP VIEW "public"."dz_count_of_fifteen_min_irradiance_intervals";
+
 DROP VIEW "public"."_dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero";
 
 DROP TABLE "_IrradianceFifteenMinIntervals" CASCADE;
@@ -124,8 +128,6 @@ FROM
 GROUP BY
 	DAY;
 
-DROP VIEW "public"."dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero";
-
 CREATE VIEW "public"."dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero" AS SELECT
 	"_IrradianceFifteenMinIntervals".end_time,
 	"_IrradianceFifteenMinIntervals".sensor_id,
@@ -199,5 +201,17 @@ ORDER BY
 	"_IrradianceFifteenMinIntervals".end_time,
 	"_IrradianceFifteenMinIntervals".sensor_id;
 
-COMMENT ON VIEW "public"."dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero" IS NULL;
+COMMENT ON VIEW "public"."dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero" IS 'Transformed irradiance data for use in analysis. @author Daniel Zhang (張道博)';
+
+GRANT DELETE,
+ SELECT
+	,
+	REFERENCES,
+	TRIGGER,
+	INSERT,
+	UPDATE,
+	TRUNCATE ON dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero TO "sepgroup";
+
+GRANT SELECT
+	ON dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero TO "sepgroupreadonly";
 
