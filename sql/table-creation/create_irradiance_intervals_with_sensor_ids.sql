@@ -152,7 +152,7 @@ FROM
 				)
 			)
 		)
-		JOIN dz_count_of_15_min_irradiance_intervals ON (
+		JOIN dz_count_of_fifteen_min_irradiance_intervals ON (
 			(
 				(
 					date_trunc(
