@@ -6,7 +6,7 @@ SELECT
 	COUNT (*) / 4 AS cnt,
 	date_trunc('day', end_time) AS DAY
 FROM
-	"dz_avg_irradiance_15_min_uniform_intervals_null_as_zero"
+	"dz_irradiance_uniform_fifteen_min_intervals_null_as_zero"
 WHERE
 	cnt = 96
 GROUP BY
