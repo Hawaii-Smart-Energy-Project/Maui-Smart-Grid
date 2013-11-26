@@ -4,6 +4,8 @@
 """
 Setup script for MSG Data Processing and Operations.
 
+Additional file-based inclusions can be found in MANIFEST.in.
+
 The distribution archive is created using
 
     python setup.py sdist
