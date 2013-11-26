@@ -1,8 +1,10 @@
-include README.md
 include BSD-LICENSE.txt
-recursive-include src/msg_egauge_service *
+include README.md
 recursive-include sql/meco_v3 *
 recursive-include sql/msg_egauge_service *
-recursive-include sql/utility *
+recursive-include sql/queries *
+recursive-include sql/table-creation *
 recursive-include sql/test_meco *
+recursive-include sql/utility *
+recursive-include src/msg_egauge_service *
 recursive-include test-data *
