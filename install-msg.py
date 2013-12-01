@@ -56,6 +56,7 @@ def runCommand(cmd = None):
         except subprocess.CalledProcessError, e:
             logger.log("An exception occurred: %s" % e, 'error')
 
+
 def softwareInstallName():
     cmd = "python %s/setup.py --name" % commandLineArgs.sourcePath
     try:
@@ -63,6 +64,7 @@ def softwareInstallName():
     except subprocess.CalledProcessError, e:
         logger.log("An exception occurred: %s" % e, 'error')
     return softwareName.strip()
+
 
 def softwareVersion():
     """
@@ -99,7 +101,8 @@ installCmd = """python setup.py install --home=%s""" % commandLineArgs\
 runCommand(installCmd)
 
 # Extract the distribution archive.
-tarfile.open(name = '%s/dist/' % commandLineArgs.sourcePath)
+tarfile.open(name = '%s/dist/%s-%s.tar.gz' % (
+commandLineArgs.sourcePath, PROJECT_NAME, VERSION))
 
 print "\nInstallation of the MSG software to %s is complete." % \
       commandLineArgs.installPathUser
