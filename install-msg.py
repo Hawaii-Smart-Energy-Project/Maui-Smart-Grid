@@ -4,11 +4,16 @@
 """
 MSG Install Script
 
-This is an interface to the install process.
+This is an interface to the install process that automates the following
+operations.
 
 1. Create the distribution archive.
 2. Extract the distribution archive.
-2. Install the distribution from the current code base.
+2. Install the distribution from extracted archive.
+
+This is useful to automatically maintain an existing installation based on
+the most
+recent source code base.
 
 Usage:
 
@@ -86,23 +91,27 @@ processCommandLineArguments()
 
 os.chdir(commandLineArgs.sourcePath)
 
-print "%s" % os.getcwd()
-
 archiveCmd = """python setup.py sdist"""
 runCommand(archiveCmd)
 
 PROJECT_NAME = softwareInstallName()
 VERSION = softwareVersion()
 
-print "Performing scripted install of %s-%s." % (PROJECT_NAME, VERSION)
+print "Current working directory is %s." % os.getcwd()
+print "\nPerforming scripted install of %s-%s." % (PROJECT_NAME, VERSION)
 
 installCmd = """python setup.py install --home=%s""" % commandLineArgs\
     .installPathUser
 runCommand(installCmd)
 
-# Extract the distribution archive.
-tarfile.open(name = '%s/dist/%s-%s.tar.gz' % (
-commandLineArgs.sourcePath, PROJECT_NAME, VERSION))
+# Extract the distribution archive into the dist directory.
+os.chdir('%s/dist' % commandLineArgs.sourcePath)
+print
+logger.log("Current working directory is %s." % os.getcwd())
+t = tarfile.open(name = '%s/dist/%s-%s.tar.gz' % (
+    commandLineArgs.sourcePath, PROJECT_NAME, VERSION))
+
+t.extractall()
 
 print "\nInstallation of the MSG software to %s is complete." % \
       commandLineArgs.installPathUser
