@@ -6,7 +6,8 @@ Setup script for MSG Data Processing and Operations.
 
 Additional file-based inclusions can be found in MANIFEST.in.
 
-The distribution archive is created using
+The distribution archive is created as a source distribution,
+http://docs.python.org/2/distutils/sourcedist.html, using
 
     python setup.py sdist
 
@@ -25,8 +26,7 @@ __license__ = 'https://raw.github' \
 
 from distutils.core import setup
 
-setup(name = 'MauiSmartGrid',
-      version = '1.0.0',
+setup(name = 'Maui-Smart-Grid', version = '1.0.0',
       description = 'Data Processing and Data Operations for the Maui Smart '
                     'Grid Project.',
       long_description = 'The University of Hawaii at Manoa was tasked with '
@@ -48,52 +48,31 @@ setup(name = 'MauiSmartGrid',
       url = 'https://github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid',
       license = 'https://raw.github'
                 '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD'
-                '-LICENSE.txt',
-      platforms = 'OS X, Linux',
+                '-LICENSE.txt', platforms = 'OS X, Linux',
 
       package_dir = {'': 'src'},
 
-      py_modules = [
-          'filelock',
-          'meco_data_autoloader',
-          'meco_db_delete',
-          'meco_db_insert',
-          'meco_db_read',
-          'meco_dupe_check',
-          'meco_fk',
-          'meco_mapper',
-          'meco_plotting',
-          'meco_pv_readings_in_nonpv_mlh_notifier',
-          'meco_xml_parser',
-          'msg_configer',
-          'msg_db_connector',
-          'msg_db_exporter',
-          'msg_db_util',
-          'msg_file_util',
-          'msg_logger',
-          'msg_noaa_weather_data_dupe_checker',
-          'msg_noaa_weather_data_inserter',
-          'msg_noaa_weather_data_parser',
-          'msg_noaa_weather_data_util',
-          'msg_notifier',
-          'msg_time_util'
-      ],
+      py_modules = ['filelock', 'meco_data_autoloader', 'meco_db_delete',
+                    'meco_db_insert', 'meco_db_read', 'meco_dupe_check',
+                    'meco_fk', 'meco_mapper', 'meco_plotting',
+                    'meco_pv_readings_in_nonpv_mlh_notifier', 'meco_xml_parser',
+                    'msg_configer', 'msg_db_connector', 'msg_db_exporter',
+                    'msg_db_util', 'msg_file_util', 'msg_logger',
+                    'msg_noaa_weather_data_dupe_checker',
+                    'msg_noaa_weather_data_inserter',
+                    'msg_noaa_weather_data_parser',
+                    'msg_noaa_weather_data_util', 'msg_notifier',
+                    'msg_time_util'],
 
-      scripts = [
-          'src/aggregate-irradiance-data.sh',
-          'src/aggregateIrradianceData.py',
-          'src/aggregateSCADAWeatherData.py',
-          'src/autoloadNewMECOData.py',
-          'src/exportDBsToCloud.py',
-          'src/insertAggregatedIrradianceData.py',
-          'src/insertAggregatedSCADAWeatherData.py',
-          'src/insertCompressedNOAAWeatherData.py',
-          'src/insertLocationRecords.py',
-          'src/insertMECOEnergyData.py',
-          'src/insertMECOMeterLocationHistoryData.py',
-          'src/insertMeterRecords.py',
-          'src/insertSCADAWeatherData.py',
-          'src/insertSingleMECOEnergyDataFile.py',
-          'src/retrieveNOAAWeatherData.py'
-      ]
-)
+      scripts = ['src/aggregate-irradiance-data.sh',
+                 'src/aggregateIrradianceData.py',
+                 'src/aggregateSCADAWeatherData.py',
+                 'src/autoloadNewMECOData.py', 'src/exportDBsToCloud.py',
+                 'src/insertAggregatedIrradianceData.py',
+                 'src/insertAggregatedSCADAWeatherData.py',
+                 'src/insertCompressedNOAAWeatherData.py',
+                 'src/insertLocationRecords.py', 'src/insertMECOEnergyData.py',
+                 'src/insertMECOMeterLocationHistoryData.py',
+                 'src/insertMeterRecords.py', 'src/insertSCADAWeatherData.py',
+                 'src/insertSingleMECOEnergyDataFile.py',
+                 'src/retrieveNOAAWeatherData.py'])
