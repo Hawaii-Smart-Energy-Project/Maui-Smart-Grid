@@ -4,7 +4,7 @@
 
 ## Overview ##
 
-The University of Hawaii at Manoa was tasked with maintaining a data science repository for use by analysts of the [Maui Smart Grid](http://www.mauismartgrid.com) energy sustainability project through the [Hawaii Natural Energy Institute](http://www.hnei.hawaii.edu). This software provides the data acquisition, processing and operational resources necessary to accomplish this task. Source data is acquired in multiple formats including XML, tab-separated values, and comma-separated values. Issues for this project are tracked at the [Hawaii Smart Energy Project YouTRACK instance](http://smart-energy-project.myjetbrains.com/youtrack/rest/agile/).
+The University of Hawaii at Manoa was tasked with maintaining a data science repository for use by analysts of the [Maui Smart Grid](http://www.mauismartgrid.com) energy sustainability project through the [Hawaii Natural Energy Institute](http://www.hnei.hawaii.edu). This software provides the data acquisition, processing and operational resources necessary to accomplish this task. Source data is acquired in multiple formats including XML, tab-separated values, and comma-separated values. Data storage is required to be provided by a PostgreSQL database server on the back end. Issues for this project are tracked at the [Hawaii Smart Energy Project YouTRACK instance](http://smart-energy-project.myjetbrains.com/youtrack/rest/agile/).
 
 ### Software Features ###
 
