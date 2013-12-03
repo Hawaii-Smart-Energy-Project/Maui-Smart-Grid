@@ -71,7 +71,16 @@ Plot of readings per meter counts and meter counts per day loaded to meco_v3.
 
 ## Installation ##
 
-The software distribution archive is in tar gz format and can be extracted using
+A custom automatic installation script, `install-msg.py`, has been developed to provide
+
+* Creation of a distribution archive from the source code base.
+* Installation, or updating of an existing installation, from the installer within the distribution archive.
+
+It is intended to facilitate the maintenace of the software installation while at the same time allowing development of the source code base. It is used like so
+
+	python install-msg.py --sourcePath ${SOURCE_CODE_BASE_PATH} --installUserPath ${DESTINATION_BASE_PATH}
+
+The software distribution archive is managed by `distutils` and is in tar gz format. It can be extracted using
 
     $ tar -zxvf Maui-Smart-Grid-1.0.0.tar.gz
 
@@ -97,7 +106,7 @@ The Python-based scripts and modules have their installer implemented through `d
 	$ cd dist/MauiSmartGrid-1.0.0
 	$ python setup.py install --home=~/Maui-Smart-Grid-1.0.0
 
-This example demonstrates installing to a user directory (user-based install) which is sometimes preferred over installing to a system-wide path. For this example, the `PYTHONPATH` environment variable should be set using something like
+This example demonstrates installing to a user directory (user-based install) which is sometimes preferred over installing to a system-wide path. This is also referred to as installing using the "home scheme" in the Python documentation. For this example, the `PYTHONPATH` environment variable should be set using something like
 
 	$ export PYTHONPATH=~/Maui-Smart-Grid-1.0.0/lib/python
 
