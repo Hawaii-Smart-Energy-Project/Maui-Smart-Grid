@@ -1,5 +1,6 @@
 include BSD-LICENSE.txt
 include README.md
+include install-msg.py
 recursive-include sql/meco_v3 *
 recursive-include sql/msg_egauge_service *
 recursive-include sql/queries *
