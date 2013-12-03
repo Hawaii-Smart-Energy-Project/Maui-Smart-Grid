@@ -23,7 +23,10 @@ Usage:
 The distribution archive is placed in ${ROOT_PATH_TO_SOURCE}/dist.
 
 The software is installed to path given by the base path to a directory named
-after the software including its version number.
+after the software including its version number. For example, if the user
+install path is  given as ~/software the software will be installed to
+~/software/Maui-Smart-Grid-1.x.x where 1.x.x represents the appropriate
+version number.
 
 """
 
@@ -100,10 +103,6 @@ VERSION = softwareVersion()
 print "Current working directory is %s." % os.getcwd()
 print "\nPerforming scripted install of %s-%s." % (PROJECT_NAME, VERSION)
 
-installCmd = """python setup.py install --home=%s""" % commandLineArgs\
-    .installPathUser
-runCommand(installCmd)
-
 # Extract the distribution archive into the dist directory.
 os.chdir('%s/dist' % commandLineArgs.sourcePath)
 print
@@ -113,8 +112,17 @@ t = tarfile.open(name = '%s/dist/%s-%s.tar.gz' % (
 
 t.extractall()
 
+# Change the working directory to the extracted archive path.
+logger.log("Performing install.")
+os.chdir('%s/dist/%s-%s' % (commandLineArgs.sourcePath, PROJECT_NAME, VERSION ))
+logger.log("Current working directory is %s." % os.getcwd())
+
+# Install the software.
+installCmd = """python setup.py install --home=%s/%s-%s""" % (
+    commandLineArgs.installPathUser, PROJECT_NAME, VERSION)
+runCommand(installCmd)
+
 print "\nInstallation of the MSG software to %s is complete." % \
       commandLineArgs.installPathUser
-print "\nPlease add the following path, %s/lib/python, to your PYTHONPATH if " \
-      "it " \
-      "is not already there." % commandLineArgs.installPathUser
+print "\nPlease add the path, %s/lib/python, to your PYTHONPATH if it is not " \
+      "already there." % commandLineArgs.installPathUser
