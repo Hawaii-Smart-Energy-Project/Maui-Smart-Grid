@@ -222,7 +222,21 @@ The database schema can be installed using the following command form where `${D
 
 ### Crontab Setup ###
 
-This software system makes use of `cron` for automatic operation scheduling. It is capable of running under a properly configured user-based crontab.
+This software system makes use of `cron` for automatic operation scheduling. It is capable of running under a properly configured user-based crontab where the software distribution is installed in a user's home folder.
+
+#### Example User-Based Crontab ####
+
+The following represents an example crontab configuration that can be installed using `crontab -e` with the appropriate substitutions.
+
+	MAILTO=${EMAIL_ADDRESS}
+	PYTHONPATH=/home/${USERNAME}/Maui-Smart-Grid-1.0.0/lib/python
+	20 * * * * /usr/local/egauge-automatic-data-services/bin/runWithEnvGetEgaugeData.sh
+	12 * * * * /usr/local/msg-egauge-service/bin/runWithEnvGetEgaugeData.sh
+	40 14 * * 1 /usr/local/bin/msg_egauge_new_data_checker.py
+	30 14 * * 2 /usr/local/bin/retrieveNOAAWeatherData.py
+	30 15 * * 2 /usr/local/bin/insertCompressedNOAAWeatherData.py --email
+	01 03 * * * python ~/Maui-Smart-Grid-1.0.0/bin/exportDBsToCloud.py
+	*/15 * * * * python ~/Maui-Smart-Grid-1.0.0/bin/autoloadNewMECOData.py
 
 ## Software Operation ##
 
