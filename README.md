@@ -75,10 +75,13 @@ A custom automatic installation script, `install-msg.py`, has been developed to 
 
 * Creation of a distribution archive from the source code base.
 * Installation, or updating of an existing installation, from the installer within the distribution archive.
+* Installation of non-Python code such as the MSG eGauge Service.
 
 It is intended to facilitate the maintenace of the software installation while at the same time allowing development of the source code base. It is used like so
 
 	python install-msg.py --sourcePath ${SOURCE_CODE_BASE_PATH} --installUserPath ${DESTINATION_BASE_PATH}
+
+If the tilde symbol (~) is used as the destination base path, then the software will be installed into a directory titled after the package name and version in the user's home directory. 
 
 The software distribution archive is managed by `distutils` and is in tar gz format. It can be extracted using
 
