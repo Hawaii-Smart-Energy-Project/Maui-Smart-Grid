@@ -4,7 +4,8 @@
 """
 Usage:
 
-time python -u ${PATH}/insertCompressedNOAAWeatherData.py [--testing] [--email]
+    time python -u ${PATH}/insertCompressedNOAAWeatherData.py [--testing]
+                                                              [--email]
 
 This script only supports processing of *hourly.txt.gz files.
 """
