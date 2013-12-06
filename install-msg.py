@@ -12,8 +12,7 @@ operations.
 2. Install the distribution from extracted archive.
 
 This is useful to automatically maintain an existing installation based on
-the most
-recent source code base.
+the most recent source code base.
 
 Usage:
 
@@ -40,7 +39,6 @@ import subprocess
 import argparse
 import os
 from msg_logger import MSGLogger
-import pkg_resources
 import tarfile
 
 
