@@ -132,6 +132,10 @@ The distribution archive is created using
 	cd ${MAUI_SMART_GRID_SOURCE_CODE_ROOT_PATH}
 	$ python setup.py sdist
 
+### Maintaining the Distribution ###
+
+The files `setup.py` and `MANIFEST.in` require continual updates so that the installer Will be able to install the latest distribution. Specifically, `setup.py` contains all of the files are installed in the `bin` and `lib` paths, while the `MANIFEST.in` contains additional files that are relevant to the distribution.
+
 ## Uninstallation ##
 
 It is safe to complete remove the directory to which the software was installed for the purpose of replacing the software while preserving an existing configuration. The configuration settings are not stored in the software installation path and must be removed separately if complete removal is desired.
