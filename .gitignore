@@ -47,3 +47,4 @@ temp_*
 /MANIFEST
 /src/test.py
 /src/sample.py
+/power-meter-event-data/
