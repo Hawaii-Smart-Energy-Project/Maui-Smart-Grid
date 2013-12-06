@@ -48,3 +48,5 @@ temp_*
 /src/test.py
 /src/sample.py
 /power-meter-event-data/
+/msg-db-dumps/
+/average-irradiance-data/
