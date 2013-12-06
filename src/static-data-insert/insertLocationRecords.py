@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 """
+@DEPRECATED
+This is deprecated in favor of the Meter Location History.
+
 Insert Location Records into the database from a tab-separated data file.
 
 Usage:
