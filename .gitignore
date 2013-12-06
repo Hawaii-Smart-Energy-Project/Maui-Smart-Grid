@@ -51,3 +51,4 @@ temp_*
 /msg-db-dumps/
 /average-irradiance-data/
 /src/viewCloudFiles.py
+/scada-temp-humidity-data/
