@@ -46,14 +46,6 @@ def extractTimestamp(timeString):
         matches.group(5), matches.group(6), matches.group(7)[:6],
         matches.group(8))
 
-    #print matches.group(1)
-    #print matches.group(2)
-    #print matches.group(3)
-
-    #print datetime.datetime.strptime(timeString, '%d-%b-%y %I.%M.%S.%f %p')
-
-    #print tString
-
     return datetime.datetime.strptime(tString, '%d-%b-%y %I.%M.%S.%f %p')
 
 
@@ -82,15 +74,9 @@ def insertData(table, row, cols):
         vals.append(val)
         i += 1
 
-    #print 'cols: %s' % cols
-    #print 'vals: %s' % vals
-
     sql = """INSERT INTO "%s" (%s) VALUES (%s)""" % (
         table, ','.join(cols), ','.join(vals))
 
-    #print sql
-    #for col in cols:
-    #    i += 1
     dbUtil.executeSQL(cursor, sql)
 
 
@@ -109,22 +95,10 @@ for root, dirs, filenames in os.walk('.'):
             paths.append(os.path.join(root, filename))
             matchCnt += 1
 
-print "paths = %s" % paths
-
 table = 'PowerMeterEvents'
-
-#cols = dbUtil.tableColumns(cursor, table)
-
-print cols
 
 cnt = 0
 workbookCount = 0
-
-#newCols = []
-#for col in cols:
-#    Extract col from tuple.
-#newCols.append(col[0])
-#cols = newCols
 
 for path in paths:
     workbookCount += 1
