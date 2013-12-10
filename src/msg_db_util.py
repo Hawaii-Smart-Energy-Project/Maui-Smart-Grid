@@ -160,7 +160,7 @@ class MSGDBUtil(object):
         :returns: List of tuples with column names in the first position.
         """
 
-        sql = """select column_name from information_schema.columns where
+        sql = """SELECT column_name FROM information_schema.columns WHERE
         table_name='%s';""" % table
         self.executeSQL(cursor, sql)
 
