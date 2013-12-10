@@ -25,20 +25,73 @@ import os
 import fnmatch
 import xlrd
 from msg_logger import MSGLogger
+import datetime
+
+cols = ['dtype', 'id', 'event_category', 'el_epoch_num', 'el_seq_num',
+        'event_ack_status', 'event_text', 'event_time', 'generic_col_1',
+        'generic_col_10', 'generic_col_2', 'generic_col_3', 'generic_col_4',
+        'generic_col_5', 'generic_col_6', 'generic_col_7', 'generic_col_8',
+        'generic_col_9', 'insert_ts', 'job_id', 'event_key', 'nic_reboot_count',
+        'seconds_since_reboot', 'event_severity', 'source_id', 'update_ts',
+        'updated_by_user', 'event_ack_note']
 
 
-def getColumns(cursor, table):
-    """
-    :returns: List of tuples with column names in the first position.
-    """
+def extractTimestamp(timeString):
+    ts = ''
+    pattern = '(\d+)-(\w+)-(\d+)\s(\d+)\.(\d+)\.(\d+)\.(\d+)\s(\w+)'
+    matches = re.search(pattern, timeString)
 
+    tString = '%s-%s-%s %s.%s.%s.%s %s' % (
+        matches.group(1), matches.group(2), matches.group(3), matches.group(4),
+        matches.group(5), matches.group(6), matches.group(7)[:6],
+        matches.group(8))
+
+    #print matches.group(1)
+    #print matches.group(2)
+    #print matches.group(3)
+
+    #print datetime.datetime.strptime(timeString, '%d-%b-%y %I.%M.%S.%f %p')
+
+    #print tString
+
+    return datetime.datetime.strptime(tString, '%d-%b-%y %I.%M.%S.%f %p')
+
+
+def insertData(table, row, cols):
     global dbUtil
-    sql = """select column_name from information_schema.columns where
-    table_name='%s';""" % table
-    print sql
-    dbUtil.executeSQL(cursor, sql)
+    global cursor
 
-    return cursor.fetchall() # Each column is an n-tuple.
+    vals = []
+    i = 0
+    for cell in row:
+        val = cell.value
+
+        # Handle setting of type.
+        if cols[i] == 'id' or cols[i] == 'event_category' or cols[
+            i] == 'event_key' or cols[i] == 'source_id':
+            val = int(val)
+        if cols[i] == 'event_time' or cols[i] == 'insert_ts' or cols[
+            i] == 'update_ts':
+            val = extractTimestamp(val)
+
+        if val == '':
+            val = 'NULL'
+        else:
+            val = """'%s'""" % val
+
+        vals.append(val)
+        i += 1
+
+    #print 'cols: %s' % cols
+    #print 'vals: %s' % vals
+
+    sql = """INSERT INTO "%s" (%s) VALUES (%s)""" % (
+        table, ','.join(cols), ','.join(vals))
+
+    #print sql
+    #for col in cols:
+    #    i += 1
+    dbUtil.executeSQL(cursor, sql)
 
 
 connector = MSGDBConnector()
@@ -47,7 +100,6 @@ dbUtil = MSGDBUtil()
 cursor = conn.cursor()
 logger = MSGLogger(__name__)
 
-files = []
 paths = []
 patterns = ['*.xlsx']
 matchCnt = 0
@@ -61,12 +113,18 @@ print "paths = %s" % paths
 
 table = 'PowerMeterEvents'
 
-cols = getColumns(cursor, table)
+#cols = dbUtil.tableColumns(cursor, table)
 
 print cols
 
 cnt = 0
 workbookCount = 0
+
+#newCols = []
+#for col in cols:
+#    Extract col from tuple.
+#newCols.append(col[0])
+#cols = newCols
 
 for path in paths:
     workbookCount += 1
@@ -77,27 +135,21 @@ for path in paths:
     sh = wb.sheet_by_index(0)
     print sh
 
-    num_rows = sh.nrows - 1
+    numRows = sh.nrows - 1
 
-    curr_row = -1
+    currentRow = -1
 
-    while curr_row < num_rows:
-        curr_row += 1
-        try:
-            row = sh.row(curr_row)
-        except (xlrd.biffh.XLRDError, e):
-            # Ignore unsupported format error.
-            pass
-
-
+    while currentRow < numRows:
+        currentRow += 1
+        row = sh.row(currentRow)
 
         # Row is a dict of the col vals.
-        #print row
+        if currentRow != 0:
+            insertData(table, row, cols)
 
+    conn.commit()
 
 logger.log('Workbook count: %d' % workbookCount)
-
-
 
 exit(0)
 
