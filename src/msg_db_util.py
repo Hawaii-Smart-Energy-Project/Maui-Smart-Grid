@@ -48,7 +48,7 @@ class MSGDBUtil(object):
         #sql = "select currval(pg_get_serial_sequence('\"%s\"','%s'))" % (
         # tableName, columnName)
         sql = """SELECT currval(pg_get_serial_sequence('"%s"','%s'))""" % (
-        tableName, columnName)
+            tableName, columnName)
 
         cur = conn.cursor()
         self.executeSQL(cur, sql)
@@ -153,3 +153,15 @@ class MSGDBUtil(object):
         row = cursor.fetchone()
         return row
 
+    def tableColumns(self, cursor, table):
+        """
+        :param: cursor: A DB cursor
+        :param: table: Name of table to retrieve columns from.
+        :returns: List of tuples with column names in the first position.
+        """
+
+        sql = """select column_name from information_schema.columns where
+        table_name='%s';""" % table
+        self.executeSQL(cursor, sql)
+
+        return cursor.fetchall() # Each column is an n-tuple.
