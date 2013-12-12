@@ -37,7 +37,6 @@ cols = ['dtype', 'id', 'event_category', 'el_epoch_num', 'el_seq_num',
 
 
 def extractTimestamp(timeString):
-    ts = ''
     pattern = '(\d+)-(\w+)-(\d+)\s(\d+)\.(\d+)\.(\d+)\.(\d+)\s(\w+)'
     matches = re.search(pattern, timeString)
 
