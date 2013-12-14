@@ -23,92 +23,94 @@ from msg_db_util import MSGDBUtil
 import csv
 import re
 
-connector = MSGDBConnector()
-conn = connector.connectDB()
-dbUtil = MSGDBUtil()
-cursor = conn.cursor()
+if __name__ == '__main__':
 
-tFiles = ['Kihei AirTemp F 2013_07.csv', 'Kihei AirTemp F 2013_08.csv',
-          'Kihei AirTemp F 2013_09.csv', 'Kihei AirTemp F 2013_10.csv']
+    connector = MSGDBConnector()
+    conn = connector.connectDB()
+    dbUtil = MSGDBUtil()
+    cursor = conn.cursor()
 
-hFiles = ['Kihei_Rel_Humid 2013_07.csv', 'Kihei_Rel_Humid 2013_08.csv',
-          'Kihei_Rel_Humid 2013_09.csv', 'Kihei_Rel_Humid 2013_10.csv']
+    tFiles = ['Kihei AirTemp F 2013_07.csv', 'Kihei AirTemp F 2013_08.csv',
+              'Kihei AirTemp F 2013_09.csv', 'Kihei AirTemp F 2013_10.csv']
 
-table = 'KiheiSCADATemperatureHumidity'
-tCols = ['timestamp', 'met_air_temp_degf']
-hCols = ['met_rel_humid_pct']
+    hFiles = ['Kihei_Rel_Humid 2013_07.csv', 'Kihei_Rel_Humid 2013_08.csv',
+              'Kihei_Rel_Humid 2013_09.csv', 'Kihei_Rel_Humid 2013_10.csv']
 
-cnt = 0
+    table = 'KiheiSCADATemperatureHumidity'
+    tCols = ['timestamp', 'met_air_temp_degf']
+    hCols = ['met_rel_humid_pct']
 
-temps = []
-t_i = 0
-h_i = 0
-
-for i in range(4):
-
-    with open(tFiles[i], 'rb') as csvfile:
-        print "Reading %s" % (tFiles[i])
-
-        myReader = csv.reader(csvfile, delimiter = ',')
-
-        for row in myReader:
-            if cnt == 0:
-                cnt += 1
-                continue
-                #temps[t_i] = [row[0], row[1]]
-
-            row[0] = row[0].replace('GMT-1000', '')
-            row[0] = re.sub(r'\s24:', '\s00:', row[0])
-
-            if row[1] == '':
-                row[1] = 'NULL'
-
-            sql = """INSERT INTO "%s" (%s) VALUES (TIMESTAMP %s,%s)""" % (
-                table, ','.join(tCols), "'" + row[0].strip() + "'",
-                "'" + row[1].strip() + "'")
-
-            sql = sql.replace("'NULL'", 'NULL')
-
-            #print sql
-            dbUtil.executeSQL(cursor, sql)
-
-            cnt += 1
-            if cnt % 10000 == 0:
-                conn.commit()
-
-    conn.commit()
     cnt = 0
 
-    with open(hFiles[i], 'rb') as csvfile:
-        print "Reading %s" % (hFiles[i])
+    temps = []
+    t_i = 0
+    h_i = 0
 
-        myReader = csv.reader(csvfile, delimiter = ',')
+    for i in range(4):
 
-        for row in myReader:
-            if cnt == 0:
+        with open(tFiles[i], 'rb') as csvfile:
+            print "Reading %s" % (tFiles[i])
+
+            myReader = csv.reader(csvfile, delimiter = ',')
+
+            for row in myReader:
+                if cnt == 0:
+                    cnt += 1
+                    continue
+                    #temps[t_i] = [row[0], row[1]]
+
+                row[0] = row[0].replace('GMT-1000', '')
+                row[0] = re.sub(r'\s24:', '\s00:', row[0])
+
+                if row[1] == '':
+                    row[1] = 'NULL'
+
+                sql = """INSERT INTO "%s" (%s) VALUES (TIMESTAMP %s,%s)""" % (
+                    table, ','.join(tCols), "'" + row[0].strip() + "'",
+                    "'" + row[1].strip() + "'")
+
+                sql = sql.replace("'NULL'", 'NULL')
+
+                #print sql
+                dbUtil.executeSQL(cursor, sql)
+
                 cnt += 1
-                continue
+                if cnt % 10000 == 0:
+                    conn.commit()
 
-            row[0] = row[0].replace('GMT-1000', '')
-            row[0] = re.sub(r'\s24:', '\s00:', row[0])
+        conn.commit()
+        cnt = 0
 
-            if row[1] == '':
-                row[1] = 'NULL'
+        with open(hFiles[i], 'rb') as csvfile:
+            print "Reading %s" % (hFiles[i])
 
-            sql = """UPDATE "%s" SET %s = %s WHERE timestamp =
-            TIMESTAMP '%s'""" % (
-                table, ','.join(hCols), "'" + row[1].strip() + "'",
-                row[0].strip())
+            myReader = csv.reader(csvfile, delimiter = ',')
 
-            sql = sql.replace("'NULL'", 'NULL')
+            for row in myReader:
+                if cnt == 0:
+                    cnt += 1
+                    continue
 
-            #print sql
-            dbUtil.executeSQL(cursor, sql)
+                row[0] = row[0].replace('GMT-1000', '')
+                row[0] = re.sub(r'\s24:', '\s00:', row[0])
 
-            cnt += 1
-            if cnt % 10000 == 0:
-                conn.commit()
-                pass
+                if row[1] == '':
+                    row[1] = 'NULL'
 
-    conn.commit()
-    cnt = 0
+                sql = """UPDATE "%s" SET %s = %s WHERE timestamp =
+                TIMESTAMP '%s'""" % (
+                    table, ','.join(hCols), "'" + row[1].strip() + "'",
+                    row[0].strip())
+
+                sql = sql.replace("'NULL'", 'NULL')
+
+                #print sql
+                dbUtil.executeSQL(cursor, sql)
+
+                cnt += 1
+                if cnt % 10000 == 0:
+                    conn.commit()
+                    pass
+
+        conn.commit()
+        cnt = 0

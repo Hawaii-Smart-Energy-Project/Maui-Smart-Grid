@@ -78,51 +78,52 @@ def insertData(table, row, cols):
 
     dbUtil.executeSQL(cursor, sql)
 
+if __name__ == '__main__':
 
-connector = MSGDBConnector()
-conn = connector.connectDB()
-dbUtil = MSGDBUtil()
-cursor = conn.cursor()
-logger = MSGLogger(__name__)
+    connector = MSGDBConnector()
+    conn = connector.connectDB()
+    dbUtil = MSGDBUtil()
+    cursor = conn.cursor()
+    logger = MSGLogger(__name__)
 
-paths = []
-patterns = ['*.xlsx']
-matchCnt = 0
-for root, dirs, filenames in os.walk('.'):
-    for pat in patterns:
-        for filename in fnmatch.filter(filenames, pat):
-            paths.append(os.path.join(root, filename))
-            matchCnt += 1
+    paths = []
+    patterns = ['*.xlsx']
+    matchCnt = 0
+    for root, dirs, filenames in os.walk('.'):
+        for pat in patterns:
+            for filename in fnmatch.filter(filenames, pat):
+                paths.append(os.path.join(root, filename))
+                matchCnt += 1
 
-table = 'PowerMeterEvents'
+    table = 'PowerMeterEvents'
 
-cnt = 0
-workbookCount = 0
+    cnt = 0
+    workbookCount = 0
 
-for path in paths:
-    workbookCount += 1
-    logger.log('workbook: %s' % path)
-    wb = xlrd.open_workbook(path)
-    wb.sheet_names()
-    print wb.sheet_names()
-    sh = wb.sheet_by_index(0)
-    print sh
+    for path in paths:
+        workbookCount += 1
+        logger.log('workbook: %s' % path)
+        wb = xlrd.open_workbook(path)
+        wb.sheet_names()
+        print wb.sheet_names()
+        sh = wb.sheet_by_index(0)
+        print sh
 
-    numRows = sh.nrows - 1
+        numRows = sh.nrows - 1
 
-    currentRow = -1
+        currentRow = -1
 
-    while currentRow < numRows:
-        currentRow += 1
-        row = sh.row(currentRow)
+        while currentRow < numRows:
+            currentRow += 1
+            row = sh.row(currentRow)
 
-        # Row is a dict of the col vals.
-        if currentRow != 0:
-            insertData(table, row, cols)
+            # Row is a dict of the col vals.
+            if currentRow != 0:
+                insertData(table, row, cols)
 
-    conn.commit()
+        conn.commit()
 
-logger.log('Workbook count: %d' % workbookCount)
+    logger.log('Workbook count: %d' % workbookCount)
 
-exit(0)
+    exit(0)
 

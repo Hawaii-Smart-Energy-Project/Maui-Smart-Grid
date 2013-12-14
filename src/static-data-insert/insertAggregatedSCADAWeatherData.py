@@ -23,7 +23,6 @@ import argparse
 
 commandLineArgs = None
 
-
 def processCommandLineArguments():
     """
     Create command line arguments and parse them.
@@ -34,33 +33,35 @@ def processCommandLineArguments():
     parser.add_argument('--filename', type = str)
     commandLineArgs = parser.parse_args()
 
-processCommandLineArguments()
-connector = MSGDBConnector()
-conn = connector.connectDB()
-dbUtil = MSGDBUtil()
-cursor = conn.cursor()
+if __name__ == '__main__':
 
-table = 'AverageFifteenMinKiheiSCADATemperatureHumidity'
-cols = ['timestamp', 'met_air_temp_degf', 'met_rel_humid_pct']
+    processCommandLineArguments()
+    connector = MSGDBConnector()
+    conn = connector.connectDB()
+    dbUtil = MSGDBUtil()
+    cursor = conn.cursor()
 
-cnt = 0
+    table = 'AverageFifteenMinKiheiSCADATemperatureHumidity'
+    cols = ['timestamp', 'met_air_temp_degf', 'met_rel_humid_pct']
 
-# @todo Test existence of file.
+    cnt = 0
 
-with open(commandLineArgs.filename, 'rb') as csvfile:
-    myReader = csv.reader(csvfile, delimiter = ',')
-    for row in myReader:
-        sql = """INSERT INTO "%s" (%s) VALUES (%s)""" % (
-            table, ','.join(cols),
-            ','.join("'" + item.strip() + "'" for item in row))
+    # @todo Test existence of file.
 
-        sql = sql.replace("'NULL'", 'NULL')
+    with open(commandLineArgs.filename, 'rb') as csvfile:
+        myReader = csv.reader(csvfile, delimiter = ',')
+        for row in myReader:
+            sql = """INSERT INTO "%s" (%s) VALUES (%s)""" % (
+                table, ','.join(cols),
+                ','.join("'" + item.strip() + "'" for item in row))
 
-        dbUtil.executeSQL(cursor, sql)
+            sql = sql.replace("'NULL'", 'NULL')
 
-        cnt += 1
-        if cnt % 10000 == 0:
-            conn.commit()
+            dbUtil.executeSQL(cursor, sql)
 
-conn.commit()
-cnt = 0
+            cnt += 1
+            if cnt % 10000 == 0:
+                conn.commit()
+
+    conn.commit()
+    cnt = 0
