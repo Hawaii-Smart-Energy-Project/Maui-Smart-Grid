@@ -19,8 +19,6 @@ from apiclient.http import MediaFileUpload
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.file import Storage
 from apiclient import errors
-#from msg_notifier import MSGNotifier
-#import time
 import datetime
 import argparse
 import hashlib
@@ -159,8 +157,8 @@ class MSGDBExporter(object):
                 self.logger.log(
                     'Exception while removing %s.sql: %s.' % (fullPath, e))
 
-        self.deleteOutdatedFiles(minAge = datetime.timedelta(
-            days = self.configer.configOptionValue('Export', 'days_to_keep')))
+        self.deleteOutdatedFiles(minAge = datetime.timedelta(days = int(
+            self.configer.configOptionValue('Export', 'days_to_keep'))))
 
 
     def uploadDBToCloudStorage(self, fullPath = '', testing = False):
