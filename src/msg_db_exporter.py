@@ -20,27 +20,8 @@ from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.file import Storage
 from apiclient import errors
 import datetime
-import argparse
 import hashlib
 from functools import partial
-
-commandLineArgs = None
-
-
-def processCommandLineArguments():
-    """
-    Generate command-line arguments. Load them into global variable
-    commandLineArgs.
-    """
-
-    global parser, commandLineArgs
-    parser = argparse.ArgumentParser(description = '')
-    parser.add_argument('--dbname', help = 'Database file to be uploaded.')
-    parser.add_argument('--fullpath',
-                        help = 'Full path to database file to be uploaded.')
-    parser.add_argument('--testing', action = 'store_true', default = False)
-
-    commandLineArgs = parser.parse_args()
 
 
 class MSGDBExporter(object):
