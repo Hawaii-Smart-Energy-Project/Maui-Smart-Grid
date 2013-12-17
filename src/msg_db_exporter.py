@@ -291,10 +291,6 @@ class MSGDBExporter(object):
 
         deleteCnt = 0
 
-        self.logger.log('minAge: %d' % minAge, 'DEBUG')
-        self.logger.log(
-            'datetime.timedelta(days = 0)' % datetime.timedelta(days = 0),
-            'DEBUG')
         if minAge == datetime.timedelta(days = 0):
             return 0
 
@@ -303,8 +299,6 @@ class MSGDBExporter(object):
                                             "%Y-%m-%dT%H:%M:%S.%fZ")
             t2 = datetime.datetime.now()
             tdelta = t2 - t1
-
-            self.logger.log('tdelta: %s' % tdelta, 'DEBUG')
 
             if tdelta > minAge and tdelta < maxAge:
                 deleteCnt += 1
