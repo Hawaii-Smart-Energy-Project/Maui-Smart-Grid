@@ -47,8 +47,9 @@ The schema consists of the following components.
 8. Transformer Data
 10. Irradiance Data
 11. PV Service Points
+12. Power Meter Events
 
-A [helpful schema diagram](https://github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/raw/master/diagrams/meco-direct-derived-schema-v3.pdf) is provided in the repository and a version is displayed here illustrating the portion of the schema derived from MECO export data.
+A [helpful schema diagram](https://github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/raw/master/diagrams/meco-direct-derived-schema-v3.pdf) is provided in the repository and a version is displayed here illustrating the portion of the schema derived from MECO export data by SSN (Silver Spring Networks).
 
 ![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/maui-smart-grid/master/diagrams/meco-direct-derived-schema-v3.png)
 
