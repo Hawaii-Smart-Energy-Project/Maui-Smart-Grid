@@ -4,6 +4,9 @@
 """
 MSG Install Script
 
+This script is useful for updating an existing MSG software installation from an
+active development code base.
+
 This is an interface to the install process that automates the following
 operations.
 
