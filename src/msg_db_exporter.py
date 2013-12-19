@@ -240,7 +240,10 @@ class MSGDBExporter(object):
     def uploadWasSuccessful(self, file):
         """
         Determine upload success.
+
+        This is not used.
         """
+
         success = False
         return success
 
@@ -265,6 +268,8 @@ class MSGDBExporter(object):
     def deleteOutdatedFiles(self, minAge = datetime.timedelta(days = 0),
                             maxAge = datetime.timedelta(weeks = 9999999)):
         """
+        Remove outdated files from cloud storage.
+
         :param minAge: Minimum age before a file is considered outdated.
         :param maxAge: Maximum age to consider for a file.
         :returns: Count of deleted items.
@@ -289,10 +294,21 @@ class MSGDBExporter(object):
 
 
     def sendNotificationOfFiles(self):
+        """
+        Provide a notification that lists the export files along with sharing links.
+        """
+
         pass
 
 
     def verifyMD5Sum(self, localFilePath, remoteFileID):
+        """
+        Verify that the local MD5 sum matches the MD5 sum for the remote file corresponding to an ID.
+
+        :param localFilePath: Full path of the local file.
+        :param remoteFileID: Cloud ID for the remote file.
+        :returns: True if the MD5 sums match, otherwise, False.
+        """
 
         self.logger.log('local file path: %s' % localFilePath)
         # Get the md5sum for the local file.
@@ -319,6 +335,9 @@ class MSGDBExporter(object):
     def fileIDForFileName(self, filename):
         """
         Get the file ID for the given filename.
+
+        :param Filename for which to retrieve the ID.
+        :returns: Cloud file ID
         """
 
         for item in self.cloudFiles['items']:
@@ -328,5 +347,11 @@ class MSGDBExporter(object):
         return None
 
 
+    def addReadPermission(self, emailAddressList):
+        """
+        Add read permission to an export file for the given list of email addresses.
+        """
+
+        pass
 
 
