@@ -49,7 +49,7 @@ The schema consists of the following components.
 11. PV Service Points
 12. Power Meter Events
 
-A [helpful schema diagram](https://github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/raw/master/diagrams/meco-direct-derived-schema-v3.pdf) is provided in the repository and a version is displayed here illustrating the portion of the schema derived from MECO export data by SSN (Silver Spring Networks).
+A [helpful schema diagram](https://github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/raw/master/diagrams/meco-direct-derived-schema-v3.pdf) is provided in the repository and a version is displayed here illustrating the portion of the schema derived from MECO export data by [SSN (Silver Spring Networks)](http://www.mauismartgrid.com/maui-smart-grid-project-description/project-team/).
 
 ![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/maui-smart-grid/master/diagrams/meco-direct-derived-schema-v3.png)
 
@@ -70,15 +70,15 @@ v4 (Development)
 ![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/diagrams/2013-07-29_ReadingAndMeterCounts.png)
 Plot of readings per meter counts and meter counts per day loaded to meco_v3.
 
-## Installation ##
+## Installation and Updating ##
 
-A custom automatic installation script, `install-msg.py`, has been developed to provide
+A custom automatic installation script, `install-msg.py`, has been developed to provide a single command capable of:
 
 * Creation of a distribution archive from the source code base.
 * Installation, or updating of an existing installation, from the installer within the distribution archive.
 * Installation of non-Python code such as the MSG eGauge Service.
 
-It is intended to facilitate the maintenace of the software installation while at the same time allowing development of the source code base. It is used like so
+It is intended to facilitate the maintenace of the software installation, **and** updating, while at the same time allowing development of the source code base. It is used like so
 
 	python install-msg.py --sourcePath ${SOURCE_CODE_BASE_PATH} --installUserPath ${DESTINATION_BASE_PATH}
 
