@@ -39,15 +39,16 @@ class MSGDBExporterTester(unittest.TestCase):
         self.assertEquals(len(md5sum), 32)
 
     # @todo Upload file for testing.
-    def testGetFileIDForFilename(self):
+    def testGetFileIDsForFilename(self):
         """
-        Retrieve the file ID for the given file name.
+        Retrieve the matching file IDs for the given file name.
         """
 
-        fileID = self.exporter.fileIDForFileName(
+        fileIDs = self.exporter.fileIDForFileName(
             'meco_v3.sql.gz')
-        print "file id = %s" % fileID
-        self.assertIsNotNone(fileID)
+        print "file ids = %s" % fileIDs
+
+        self.assertIsNotNone(fileIDs)
 
     def testUploadTestData(self):
         """

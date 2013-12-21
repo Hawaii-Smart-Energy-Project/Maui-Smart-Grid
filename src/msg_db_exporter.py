@@ -341,14 +341,20 @@ class MSGDBExporter(object):
         Get the file ID for the given filename.
 
         :param Filename for which to retrieve the ID.
-        :returns: Cloud file ID
+        :returns: List of Cloud file ID
         """
+
+        ids = []
 
         for item in self.cloudFiles['items']:
             # self.logger.log('title: %s' % item['title'], 'DEBUG')
             if (item['title'] == filename):
-                return item['id']
-        return None
+                ids.append(item['id'])
+
+        if ids:
+            return ids
+        else:
+            return None
 
 
     def addReaders(self, fileID = None, emailAddressList = None):
