@@ -97,8 +97,9 @@ class MSGDBExporter(object):
         pg_dump -s -h ${HOST} ${DB_NAME} > ${DUMP_TIMESTAMP}_{DB_NAME}.sql
 
         :param databases: List of database names.
-        :param toCloud: If set to True, then export will also be copied to
+        :param toCloud: If set to True, then the export will also be copied to
         cloud storage.
+        :param testing: Flag for testing mode.
         """
 
         host = self.configer.configOptionValue('Database', 'db_host')
@@ -128,7 +129,7 @@ class MSGDBExporter(object):
                 self.gzipCompressFile(fullPath)
 
             if toCloud:
-                self.uploadDBToCloudStorage('%s.sql.gz' % fullPath,
+                fileID = self.uploadDBToCloudStorage('%s.sql.gz' % fullPath,
                                             testing = testing)
 
             # Remove the uncompressed file.
@@ -154,7 +155,6 @@ class MSGDBExporter(object):
         dbName = os.path.basename(fullPath)
 
         self.logger.log('full path %s' % os.path.dirname(fullPath), 'debug')
-        #self.startDriveService(os.path.dirname(fullPath))
 
         self.logger.log("Uploading %s." % dbName)
 
@@ -170,11 +170,12 @@ class MSGDBExporter(object):
                                        'compressed DB export.',
                         'mimeType': 'application/gzip-compressed'}
 
-                file = self.driveService.files().insert(body = body,
+                result = self.driveService.files().insert(body = body,
                                                         media_body =
                                                         media_body).execute()
 
-                #pprint.pprint(file)
+                print "Result = %s" % result
+
             else:
                 self.logger.log("Called upload with testing flag on.")
 
@@ -195,6 +196,8 @@ class MSGDBExporter(object):
     def retrieveCredentials(self):
         """
         Perform authorization at the server.
+
+        Credentials are loaded into the object attribute googleAPICredentials.
         """
 
         flow = OAuth2WebServerFlow(self.clientID, self.clientSecret,
@@ -228,7 +231,7 @@ class MSGDBExporter(object):
         Get free space from the drive service.
 
         :param driveService: Object for the drive service.
-        :returns: Free space on the drive service.
+        :returns: Free space on the drive service as an integer.
         """
 
         aboutData = self.driveService.about().get().execute()
@@ -255,7 +258,6 @@ class MSGDBExporter(object):
         :param fileID: Googe API file ID.
         """
 
-        #self.logger.log('http: %s', self.driveService._http)
         self.logger.log('Deleting File ID: %s' % fileID, 'debug')
 
         try:
@@ -295,7 +297,8 @@ class MSGDBExporter(object):
 
     def sendNotificationOfFiles(self):
         """
-        Provide a notification that lists the export files along with sharing links.
+        Provide a notification that lists the export files along with sharing
+        links.
         """
 
         pass
@@ -303,7 +306,8 @@ class MSGDBExporter(object):
 
     def verifyMD5Sum(self, localFilePath, remoteFileID):
         """
-        Verify that the local MD5 sum matches the MD5 sum for the remote file corresponding to an ID.
+        Verify that the local MD5 sum matches the MD5 sum for the remote file
+        corresponding to an ID.
 
         :param localFilePath: Full path of the local file.
         :param remoteFileID: Cloud ID for the remote file.
@@ -341,17 +345,34 @@ class MSGDBExporter(object):
         """
 
         for item in self.cloudFiles['items']:
-            self.logger.log('title: %s' % item['title'], 'DEBUG')
+            # self.logger.log('title: %s' % item['title'], 'DEBUG')
             if (item['title'] == filename):
                 return item['id']
         return None
 
 
-    def addReadPermission(self, emailAddressList):
+    def addReaders(self, fileID = None, emailAddressList = None):
         """
-        Add read permission to an export file for the given list of email addresses.
+        Add reader permission to an export file for the given list of email
+        addresses.
+
+        :param fileID: Cloud file ID to be processed.
+        :param emailAddressList: A list of email addresses.
+        :returns: True if successful, otherwise False.
         """
 
-        pass
+        success = True
 
+        for addr in emailAddressList:
+            permission = {'value': addr, 'type': 'user', 'role': 'reader'}
+
+            if fileID:
+                try:
+                    resp = self.driveService.permissions().insert(
+                        fileId = fileID, body = permission).execute()
+                except errors.HttpError, error:
+                    print 'An error occurred: %s' % error
+                    success = False
+
+        return success
 
