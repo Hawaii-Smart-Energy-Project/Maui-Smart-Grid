@@ -13,15 +13,17 @@ from logging import ERROR
 class MSGLoggerTester(unittest.TestCase):
 
     def setUp(self):
-        self.logger = MSGLogger(__name__)
+        #print "Initializing logger."
+        self.logger = MSGLogger(__name__, level='DEBUG')
+        print 'logger level: %s' % self.logger.loggerLevel
 
     def testInit(self):
-        self.logger.log('Testing init.')
+        self.logger.log('Testing init.',level='info')
 
         self.assertIsNotNone(self.logger)
 
     def testLogRecording(self):
-        self.logger.log('Testing log recording.')
+        self.logger.log('Testing log recording.','info')
 
         msg = "Recording test."
 
@@ -33,7 +35,7 @@ class MSGLoggerTester(unittest.TestCase):
         self.assertEqual(self.logger.recording, msg)
 
     def testSilentLogging(self):
-        self.logger.log('Testing silent logging.')
+        self.logger.log('Testing silent logging.','info')
 
         msg = "Recording test."
 
@@ -42,6 +44,9 @@ class MSGLoggerTester(unittest.TestCase):
         self.logger.endRecording()
 
         self.assertEqual(self.logger.recording, '')
+
+    def testDebugLogging(self):
+        self.logger.log('Testing debug logging','DEBUG')
 
 
 if __name__ == '__main__':
