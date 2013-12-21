@@ -19,15 +19,16 @@ class MSGDBExporterTester(unittest.TestCase):
         self.exporter = MSGDBExporter()
 
     def testListRemoteFiles(self):
+        self.logger.log('Testing listing of remote files.','INFO')
         title = ''
         id = ''
         for item in self.exporter.cloudFiles['items']:
             title = item['title']
             print title
             id = item['id']
-            print id
-        self.assertIsNot(title, '')
-        self.assertIsNot(id, '')
+            print "id = %s" % id
+            self.assertIsNot(title, '')
+            self.assertIsNot(id, '')
 
     def testGetMD5Sum(self):
         md5sum = ''
@@ -39,8 +40,12 @@ class MSGDBExporterTester(unittest.TestCase):
 
     # @todo Upload file for testing.
     def testGetFileIDForFilename(self):
+        """
+        Retrieve the file ID for the given file name.
+        """
+
         fileID = self.exporter.fileIDForFileName(
-            '2013-11-01_021138_meco_v3.sql.gz')
+            'meco_v3.sql.gz')
         print "file id = %s" % fileID
         self.assertIsNotNone(fileID)
 
@@ -54,7 +59,6 @@ class MSGDBExporterTester(unittest.TestCase):
         filePath = "../test-data/db-export/meco_v3.sql.gz"
         print hashlib.md5(filePath).hexdigest()
 
-        #for i in range(3):
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
 
         for item in self.exporter.cloudFiles['items']:
@@ -80,6 +84,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
     def testDeleteOutdatedFiles(self):
         # @todo Prevent deleting files uploaded today.
+        # @todo Prevent deleting NON-testing files.
 
         self.logger.log("Test deleting outdated files.")
 
@@ -97,6 +102,8 @@ class MSGDBExporterTester(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+    # Run a single test:
     #mySuite = unittest.TestSuite()
     #mySuite.addTest(MSGDBExporterTester('testGetMD5Sum'))
     #unittest.TextTestRunner().run(mySuite)
