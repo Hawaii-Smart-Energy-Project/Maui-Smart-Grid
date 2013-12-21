@@ -347,14 +347,22 @@ class MSGDBExporter(object):
         ids = []
 
         for item in self.cloudFiles['items']:
-            # self.logger.log('title: %s' % item['title'], 'DEBUG')
-            if (item['title'] == filename):
-                ids.append(item['id'])
 
+            if (item['title'] == filename):
+                self.logger.log('item: %s' % item)
+                self.logger.log('matching title: %s' % item['title'], 'DEBUG')
+                self.logger.log('file state trashed: %s' % item['labels']['trashed'], 'DEBUG')
+                if not item['labels']['trashed']:
+                    ids.append(item['id'])
+
+        # if len(ids) == 1:
         if ids:
-            return ids
-        else:
+            return ids[0]
+        elif not ids:
             return None
+        else:
+            # raise Exception("More than one matching file ID exists.")
+            raise Exception("Unmatched case for fileIDForFileName.")
 
 
     def addReaders(self, fileID = None, emailAddressList = None):
