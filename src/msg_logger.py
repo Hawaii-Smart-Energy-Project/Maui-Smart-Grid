@@ -126,7 +126,8 @@ class MSGLogger(object):
         """
 
         self.logger.addHandler(self.streamHandlerStdErr)
-        self.logger.addHandler(self.streamHandlerString)
+        if self.shouldRecord:
+            self.logger.addHandler(self.streamHandlerString)
 
         if level:
             level = level.lower()
