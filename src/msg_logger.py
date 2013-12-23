@@ -26,6 +26,12 @@ def enum(**enums):
 class MSGLogger(object):
     """
     This class provides logging functionality.
+
+    It supports recording of log output by setting self.shouldRecord = True.
+    The recorded output is then available in self.recording.
+
+    :param caller: The object that is calling this class.
+    :param level: Logger level string in ('info', 'error', 'silent', 'debug')
     """
 
     def __init__(self, caller, level = 'info'):
@@ -37,8 +43,6 @@ class MSGLogger(object):
 
         @todo Provide enumeration type.
         """
-
-        #print "Initializing logger for %s." % caller
 
         self.logger = logging.getLogger(caller)
 
@@ -59,9 +63,6 @@ class MSGLogger(object):
 
         self.loggerLevel = None
 
-        # @todo Test use of enum.
-        #self.LogLevels = enum(INFO = 1, ERROR = 2, DEBUG = 3)
-
         #The log level that is set here provides the cut-off point for future
         # calls to log that are responsible for the actual log messages.
 
@@ -69,7 +70,6 @@ class MSGLogger(object):
         # level used in the call to self.logger.log().
 
         level = level.lower()
-        #logLevel = level
 
         if level == 'info':
             self.loggerLevel = logging.INFO
@@ -81,12 +81,6 @@ class MSGLogger(object):
             self.loggerLevel = logging.DEBUG
         else:
             self.loggerLevel = logging.INFO
-
-
-        #if logLevel == self.LogLevels.INFO:
-        #    pass
-        #if logLevel == self.LogLevels.ERROR:
-        #    pass
 
 
         # Messages equal to and above the logging level will be logged.
@@ -134,11 +128,6 @@ class MSGLogger(object):
         self.logger.addHandler(self.streamHandlerStdErr)
         self.logger.addHandler(self.streamHandlerString)
 
-        #if not level:
-        #    loggerLevel = self.loggerLevel
-
-        #else:
-
         if level:
             level = level.lower()
 
@@ -153,11 +142,6 @@ class MSGLogger(object):
             loggerLevel = logging.NOTSET
         else:
             loggerLevel = logging.INFO # Default logger level.
-
-        # @todo Assert that logger level is never None.
-
-        #if loggerLevel == logging.NOTSET:
-        #    return
 
         if loggerLevel != None:
             # For debugging:
@@ -189,5 +173,3 @@ class MSGLogger(object):
 
     def endRecording(self):
         self.shouldRecord = False
-
-
