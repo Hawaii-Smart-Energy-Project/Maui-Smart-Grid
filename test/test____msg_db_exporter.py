@@ -15,7 +15,7 @@ import datetime
 
 class MSGDBExporterTester(unittest.TestCase):
     def setUp(self):
-        self.logger = MSGLogger(__name__)
+        self.logger = MSGLogger(__name__, 'DEBUG')
         self.exporter = MSGDBExporter()
 
 
@@ -42,17 +42,25 @@ class MSGDBExporterTester(unittest.TestCase):
         self.assertEquals(len(md5sum), 32)
 
 
-    # @todo Upload file for testing.
+
     def testGetFileIDsForFilename(self):
         """
         Retrieve the matching file IDs for the given file name.
         """
 
+        # @todo Upload file for testing.
+        self.logger.log("Uploading test data.")
+
+        filePath = "../test-data/db-export/meco_v3.sql.gz"
+
+        uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
+
+        self.assertTrue(uploadResult)
 
         self.logger.log('Testing getting the file ID for a filename.')
 
         fileIDs = self.exporter.fileIDForFileName('meco_v3.sql.gz')
-        self.logger.log("file ids = %s" % fileIDs,'info')
+        self.logger.log("file ids = %s" % fileIDs, 'info')
 
         self.assertIsNotNone(fileIDs)
 
