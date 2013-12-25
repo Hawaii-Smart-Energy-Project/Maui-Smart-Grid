@@ -130,7 +130,7 @@ class MSGDBExporter(object):
 
             if toCloud:
                 fileID = self.uploadDBToCloudStorage('%s.sql.gz' % fullPath,
-                                            testing = testing)
+                                                     testing = testing)
 
             # Remove the uncompressed file.
             try:
@@ -171,8 +171,8 @@ class MSGDBExporter(object):
                         'mimeType': 'application/gzip-compressed'}
 
                 result = self.driveService.files().insert(body = body,
-                                                        media_body =
-                                                        media_body).execute()
+                                                          media_body =
+                                                          media_body).execute()
 
                 print "Result = %s" % result
 
@@ -351,17 +351,17 @@ class MSGDBExporter(object):
             if (item['title'] == filename):
                 self.logger.log('item: %s' % item)
                 self.logger.log('matching title: %s' % item['title'], 'DEBUG')
-                self.logger.log('file state trashed: %s' % item['labels']['trashed'], 'DEBUG')
+                self.logger.log(
+                    'file state trashed: %s' % item['labels']['trashed'],
+                    'DEBUG')
                 if not item['labels']['trashed']:
                     ids.append(item['id'])
 
-        # if len(ids) == 1:
         if ids:
             return ids[0]
         elif not ids:
             return None
         else:
-            # raise Exception("More than one matching file ID exists.")
             raise Exception("Unmatched case for fileIDForFileName.")
 
 
