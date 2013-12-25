@@ -42,7 +42,6 @@ class MSGDBExporterTester(unittest.TestCase):
         self.assertEquals(len(md5sum), 32)
 
 
-
     def testGetFileIDsForFilename(self):
         """
         Retrieve the matching file IDs for the given file name.
@@ -110,7 +109,20 @@ class MSGDBExporterTester(unittest.TestCase):
         Delete all test items.
         """
 
-        pass
+        deleteSuccessful = True
+
+        # Keep deleting until there is no more to delete.
+        while deleteSuccessful:
+            try:
+                fileIDToDelete = self.exporter.fileIDForFileName(
+                    'meco_v3.sql.gz')
+                self.logger.log("file ID to delete: %s" % fileIDToDelete,
+                                'DEBUG')
+                self.exporter.driveService.files().delete(
+                    fileId = '%s' % fileIDToDelete).execute()
+            except (TypeError, http.HttpError) as e:
+                self.logger.log('Delete not successful: %s' % e, 'DEBUG')
+                break
 
 
 if __name__ == '__main__':
