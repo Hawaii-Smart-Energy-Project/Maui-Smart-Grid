@@ -18,25 +18,29 @@ class MSGDBExporterTester(unittest.TestCase):
         self.logger = MSGLogger(__name__)
         self.exporter = MSGDBExporter()
 
+
     def testListRemoteFiles(self):
-        self.logger.log('Testing listing of remote files.','INFO')
+        self.logger.log('Testing listing of remote files.', 'INFO')
         title = ''
         id = ''
         for item in self.exporter.cloudFiles['items']:
             title = item['title']
-            print title
+            # print title
             id = item['id']
-            print "id = %s" % id
+            # print "id = %s" % id
             self.assertIsNot(title, '')
             self.assertIsNot(id, '')
 
+
     def testGetMD5Sum(self):
+        self.logger.log('Testing getting the MD5 sum.', 'info')
         md5sum = ''
         for item in self.exporter.cloudFiles['items']:
-            print item['title']
+            # print item['title']
             md5sum = item['md5Checksum']
-            print md5sum
+            # print md5sum
         self.assertEquals(len(md5sum), 32)
+
 
     # @todo Upload file for testing.
     def testGetFileIDsForFilename(self):
@@ -44,16 +48,21 @@ class MSGDBExporterTester(unittest.TestCase):
         Retrieve the matching file IDs for the given file name.
         """
 
-        fileIDs = self.exporter.fileIDForFileName(
-            'meco_v3.sql.gz')
-        print "file ids = %s" % fileIDs
+
+        self.logger.log('Testing getting the file ID for a filename.')
+
+        fileIDs = self.exporter.fileIDForFileName('meco_v3.sql.gz')
+        self.logger.log("file ids = %s" % fileIDs,'info')
 
         self.assertIsNotNone(fileIDs)
+
 
     def testUploadTestData(self):
         """
         Upload a test data file for unit testing of DB export.
         """
+
+        return
 
         self.logger.log("Uploading test data.")
 
@@ -66,26 +75,13 @@ class MSGDBExporterTester(unittest.TestCase):
             print 'item: %s' % item['title']
             print 'md5: %s' % item['md5Checksum']
 
-        deleteSuccessful = True
-
-        # Keep deleting until there is no more to delete.
-        while deleteSuccessful:
-            try:
-                fileIDToDelete = self.exporter.fileIDForFileName(
-                    'meco_v3.sql.gz')
-                self.logger.log("file ID to delete: %s" % fileIDToDelete,
-                                'DEBUG')
-                self.exporter.driveService.files().delete(
-                    fileId = '%s' % fileIDToDelete).execute()
-            except (TypeError, http.HttpError) as e:
-                self.logger.log('Delete not successful: %s' % e, 'DEBUG')
-                break
-
         self.assertTrue(uploadResult)
 
     def testDeleteOutdatedFiles(self):
         # @todo Prevent deleting files uploaded today.
         # @todo Prevent deleting NON-testing files.
+
+        return
 
         self.logger.log("Test deleting outdated files.")
 
@@ -99,6 +95,14 @@ class MSGDBExporterTester(unittest.TestCase):
             minAge = datetime.timedelta(days = -2),
             maxAge = datetime.timedelta(days = 0))
         self.assertGreater(cnt, 0)
+
+
+    def tearDown(self):
+        """
+        Delete all test items.
+        """
+
+        pass
 
 
 if __name__ == '__main__':
