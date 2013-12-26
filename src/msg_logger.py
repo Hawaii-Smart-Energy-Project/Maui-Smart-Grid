@@ -6,6 +6,23 @@ Provide logging services for the MSG Data Operations Project.
 
 Setting self.shouldRecord=True provides a way of collecting all logging output
 for the instantiated logger into self.recording.
+
+The logger is configurable at the class level and is typically instantiated
+within the init for a class.
+
+    self.logger = MSGLogger(__name__)
+
+The name parameter is used to pass the calling class. The optional debugging
+level corresponds to the levels used in the logging module. It is useful for
+filtering logging output. For example, if the logger is instantiated using
+
+    self.logger = MSGLogger(__name__, 'INFO')
+
+then debugging level logging statements such as
+
+    self.logger.log('A debug message.', 'DEBUG')
+
+will not be printed.
 """
 
 __author__ = 'Daniel Zhang (張道博)'
