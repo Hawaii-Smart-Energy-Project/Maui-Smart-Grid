@@ -69,18 +69,16 @@ class MSGDBExporterTester(unittest.TestCase):
         Upload a test data file for unit testing of DB export.
         """
 
-        return
-
         self.logger.log("Uploading test data.")
 
         filePath = "../test-data/db-export/meco_v3.sql.gz"
-        print hashlib.md5(filePath).hexdigest()
+        # print hashlib.md5(filePath).hexdigest()
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
 
-        for item in self.exporter.cloudFiles['items']:
-            print 'item: %s' % item['title']
-            print 'md5: %s' % item['md5Checksum']
+        # for item in self.exporter.cloudFiles['items']:
+        #     print 'item: %s' % item['title']
+        #     print 'md5: %s' % item['md5Checksum']
 
         self.assertTrue(uploadResult)
 
