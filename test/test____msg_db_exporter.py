@@ -11,11 +11,14 @@ import os
 import httplib2
 from apiclient import http
 import datetime
+from apiclient import errors
+from msg_configer import MSGConfiger
 
 
 class MSGDBExporterTester(unittest.TestCase):
     def setUp(self):
         self.logger = MSGLogger(__name__, 'DEBUG')
+        self.configer = MSGConfiger()
         self.exporter = MSGDBExporter()
 
 
@@ -82,7 +85,13 @@ class MSGDBExporterTester(unittest.TestCase):
 
         self.assertTrue(uploadResult)
 
+
     def testDeleteOutdatedFiles(self):
+        """
+        The timestamp of an uploaded file should be set in the past to provide
+        the ability to test the deleting of outdated files.
+        """
+
         # @todo Prevent deleting files uploaded today.
         # @todo Prevent deleting NON-testing files.
 
@@ -102,6 +111,37 @@ class MSGDBExporterTester(unittest.TestCase):
         self.assertGreater(cnt, 0)
 
 
+    def testAddingReaderPermissions(self):
+        """
+        Add reader permissions to a file that was uploaded.
+        """
+
+        self.logger.log("Testing adding reader permissions.")
+        self.logger.log("Uploading test data.")
+        filePath = "../test-data/db-export/meco_v3.sql.gz"
+        uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
+        email = self.configer.configOptionValue('Testing', 'tester_email')
+        service = self.exporter.driveService
+        try:
+            id_resp = service.permissions().getIdForEmail(
+                email = email).execute()
+            print id_resp
+
+        except errors.HttpError, error:
+            print 'An error occured: %s' % error
+
+        new_permission = {'value': email, 'type': 'user', 'role': 'reader'}
+        try:
+            self.logger.log('Adding reader permission', 'INFO')
+            fileIDToAddTo = self.exporter.fileIDForFileName('meco_v3.sql.gz')
+
+            # The permission dict is being output to stdout here.
+            resp = service.permissions().insert(fileId = fileIDToAddTo,
+                                                body = new_permission).execute()
+        except errors.HttpError, error:
+            print 'An error occurred: %s' % error
+
+
     def tearDown(self):
         """
         Delete all test items.
@@ -119,14 +159,15 @@ class MSGDBExporterTester(unittest.TestCase):
                 self.exporter.driveService.files().delete(
                     fileId = '%s' % fileIDToDelete).execute()
             except (TypeError, http.HttpError) as e:
-                self.logger.log('Delete not successful: %s' % e, 'DEBUG')
+                self.logger.log('Delete not successful: %s' % e, 'SILENT')
                 break
 
 
 if __name__ == '__main__':
+    # Run all tests.
     unittest.main()
 
     # Run a single test:
-    #mySuite = unittest.TestSuite()
-    #mySuite.addTest(MSGDBExporterTester('testGetMD5Sum'))
-    #unittest.TextTestRunner().run(mySuite)
+    # mySuite = unittest.TestSuite()
+    # mySuite.addTest(MSGDBExporterTester('testAddingReaderPermissions'))
+    # unittest.TextTestRunner().run(mySuite)
