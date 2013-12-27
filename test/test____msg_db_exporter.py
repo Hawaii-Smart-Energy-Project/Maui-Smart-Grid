@@ -6,14 +6,10 @@ __author__ = 'Daniel Zhang (張道博)'
 import unittest
 from msg_logger import MSGLogger
 from msg_db_exporter import MSGDBExporter
-import hashlib
-import os
-import httplib2
 from apiclient import http
 import datetime
 from apiclient import errors
 from msg_configer import MSGConfiger
-
 
 class MSGDBExporterTester(unittest.TestCase):
     def setUp(self):
@@ -164,10 +160,14 @@ class MSGDBExporterTester(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    # Run all tests.
-    unittest.main()
+    runSingleTest = False
 
-    # Run a single test:
-    # mySuite = unittest.TestSuite()
-    # mySuite.addTest(MSGDBExporterTester('testAddingReaderPermissions'))
-    # unittest.TextTestRunner().run(mySuite)
+    if runSingleTest:
+        # Run a single test:
+        mySuite = unittest.TestSuite()
+        mySuite.addTest(MSGDBExporterTester('testAddingReaderPermissions'))
+        unittest.TextTestRunner().run(mySuite)
+    else:
+        # Run all tests.
+        unittest.main()
+
