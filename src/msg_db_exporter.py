@@ -66,7 +66,7 @@ class MSGDBExporter(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__, 'debug')
+        self.logger = MSGLogger(__name__, 'INFO')
         self.timeUtil = MSGTimeUtil()
         self.configer = MSGConfiger()
 
@@ -174,7 +174,7 @@ class MSGDBExporter(object):
                                                           media_body =
                                                           media_body).execute()
 
-                print "Result = %s" % result
+                # print "Result = %s" % result
 
             else:
                 self.logger.log("Called upload with testing flag on.")
@@ -340,8 +340,14 @@ class MSGDBExporter(object):
         """
         Get the file ID for the given filename.
 
+        This method supports matching multiple matching cloud filenames but only
+        returns the ID for a single matching filename.
+
+        This not the best way to handle things, but it works for the typical
+        use case and prevents errors from taking down the system.
+
         :param Filename for which to retrieve the ID.
-        :returns: List of Cloud file ID
+        :returns: A cloud file ID.
         """
 
         ids = []
@@ -349,11 +355,11 @@ class MSGDBExporter(object):
         for item in self.cloudFiles['items']:
 
             if (item['title'] == filename):
-                self.logger.log('item: %s' % item)
-                self.logger.log('matching title: %s' % item['title'], 'DEBUG')
-                self.logger.log(
-                    'file state trashed: %s' % item['labels']['trashed'],
-                    'DEBUG')
+                # self.logger.log('item: %s' % item, 'INFO')
+                # self.logger.log('matching title: %s' % item['title'], 'DEBUG')
+                # self.logger.log(
+                #     'file state trashed: %s' % item['labels']['trashed'],
+                #     'DEBUG')
                 if not item['labels']['trashed']:
                     ids.append(item['id'])
 
