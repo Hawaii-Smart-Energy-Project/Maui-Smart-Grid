@@ -1,5 +1,5 @@
 -- Creates a table containing a series of intervals for analyzing irradiance
--- data usin 15 min intervals. The intervals are created from the first
+-- data using 15 min intervals. The intervals are created from the first
 -- data point up to 1 year + 1 day past the last data point.
 --
 -- Sensor IDs are included.
