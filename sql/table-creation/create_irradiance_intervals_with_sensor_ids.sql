@@ -4,8 +4,6 @@
 --
 -- Sensor IDs are included.
 --
--- Create aggregated temperature view using NOAA weather data.
---
 -- @author Daniel Zhang (張道博)
 DROP VIEW "public"."dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero";
 
