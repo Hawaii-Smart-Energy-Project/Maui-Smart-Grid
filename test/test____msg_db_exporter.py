@@ -10,12 +10,21 @@ from apiclient import http
 import datetime
 from apiclient import errors
 from msg_configer import MSGConfiger
+import os
+
 
 class MSGDBExporterTester(unittest.TestCase):
     def setUp(self):
         self.logger = MSGLogger(__name__, 'DEBUG')
         self.configer = MSGConfiger()
         self.exporter = MSGDBExporter()
+        self.testDir = 'db_exporter_test'
+
+        # Create a temporary working directory.
+        try:
+            os.mkdir(self.testDir)
+        except OSError as detail:
+            self.logger.log('Exception: %s' % detail, 'ERROR')
 
 
     def testListRemoteFiles(self):
@@ -142,6 +151,11 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         Delete all test items.
         """
+
+        try:
+            os.rmdir(self.testDir)
+        except OSError as detail:
+            self.logger.log('Exception: %s' % detail, 'ERROR')
 
         deleteSuccessful = True
 
