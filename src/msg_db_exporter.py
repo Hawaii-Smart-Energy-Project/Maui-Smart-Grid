@@ -221,11 +221,14 @@ class MSGDBExporter(object):
         extension of the data to be compressed.
         """
 
-        f_in = open('%s.sql' % fullPath, 'rb')
-        f_out = gzip.open('%s.sql.gz' % fullPath, 'wb')
-        f_out.writelines(f_in)
-        f_out.close()
-        f_in.close()
+        try:
+            f_in = open('%s.sql' % fullPath, 'rb')
+            f_out = gzip.open('%s.sql.gz' % fullPath, 'wb')
+            f_out.writelines(f_in)
+            f_out.close()
+            f_in.close()
+        except IOError as detail:
+            self.logger.log('Exception: %s' % detail, 'ERROR')
 
 
     def freeSpace(self):
