@@ -13,6 +13,10 @@ from msg_configer import MSGConfiger
 import os
 import shutil
 import re
+import hashlib
+from functools import partial
+import gzip
+import time
 
 
 class MSGDBExporterTester(unittest.TestCase):
@@ -28,7 +32,6 @@ class MSGDBExporterTester(unittest.TestCase):
             os.mkdir(self.testDir)
         except OSError as detail:
             self.logger.log('Exception: %s' % detail, 'ERROR')
-
 
     def testListRemoteFiles(self):
         self.logger.log('Testing listing of remote files.', 'INFO')
@@ -151,7 +154,12 @@ class MSGDBExporterTester(unittest.TestCase):
 
     def testCreateCompressedArchived(self):
         """
-        Create a gzip-compressed archive.
+        * Copy test data to a temp directory.
+        * Create a checksum for test data.
+        * Create a gzip-compressed archive.
+        * Extract gzip-compressed archive.
+        * Create a checksum for the uncompressed data.
+        * Compare the checksums.
         """
 
         self.logger.log('cwd %s' % os.getcwd())
@@ -160,15 +168,19 @@ class MSGDBExporterTester(unittest.TestCase):
                          self.uncompressedTestFilename))
         shutil.copyfile('../test-data/db-export/meco_v3.sql', fullPath)
 
+        # Generate checksum for original data.
+        f = open(fullPath, mode = 'rb')
+        fContent = hashlib.md5()
+        for buf in iter(partial(f.read, 128), b''):
+            fContent.update(buf)
+        md5sum1 = fContent.hexdigest()
+        self.logger.log('md5sum1: %s' % md5sum1)
+        f.close()
+
         pattern = '(.*)\..*'
         result = re.match(pattern, fullPath).group(1)
         self.logger.log('base name: %s' % result)
         self.exporter.gzipCompressFile(result)
-
-    def tearDown(self):
-        """
-        Delete all test items.
-        """
 
         try:
             os.remove(os.path.join(os.getcwd(), self.testDir,
@@ -176,7 +188,44 @@ class MSGDBExporterTester(unittest.TestCase):
         except OSError as detail:
             self.logger.log('Exception: %s' % detail, 'ERROR')
 
+            # Test should fail at this point.
+            pass
+
+        # Extract archived data and generate checksum.
+        src = gzip.open('%s%s' % (fullPath, '.gz'), "rb")
+        uncompressed = open(fullPath, "wb")
+        decoded = src.read()
+        uncompressed.write(decoded)
+        uncompressed.close()
+
+        f = open(fullPath, mode = 'rb')
+        fContent = hashlib.md5()
+        for buf in iter(partial(f.read, 128), b''):
+            fContent.update(buf)
+        md5sum2 = fContent.hexdigest()
+        self.logger.log('md5sum2: %s' % md5sum2)
+        f.close()
+
+        self.assertEqual(md5sum1, md5sum2,
+                         'Checksums are equal for original and new '
+                         'decompressed archive.')
+
+    def tearDown(self):
+        """
+        Delete all test items.
+        """
+
         try:
+            pass
+            os.remove(os.path.join(os.getcwd(), self.testDir,
+                                   self.uncompressedTestFilename))
+            os.remove(os.path.join(os.getcwd(), self.testDir, '%s%s' % (
+                self.uncompressedTestFilename, '.gz')))
+        except OSError as detail:
+            self.logger.log('Exception: %s' % detail, 'ERROR')
+
+        try:
+            # Might need recursive delete here to handle unexpected cases.
             os.rmdir(self.testDir)
         except OSError as detail:
             self.logger.log('Exception: %s' % detail, 'ERROR')
