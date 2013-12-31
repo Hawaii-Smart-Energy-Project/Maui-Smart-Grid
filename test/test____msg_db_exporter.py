@@ -11,6 +11,8 @@ import datetime
 from apiclient import errors
 from msg_configer import MSGConfiger
 import os
+import shutil
+import re
 
 
 class MSGDBExporterTester(unittest.TestCase):
@@ -19,6 +21,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.configer = MSGConfiger()
         self.exporter = MSGDBExporter()
         self.testDir = 'db_exporter_test'
+        self.uncompressedTestFilename = 'meco_v3.sql'
 
         # Create a temporary working directory.
         try:
@@ -146,11 +149,32 @@ class MSGDBExporterTester(unittest.TestCase):
         except errors.HttpError, error:
             print 'An error occurred: %s' % error
 
+    def testCreateCompressedArchived(self):
+        """
+        Create a gzip-compressed archive.
+        """
+
+        self.logger.log('cwd %s' % os.getcwd())
+        fullPath = '%s' % (
+            os.path.join(os.getcwd(), self.testDir,
+                         self.uncompressedTestFilename))
+        shutil.copyfile('../test-data/db-export/meco_v3.sql', fullPath)
+
+        pattern = '(.*)\..*'
+        result = re.match(pattern, fullPath).group(1)
+        self.logger.log('base name: %s' % result)
+        self.exporter.gzipCompressFile(result)
 
     def tearDown(self):
         """
         Delete all test items.
         """
+
+        try:
+            os.remove(os.path.join(os.getcwd(), self.testDir,
+                                   self.uncompressedTestFilename))
+        except OSError as detail:
+            self.logger.log('Exception: %s' % detail, 'ERROR')
 
         try:
             os.rmdir(self.testDir)
@@ -174,12 +198,13 @@ class MSGDBExporterTester(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    runSingleTest = False
+    # This flag is during development of tests.
+    runSingleTest = True
 
     if runSingleTest:
         # Run a single test:
         mySuite = unittest.TestSuite()
-        mySuite.addTest(MSGDBExporterTester('testAddingReaderPermissions'))
+        mySuite.addTest(MSGDBExporterTester('testCreateCompressedArchived'))
         unittest.TextTestRunner().run(mySuite)
     else:
         # Run all tests.
