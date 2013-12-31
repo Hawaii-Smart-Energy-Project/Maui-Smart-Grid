@@ -216,7 +216,9 @@ class MSGDBExporter(object):
         @todo Test valid compression.
         @todo Move to file utils.
 
-        :param fullPath: Full path of the file to be compressed.
+        :param fullPath: Full path of the file to be compressed. The full
+        path is mislabeled here and refers to the full path minus the
+        extension of the data to be compressed.
         """
 
         f_in = open('%s.sql' % fullPath, 'rb')
