@@ -9,6 +9,9 @@ __license__ = 'https://raw.github' \
 
 from msg_logger import MSGLogger
 import os
+import hashlib
+from functools import partial
+
 
 class MSGFileUtil(object):
     """
@@ -32,3 +35,22 @@ class MSGFileUtil(object):
             return True
         else:
             return False
+
+    def md5Checksum(self, fullPath):
+        """
+        Get the MD5 checksum for the file given by fullPath.
+
+        :returns: MD5 checksum value as a hex digest.
+        """
+
+        try:
+            f = open(fullPath, mode = 'rb')
+            content = hashlib.md5()
+            for buf in iter(partial(f.read, 128), b''):
+                content.update(buf)
+            md5sum = content.hexdigest()
+            f.close()
+            return md5sum
+        except IOError as detail:
+            self.logger.log('Exception: %s' % detail, 'ERROR')
+
