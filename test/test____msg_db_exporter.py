@@ -17,6 +17,7 @@ import hashlib
 from functools import partial
 import gzip
 import time
+from msg_file_util import MSGFileUtil
 
 
 class MSGDBExporterTester(unittest.TestCase):
@@ -26,6 +27,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.exporter = MSGDBExporter()
         self.testDir = 'db_exporter_test'
         self.uncompressedTestFilename = 'meco_v3.sql'
+        self.fileUtil = MSGFileUtil()
 
         # Create a temporary working directory.
         try:
@@ -45,8 +47,7 @@ class MSGDBExporterTester(unittest.TestCase):
             self.assertIsNot(title, '')
             self.assertIsNot(id, '')
 
-
-    def testGetMD5Sum(self):
+    def testGetMD5SumFromCloud(self):
         self.logger.log('Testing getting the MD5 sum.', 'info')
         md5sum = ''
         for item in self.exporter.cloudFiles['items']:
@@ -54,6 +55,11 @@ class MSGDBExporterTester(unittest.TestCase):
             md5sum = item['md5Checksum']
             # print md5sum
         self.assertEquals(len(md5sum), 32)
+
+
+    def testGetMD5SumFromLocalFile(self):
+        return
+        self.exporter.verifyExportChecksum()
 
 
     def testGetFileIDsForFilename(self):
@@ -161,6 +167,7 @@ class MSGDBExporterTester(unittest.TestCase):
         * Create a checksum for the uncompressed data.
         * Compare the checksums.
         """
+        self.logger.log('Testing verification of a compressed archive.')
 
         self.logger.log('cwd %s' % os.getcwd())
         fullPath = '%s' % (
@@ -168,14 +175,7 @@ class MSGDBExporterTester(unittest.TestCase):
                          self.uncompressedTestFilename))
         shutil.copyfile('../test-data/db-export/meco_v3.sql', fullPath)
 
-        # Generate checksum for original data.
-        f = open(fullPath, mode = 'rb')
-        fContent = hashlib.md5()
-        for buf in iter(partial(f.read, 128), b''):
-            fContent.update(buf)
-        md5sum1 = fContent.hexdigest()
-        self.logger.log('md5sum1: %s' % md5sum1)
-        f.close()
+        md5sum1 = self.fileUtil.md5Checksum(fullPath)
 
         pattern = '(.*)\..*'
         result = re.match(pattern, fullPath).group(1)
@@ -198,13 +198,7 @@ class MSGDBExporterTester(unittest.TestCase):
         uncompressed.write(decoded)
         uncompressed.close()
 
-        f = open(fullPath, mode = 'rb')
-        fContent = hashlib.md5()
-        for buf in iter(partial(f.read, 128), b''):
-            fContent.update(buf)
-        md5sum2 = fContent.hexdigest()
-        self.logger.log('md5sum2: %s' % md5sum2)
-        f.close()
+        md5sum2 = self.fileUtil.md5Checksum(fullPath)
 
         self.assertEqual(md5sum1, md5sum2,
                          'Checksums are equal for original and new '
