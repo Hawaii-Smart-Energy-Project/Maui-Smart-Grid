@@ -204,6 +204,17 @@ class MSGDBExporterTester(unittest.TestCase):
                          'Checksums are equal for original and new '
                          'decompressed archive.')
 
+    def testExportDB(self):
+        """
+        Perform a quick test of the DB export method.
+        """
+
+        self.logger.log('Testing exportDB')
+        dbs = ['meco_v3']
+        success = self.exporter.exportDB(dbs, toCloud = False, testing = True)
+        self.logger.log('Success: %s' % success)
+
+
     def tearDown(self):
         """
         Delete all test items.
@@ -216,17 +227,20 @@ class MSGDBExporterTester(unittest.TestCase):
             os.remove(os.path.join(os.getcwd(), self.testDir, '%s%s' % (
                 self.uncompressedTestFilename, '.gz')))
         except OSError as detail:
-            self.logger.log('Exception: %s' % detail, 'ERROR')
+            self.logger.log(
+                'Exception while removing temporary files: %s' % detail,
+                'ERROR')
 
         try:
             # Might need recursive delete here to handle unexpected cases.
             os.rmdir(self.testDir)
         except OSError as detail:
-            self.logger.log('Exception: %s' % detail, 'ERROR')
+            self.logger.log('Exception while removing directory: %s' % detail,
+                            'ERROR')
 
         deleteSuccessful = True
 
-        # Keep deleting until there is no more to delete.
+        # Keep deleting from the cloud until there is no more to delete.
         while deleteSuccessful:
             try:
                 fileIDToDelete = self.exporter.fileIDForFileName(
@@ -247,9 +261,8 @@ if __name__ == '__main__':
     if runSingleTest:
         # Run a single test:
         mySuite = unittest.TestSuite()
-        mySuite.addTest(MSGDBExporterTester('testCreateCompressedArchived'))
+        mySuite.addTest(MSGDBExporterTester('testExportDB'))
         unittest.TextTestRunner().run(mySuite)
     else:
         # Run all tests.
         unittest.main()
-

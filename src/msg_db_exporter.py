@@ -22,6 +22,7 @@ from apiclient import errors
 import datetime
 import hashlib
 from functools import partial
+from msg_file_util import MSGFileUtil
 
 
 class MSGDBExporter(object):
@@ -45,10 +46,6 @@ class MSGDBExporter(object):
             raise Exception("Credential path is required.")
         storage = Storage('%s/google_api_credentials' % self.credentialPath)
 
-        #self.logger.log("Retrieving credentials.")
-        #self.retrieveCredentials()
-        #storage.put(self.googleAPICredentials)
-
         self.googleAPICredentials = storage.get()
 
         self.logger.log("Authorizing credentials.", 'info')
@@ -69,6 +66,7 @@ class MSGDBExporter(object):
         self.logger = MSGLogger(__name__, 'INFO')
         self.timeUtil = MSGTimeUtil()
         self.configer = MSGConfiger()
+        self.fileUtil = MSGFileUtil()
 
         # Google Drive parameters.
         self.clientID = self.configer.configOptionValue('Export',
@@ -88,6 +86,20 @@ class MSGDBExporter(object):
         self._cloudFiles = None
 
 
+    def verifyExportChecksum(self, testing = False):
+        """
+        Verify the compressed export file using a checksum.
+
+        * Save the checksum of the original uncompressed export data.
+        * Extract the compressed file.
+        * Verify the uncompressed export data.
+        """
+
+        # Get the checksum of the original file.
+        md5sum = self.fileUtil.md5Checksum(self.exportPath)
+        self.logger.log('md5sum: %s' % md5sum)
+
+
     def exportDB(self, databases = None, toCloud = False, testing = False):
         """
         Export a set of DBs to local storage.
@@ -100,31 +112,51 @@ class MSGDBExporter(object):
         :param toCloud: If set to True, then the export will also be copied to
         cloud storage.
         :param testing: Flag for testing mode.
+        :returns: True if no errors have occurred, False otherwise.
         """
+
+        noErrors = True
 
         host = self.configer.configOptionValue('Database', 'db_host')
 
         for db in databases:
             self.logger.log('Exporting %s.' % db, 'info')
             conciseNow = self.timeUtil.conciseNow()
-            dumpName = "%s_%s" % (conciseNow, db)
+
+            if not testing:
+                dumpName = "%s_%s" % (conciseNow, db)
+            else:
+                dumpName = 'meco_v3.sql'
+
             command = """pg_dump -h %s %s > %s/%s.sql""" % (host, db,
                                                             self.configer
                                                             .configOptionValue(
                                                                 'Export',
                                                                 'db_export_path'),
                                                             dumpName)
-            fullPath = '%s/%s' % (
+
+            if not testing:
+                fullPath = '%s/%s' % (
                 self.configer.configOptionValue('Export', 'db_export_path'),
                 dumpName)
+            else:
+                fullPath = '%s/%s' % (self.configer.configOptionValue('Testing',
+                                                                      'export_test_data_path'),
+                                      dumpName)
 
             try:
                 if not testing:
+                    # Generate the SQL script export.
                     subprocess.check_call(command, shell = True)
             except subprocess.CalledProcessError, e:
-                self.logger.log("An exception occurred: %s" % e)
+                self.logger.log("Exception while dumping: %s" % e)
+                noErrors = False
+
+            # Obtain the checksum for the export.
+            md5sum1 = self.fileUtil.md5Checksum(fullPath)
 
             self.logger.log("Compressing %s using gzip." % db, 'info')
+
             if not testing:
                 self.gzipCompressFile(fullPath)
 
@@ -134,14 +166,17 @@ class MSGDBExporter(object):
 
             # Remove the uncompressed file.
             try:
-                os.remove('%s.sql' % fullPath)
+                if not testing:
+                    os.remove('%s.sql' % fullPath)
             except OSError, e:
                 self.logger.log(
                     'Exception while removing %s.sql: %s.' % (fullPath, e))
+                noErrors = False
 
         self.deleteOutdatedFiles(minAge = datetime.timedelta(days = int(
             self.configer.configOptionValue('Export', 'days_to_keep'))))
 
+        return noErrors
 
     def uploadDBToCloudStorage(self, fullPath = '', testing = False):
         """
@@ -228,7 +263,7 @@ class MSGDBExporter(object):
             f_out.close()
             f_in.close()
         except IOError as detail:
-            self.logger.log('Exception: %s' % detail, 'ERROR')
+            self.logger.log('Exception while gzipping: %s' % detail, 'ERROR')
 
 
     def freeSpace(self):
@@ -269,7 +304,7 @@ class MSGDBExporter(object):
             self.driveService.files().delete(fileId = fileID).execute()
 
         except errors.HttpError, error:
-            self.logger.log('An error occurred: %s' % error, 'error')
+            self.logger.log('Exception while deleting: %s' % error, 'error')
 
 
     def deleteOutdatedFiles(self, minAge = datetime.timedelta(days = 0),
@@ -313,6 +348,9 @@ class MSGDBExporter(object):
         """
         Verify that the local MD5 sum matches the MD5 sum for the remote file
         corresponding to an ID.
+
+        This verifies that the uploaded file matches the local compressed
+        export file.
 
         :param localFilePath: Full path of the local file.
         :param remoteFileID: Cloud ID for the remote file.
