@@ -52,5 +52,6 @@ class MSGFileUtil(object):
             f.close()
             return md5sum
         except IOError as detail:
-            self.logger.log('Exception: %s' % detail, 'ERROR')
+            self.logger.log(
+                'Exception during checksum calculation: %s' % detail, 'ERROR')
 
