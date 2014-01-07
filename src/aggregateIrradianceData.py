@@ -9,7 +9,10 @@ Provides intervals where the timestamp represents the end of the interval.
 
 Usage:
 
-This script is called by aggregate-irradiance-data.sh.
+    python aggregateIrradianceData.py --startDate ${START_DATE}
+                                      --endDate ${END_DATE}
+
+This script is used by aggregate-irradiance-data.sh.
 
 """
 
@@ -27,6 +30,7 @@ from msg_math_util import MSGMathUtil
 
 NEXT_MINUTE_CROSSING = 0
 
+
 def processCommandLineArguments():
     """
     Create command line arguments and parse them.
@@ -34,12 +38,21 @@ def processCommandLineArguments():
 
     global parser, commandLineArgs
     parser = argparse.ArgumentParser(description = '')
-    parser.add_argument('--startDate', type = str)
-    parser.add_argument('--endDate', type = str)
+    parser.add_argument('--startDate', type = str, required = True)
+    parser.add_argument('--endDate', type = str, required = True)
     commandLineArgs = parser.parse_args()
 
 
 def emitAverage(sum, cnt, timestamp):
+    """
+    Emit the averaged data along with the timestamp.
+
+    :param sum
+    :param cnt
+    :param timestamp: This is the timestamp that is emitted.
+    :returns: None
+    """
+
     myCount = 0
     idx = 0
     for item in sum:
@@ -73,6 +86,7 @@ def intervalCrossed(minute):
         return True
 
     return False
+
 
 processCommandLineArguments()
 
@@ -108,6 +122,7 @@ rowCnt = 0
 for row in rows:
 
     if mUtil.isNumber(row[1]):
+        # Add up the values for each sensor.
         cnt[row[0] - 1] += 1
         sum[row[0] - 1] += row[1]
 
@@ -124,7 +139,11 @@ for row in rows:
             NEXT_MINUTE_CROSSING = 0
 
     if (intervalCrossed(minute)):
+        # Emit the average for the current sum.
+        # Use the current timestamp.
+        logger.log('timestamp: %s' % row[2])
         emitAverage(sum, cnt, row[2])
+
         cnt = 0
         sum = list()
         for i in range(4):
@@ -137,3 +156,5 @@ for row in rows:
 
     rowCnt += 1
 
+    if rowCnt > 40000:
+        exit(0)
