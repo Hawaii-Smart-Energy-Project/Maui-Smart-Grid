@@ -39,6 +39,7 @@ def processCommandLineArguments():
 
     commandLineArgs = parser.parse_args()
 
+
 if __name__ == '__main__':
     logger = MSGLogger(__name__, 'INFO')
 

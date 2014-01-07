@@ -18,7 +18,7 @@ DEBUG = 1
 
 class MECODBInserter(object):
     """
-    This provides methods that perform insertion of MECO data.
+    Provides methods that perform insertion of MECO data.
     """
 
     def __init__(self):
