@@ -163,10 +163,26 @@ The reference template can be found in `config/sample-dot-msg-data-operations.cf
     limit_commits=False
     
     [Data Paths]
+    # Plot path is where plots will be saved.
     plot_path=${PLOT_PATH}
     
+    [MECO Autoload]
+    # These are paths related to MECO data autoloading.
+    meco_new_data_path=${AUTOLOAD_DATA_PATH}
+    Example: /usr/local/smb-share/MECO-DATA-AUTOLOAD
+
+    meco_autoload_archive_path=${AUTOLOAD_ARCHIVE_PATH}
+    ## Example: /usr/local/smb-share/.MECO-AUTOLOAD-ARCHIVE
+
+    meco_autoload_failures_path=${AUTOLOAD_FAILURE_PATH}
+    ## Example: /usr/local/smb-share/.MECO-AUTOLOAD-FAILURES
+
+    data_load_command=${COMMAND_USED_FOR_INSERTING_MECO_DATA}
+    ## Example: python ~/Maui-Smart-Grid-1.0.0/bin/insertMECOEnergyData.py --email > insert.log
+
     [Executable Paths]
     bin_path=${MECO_BIN_DIR}
+	  ## Example: ~/Maui-Smart-Grid-1.0.0/bin
     
     [Notifications]
     email_fromaddr=${EMAIL_ADDRESS}
@@ -186,6 +202,17 @@ The reference template can be found in `config/sample-dot-msg-data-operations.cf
     
     weather_data_path=${WEATHER_DATA_PATH}
     
+    [Export]
+    db_export_path=/home/daniel/msg-db-dumps
+    dbs_to_export=${DATABASE_NAME}
+    ## Example: meco_v3
+
+    google_api_client_id=${GOOGLE_CLIENT_ID}
+    google_api_client_secret=${GOOGLE_CLIENT_SECRET}
+    google_api_credentials_path=${GOOGLE_CLIENT_CREDENTIALS_PATH}
+    days_to_keep=${NUMBER_OF_DAYS_OF_EXPORTS_TO_KEEP}
+    read_permission=${EMAIL_ADDRESSES_TO_GRANT_READER_PERMISSION}
+
     [Database]
     db_password=${PASSWORD}
     db_host=${IP_ADDRESS_OR_HOSTNAME}
@@ -200,6 +227,9 @@ The reference template can be found in `config/sample-dot-msg-data-operations.cf
     
     [Hardware]
     multiprocessing_limit = ${MULTIPROCESSING_LIMIT}
+
+    [Testing]
+    tester_email=${EMAIL_ADDRESS}
 
 ### MSG eGauge Service Configuration ###
 
@@ -338,7 +368,7 @@ When invalid data exists, all other data is not loaded. This is a limitation of 
 
 ### Database Exports ###
 
-Exports of MSG databases and other databases occur according to a predefined schedule. The exports consist of gzip compressed SQL scripts that are stored both on local storage and cloud storage. Storage to the Google Drive service is supported at this time. Database exports are verified by their MD5 checksums.
+Exports of MSG databases and other databases occur according to a predefined schedule. The exports consist of gzip compressed SQL scripts that are stored both on local storage and cloud storage. Storage to the Google Drive service is supported at this time. Database exports are verified by their MD5 checksums. Individual export archives are shared to a predefined recipient list at the time of export.
 
 ### Utility Scripts ###
 
