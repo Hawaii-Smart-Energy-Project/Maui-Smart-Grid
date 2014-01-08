@@ -52,3 +52,7 @@ temp_*
 /average-irradiance-data/
 /src/viewCloudFiles.py
 /scada-temp-humidity-data/
+/MSG Data Services Documentation.scriv/
+/plots/
+/src/result.txt
+/test/test-export-results.txt
