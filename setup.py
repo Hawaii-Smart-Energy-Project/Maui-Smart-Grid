@@ -78,19 +78,21 @@ setup(name = 'Maui-Smart-Grid', version = '1.0.0',
                     'msg_time_util'
       ],
 
-      scripts = ['src/aggregate-irradiance-data.sh',
+      scripts = [
+                 'src/aggregate-irradiance-data.sh',
                  'src/aggregateIrradianceData.py',
                  'src/aggregateSCADAWeatherData.py',
                  'src/autoloadNewMECOData.py',
                  'src/exportDBsToCloud.py',
                  'src/insertAggregatedIrradianceData.py',
-                 'src/insertAggregatedSCADAWeatherData.py',
                  'src/insertCompressedNOAAWeatherData.py',
-                 'src/insertLocationRecords.py',
                  'src/insertMECOEnergyData.py',
-                 'src/insertMECOMeterLocationHistoryData.py',
-                 'src/insertMeterRecords.py',
-                 'src/insertSCADAWeatherData.py',
                  'src/insertSingleMECOEnergyDataFile.py',
-                 'src/retrieveNOAAWeatherData.py'
+                 'src/retrieveNOAAWeatherData.py',
+                 'src/static-data-insert/insertAggregatedSCADAWeatherData.py',
+                 'src/static-data-insert/insertLocationRecords.py',
+                 'src/static-data-insert/insertMECOMeterLocationHistoryData.py',
+                 'src/static-data-insert/insertMeterRecords.py',
+                 'src/static-data-insert/insertPowerMeterEvents.py',
+                 'src/static-data-insert/insertSCADAWeatherData.py'
       ])
