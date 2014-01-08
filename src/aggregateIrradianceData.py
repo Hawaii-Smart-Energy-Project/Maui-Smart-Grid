@@ -99,7 +99,7 @@ mUtil = MSGMathUtil()
 sql = """SELECT sensor_id, irradiance_w_per_m2, timestamp
          FROM "IrradianceData"
          WHERE timestamp BETWEEN '%s' AND '%s'
-         ORDER BY timestamp""" % (
+         ORDER BY timestamp, sensor_id""" % (
     commandLineArgs.startDate, commandLineArgs.endDate)
 
 cursor = conn.cursor()
@@ -124,6 +124,12 @@ for row in rows:
     if mUtil.isNumber(row[1]):
         # Add up the values for each sensor.
         cnt[row[0] - 1] += 1
+
+        # if sum[row[0] - 1] == 0:
+        # logger.log(
+        #     'timestamp at sum 0 for sensor %s: %s' % (row[0] - 1, row[2]))
+
+
         sum[row[0] - 1] += row[1]
 
     minute = row[2].timetuple()[4]
@@ -141,7 +147,7 @@ for row in rows:
     if (intervalCrossed(minute)):
         # Emit the average for the current sum.
         # Use the current timestamp.
-        logger.log('timestamp: %s' % row[2])
+        # logger.log('timestamp: %s' % row[2])
         emitAverage(sum, cnt, row[2])
 
         cnt = 0
@@ -156,5 +162,5 @@ for row in rows:
 
     rowCnt += 1
 
-    if rowCnt > 40000:
-        exit(0)
+    # if rowCnt > 40000:
+    #     exit(0)
