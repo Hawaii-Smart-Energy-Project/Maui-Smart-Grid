@@ -30,6 +30,12 @@ install path is  given as ~/software the software will be installed to
 ~/software/Maui-Smart-Grid-1.x.x where 1.x.x represents the appropriate
 version number.
 
+The external dependencies, documented at
+
+    https://github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid
+    #installation-and-updating
+
+should be satisfied using a suitable method such as installation through pip.
 """
 
 __author__ = 'Daniel Zhang (張道博)'
@@ -41,7 +47,6 @@ __license__ = 'https://raw.github' \
 import subprocess
 import argparse
 import os
-from msg_logger import MSGLogger
 import tarfile
 
 
@@ -62,16 +67,18 @@ def runCommand(cmd = None):
     if cmd is not None:
         try:
             subprocess.check_call(cmd, shell = True)
-        except subprocess.CalledProcessError, e:
-            logger.log("An exception occurred: %s" % e, 'error')
+        except subprocess.CalledProcessError as error:
+            print "Exception occurred while calling the process to run a " \
+                  "command: %s" % error
 
 
 def softwareInstallName():
     cmd = "python %s/setup.py --name" % commandLineArgs.sourcePath
     try:
         softwareName = subprocess.check_output(cmd, shell = True)
-    except subprocess.CalledProcessError, e:
-        logger.log("An exception occurred: %s" % e, 'error')
+    except subprocess.CalledProcessError as error:
+        print "An exception occurred while calling the process to get the " \
+              "software install name: %s" % error
     return softwareName.strip()
 
 
@@ -84,13 +91,13 @@ def softwareVersion():
     cmd = "python %s/setup.py --version" % commandLineArgs.sourcePath
     try:
         softwareVersion = subprocess.check_output(cmd, shell = True)
-    except subprocess.CalledProcessError, e:
-        logger.log("An exception occurred: %s" % e, 'error')
+    except subprocess.CalledProcessError as error:
+        print "An exception occurred while calling the process to get the " \
+              "software version: %s" % error
     return softwareVersion.strip()
 
 
 commandLineArgs = None
-logger = MSGLogger(__name__)
 processCommandLineArguments()
 
 os.chdir(commandLineArgs.sourcePath)
@@ -107,16 +114,16 @@ print "\nPerforming scripted install of %s-%s." % (PROJECT_NAME, VERSION)
 # Extract the distribution archive into the dist directory.
 os.chdir('%s/dist' % commandLineArgs.sourcePath)
 print
-logger.log("Current working directory is %s." % os.getcwd())
+print "Current working directory is %s." % os.getcwd()
 t = tarfile.open(name = '%s/dist/%s-%s.tar.gz' % (
     commandLineArgs.sourcePath, PROJECT_NAME, VERSION))
 
 t.extractall()
 
 # Change the working directory to the extracted archive path.
-logger.log("Performing install.")
+print "Performing install."
 os.chdir('%s/dist/%s-%s' % (commandLineArgs.sourcePath, PROJECT_NAME, VERSION ))
-logger.log("Current working directory is %s." % os.getcwd())
+print "Current working directory is %s." % os.getcwd()
 
 # Install the software.
 installCmd = """python setup.py install --home=%s/%s-%s""" % (
