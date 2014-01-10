@@ -68,7 +68,8 @@ def runCommand(cmd = None):
         try:
             subprocess.check_call(cmd, shell = True)
         except subprocess.CalledProcessError as error:
-            print "An exception occurred: %s" % error
+            print "Exception occurred while calling the process to run a " \
+                  "command: %s" % error
 
 
 def softwareInstallName():
@@ -76,7 +77,8 @@ def softwareInstallName():
     try:
         softwareName = subprocess.check_output(cmd, shell = True)
     except subprocess.CalledProcessError as error:
-        print "An exception occurred: %s" % error
+        print "An exception occurred while calling the process to get the " \
+              "software install name: %s" % error
     return softwareName.strip()
 
 
@@ -90,7 +92,8 @@ def softwareVersion():
     try:
         softwareVersion = subprocess.check_output(cmd, shell = True)
     except subprocess.CalledProcessError as error:
-        print "An exception occurred: %s" % error
+        print "An exception occurred while calling the process to get the " \
+              "software version: %s" % error
     return softwareVersion.strip()
 
 
