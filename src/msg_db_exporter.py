@@ -63,7 +63,7 @@ class MSGDBExporter(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__, 'INFO')
+        self.logger = MSGLogger(__name__, 'DEBUG')
         self.timeUtil = MSGTimeUtil()
         self.configer = MSGConfiger()
         self.fileUtil = MSGFileUtil()
@@ -93,6 +93,8 @@ class MSGDBExporter(object):
         * Save the checksum of the original uncompressed export data.
         * Extract the compressed file.
         * Verify the uncompressed export data.
+
+        :param testing: When set to True, Testing Mode is used.
         """
 
         # Get the checksum of the original file.
@@ -104,7 +106,7 @@ class MSGDBExporter(object):
         """
         Export a set of DBs to local storage.
 
-        Uses
+        This method makes use of
 
         pg_dump -s -h ${HOST} ${DB_NAME} > ${DUMP_TIMESTAMP}_{DB_NAME}.sql
 
@@ -143,6 +145,7 @@ class MSGDBExporter(object):
                 fullPath = '%s/%s' % (self.configer.configOptionValue('Testing',
                                                                       'export_test_data_path'),
                                       dumpName)
+                self.logger.log('fullPath: %s' % fullPath, 'DEBUG')
 
             try:
                 if not testing:
@@ -183,6 +186,7 @@ class MSGDBExporter(object):
         Export a DB to cloud storage.
 
         :param fullPath of DB file to be exported.
+        :param testing: When to to True, Testing Mode is used.
         :returns: True on verified on upload; False if verification fails.
         """
 
@@ -282,6 +286,8 @@ class MSGDBExporter(object):
 
     def uploadWasSuccessful(self, file):
         """
+        @DEPRECATED
+
         Determine upload success.
 
         This is not used.

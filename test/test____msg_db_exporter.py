@@ -206,7 +206,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
     def testExportDB(self):
         """
-        Perform a quick test of the DB export method.
+        Perform a quick test of the DB export method using Testing Mode.
         """
 
         self.logger.log('Testing exportDB')
