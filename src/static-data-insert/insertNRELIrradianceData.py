@@ -28,20 +28,26 @@ import os
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 
-#-------------------------#
-# define helper functions #
-#-------------------------#
-
-#given: a name of the target file xxx.txt
-#return: the absolute path name of the new cleaned file c:\...\xxx_clean.txt
 def get_clean_name(name):
+	"""
+	A convenience method for naming the output files.
+
+	:param name: A name of the target file.
+	:returns: The name suffixed with "_clean" and the file extension.
+	"""
+
 	name = name.split(".")
 	name = name[0] + "_clean." + name[1]
 	return name
 
-#given: a list containing the seconds, year, julian day, hour, and minute
-#return: a corresponding timestamp
 def get_timestamp(row):
+	"""
+	A convenience method to parse a string into a Python datetime object.
+
+	:param datetimeStr: A string containing a date and time, e.g.: Sun Sep 01 2013 24:00:00.000 GMT-1000
+	:returns: The corresponding datetime.datetime object
+	"""
+
 	#assign the values in the list to the different components needed to
 	#create the datetime object
 	second = int(row[0])
