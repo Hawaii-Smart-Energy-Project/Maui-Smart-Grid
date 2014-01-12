@@ -451,6 +451,8 @@ def insertData(files, table, cols):
 
 		with open(file, 'rb') as csvfile:
 			myReader = csv.reader(csvfile, delimiter = ',')
+			# Skip the header line.
+			reader.next()
 			for row in myReader:
 				sql = """INSERT INTO "%s" (%s) VALUES (%s)""" % (
 					table, ','.join(cols),
@@ -478,7 +480,7 @@ def callInsertData():
 	insertData(['circuitOutput.csv'], 'CircuitData', cols)
 
 	cols = ['sensor_id', 'timestamp', 'irradiance_w_per_m2']
-	insertData(['irradianceOutput.csv'], 'TrradianceData', cols)
+	insertData(['irradianceOutput.csv'], 'IrradianceData', cols)
 
 	cols = ['timestamp', 'tap_setting']
 	insertData(['tapDataOutput.csv'], 'TapData', cols)
