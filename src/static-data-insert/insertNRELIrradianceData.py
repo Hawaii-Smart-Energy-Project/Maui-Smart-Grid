@@ -30,7 +30,7 @@ from msg_db_util import MSGDBUtil
 
 def get_clean_name(name):
 	"""
-	A convenience method for naming the output files.
+	A convenience function for naming the output files.
 
 	:param name: A name of the target file.
 	:returns: The name suffixed with "_clean" and the file extension.
@@ -42,7 +42,7 @@ def get_clean_name(name):
 
 def get_timestamp(row):
 	"""
-	A convenience method to parse a string into a Python datetime object.
+	A convenience function to parse a string into a Python datetime object.
 
 	:param datetimeStr: A string containing a date and time, e.g.: Sun Sep 01 2013 24:00:00.000 GMT-1000
 	:returns: The corresponding datetime.datetime object
@@ -212,9 +212,9 @@ def getFileNames(ext):
 	# For each line split it by the empty spaces
 	for line in output:
 		line = line.split(" ")
+
 		# For each element find the file name of the files in that folder with
 		# the extension *.txt
-
 		for element in line:
 			if ext in element and "~" not in element:
 				#if you found a valid filename, put it in a list
@@ -224,7 +224,7 @@ def getFileNames(ext):
 
 def cleanFiles(files, targetDir):
 	"""
-	This method processes the files given to it into the target directory.
+	Process the files given and output into the target directory.
 
 	:param files: A list of filenames.
 	:param targetDir: The directory in which to write the output.
