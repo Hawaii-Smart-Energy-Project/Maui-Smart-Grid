@@ -8,9 +8,10 @@ __license__ = 'https://raw.github' \
               '-LICENSE.txt'
 
 from msg_logger import MSGLogger
-import os
 import hashlib
 from functools import partial
+import gzip
+import os
 
 
 class MSGFileUtil(object):
@@ -29,17 +30,22 @@ class MSGFileUtil(object):
         """
         Verify that the path is a valid directory.
 
+        :param path: Path to check.
         :returns: True if path is a valid directory.
         """
+
         if os.path.exists(path) and os.path.isdir(path):
             return True
         else:
             return False
 
+
     def md5Checksum(self, fullPath):
         """
         Get the MD5 checksum for the file given by fullPath.
 
+        :param fullPath: Full path of the file to generate for which to
+        generate a checksum.
         :returns: MD5 checksum value as a hex digest.
         """
 
@@ -55,3 +61,17 @@ class MSGFileUtil(object):
             self.logger.log(
                 'Exception during checksum calculation: %s' % detail, 'ERROR')
 
+
+    def gzipUncompressFile(self, srcPath, destPath):
+        """
+        Gzip uncompress a file given by fullPath.
+
+        :param fullPath: Full path of the file to be uncompressed.
+        """
+
+        gzipFile = gzip.open(srcPath, "rb")
+        uncompressedFile = open(destPath, "wb")
+        decoded = gzipFile.read()
+        uncompressedFile.write(decoded)
+        gzipFile.close()
+        uncompressedFile.close()

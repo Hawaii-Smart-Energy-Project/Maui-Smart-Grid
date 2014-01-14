@@ -207,18 +207,24 @@ class MSGDBExporterTester(unittest.TestCase):
     def testExportDB(self):
         """
         Perform a quick test of the DB export method using Testing Mode.
+
+        Want to test the ability to verify the newly archived file using a
+        checksum.
         """
 
         self.logger.log('Testing exportDB')
         dbs = ['meco_v3']
         success = self.exporter.exportDB(dbs, toCloud = False, testing = True)
         self.logger.log('Success: %s' % success)
+        self.assertTrue(success, "Export was successful.")
 
 
     def tearDown(self):
         """
         Delete all test items.
         """
+
+        return
 
         try:
             pass

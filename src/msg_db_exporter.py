@@ -139,8 +139,8 @@ class MSGDBExporter(object):
 
             if not testing:
                 fullPath = '%s/%s' % (
-                self.configer.configOptionValue('Export', 'db_export_path'),
-                dumpName)
+                    self.configer.configOptionValue('Export', 'db_export_path'),
+                    dumpName)
             else:
                 fullPath = '%s/%s' % (self.configer.configOptionValue('Testing',
                                                                       'export_test_data_path'),
@@ -155,13 +155,30 @@ class MSGDBExporter(object):
                 self.logger.log("Exception while dumping: %s" % e)
                 noErrors = False
 
-            # Obtain the checksum for the export.
+            # Obtain the checksum for the export prior to compression.
             md5sum1 = self.fileUtil.md5Checksum(fullPath)
+            print "md5sum: %s" % md5sum1
 
+            # Perform compression of the file.
             self.logger.log("Compressing %s using gzip." % db, 'info')
-
-            if not testing:
+            # if not testing:
+            self.logger.log('fullpath: %s' % fullPath, 'DEBUG')
+            if testing:
+                self.gzipCompressFile(fullPath, dontAddExtension = True)
+            else:
                 self.gzipCompressFile(fullPath)
+
+            # Verify the compressed file.
+            if testing:
+                self.logger.log('reading: %s' % fullPath + '.gz', 'DEBUG')
+                self.logger.log('writing: %s' % os.path.join(
+                    self.configer.configOptionValue('Testing',
+                                                    'export_test_data_path'),
+                    os.path.splitext(os.path.basename(fullPath))[0]), 'DEBUG')
+                self.fileUtil.gzipUncompressFile(fullPath + '.gz', os.path.join(
+                    self.configer.configOptionValue('Testing',
+                                                    'export_test_data_path'),
+                    os.path.splitext(os.path.basename(fullPath))[0]))
 
             if toCloud:
                 fileID = self.uploadDBToCloudStorage('%s.sql.gz' % fullPath,
@@ -181,6 +198,7 @@ class MSGDBExporter(object):
 
         return noErrors
 
+
     def uploadDBToCloudStorage(self, fullPath = '', testing = False):
         """
         Export a DB to cloud storage.
@@ -193,8 +211,7 @@ class MSGDBExporter(object):
         success = True
         dbName = os.path.basename(fullPath)
 
-        self.logger.log('full path %s' % os.path.dirname(fullPath), 'debug')
-
+        self.logger.log('full path %s' % os.path.dirname(fullPath), 'DEBUG')
         self.logger.log("Uploading %s." % dbName)
 
         try:
@@ -250,7 +267,7 @@ class MSGDBExporter(object):
         print "expiry = %s" % self.googleAPICredentials.token_expiry
 
 
-    def gzipCompressFile(self, fullPath):
+    def gzipCompressFile(self, fullPath, dontAddExtension = False):
         """
         @todo Test valid compression.
         @todo Move to file utils.
@@ -258,11 +275,16 @@ class MSGDBExporter(object):
         :param fullPath: Full path of the file to be compressed. The full
         path is mislabeled here and refers to the full path minus the
         extension of the data to be compressed.
+        :param dontAddExtension: Don't add the SQL extension if set to True.
         """
 
         try:
-            f_in = open('%s.sql' % fullPath, 'rb')
-            f_out = gzip.open('%s.sql.gz' % fullPath, 'wb')
+            if dontAddExtension:
+                extension = ''
+            else:
+                extension = '.sql'
+            f_in = open('%s%s' % (fullPath, extension), 'rb')
+            f_out = gzip.open('%s%s.gz' % (fullPath, extension), 'wb')
             f_out.writelines(f_in)
             f_out.close()
             f_in.close()
