@@ -681,7 +681,7 @@ COMMENT ON TABLE "PVServicePointIDs" IS 'Contains service point data for one-met
 
 
 --
--- Name: PowerMeterEvents; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+-- Name: PowerMeterEvents; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
 CREATE TABLE "PowerMeterEvents" (
@@ -716,7 +716,7 @@ CREATE TABLE "PowerMeterEvents" (
 );
 
 
-ALTER TABLE public."PowerMeterEvents" OWNER TO postgres;
+ALTER TABLE public."PowerMeterEvents" OWNER TO sepgroup;
 
 --
 -- Name: Reading; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
@@ -986,28 +986,21 @@ CREATE VIEW az_noaa_weather_data AS
 ALTER TABLE public.az_noaa_weather_data OWNER TO eileen;
 
 --
--- Name: readings_by_meter_location_history; Type: VIEW; Schema: public; Owner: sepgroup
+-- Name: readings_by_meter_location_history; Type: VIEW; Schema: public; Owner: eileen
 --
 
 CREATE VIEW readings_by_meter_location_history AS
     SELECT "MeterLocationHistory".meter_name, "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".location, "MeterLocationHistory".address, "MeterLocationHistory".latitude, "MeterLocationHistory".longitude, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "Interval".end_time, "MeterData".meter_data_id FROM (((("MeterLocationHistory" JOIN "MeterData" ON ((("MeterLocationHistory".meter_name)::bpchar = "MeterData".meter_name))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (((("Interval".interval_id = "Reading".interval_id) AND ("Interval".end_time >= "MeterLocationHistory".installed)) AND CASE WHEN ("MeterLocationHistory".uninstalled IS NULL) THEN true ELSE ("Interval".end_time < "MeterLocationHistory".uninstalled) END)));
 
 
-ALTER TABLE public.readings_by_meter_location_history OWNER TO sepgroup;
-
---
--- Name: VIEW readings_by_meter_location_history; Type: COMMENT; Schema: public; Owner: sepgroup
---
-
-COMMENT ON VIEW readings_by_meter_location_history IS 'Readings that are referenced by the MLH. @author Daniel Zhang (張道博)';
-
+ALTER TABLE public.readings_by_meter_location_history OWNER TO eileen;
 
 --
 -- Name: cd_readings_channel_as_columns_by_service_point; Type: VIEW; Schema: public; Owner: eileen
 --
 
 CREATE VIEW cd_readings_channel_as_columns_by_service_point AS
-    SELECT readings_by_meter_location_history.service_point_id, max(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy to House kwH", max(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy from House kwH(rec)", max(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Net Energy to House KwH", max(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "voltage at house", readings_by_meter_location_history.end_time, max(readings_by_meter_location_history.service_point_latitude) AS service_point_latitude, max(readings_by_meter_location_history.service_point_longitude) AS service_point_longitude, max((readings_by_meter_location_history.location)::text) AS "location_ID", max((readings_by_meter_location_history.address)::text) AS address, max(readings_by_meter_location_history.latitude) AS location_latitude, max(readings_by_meter_location_history.longitude) AS location_longitude FROM readings_by_meter_location_history GROUP BY readings_by_meter_location_history.service_point_id, readings_by_meter_location_history.end_time;
+    SELECT readings_by_meter_location_history_new_spid.service_point_id, max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (1)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS "Energy to House kwH", max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (2)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS "Energy from House kwH(rec)", max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (3)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS "Net Energy to House KwH", max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (4)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS "voltage at house", readings_by_meter_location_history_new_spid.end_time, max(readings_by_meter_location_history_new_spid.service_point_latitude) AS service_point_latitude, max(readings_by_meter_location_history_new_spid.service_point_longitude) AS service_point_longitude, max((readings_by_meter_location_history_new_spid.location)::text) AS "location_ID", max((readings_by_meter_location_history_new_spid.address)::text) AS address, max(readings_by_meter_location_history_new_spid.latitude) AS location_latitude, max(readings_by_meter_location_history_new_spid.longitude) AS location_longitude FROM readings_by_meter_location_history readings_by_meter_location_history_new_spid GROUP BY readings_by_meter_location_history_new_spid.service_point_id, readings_by_meter_location_history_new_spid.end_time;
 
 
 ALTER TABLE public.cd_readings_channel_as_columns_by_service_point OWNER TO eileen;
@@ -1023,21 +1016,11 @@ CREATE VIEW az_readings_channel_as_columns_by_spid AS
 ALTER TABLE public.az_readings_channel_as_columns_by_spid OWNER TO eileen;
 
 --
--- Name: readings_by_meter_location_history_new_spid; Type: VIEW; Schema: public; Owner: eileen
---
-
-CREATE VIEW readings_by_meter_location_history_new_spid AS
-    SELECT "MeterLocationHistory".meter_name, "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".location, "MeterLocationHistory".address, "MeterLocationHistory".latitude, "MeterLocationHistory".longitude, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "Interval".end_time, "MeterData".meter_data_id FROM (((("MeterLocationHistory" JOIN "MeterData" ON ((("MeterLocationHistory".meter_name)::bpchar = "MeterData".meter_name))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (((("Interval".interval_id = "Reading".interval_id) AND ("Interval".end_time >= "MeterLocationHistory".installed)) AND CASE WHEN ("MeterLocationHistory".uninstalled IS NULL) THEN true ELSE ("Interval".end_time < "MeterLocationHistory".uninstalled) END)));
-
-
-ALTER TABLE public.readings_by_meter_location_history_new_spid OWNER TO eileen;
-
---
 -- Name: readings_channel_as_columns_by_new_spid; Type: VIEW; Schema: public; Owner: eileen
 --
 
 CREATE VIEW readings_channel_as_columns_by_new_spid AS
-    SELECT readings_by_meter_location_history_new_spid.service_point_id, max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (1)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS "Energy to House kwH", max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (2)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS "Energy from House kwH(rec)", max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (3)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS "Net Energy to House KwH", max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (4)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS "voltage at house", readings_by_meter_location_history_new_spid.end_time, max(readings_by_meter_location_history_new_spid.service_point_latitude) AS service_point_latitude, max(readings_by_meter_location_history_new_spid.service_point_longitude) AS service_point_longitude, max((readings_by_meter_location_history_new_spid.location)::text) AS "location_ID", max((readings_by_meter_location_history_new_spid.address)::text) AS address, max(readings_by_meter_location_history_new_spid.latitude) AS location_latitude, max(readings_by_meter_location_history_new_spid.longitude) AS location_longitude FROM readings_by_meter_location_history_new_spid GROUP BY readings_by_meter_location_history_new_spid.service_point_id, readings_by_meter_location_history_new_spid.end_time;
+    SELECT readings_by_meter_location_history_new_spid.service_point_id, max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (1)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS "Energy to House kwH", max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (2)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS "Energy from House kwH(rec)", max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (3)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS "Net Energy to House KwH", max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (4)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS "voltage at house", readings_by_meter_location_history_new_spid.end_time, max(readings_by_meter_location_history_new_spid.service_point_latitude) AS service_point_latitude, max(readings_by_meter_location_history_new_spid.service_point_longitude) AS service_point_longitude, max((readings_by_meter_location_history_new_spid.location)::text) AS "location_ID", max((readings_by_meter_location_history_new_spid.address)::text) AS address, max(readings_by_meter_location_history_new_spid.latitude) AS location_latitude, max(readings_by_meter_location_history_new_spid.longitude) AS location_longitude FROM readings_by_meter_location_history readings_by_meter_location_history_new_spid GROUP BY readings_by_meter_location_history_new_spid.service_point_id, readings_by_meter_location_history_new_spid.end_time;
 
 
 ALTER TABLE public.readings_channel_as_columns_by_new_spid OWNER TO eileen;
@@ -1356,7 +1339,7 @@ ALTER TABLE public.z_dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zer
 -- Name: VIEW z_dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero; Type: COMMENT; Schema: public; Owner: postgres
 --
 
-COMMENT ON VIEW z_dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero IS 'Used internally. @author Daniel Zhang (張道博)';
+COMMENT ON VIEW z_dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero IS 'Used internally for aggregating irradiance data. @author Daniel Zhang (張道博)';
 
 
 --
@@ -1391,7 +1374,7 @@ COMMENT ON VIEW dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero IS 
 --
 
 CREATE VIEW dz_energy_voltages_for_houses_without_pv AS
-    SELECT readings_by_meter_location_history.meter_name, readings_by_meter_location_history.end_time, max(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy to House kwH", zero_to_null(max(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END)) AS "Voltage", max(readings_by_meter_location_history.service_point_longitude) AS service_pt_longitude, max(readings_by_meter_location_history.service_point_latitude) AS service_pt_latitude, max((readings_by_meter_location_history.address)::text) AS address FROM (deprecated_meter_ids_for_houses_without_pv meter_ids_for_houses_without_pv JOIN readings_by_meter_location_history readings_by_meter_location_history ON (((meter_ids_for_houses_without_pv.device_util_id)::text = (readings_by_meter_location_history.meter_name)::text))) WHERE ((readings_by_meter_location_history.channel = (1)::smallint) OR (readings_by_meter_location_history.channel = (4)::smallint)) GROUP BY readings_by_meter_location_history.meter_name, readings_by_meter_location_history.end_time;
+    SELECT readings_by_meter_location_history_new_spid.meter_name, readings_by_meter_location_history_new_spid.end_time, max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (1)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS "Energy to House kwH", zero_to_null(max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (4)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END)) AS "Voltage", max(readings_by_meter_location_history_new_spid.service_point_longitude) AS service_pt_longitude, max(readings_by_meter_location_history_new_spid.service_point_latitude) AS service_pt_latitude, max((readings_by_meter_location_history_new_spid.address)::text) AS address FROM (deprecated_meter_ids_for_houses_without_pv meter_ids_for_houses_without_pv JOIN readings_by_meter_location_history readings_by_meter_location_history_new_spid ON (((meter_ids_for_houses_without_pv.device_util_id)::text = (readings_by_meter_location_history_new_spid.meter_name)::text))) WHERE ((readings_by_meter_location_history_new_spid.channel = (1)::smallint) OR (readings_by_meter_location_history_new_spid.channel = (4)::smallint)) GROUP BY readings_by_meter_location_history_new_spid.meter_name, readings_by_meter_location_history_new_spid.end_time;
 
 
 ALTER TABLE public.dz_energy_voltages_for_houses_without_pv OWNER TO postgres;
@@ -1418,7 +1401,7 @@ ALTER TABLE public.dz_irradiance_fifteen_min_intervals_plus_one_year OWNER TO po
 --
 
 CREATE VIEW dz_monthly_energy_summary_double_pv_meter AS
-    SELECT max((readings_by_meter_location_history.service_point_id)::text) AS service_point_id, sum(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_energy_to_house_kwh, sum(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_energy_from_house_kwh, sum(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_net_energy_kwh, avg(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS avg, to_char(date_trunc('month'::text, readings_by_meter_location_history.end_time), 'yyyy-mm'::text) AS service_month, max(readings_by_meter_location_history.service_point_latitude) AS sp_latitude, max(readings_by_meter_location_history.service_point_longitude) AS sp_longitude, max((readings_by_meter_location_history.location)::text) AS location_id, max((readings_by_meter_location_history.address)::text) AS address, max(readings_by_meter_location_history.latitude) AS location_latitude, max(readings_by_meter_location_history.longitude) AS location_longitude, ((count(readings_by_meter_location_history.end_time) / 4) / 24) AS count_day FROM (readings_by_meter_location_history JOIN "PVServicePointIDs" ON ((((readings_by_meter_location_history.service_point_id)::text = ("PVServicePointIDs".old_house_service_point_id)::text) OR ((readings_by_meter_location_history.service_point_id)::text = ("PVServicePointIDs".old_pv_service_point_id)::text)))) WHERE ("PVServicePointIDs".old_pv_service_point_id IS NOT NULL) GROUP BY readings_by_meter_location_history.service_point_id, to_char(date_trunc('month'::text, readings_by_meter_location_history.end_time), 'yyyy-mm'::text);
+    SELECT max((readings_by_meter_location_history_new_spid.service_point_id)::text) AS service_point_id, sum(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (1)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS total_energy_to_house_kwh, sum(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (2)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS total_energy_from_house_kwh, sum(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (3)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS total_net_energy_kwh, avg(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (4)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS avg, to_char(date_trunc('month'::text, readings_by_meter_location_history_new_spid.end_time), 'yyyy-mm'::text) AS service_month, max(readings_by_meter_location_history_new_spid.service_point_latitude) AS sp_latitude, max(readings_by_meter_location_history_new_spid.service_point_longitude) AS sp_longitude, max((readings_by_meter_location_history_new_spid.location)::text) AS location_id, max((readings_by_meter_location_history_new_spid.address)::text) AS address, max(readings_by_meter_location_history_new_spid.latitude) AS location_latitude, max(readings_by_meter_location_history_new_spid.longitude) AS location_longitude, ((count(readings_by_meter_location_history_new_spid.end_time) / 4) / 24) AS count_day FROM (readings_by_meter_location_history readings_by_meter_location_history_new_spid JOIN "PVServicePointIDs" ON ((((readings_by_meter_location_history_new_spid.service_point_id)::text = ("PVServicePointIDs".old_house_service_point_id)::text) OR ((readings_by_meter_location_history_new_spid.service_point_id)::text = ("PVServicePointIDs".old_pv_service_point_id)::text)))) WHERE ("PVServicePointIDs".old_pv_service_point_id IS NOT NULL) GROUP BY readings_by_meter_location_history_new_spid.service_point_id, to_char(date_trunc('month'::text, readings_by_meter_location_history_new_spid.end_time), 'yyyy-mm'::text);
 
 
 ALTER TABLE public.dz_monthly_energy_summary_double_pv_meter OWNER TO postgres;
@@ -1435,7 +1418,7 @@ COMMENT ON VIEW dz_monthly_energy_summary_double_pv_meter IS 'Monthly energy sum
 --
 
 CREATE VIEW nonpv_service_point_ids AS
-    SELECT "MeterLocationHistory".old_service_point_id AS service_point_id, "MeterLocationHistory".meter_name, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled FROM "MeterLocationHistory" WHERE ((NOT (EXISTS (SELECT "PVServicePointIDs".old_pv_service_point_id AS pv_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".old_pv_service_point_id)::text = ("MeterLocationHistory".old_service_point_id)::text)))) OR (NOT (EXISTS (SELECT "PVServicePointIDs".old_house_service_point_id AS house_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".old_house_service_point_id)::text = ("MeterLocationHistory".old_service_point_id)::text)))));
+    SELECT "MeterLocationHistory".service_point_id, "MeterLocationHistory".meter_name, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled FROM "MeterLocationHistory" WHERE ((NOT (EXISTS (SELECT "PVServicePointIDs".pv_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".pv_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text)))) OR (NOT (EXISTS (SELECT "PVServicePointIDs".house_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".house_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text)))));
 
 
 ALTER TABLE public.nonpv_service_point_ids OWNER TO postgres;
@@ -1452,7 +1435,7 @@ COMMENT ON VIEW nonpv_service_point_ids IS 'Service Point IDs, in the MLH,  that
 --
 
 CREATE VIEW dz_monthly_energy_summary_for_nonpv_service_points AS
-    SELECT max((readings_by_meter_location_history.service_point_id)::text) AS service_point_id, sum(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_energy_to_house_kwh, sum(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_energy_from_house_kwh, sum(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_net_energy_kwh, avg(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS avg, to_char(date_trunc('month'::text, readings_by_meter_location_history.end_time), 'yyyy-mm'::text) AS service_month, max(readings_by_meter_location_history.service_point_latitude) AS sp_latitude, max(readings_by_meter_location_history.service_point_longitude) AS sp_longitude, max((readings_by_meter_location_history.location)::text) AS location_id, max((readings_by_meter_location_history.address)::text) AS address, max(readings_by_meter_location_history.latitude) AS location_latitude, max(readings_by_meter_location_history.longitude) AS location_longitude, ((count(readings_by_meter_location_history.end_time) / 4) / 24) AS count_day FROM (readings_by_meter_location_history JOIN nonpv_service_point_ids nonpv_service_point_ids_v2 ON (((readings_by_meter_location_history.service_point_id)::text = (nonpv_service_point_ids_v2.service_point_id)::text))) GROUP BY readings_by_meter_location_history.service_point_id, to_char(date_trunc('month'::text, readings_by_meter_location_history.end_time), 'yyyy-mm'::text);
+    SELECT max((readings_by_meter_location_history_new_spid.service_point_id)::text) AS service_point_id, sum(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (1)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS total_energy_to_house_kwh, sum(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (2)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS total_energy_from_house_kwh, sum(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (3)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS total_net_energy_kwh, avg(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (4)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS avg, to_char(date_trunc('month'::text, readings_by_meter_location_history_new_spid.end_time), 'yyyy-mm'::text) AS service_month, max(readings_by_meter_location_history_new_spid.service_point_latitude) AS sp_latitude, max(readings_by_meter_location_history_new_spid.service_point_longitude) AS sp_longitude, max((readings_by_meter_location_history_new_spid.location)::text) AS location_id, max((readings_by_meter_location_history_new_spid.address)::text) AS address, max(readings_by_meter_location_history_new_spid.latitude) AS location_latitude, max(readings_by_meter_location_history_new_spid.longitude) AS location_longitude, ((count(readings_by_meter_location_history_new_spid.end_time) / 4) / 24) AS count_day FROM (readings_by_meter_location_history readings_by_meter_location_history_new_spid JOIN nonpv_service_point_ids nonpv_service_point_ids_v2 ON (((readings_by_meter_location_history_new_spid.service_point_id)::text = (nonpv_service_point_ids_v2.service_point_id)::text))) GROUP BY readings_by_meter_location_history_new_spid.service_point_id, to_char(date_trunc('month'::text, readings_by_meter_location_history_new_spid.end_time), 'yyyy-mm'::text);
 
 
 ALTER TABLE public.dz_monthly_energy_summary_for_nonpv_service_points OWNER TO postgres;
@@ -1469,7 +1452,7 @@ COMMENT ON VIEW dz_monthly_energy_summary_for_nonpv_service_points IS 'Monthly e
 --
 
 CREATE VIEW dz_monthly_energy_summary_single_pv_meter AS
-    SELECT max((readings_by_meter_location_history.service_point_id)::text) AS service_point_id, sum(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_energy_to_house_kwh, sum(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_energy_from_house_kwh, sum(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_net_energy_kwh, avg(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS avg, to_char(date_trunc('month'::text, readings_by_meter_location_history.end_time), 'yyyy-mm'::text) AS service_month, max(readings_by_meter_location_history.service_point_latitude) AS sp_latitude, max(readings_by_meter_location_history.service_point_longitude) AS sp_longitude, max((readings_by_meter_location_history.location)::text) AS location_id, max((readings_by_meter_location_history.address)::text) AS address, max(readings_by_meter_location_history.latitude) AS location_latitude, max(readings_by_meter_location_history.longitude) AS location_longitude, ((count(readings_by_meter_location_history.end_time) / 4) / 24) AS count_day FROM (readings_by_meter_location_history JOIN "PVServicePointIDs" ON (((readings_by_meter_location_history.service_point_id)::text = ("PVServicePointIDs".old_house_service_point_id)::text))) WHERE ("PVServicePointIDs".old_pv_service_point_id IS NULL) GROUP BY readings_by_meter_location_history.service_point_id, to_char(date_trunc('month'::text, readings_by_meter_location_history.end_time), 'yyyy-mm'::text);
+    SELECT max((readings_by_meter_location_history_new_spid.service_point_id)::text) AS service_point_id, sum(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (1)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS total_energy_to_house_kwh, sum(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (2)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS total_energy_from_house_kwh, sum(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (3)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS total_net_energy_kwh, avg(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (4)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS avg, to_char(date_trunc('month'::text, readings_by_meter_location_history_new_spid.end_time), 'yyyy-mm'::text) AS service_month, max(readings_by_meter_location_history_new_spid.service_point_latitude) AS sp_latitude, max(readings_by_meter_location_history_new_spid.service_point_longitude) AS sp_longitude, max((readings_by_meter_location_history_new_spid.location)::text) AS location_id, max((readings_by_meter_location_history_new_spid.address)::text) AS address, max(readings_by_meter_location_history_new_spid.latitude) AS location_latitude, max(readings_by_meter_location_history_new_spid.longitude) AS location_longitude, ((count(readings_by_meter_location_history_new_spid.end_time) / 4) / 24) AS count_day FROM (readings_by_meter_location_history readings_by_meter_location_history_new_spid JOIN "PVServicePointIDs" ON (((readings_by_meter_location_history_new_spid.service_point_id)::text = ("PVServicePointIDs".old_house_service_point_id)::text))) WHERE ("PVServicePointIDs".old_pv_service_point_id IS NULL) GROUP BY readings_by_meter_location_history_new_spid.service_point_id, to_char(date_trunc('month'::text, readings_by_meter_location_history_new_spid.end_time), 'yyyy-mm'::text);
 
 
 ALTER TABLE public.dz_monthly_energy_summary_single_pv_meter OWNER TO postgres;
@@ -1486,7 +1469,7 @@ COMMENT ON VIEW dz_monthly_energy_summary_single_pv_meter IS 'Monthly energy sum
 --
 
 CREATE VIEW dz_nonpv_addresses_service_points AS
-    SELECT DISTINCT mlh.old_service_point_id AS service_point_id, mlh.address, mlh.uninstalled, mlh.installed FROM "MeterLocationHistory" mlh WHERE ((mlh.uninstalled IS NULL) AND (NOT (EXISTS (SELECT "PVServicePointIDs".old_pv_service_point_id AS pv_service_point_id FROM "PVServicePointIDs" WHERE ((("PVServicePointIDs".old_pv_service_point_id)::text = (mlh.old_service_point_id)::text) OR (("PVServicePointIDs".old_house_service_point_id)::text = (mlh.old_service_point_id)::text))))));
+    SELECT DISTINCT mlh.service_point_id, mlh.address, mlh.uninstalled, mlh.installed FROM "MeterLocationHistory" mlh WHERE ((mlh.uninstalled IS NULL) AND (NOT (EXISTS (SELECT "PVServicePointIDs".pv_service_point_id FROM "PVServicePointIDs" WHERE ((("PVServicePointIDs".pv_service_point_id)::text = (mlh.service_point_id)::text) OR (("PVServicePointIDs".house_service_point_id)::text = (mlh.service_point_id)::text))))));
 
 
 ALTER TABLE public.dz_nonpv_addresses_service_points OWNER TO postgres;
@@ -1496,7 +1479,7 @@ ALTER TABLE public.dz_nonpv_addresses_service_points OWNER TO postgres;
 --
 
 CREATE VIEW nonpv_mlh AS
-    SELECT "MeterLocationHistory".old_service_point_id AS service_point_id, "MeterLocationHistory".service_point_height, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".notes, "MeterLocationHistory".longitude, "MeterLocationHistory".latitude, "MeterLocationHistory".city, "MeterLocationHistory".address, "MeterLocationHistory".location, "MeterLocationHistory".uninstalled, "MeterLocationHistory".installed, "MeterLocationHistory".mac_address, "MeterLocationHistory".meter_name FROM "MeterLocationHistory" WHERE (NOT (EXISTS (SELECT "PVServicePointIDs".old_pv_service_point_id AS pv_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".old_pv_service_point_id)::text = ("MeterLocationHistory".old_service_point_id)::text))));
+    SELECT "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_height, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".notes, "MeterLocationHistory".longitude, "MeterLocationHistory".latitude, "MeterLocationHistory".city, "MeterLocationHistory".address, "MeterLocationHistory".location, "MeterLocationHistory".uninstalled, "MeterLocationHistory".installed, "MeterLocationHistory".mac_address, "MeterLocationHistory".meter_name FROM "MeterLocationHistory" WHERE (NOT (EXISTS (SELECT "PVServicePointIDs".pv_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".pv_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text))));
 
 
 ALTER TABLE public.nonpv_mlh OWNER TO postgres;
@@ -1695,7 +1678,7 @@ ALTER TABLE public.locations_with_pv_service_points_ids OWNER TO postgres;
 --
 
 CREATE VIEW nonpv_mlh_v2 AS
-    SELECT "MeterLocationHistory".old_service_point_id AS service_point_id, "MeterLocationHistory".service_point_height, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".notes, "MeterLocationHistory".longitude, "MeterLocationHistory".latitude, "MeterLocationHistory".city, "MeterLocationHistory".address, "MeterLocationHistory".location, "MeterLocationHistory".uninstalled, "MeterLocationHistory".installed, "MeterLocationHistory".mac_address, "MeterLocationHistory".meter_name FROM "MeterLocationHistory" WHERE (NOT (EXISTS (SELECT "PVServicePointIDs".old_pv_service_point_id AS pv_service_point_id FROM "PVServicePointIDs" WHERE ((("PVServicePointIDs".old_pv_service_point_id)::text = ("MeterLocationHistory".old_service_point_id)::text) OR (("PVServicePointIDs".old_house_service_point_id)::text = ("MeterLocationHistory".old_service_point_id)::text)))));
+    SELECT "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_height, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".notes, "MeterLocationHistory".longitude, "MeterLocationHistory".latitude, "MeterLocationHistory".city, "MeterLocationHistory".address, "MeterLocationHistory".location, "MeterLocationHistory".uninstalled, "MeterLocationHistory".installed, "MeterLocationHistory".mac_address, "MeterLocationHistory".meter_name FROM "MeterLocationHistory" WHERE (NOT (EXISTS (SELECT "PVServicePointIDs".pv_service_point_id FROM "PVServicePointIDs" WHERE ((("PVServicePointIDs".pv_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text) OR (("PVServicePointIDs".house_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text)))));
 
 
 ALTER TABLE public.nonpv_mlh_v2 OWNER TO postgres;
@@ -1821,7 +1804,7 @@ ALTER SEQUENCE reading_id_seq OWNED BY "Reading".reading_id;
 --
 
 CREATE VIEW readings_not_referenced_by_mlh AS
-    SELECT readings_by_meter_location_history_2.meter_name AS mlh_meter_name, readings_with_meter_data_id_unfiltered.meter_name AS full_meter_name, readings_by_meter_location_history_2.channel AS mlh_channel, readings_by_meter_location_history_2.value AS mlh_value, readings_with_meter_data_id_unfiltered.channel AS full_channel, readings_with_meter_data_id_unfiltered.value AS full_value, readings_by_meter_location_history_2.end_time AS mlh_end_time, readings_with_meter_data_id_unfiltered.end_time AS full_end_time, readings_with_meter_data_id_unfiltered.meter_data_id AS full_meter_data_id FROM (readings_unfiltered readings_with_meter_data_id_unfiltered LEFT JOIN readings_by_meter_location_history readings_by_meter_location_history_2 ON ((readings_with_meter_data_id_unfiltered.meter_data_id = readings_by_meter_location_history_2.meter_data_id))) WHERE (readings_by_meter_location_history_2.meter_data_id IS NULL);
+    SELECT readings_by_meter_location_history_new_spid_2.meter_name AS mlh_meter_name, readings_with_meter_data_id_unfiltered.meter_name AS full_meter_name, readings_by_meter_location_history_new_spid_2.channel AS mlh_channel, readings_by_meter_location_history_new_spid_2.value AS mlh_value, readings_with_meter_data_id_unfiltered.channel AS full_channel, readings_with_meter_data_id_unfiltered.value AS full_value, readings_by_meter_location_history_new_spid_2.end_time AS mlh_end_time, readings_with_meter_data_id_unfiltered.end_time AS full_end_time, readings_with_meter_data_id_unfiltered.meter_data_id AS full_meter_data_id FROM (readings_unfiltered readings_with_meter_data_id_unfiltered LEFT JOIN readings_by_meter_location_history readings_by_meter_location_history_new_spid_2 ON ((readings_with_meter_data_id_unfiltered.meter_data_id = readings_by_meter_location_history_new_spid_2.meter_data_id))) WHERE (readings_by_meter_location_history_new_spid_2.meter_data_id IS NULL);
 
 
 ALTER TABLE public.readings_not_referenced_by_mlh OWNER TO postgres;
@@ -1838,7 +1821,7 @@ COMMENT ON VIEW readings_not_referenced_by_mlh IS 'Readings that are present in 
 --
 
 CREATE VIEW readings_with_pv_service_point_id AS
-    SELECT readings_by_meter_location_history.meter_name, readings_by_meter_location_history.end_time, max((readings_by_meter_location_history.location)::text) AS location_id, max(("PVServicePointIDs".old_pv_service_point_id)::text) AS pv_service_point_id, max(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS pv_channel_1, max(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS pv_channel_2, max(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS pv_channel_3, zero_to_null(max(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END)) AS pv_channel_4_voltage FROM ("PVServicePointIDs" JOIN readings_by_meter_location_history ON ((("PVServicePointIDs".old_pv_service_point_id)::text = (readings_by_meter_location_history.service_point_id)::text))) GROUP BY readings_by_meter_location_history.meter_name, readings_by_meter_location_history.end_time;
+    SELECT readings_by_meter_location_history_new_spid.meter_name, readings_by_meter_location_history_new_spid.end_time, max((readings_by_meter_location_history_new_spid.location)::text) AS location_id, max(("PVServicePointIDs".old_pv_service_point_id)::text) AS pv_service_point_id, max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (1)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS pv_channel_1, max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (2)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS pv_channel_2, max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (3)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS pv_channel_3, zero_to_null(max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (4)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END)) AS pv_channel_4_voltage FROM ("PVServicePointIDs" JOIN readings_by_meter_location_history readings_by_meter_location_history_new_spid ON ((("PVServicePointIDs".old_pv_service_point_id)::text = (readings_by_meter_location_history_new_spid.service_point_id)::text))) GROUP BY readings_by_meter_location_history_new_spid.meter_name, readings_by_meter_location_history_new_spid.end_time;
 
 
 ALTER TABLE public.readings_with_pv_service_point_id OWNER TO postgres;
@@ -2134,7 +2117,7 @@ ALTER TABLE ONLY "NotificationHistory"
 
 
 --
--- Name: PowerMeterEvents_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+-- Name: PowerMeterEvents_pkey; Type: CONSTRAINT; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
 ALTER TABLE ONLY "PowerMeterEvents"
@@ -2722,12 +2705,11 @@ GRANT SELECT ON TABLE "PVServicePointIDs" TO sepgroupreadonly;
 
 
 --
--- Name: PowerMeterEvents; Type: ACL; Schema: public; Owner: postgres
+-- Name: PowerMeterEvents; Type: ACL; Schema: public; Owner: sepgroup
 --
 
 REVOKE ALL ON TABLE "PowerMeterEvents" FROM PUBLIC;
-REVOKE ALL ON TABLE "PowerMeterEvents" FROM postgres;
-GRANT ALL ON TABLE "PowerMeterEvents" TO postgres;
+REVOKE ALL ON TABLE "PowerMeterEvents" FROM sepgroup;
 GRANT ALL ON TABLE "PowerMeterEvents" TO sepgroup;
 GRANT SELECT ON TABLE "PowerMeterEvents" TO sepgroupreadonly;
 
@@ -2891,11 +2873,12 @@ GRANT SELECT ON TABLE az_noaa_weather_data TO sepgroupreadonly;
 
 
 --
--- Name: readings_by_meter_location_history; Type: ACL; Schema: public; Owner: sepgroup
+-- Name: readings_by_meter_location_history; Type: ACL; Schema: public; Owner: eileen
 --
 
 REVOKE ALL ON TABLE readings_by_meter_location_history FROM PUBLIC;
-REVOKE ALL ON TABLE readings_by_meter_location_history FROM sepgroup;
+REVOKE ALL ON TABLE readings_by_meter_location_history FROM eileen;
+GRANT ALL ON TABLE readings_by_meter_location_history TO eileen;
 GRANT ALL ON TABLE readings_by_meter_location_history TO sepgroup;
 GRANT SELECT ON TABLE readings_by_meter_location_history TO sepgroupreadonly;
 
@@ -2920,17 +2903,6 @@ REVOKE ALL ON TABLE az_readings_channel_as_columns_by_spid FROM eileen;
 GRANT ALL ON TABLE az_readings_channel_as_columns_by_spid TO eileen;
 GRANT ALL ON TABLE az_readings_channel_as_columns_by_spid TO sepgroup;
 GRANT SELECT ON TABLE az_readings_channel_as_columns_by_spid TO sepgroupreadonly;
-
-
---
--- Name: readings_by_meter_location_history_new_spid; Type: ACL; Schema: public; Owner: eileen
---
-
-REVOKE ALL ON TABLE readings_by_meter_location_history_new_spid FROM PUBLIC;
-REVOKE ALL ON TABLE readings_by_meter_location_history_new_spid FROM eileen;
-GRANT ALL ON TABLE readings_by_meter_location_history_new_spid TO eileen;
-GRANT ALL ON TABLE readings_by_meter_location_history_new_spid TO sepgroup;
-GRANT SELECT ON TABLE readings_by_meter_location_history_new_spid TO sepgroupreadonly;
 
 
 --
