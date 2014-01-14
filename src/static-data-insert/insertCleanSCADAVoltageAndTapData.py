@@ -15,7 +15,7 @@ MECO SCADA data, and separates their columns severally into their own files--
 one each for good, bad and raw data. The algorithm to determine whether the
 data is good or not measures the sliding standard deviation and looks for
 places where it falls below a threshold specified in the algorithm. Because
-this method relies upon a mean (namely, of the sliding window) to calculate 
+this function relies upon a mean (namely, of the sliding window) to calculate 
 standard deviation, a few of the bad members may sneak into the "good" 
 dataset. Davey was not extremely concerned about optimizing this out of the 
 algorithm because the number of these cases was a very small fraction of a 
@@ -37,7 +37,7 @@ from msg_db_util import MSGDBUtil
 
 def getCleanName(name):
 	"""
-	A convenience method for naming the output files.
+	A convenience function for naming the output files.
 
 	:param name: A name of the target file.
 	:returns: The name suffixed with "_clean" and the file extension.
@@ -49,7 +49,7 @@ def getCleanName(name):
 
 def getTimestamp(datetimeStr):
 	"""
-	A convenience method to parse a string into a Python datetime object.
+	A convenience function to parse a string into a Python datetime object.
 
 	:param datetimeStr: A string containing a date and time, e.g.: Sun Sep 01 2013 24:00:00.000 GMT-1000
 	:returns: The corresponding datetime.datetime object
@@ -451,6 +451,8 @@ def insertData(files, table, cols):
 
 		with open(file, 'rb') as csvfile:
 			myReader = csv.reader(csvfile, delimiter = ',')
+			# Skip the header line.
+			reader.next()
 			for row in myReader:
 				sql = """INSERT INTO "%s" (%s) VALUES (%s)""" % (
 					table, ','.join(cols),
@@ -478,7 +480,7 @@ def callInsertData():
 	insertData(['circuitOutput.csv'], 'CircuitData', cols)
 
 	cols = ['sensor_id', 'timestamp', 'irradiance_w_per_m2']
-	insertData(['irradianceOutput.csv'], 'TrradianceData', cols)
+	insertData(['irradianceOutput.csv'], 'IrradianceData', cols)
 
 	cols = ['timestamp', 'tap_setting']
 	insertData(['tapDataOutput.csv'], 'TapData', cols)
