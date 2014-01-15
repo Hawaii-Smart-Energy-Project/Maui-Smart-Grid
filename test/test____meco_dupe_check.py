@@ -70,3 +70,6 @@ class TestMECODupeChecker(unittest.TestCase):
     def tearDown(self):
         self.dbConnect.closeDB(self.conn)
 
+if __name__ == '__main__':
+    unittest.main()
+

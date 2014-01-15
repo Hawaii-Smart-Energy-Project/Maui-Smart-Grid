@@ -14,7 +14,7 @@ from msg_configer import MSGConfiger
 from msg_logger import MSGLogger
 import os
 
-SEND_EMAIL = True
+SEND_EMAIL = False
 
 
 class TestMECONotifier(unittest.TestCase):
