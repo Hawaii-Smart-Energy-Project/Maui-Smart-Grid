@@ -34,6 +34,14 @@ class MSGNotifier(object):
 
         self.config = MSGConfiger()
         self.logger = MSGLogger(__name__, 'info')
+        self.notificationHeader = "This is a message from the Hawaii Smart " \
+                                  "Energy Project MSG Project notification " \
+                                  "system.\n\n"
+
+        self.noReplyNotice = """\n\nThis email account is not monitored. No
+        replies will originate from this account.\n\nYou are receiving this
+        message because you are on the recipient list for notifications for
+        the Hawaii Smart Energy Project."""
 
 
     def sendNotificationEmail(self, msgBody, testing = False):
@@ -66,7 +74,8 @@ class MSGNotifier(object):
             server.starttls()
         except smtplib.SMTPException as detail:
             errorOccurred = True
-            self.logger.log("Exception during SMTP STARTTLS: %s" % detail, 'ERROR')
+            self.logger.log("Exception during SMTP STARTTLS: %s" % detail,
+                            'ERROR')
 
         try:
             server.login(user, password)
@@ -82,15 +91,9 @@ class MSGNotifier(object):
                     "My-Mail\r\n\r\n" % (
                         senddate, fromaddr, toaddr, subject)
 
-        msgBody = "This is a message from the Hawaii Smart Energy Project " \
-                  "MSG Project notification system.\n\n" + msgBody
+        msgBody = self.notificationHeader + msgBody
 
-        msgBody += '\nThis email account is not monitored. No replies will ' \
-                   'originate from this account.'
-
-        msgBody += '\n\nYou are receiving this message because you are on the' \
-                   ' recipient list for notifications for the Hawaii Smart ' \
-                   'Energy Project.'
+        msgBody += self.noReplyNotice
 
         try:
             self.logger.log("Send email notification.", 'INFO')
@@ -98,7 +101,8 @@ class MSGNotifier(object):
             server.quit()
         except smtplib.SMTPException as detail:
             errorOccurred = True
-            self.logger.log("Exception during SMTP sendmail: %s" % detail, 'ERROR')
+            self.logger.log("Exception during SMTP sendmail: %s" % detail,
+                            'ERROR')
 
         return errorOccurred != True
 
@@ -160,7 +164,8 @@ class MSGNotifier(object):
             server.starttls()
         except smtplib.SMTPException as detail:
             errorOccurred = True
-            self.logger.log("Exception during SMTP STARTTLS: %s" % detail, 'ERROR')
+            self.logger.log("Exception during SMTP STARTTLS: %s" % detail,
+                            'ERROR')
 
         try:
             server.login(user, password)
@@ -174,7 +179,8 @@ class MSGNotifier(object):
             server.sendmail(send_from, send_to, msg.as_string())
         except smtplib.SMTPException as detail:
             errorOccurred = True
-            self.logger.log("Exception during SMTP sendmail: %s" % detail, 'ERROR')
+            self.logger.log("Exception during SMTP sendmail: %s" % detail,
+                            'ERROR')
 
         server.quit()
 
