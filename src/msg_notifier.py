@@ -35,6 +35,7 @@ class MSGNotifier(object):
         self.config = MSGConfiger()
         self.logger = MSGLogger(__name__, 'info')
 
+
     def sendNotificationEmail(self, msgBody, testing = False):
         """
         This method is an alternative to the multipart method in
@@ -63,15 +64,15 @@ class MSGNotifier(object):
 
         try:
             server.starttls()
-        except smtplib.SMTPException, e:
+        except smtplib.SMTPException as detail:
             errorOccurred = True
-            print "Exception = %s" % e
+            self.logger.log("Exception during SMTP STARTTLS: %s" % detail, 'ERROR')
 
         try:
             server.login(user, password)
-        except smtplib.SMTPException, e:
+        except smtplib.SMTPException as detail:
             errorOccurred = True
-            print "Exception = %s" % e
+            self.logger.log("Exception during SMTP login: %s" % detail, 'ERROR')
 
         senddate = datetime.strftime(datetime.now(), '%Y-%m-%d')
         subject = "HISEP Notification"
@@ -92,14 +93,15 @@ class MSGNotifier(object):
                    'Energy Project.'
 
         try:
-            sys.stderr.write("Sending email notifications.\n")
+            self.logger.log("Send email notification.", 'INFO')
             server.sendmail(fromaddr, toaddr, msgHeader + msgBody)
             server.quit()
-        except smtplib.SMTPException, e:
+        except smtplib.SMTPException as detail:
             errorOccurred = True
-            print "Exception = %s" % e
+            self.logger.log("Exception during SMTP sendmail: %s" % detail, 'ERROR')
 
         return errorOccurred != True
+
 
     def sendMailWithAttachments(self, msgBody, files = None, testing = False):
         """
@@ -156,17 +158,24 @@ class MSGNotifier(object):
             self.config.configOptionValue('Notifications', 'email_smtp_server'))
         try:
             server.starttls()
-        except smtplib.SMTPException, e:
+        except smtplib.SMTPException as detail:
             errorOccurred = True
-            print "Exception = %s" % e
+            self.logger.log("Exception during SMTP STARTTLS: %s" % detail, 'ERROR')
 
         try:
             server.login(user, password)
-        except smtplib.SMTPException, e:
+        except smtplib.SMTPException as detail:
             errorOccurred = True
-            self.logger.log("Exception = %s" % e, 'error')
+            self.logger.log("Exception during SMTP login: %s" % detail, 'ERROR')
 
-        server.sendmail(send_from, send_to, msg.as_string())
+        self.logger.log("Send email notification.", 'INFO')
+
+        try:
+            server.sendmail(send_from, send_to, msg.as_string())
+        except smtplib.SMTPException as detail:
+            errorOccurred = True
+            self.logger.log("Exception during SMTP sendmail: %s" % detail, 'ERROR')
+
         server.quit()
 
         if errorOccurred == False:
