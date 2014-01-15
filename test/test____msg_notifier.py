@@ -10,8 +10,9 @@ __license__ = 'https://raw.github' \
 import unittest
 from msg_notifier import MSGNotifier
 import smtplib
-
 from msg_configer import MSGConfiger
+from msg_logger import MSGLogger
+import os
 
 SEND_EMAIL = True
 
@@ -22,8 +23,9 @@ class TestMECONotifier(unittest.TestCase):
     """
 
     def setUp(self):
+        self.logger = MSGLogger(__name__)
         self.notifier = MSGNotifier()
-        self.config = MSGConfiger()
+        self.configer = MSGConfiger()
 
     def tearDown(self):
         pass
@@ -38,12 +40,12 @@ class TestMECONotifier(unittest.TestCase):
         """
 
         errorOccurred = False
-        user = self.config.configOptionValue('Notifications', 'email_username')
-        password = self.config.configOptionValue('Notifications',
+        user = self.configer.configOptionValue('Notifications', 'email_username')
+        password = self.configer.configOptionValue('Notifications',
                                                  'email_password')
 
         server = smtplib.SMTP(
-            self.config.configOptionValue('Notifications', 'email_smtp_server'))
+            self.configer.configOptionValue('Notifications', 'email_smtp_server'))
 
         try:
             server.starttls()
@@ -81,7 +83,8 @@ class TestMECONotifier(unittest.TestCase):
 
         if SEND_EMAIL:
             body = "Test message"
-            file = "../../test-data/graph.png"
+            testDataPath = self.configer.configOptionValue('Testing', 'test_data_path')
+            file = os.path.join(testDataPath, 'graph.png')
             success = self.notifier.sendMailWithAttachments(body, [file],
                                                             testing = True)
             success = (success != True)

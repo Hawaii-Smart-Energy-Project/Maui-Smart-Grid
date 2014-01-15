@@ -138,6 +138,7 @@ class MSGNotifier(object):
         else:
             send_to = self.config.configOptionValue('Notifications',
                                                     'email_recipients')
+
         send_from = self.config.configOptionValue('Notifications',
                                                   'email_fromaddr')
 
