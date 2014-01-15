@@ -23,7 +23,7 @@ class MSGFileUtil(object):
         """
         Constructor.
         """
-        self.logger = MSGLogger(__name__)
+        self.logger = MSGLogger(__name__, 'DEBUG')
 
 
     def validDirectory(self, path):
@@ -69,9 +69,13 @@ class MSGFileUtil(object):
         :param fullPath: Full path of the file to be uncompressed.
         """
 
+        self.logger.log('Writing to %s' % destPath, 'DEBUG')
         gzipFile = gzip.open(srcPath, "rb")
         uncompressedFile = open(destPath, "wb")
         decoded = gzipFile.read()
-        uncompressedFile.write(decoded)
+        try:
+            uncompressedFile.write(decoded)
+        except:
+            self.logger.log("Exception while writing uncompressed file.")
         gzipFile.close()
         uncompressedFile.close()

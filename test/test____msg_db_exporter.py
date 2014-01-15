@@ -21,6 +21,10 @@ from msg_file_util import MSGFileUtil
 
 
 class MSGDBExporterTester(unittest.TestCase):
+    """
+    Unit tests for the MSG Cloud Exporter.
+    """
+
     def setUp(self):
         self.logger = MSGLogger(__name__, 'DEBUG')
         self.configer = MSGConfiger()
