@@ -9,8 +9,8 @@ Provides intervals where the timestamp represents the end of the interval.
 
 Usage:
 
-    python aggregateSCADAWeatherData.py --startDate ${YYYY-MM-DD}
-                                        --endDate ${YYYY-MM-DD}
+    python aggregateSCADAWeatherData.py --startDate "${YYYY-MM-DD hh:mm:ss}"
+                                        --endDate "${YYYY-MM-DD hh:mm:ss}"
 
 Output is comma-separated data to STDOUT.
 
