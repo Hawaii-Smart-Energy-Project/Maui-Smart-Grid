@@ -29,7 +29,7 @@ import argparse
 from msg_math_util import MSGMathUtil
 
 NEXT_MINUTE_CROSSING = 0
-
+TABLE = "KiheiSCADATemperatureHumidity"
 
 def processCommandLineArguments():
     """
@@ -88,11 +88,14 @@ conn = connector.connectDB()
 dbUtil = MSGDBUtil()
 mUtil = MSGMathUtil()
 
+logger.log('Aggregating SCADA weather data from %s to %s.' % (
+    commandLineArgs.startDate, commandLineArgs.endDate), 'INFO')
+
 sql = """SELECT timestamp, met_air_temp_degf, met_rel_humid_pct
-         FROM "KiheiSCADATemperatureHumidity"
+         FROM "%s"
          WHERE timestamp BETWEEN '%s' AND '%s'
          ORDER BY timestamp""" % (
-    commandLineArgs.startDate, commandLineArgs.endDate)
+    TABLE, commandLineArgs.startDate, commandLineArgs.endDate)
 
 cursor = conn.cursor()
 dbUtil.executeSQL(cursor, sql)
