@@ -9,7 +9,8 @@ Provides intervals where the timestamp represents the end of the interval.
 
 Usage:
 
-    python aggregateSCADAWeatherData.py
+    python aggregateSCADAWeatherData.py --startDate ${YYYY-MM-DD}
+                                        --endDate ${YYYY-MM-DD}
 
 Output is comma-separated data to STDOUT.
 
@@ -29,6 +30,7 @@ from msg_math_util import MSGMathUtil
 
 NEXT_MINUTE_CROSSING = 0
 
+
 def processCommandLineArguments():
     """
     Create command line arguments and parse them.
@@ -36,8 +38,10 @@ def processCommandLineArguments():
 
     global parser, commandLineArgs
     parser = argparse.ArgumentParser(description = '')
-    parser.add_argument('--startDate', type = str)
-    parser.add_argument('--endDate', type = str)
+    parser.add_argument('--startDate', type = str, required = True,
+                        help = 'Start date of data to be evaluated.')
+    parser.add_argument('--endDate', type = str, required = True,
+                        help = 'End date of data to be evaluated.')
     commandLineArgs = parser.parse_args()
 
 
