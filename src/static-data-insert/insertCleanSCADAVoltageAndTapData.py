@@ -9,6 +9,7 @@ __license__ = 'https://raw.github.com/Hawaii-Smart-Energy-Project/ \
 """
 Usage:
 
+	python insertCleanSCADAVoltageAndTapData.py
 	
 This script parses any CSV files in the working directory, which should all be
 MECO SCADA data, and separates their columns severally into their own files--
@@ -99,7 +100,6 @@ def getTimestamp(datetimeStr):
 								  int(minute), int(second))
 	return timestamp
 
-
 def getColumnNumber(header, desiredValue):
 	"""
 	Return the "column number" (that is, list index) of a string, if it is
@@ -116,6 +116,59 @@ def getColumnNumber(header, desiredValue):
 			i = i + 1
 		else:
 			return i
+
+def getColumns():
+	"""
+	Return a dictionary mapping column names to their index in the CSV
+	header.
+
+	:returns: The dictionary of columns.
+	"""
+
+	columns = {}
+	# The order of the columns corresponding to data we want is subject to 
+	# change without notice, so we have this function to account for possible 
+	# changes. Note that the names of the columns are assumed not to change.
+	columns['timestampCol'] = getColumnNumber(header, 'local datetime') 
+	columns['ampA1517Col'] = getColumnNumber(header, 'WAILEA/CB/1517/AMPA')
+	columns['ampB1517Col'] = getColumnNumber(header, 'WAILEA/CB/1517/AMPB')
+	columns['ampC1517Col'] = getColumnNumber(header, 'WAILEA/CB/1517/AMPC')
+	columns['mvar1517Col'] = getColumnNumber(header, 'WAILEA/CB/1517/MVAR')
+	columns['mw1517Col'] = getColumnNumber(header, 'WAILEA/CB/1517/MW')
+	columns['ampA1518Col'] = getColumnNumber(header, 'WAILEA/CB/1518/AMPA')
+	columns['ampB1518Col'] = getColumnNumber(header, 'WAILEA/CB/1518/AMPB')
+	columns['ampC1518Col'] = getColumnNumber(header, 'WAILEA/CB/1518/AMPC')
+	columns['mvar1518Col'] = getColumnNumber(header, 'WAILEA/CB/1518/MVAR')
+	columns['mw1518Col'] = getColumnNumber(header, 'WAILEA/CB/1518/MW')
+	columns['transformerVltACol'] = getColumnNumber(header, 
+									'WAILEA/XFMR/TSF4/VLTA')
+	columns['transformerVltBCol'] = getColumnNumber(header, 
+									'WAILEA/XFMR/TSF4/VLTB')
+	columns['transformerVltCCol'] = getColumnNumber(header, 
+									'WAILEA/XFMR/TSF4/VLTC')
+	columns['transformerVoltCol'] = getColumnNumber(header, 
+									'WAILEA/XFMR/TSF4/VOLT')
+
+	# The following columns aren't in all of the CSV files.
+	if 'WAILEA/WX/MET_SOLAR/KW' in header:
+		columns['irradianceCol'] = getColumnNumber(header, \
+								   'WAILEA/WX/MET_SOLAR/KW')
+	elif 'WAILEA/WX/MET_SOLAR/VAL' in header:
+		columns['irradianceCol'] = getColumnNumber(header, \
+								   'WAILEA/WX/MET_SOLAR/VAL')
+
+	if 'WAILEA/XFMR/TSF4/TAP' in header:
+		columns['tapCol'] = getColumnNumber(header, 'WAILEA/XFMR/TSF4/TAP')
+
+	if 'KIHEI/WX/MET_AIR_TEMP/DEGF' in header:
+		columns['temperatureCol'] = getColumnNumber(header, \
+									'KIHEI/WX/MET_AIR_TEMP/DEGF')
+
+	if 'KIHEI/WX/MET_REL_HUMID/PCT' in header:
+		columns['humidityCol'] = getColumnNumber(header, \
+								 'KIHEI/WX/MET_REL_HUMID/PCT')
+
+	return columns
 
 def slidingStandardDeviationCalc(avg, var, x_0, x_n, windowSize):
 	"""
@@ -201,7 +254,7 @@ def voltageStandardDeviationAlgorithm(reader, filename, unit, columnNumber,
 		i += 1
 		row = reader.next()
 		# In case we encounter a blank row (although this should've been 
-		# cleaned up before this method was called).
+		# cleaned up before this function was called).
 		if row[columnNumber] == '':
 			i -= 1
 			continue
@@ -366,21 +419,34 @@ def writeSeparateFiles(reader, columns):
 	writerTransformer = csv.writer(outputTransformerFile)
 	i, j = 0, 0
 	stinkers = []
-	tapDataPresent = True
+	tapDataPresent, weatherDataPresent = True, True
 
-	# Not all the CSV files had tap data, so we check for it.
+	# Not all the CSV files had tap or weather data, so we check for it and set
+	# things up if found.
 	try:
 		columns['tapCol']
 	except KeyError:
 		tapDataPresent = False
 
+	try:
+		columns['humidityCol']
+	except KeyError:
+		weatherDataPresent = False
+
 	if tapDataPresent:
-		outputTapDataFile = open('tapDataOutput.csv', 'wb')
+		outputTapDataFile = open('tapOutput.csv', 'wb')
 		writerTapData = csv.writer(outputTapDataFile)
 		newRowTapData = ['timestamp', 'tap_setting', 
 						'substation', 'transformer']
 		writerTapData.writerow(newRowTapData)
-	
+
+	if weatherDataPresent:
+		outputWeatherDataFile = open('weatherOutput.csv', 'wb')
+		writerWeatherData = csv.writer(outputWeatherDataFile)
+		newRowWeatherData = ['timestamp', 'met_air_temp_degf', 
+							 'met_rel_humid_pct']
+		writerWeatherData.writerow(newRowWeatherData)
+
 	# Build the csv header rows and write them.
 	newRowIrradiance = ['sensor_id', 'irradiance_w_per_m2', 'timestamp']
 	newRowCircuit = ['circuit','timestamp','amp_a' ,'amp_b' , 'amp_c' , 
@@ -410,15 +476,20 @@ def writeSeparateFiles(reader, columns):
 					row[columns['transformerVltCCol']], 
 					row[columns['transformerVoltCol']]]
 			newRowIrradiance = ['4', row[columns['irradianceCol']], timestamp]
-			if tapDataPresent:
-				newRowTapData = [timestamp, row[columns['tapCol']], 
-								'wailea', '4']
-				writerTapData.writerow(newRowTapData)
-
 			writerCircuit.writerow(newRowCircuit1517)
 			writerCircuit.writerow(newRowCircuit1518)
 			writerTransformer.writerow(newRowTransformer)
 			writerIrradiance.writerow(newRowIrradiance)
+
+			if tapDataPresent:
+				newRowTapData = [timestamp, row[columns['tapCol']], 
+								 'wailea', '4']
+				writerTapData.writerow(newRowTapData)
+			if weatherDataPresent:
+				newRowWeatherData = [timestamp, row[columns['temperatureCol']],
+									 row[columns['humidityCol']]]
+				writerWeatherData.writerow(newRowWeatherData)
+
 		except IndexError:
 			i += 1
 			stinkers.append(row)
@@ -426,7 +497,8 @@ def writeSeparateFiles(reader, columns):
 
 	if i > 0:
 		print 'Raised IndexError exception', i, 'times in', j, 'lines copied '\
-			  'during generation of the split files. This (these) stinker(s) raised exceptions:'
+			  'during generation of the split files. This (these) bad row(s) '\
+			  'raised exceptions:'
 
 		for stinker in stinkers:
 			print stinker
@@ -469,9 +541,8 @@ def insertData(files, table, cols):
 		conn.commit()
 		cnt = 0
 
-
-def callInsertData():
-	"""Calls the insertData method a few times to insert info into the DB."""
+def insertDataCaller():
+	"""Calls the insertData function a few times to insert info into the DB."""
 
 	cols = ['transformer', 'timestamp', 'vlt_a', 'vlt_b', 'vlt_c', 'volt']
 	insertData(['transformerOutput.csv'], 'TransformerData', cols)
@@ -483,7 +554,10 @@ def callInsertData():
 	insertData(['irradianceOutput.csv'], 'IrradianceData', cols)
 
 	cols = ['timestamp', 'tap_setting']
-	insertData(['tapDataOutput.csv'], 'TapData', cols)
+	insertData(['tapOutput.csv'], 'TapData', cols)
+
+	cols = ['timestamp', 'met_air_temp_degf', 'met_rel_humid_pct']
+	insertData(['weatherOutput.csv'], 'KiheiSCADATemperatureHumidity', cols)
 
 #----------------#
 # Body of script #
@@ -511,46 +585,19 @@ for filename in fileNames:
 	print 'Working on ' + filename
 	reader = csv.reader(open(filename,'r'))
 	header = reader.next()
-	columns = {}
-	# The order of the columns corresponding to data we want is subject to 
-	# change without notice, so we have this method to account for possible 
-	# changes. Note that the names of the columns are assumed not to change.
-	columns['timestampCol'] = getColumnNumber(header, 'local datetime') 
-	columns['ampA1517Col'] = getColumnNumber(header, 'WAILEA/CB/1517/AMPA')
-	columns['ampB1517Col'] = getColumnNumber(header, 'WAILEA/CB/1517/AMPB')
-	columns['ampC1517Col'] = getColumnNumber(header, 'WAILEA/CB/1517/AMPC')
-	columns['mvar1517Col'] = getColumnNumber(header, 'WAILEA/CB/1517/MVAR')
-	columns['mw1517Col'] = getColumnNumber(header, 'WAILEA/CB/1517/MW')
-	columns['ampA1518Col'] = getColumnNumber(header, 'WAILEA/CB/1518/AMPA')
-	columns['ampB1518Col'] = getColumnNumber(header, 'WAILEA/CB/1518/AMPB')
-	columns['ampC1518Col'] = getColumnNumber(header, 'WAILEA/CB/1518/AMPC')
-	columns['mvar1518Col'] = getColumnNumber(header, 'WAILEA/CB/1518/MVAR')
-	columns['mw1518Col'] = getColumnNumber(header, 'WAILEA/CB/1518/MW')
-	irradianceCol = getColumnNumber(header, 'WAILEA/WX/MET_SOLAR/KW')
-
-	if not irradianceCol:
-		irradianceCol = getColumnNumber(header, 'WAILEA/WX/MET_SOLAR/VAL')
-
-	columns['irradianceCol'] = irradianceCol
-	columns['transformerVltACol'] = getColumnNumber(header, 
-			'WAILEA/XFMR/TSF4/VLTA')
-	columns['transformerVltBCol'] = getColumnNumber(header, 
-			'WAILEA/XFMR/TSF4/VLTB')
-	columns['transformerVltCCol'] = getColumnNumber(header, 
-			'WAILEA/XFMR/TSF4/VLTC')
-	columns['transformerVoltCol'] = getColumnNumber(header, 
-			'WAILEA/XFMR/TSF4/VOLT')
-	if getColumnNumber(header, 'WAILEA/XFMR/TSF4/TAP'):
-		columns['tapCol'] = getColumnNumber(header, 'WAILEA/XFMR/TSF4/TAP')
+	columns = getColumns()
 
 	# Here's where we call our algorithm to scan for lines found in the data
 	# where all the 'items to scan for' are blank. If a line of the CSV is 
 	# missing output for all members in the tuple, it will be deleted in the 
 	# trimBlankLines() routine.
-	itemsToScanFor = (columns['transformerVltACol'], columns['transformerVltBCol'], columns['transformerVltCCol'])
+	itemsToScanFor = (columns['transformerVltACol'], 
+		 		 	  columns['transformerVltBCol'], 
+		 		 	  columns['transformerVltCCol'])
 	inputFile = open(filename, 'r')
 
-	trimmedFile = trimBlankLines(inputFile, itemsToScanFor, columns['timestampCol'])
+	trimmedFile = trimBlankLines(inputFile, itemsToScanFor,
+								 columns['timestampCol'])
 	trimmedFilename = trimmedFile.name
 
 	with open(trimmedFilename, 'r') as trimmedFile:
@@ -566,7 +613,8 @@ for filename in fileNames:
 		voltageStandardDeviationAlgorithm(reader, 'wailea_voltage_c.csv', 
 			'voltage', columns['transformerVltCCol'], columns['timestampCol'])
 
-	# And finally we overwrite places the CSV file where we had bad data with null values. Yes, this could be broken out into a method...
+	# And finally we overwrite places the CSV file where we had bad data with 
+	# null values. Yes, this could be broken out into a function...
 	trimmedFile = open(trimmedFilename, 'r')
 	newFile = open('output.csv', 'w+')
 	badDataFile = open('wailea_voltage_a.csv', 'r')
@@ -577,12 +625,12 @@ for filename in fileNames:
 	trimmedFile.close()
 	newFile.close()
 	badDataFile.close()
-	callInsertData()
 
 	trimmedFile = open(trimmedFilename, 'r')
 	newFile = open('output.csv', 'w+')
 	badDataFile = open('wailea_voltage_b.csv', 'r')
-	writeNullsIntoCsv(badDataFile, trimmedFile, newFile, columns['transformerVltBCol'], columns['timestampCol'])
+	writeNullsIntoCsv(badDataFile, trimmedFile, newFile, \
+					  columns['transformerVltBCol'], columns['timestampCol'])
 	subprocess.call(['rm', '-f', badDataFile.name])
 	subprocess.call(['mv', newFile.name, trimmedFile.name])
 	trimmedFile.close()
@@ -603,13 +651,15 @@ for filename in fileNames:
 	trimmedFile = open(trimmedFilename, 'r')
 	reader = csv.reader(trimmedFile)
 	writeSeparateFiles(reader, columns)
-	callInsertData()
+	insertDataCaller()
+
 	newFile.close()
 	trimmedFile.close()
 	badDataFile.close()
-
 	subprocess.call(['rm', '-f', filename])
 	subprocess.call(['rm', '-f', 'circuitOutput.csv'])
 	subprocess.call(['rm', '-f', 'transformerOutput.csv'])
-	subprocess.call(['rm', '-f', 'tapDataOutput.csv'])
+	subprocess.call(['rm', '-f', 'tapOutput.csv'])
 	subprocess.call(['rm', '-f', 'irradianceOutput.csv'])
+	subprocess.call(['rm', '-f', 'weatherOutput.csv'])
+
