@@ -23,6 +23,7 @@ import datetime
 import hashlib
 from functools import partial
 from msg_file_util import MSGFileUtil
+import time
 
 
 class MSGDBExporter(object):
@@ -157,7 +158,8 @@ class MSGDBExporter(object):
 
             # Obtain the checksum for the export prior to compression.
             md5sum1 = self.fileUtil.md5Checksum(fullPath)
-            print "md5sum: %s" % md5sum1
+            self.logger.log("mtime: %s, md5sum1: %s" % (
+                time.ctime(os.path.getmtime(fullPath)), md5sum1), 'INFO')
 
             # Perform compression of the file.
             self.logger.log("Compressing %s using gzip." % db, 'info')
@@ -168,7 +170,8 @@ class MSGDBExporter(object):
             else:
                 self.gzipCompressFile(fullPath)
 
-            # Verify the compressed file.
+            # Verify the compressed file by uncompressing it and verifying its
+            # checksum against the original checksum.
             if testing:
                 self.logger.log('reading: %s' % fullPath + '.gz', 'DEBUG')
                 self.logger.log('writing: %s' % os.path.join(
@@ -178,11 +181,23 @@ class MSGDBExporter(object):
                 self.fileUtil.gzipUncompressFile(fullPath + '.gz', os.path.join(
                     self.configer.configOptionValue('Testing',
                                                     'export_test_data_path'),
-                    os.path.splitext(os.path.basename(fullPath))[0]))
+                    fullPath))
 
-            if toCloud:
-                fileID = self.uploadDBToCloudStorage('%s.sql.gz' % fullPath,
-                                                     testing = testing)
+                time.sleep(1)
+                md5sum2 = self.fileUtil.md5Checksum(fullPath)
+                self.logger.log("mtime: %s, md5sum2: %s" % (
+                    time.ctime(os.path.getmtime(fullPath)), md5sum2), 'INFO')
+
+                if md5sum1 == md5sum2:
+                    self.logger.log(
+                        'Compressed file has been validated by checksum.',
+                        'INFO')
+                else:
+                    raise (Exception, 'Checksum comparison failed.')
+
+                if toCloud:
+                    fileID = self.uploadDBToCloudStorage('%s.sql.gz' % fullPath,
+                                                         testing = testing)
 
             # Remove the uncompressed file.
             try:

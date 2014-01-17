@@ -23,6 +23,7 @@ import argparse
 
 commandLineArgs = None
 
+
 def processCommandLineArguments():
     """
     Create command line arguments and parse them.
@@ -30,8 +31,11 @@ def processCommandLineArguments():
 
     global parser, commandLineArgs
     parser = argparse.ArgumentParser(description = '')
-    parser.add_argument('--filename', type = str)
+    parser.add_argument('--filename', type = str, required = True,
+                        help = 'The filename containing the data to be '
+                               'inserted.')
     commandLineArgs = parser.parse_args()
+
 
 if __name__ == '__main__':
 

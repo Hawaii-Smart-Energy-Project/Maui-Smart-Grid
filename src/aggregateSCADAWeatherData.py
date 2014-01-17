@@ -9,7 +9,8 @@ Provides intervals where the timestamp represents the end of the interval.
 
 Usage:
 
-    python aggregateSCADAWeatherData.py
+    python aggregateSCADAWeatherData.py --startDate "${YYYY-MM-DD hh:mm:ss}"
+                                        --endDate "${YYYY-MM-DD hh:mm:ss}"
 
 Output is comma-separated data to STDOUT.
 
@@ -28,6 +29,7 @@ import argparse
 from msg_math_util import MSGMathUtil
 
 NEXT_MINUTE_CROSSING = 0
+TABLE = "KiheiSCADATemperatureHumidity"
 
 def processCommandLineArguments():
     """
@@ -36,8 +38,10 @@ def processCommandLineArguments():
 
     global parser, commandLineArgs
     parser = argparse.ArgumentParser(description = '')
-    parser.add_argument('--startDate', type = str)
-    parser.add_argument('--endDate', type = str)
+    parser.add_argument('--startDate', type = str, required = True,
+                        help = 'Start date of data to be evaluated.')
+    parser.add_argument('--endDate', type = str, required = True,
+                        help = 'End date of data to be evaluated.')
     commandLineArgs = parser.parse_args()
 
 
@@ -84,11 +88,14 @@ conn = connector.connectDB()
 dbUtil = MSGDBUtil()
 mUtil = MSGMathUtil()
 
+logger.log('Aggregating SCADA weather data from %s to %s.' % (
+    commandLineArgs.startDate, commandLineArgs.endDate), 'INFO')
+
 sql = """SELECT timestamp, met_air_temp_degf, met_rel_humid_pct
-         FROM "KiheiSCADATemperatureHumidity"
+         FROM "%s"
          WHERE timestamp BETWEEN '%s' AND '%s'
          ORDER BY timestamp""" % (
-    commandLineArgs.startDate, commandLineArgs.endDate)
+    TABLE, commandLineArgs.startDate, commandLineArgs.endDate)
 
 cursor = conn.cursor()
 dbUtil.executeSQL(cursor, sql)
