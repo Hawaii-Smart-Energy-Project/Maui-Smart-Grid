@@ -117,6 +117,79 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
+-- Name: Event; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "Event" (
+    event_name character varying,
+    event_time timestamp without time zone,
+    event_text character varying,
+    event_data_id bigint,
+    event_id bigint NOT NULL
+);
+
+
+ALTER TABLE public."Event" OWNER TO sepgroup;
+
+--
+-- Name: EventData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "EventData" (
+    end_time timestamp without time zone,
+    number_events smallint,
+    start_time timestamp without time zone,
+    meter_data_id bigint,
+    event_data_id bigint NOT NULL
+);
+
+
+ALTER TABLE public."EventData" OWNER TO sepgroup;
+
+--
+-- Name: MeterData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "MeterData" (
+    meter_data_id bigint NOT NULL,
+    mac_id character(23) NOT NULL,
+    meter_name character(8) NOT NULL,
+    util_device_id character(8) NOT NULL,
+    created timestamp without time zone
+);
+
+
+ALTER TABLE public."MeterData" OWNER TO sepgroup;
+
+--
+-- Name: TABLE "MeterData"; Type: COMMENT; Schema: public; Owner: sepgroup
+--
+
+COMMENT ON TABLE "MeterData" IS 'Root table for MECO energy data. This table is set to cascade delete so that deletions here are propagated through the MECO energy data branches. --Daniel Zhang (張道博)';
+
+
+--
+-- Name: COLUMN "MeterData".created; Type: COMMENT; Schema: public; Owner: sepgroup
+--
+
+COMMENT ON COLUMN "MeterData".created IS 'timestamp for when data is inserted';
+
+
+SET search_path = dz, pg_catalog;
+
+--
+-- Name: count_of_event_duplicates; Type: VIEW; Schema: dz; Owner: daniel
+--
+
+CREATE VIEW count_of_event_duplicates AS
+    SELECT "Event".event_time, "MeterData".meter_data_id, "EventData".event_data_id, (count(*) - 1) AS "Duplicate Count" FROM ((public."MeterData" JOIN public."EventData" ON (("MeterData".meter_data_id = "EventData".meter_data_id))) JOIN public."Event" ON (("EventData".event_data_id = "Event".event_data_id))) GROUP BY "Event".event_time, "MeterData".meter_data_id, "EventData".event_data_id HAVING ((count(*) - 1) > 0) ORDER BY "Event".event_time;
+
+
+ALTER TABLE dz.count_of_event_duplicates OWNER TO daniel;
+
+SET search_path = public, pg_catalog;
+
+--
 -- Name: Interval; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -160,35 +233,6 @@ ALTER TABLE public."IntervalReadData" OWNER TO sepgroup;
 --
 
 COMMENT ON TABLE "IntervalReadData" IS 'Part of the Reading branch for MECO energy data. --Daniel Zhang (張道博)';
-
-
---
--- Name: MeterData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
---
-
-CREATE TABLE "MeterData" (
-    meter_data_id bigint NOT NULL,
-    mac_id character(23) NOT NULL,
-    meter_name character(8) NOT NULL,
-    util_device_id character(8) NOT NULL,
-    created timestamp without time zone
-);
-
-
-ALTER TABLE public."MeterData" OWNER TO sepgroup;
-
---
--- Name: TABLE "MeterData"; Type: COMMENT; Schema: public; Owner: sepgroup
---
-
-COMMENT ON TABLE "MeterData" IS 'Root table for MECO energy data. This table is set to cascade delete so that deletions here are propagated through the MECO energy data branches. --Daniel Zhang (張道博)';
-
-
---
--- Name: COLUMN "MeterData".created; Type: COMMENT; Schema: public; Owner: sepgroup
---
-
-COMMENT ON COLUMN "MeterData".created IS 'timestamp for when data is inserted';
 
 
 --
@@ -250,14 +294,51 @@ COMMENT ON TABLE "Reading" IS 'Part of the Reading branch for MECO energy data. 
 SET search_path = dz, pg_catalog;
 
 --
--- Name: readings_by_meter_location_history; Type: VIEW; Schema: dz; Owner: postgres
+-- Name: readings_by_meter_location_history; Type: VIEW; Schema: dz; Owner: daniel
 --
 
 CREATE VIEW readings_by_meter_location_history AS
     SELECT "MeterLocationHistory".meter_name, "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".location, "MeterLocationHistory".address, "MeterLocationHistory".latitude, "MeterLocationHistory".longitude, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "Interval".end_time, "MeterData".meter_data_id FROM ((((public."MeterLocationHistory" JOIN public."MeterData" ON ((("MeterLocationHistory".meter_name)::bpchar = "MeterData".meter_name))) JOIN public."IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN public."Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN public."Reading" ON (((("Interval".interval_id = "Reading".interval_id) AND ("Interval".end_time >= "MeterLocationHistory".installed)) AND CASE WHEN ("MeterLocationHistory".uninstalled IS NULL) THEN true ELSE ("Interval".end_time < "MeterLocationHistory".uninstalled) END)));
 
 
-ALTER TABLE dz.readings_by_meter_location_history OWNER TO postgres;
+ALTER TABLE dz.readings_by_meter_location_history OWNER TO daniel;
+
+--
+-- Name: deprecated_readings_by_mlh_transposed_columns_opt1; Type: VIEW; Schema: dz; Owner: daniel
+--
+
+CREATE VIEW deprecated_readings_by_mlh_transposed_columns_opt1 AS
+    SELECT readings_by_meter_location_history.service_point_id, max(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy to House kwH", max(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy from House kwH(rec)", max(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Net Energy to House KwH", max(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "voltage at house", max(readings_by_meter_location_history.service_point_latitude) AS service_point_latitude, max(readings_by_meter_location_history.service_point_longitude) AS service_point_longitude, max((readings_by_meter_location_history.location)::text) AS "location_ID", max((readings_by_meter_location_history.address)::text) AS address, max(readings_by_meter_location_history.latitude) AS location_latitude, max(readings_by_meter_location_history.longitude) AS location_longitude, max(readings_by_meter_location_history.end_time) AS end_time FROM readings_by_meter_location_history GROUP BY readings_by_meter_location_history.service_point_id;
+
+
+ALTER TABLE dz.deprecated_readings_by_mlh_transposed_columns_opt1 OWNER TO daniel;
+
+--
+-- Name: VIEW deprecated_readings_by_mlh_transposed_columns_opt1; Type: COMMENT; Schema: dz; Owner: daniel
+--
+
+COMMENT ON VIEW deprecated_readings_by_mlh_transposed_columns_opt1 IS 'NEEDS GROUP BY END TIME. Invalid optimization 1 for readings by MLH. Channels are transposed to columns. End time sorting is removed.';
+
+
+--
+-- Name: readings_by_mlh_new_spid_for_ashkan_from_2013-07-01; Type: VIEW; Schema: dz; Owner: daniel
+--
+
+CREATE VIEW "readings_by_mlh_new_spid_for_ashkan_from_2013-07-01" AS
+    SELECT readings_by_meter_location_history.service_point_id, max(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy to House kwH", max(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy from House kwH(rec)", max(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Net Energy to House KwH", max(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "voltage at house", max((readings_by_meter_location_history.address)::text) AS address, readings_by_meter_location_history.end_time FROM readings_by_meter_location_history WHERE ((readings_by_meter_location_history.end_time >= '2013-07-01 00:00:00'::timestamp without time zone) AND (readings_by_meter_location_history.end_time <= '2014-02-01 00:00:00'::timestamp without time zone)) GROUP BY readings_by_meter_location_history.service_point_id, readings_by_meter_location_history.end_time;
+
+
+ALTER TABLE dz."readings_by_mlh_new_spid_for_ashkan_from_2013-07-01" OWNER TO daniel;
+
+--
+-- Name: readings_unfiltered; Type: VIEW; Schema: dz; Owner: daniel
+--
+
+CREATE VIEW readings_unfiltered AS
+    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time, "MeterData".meter_data_id, "Reading".interval_id FROM (((public."MeterData" JOIN public."IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN public."Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN public."Reading" ON (("Interval".interval_id = "Reading".interval_id)));
+
+
+ALTER TABLE dz.readings_unfiltered OWNER TO daniel;
 
 SET search_path = public, pg_catalog;
 
@@ -395,36 +476,6 @@ CREATE TABLE "EgaugeInfo" (
 ALTER TABLE public."EgaugeInfo" OWNER TO eileen;
 
 --
--- Name: Event; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
---
-
-CREATE TABLE "Event" (
-    event_name character varying,
-    event_time timestamp without time zone,
-    event_text character varying,
-    event_data_id bigint,
-    event_id bigint NOT NULL
-);
-
-
-ALTER TABLE public."Event" OWNER TO sepgroup;
-
---
--- Name: EventData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
---
-
-CREATE TABLE "EventData" (
-    end_time timestamp without time zone,
-    number_events smallint,
-    start_time timestamp without time zone,
-    meter_data_id bigint,
-    event_data_id bigint NOT NULL
-);
-
-
-ALTER TABLE public."EventData" OWNER TO sepgroup;
-
---
 -- Name: IrradianceData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -436,19 +487,6 @@ CREATE TABLE "IrradianceData" (
 
 
 ALTER TABLE public."IrradianceData" OWNER TO sepgroup;
-
---
--- Name: IrradianceData_copy; Type: TABLE; Schema: public; Owner: christian; Tablespace: 
---
-
-CREATE TABLE "IrradianceData_copy" (
-    sensor_id integer NOT NULL,
-    irradiance_w_per_m2 double precision,
-    "timestamp" timestamp(6) without time zone NOT NULL
-);
-
-
-ALTER TABLE public."IrradianceData_copy" OWNER TO christian;
 
 --
 -- Name: IrradianceSensorInfo; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
@@ -1386,23 +1424,6 @@ COMMENT ON VIEW deprecated_meter_ids_for_houses_without_pv IS 'Meter IDs for hou
 
 
 --
--- Name: dz.count_of_event_duplicates; Type: VIEW; Schema: public; Owner: daniel
---
-
-CREATE VIEW "dz.count_of_event_duplicates" AS
-    SELECT "Event".event_time, "MeterData".meter_data_id, "EventData".event_data_id, (count(*) - 1) AS "Duplicate Count" FROM (("MeterData" JOIN "EventData" ON (("MeterData".meter_data_id = "EventData".meter_data_id))) JOIN "Event" ON (("EventData".event_data_id = "Event".event_data_id))) GROUP BY "Event".event_time, "MeterData".meter_data_id, "EventData".event_data_id HAVING ((count(*) - 1) > 0) ORDER BY "Event".event_time;
-
-
-ALTER TABLE public."dz.count_of_event_duplicates" OWNER TO daniel;
-
---
--- Name: VIEW "dz.count_of_event_duplicates"; Type: COMMENT; Schema: public; Owner: daniel
---
-
-COMMENT ON VIEW "dz.count_of_event_duplicates" IS 'Report of counts of event duplicates. @author Daniel Zhang (張道博)';
-
-
---
 -- Name: z_dz_avg_irradiance_uniform_fifteen_min_intervals_null_as_zero; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -2189,14 +2210,6 @@ ALTER TABLE ONLY "AverageFifteenMinIrradianceData"
 
 
 --
--- Name: IrradianceData_copy_pkey1; Type: CONSTRAINT; Schema: public; Owner: christian; Tablespace: 
---
-
-ALTER TABLE ONLY "IrradianceData_copy"
-    ADD CONSTRAINT "IrradianceData_copy_pkey1" PRIMARY KEY (sensor_id, "timestamp");
-
-
---
 -- Name: KiheiSCADATemperatureHumidity_copy_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -2383,13 +2396,6 @@ CREATE INDEX "MeterData_meter_name_idx" ON "MeterData" USING btree (meter_name);
 
 
 --
--- Name: Reading_channel_idx; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
---
-
-CREATE INDEX "Reading_channel_idx" ON "Reading" USING btree (channel);
-
-
---
 -- Name: RegisterData_meter_data_id_idx; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -2481,10 +2487,31 @@ CREATE INDEX interval_read_data_id_idx ON "Interval" USING btree (interval_read_
 
 
 --
+-- Name: mac_address_idx; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE INDEX mac_address_idx ON "MeterLocationHistory" USING btree (mac_address);
+
+
+--
 -- Name: meter_data_id_idx; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
 CREATE INDEX meter_data_id_idx ON "IntervalReadData" USING btree (meter_data_id);
+
+
+--
+-- Name: old_service_point_id_idx; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE INDEX old_service_point_id_idx ON "MeterLocationHistory" USING btree (old_service_point_id);
+
+
+--
+-- Name: reading_channel_idx; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE INDEX reading_channel_idx ON "Reading" USING btree (channel);
 
 
 --
@@ -2498,7 +2525,7 @@ CREATE UNIQUE INDEX reading_id_idx ON "Reading" USING btree (reading_id);
 -- Name: service_point_id_idx; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
-CREATE INDEX service_point_id_idx ON "MeterLocationHistory" USING btree (old_service_point_id);
+CREATE INDEX service_point_id_idx ON "MeterLocationHistory" USING btree (service_point_id);
 
 
 --
@@ -2623,6 +2650,51 @@ GRANT ALL ON FUNCTION zero_to_null(double precision) TO sepgroupreadonly;
 
 
 --
+-- Name: Event; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE "Event" FROM PUBLIC;
+REVOKE ALL ON TABLE "Event" FROM sepgroup;
+GRANT ALL ON TABLE "Event" TO sepgroup;
+GRANT SELECT ON TABLE "Event" TO sepgroupreadonly;
+
+
+--
+-- Name: EventData; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE "EventData" FROM PUBLIC;
+REVOKE ALL ON TABLE "EventData" FROM sepgroup;
+GRANT ALL ON TABLE "EventData" TO sepgroup;
+GRANT SELECT ON TABLE "EventData" TO sepgroupreadonly;
+
+
+--
+-- Name: MeterData; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE "MeterData" FROM PUBLIC;
+REVOKE ALL ON TABLE "MeterData" FROM sepgroup;
+GRANT ALL ON TABLE "MeterData" TO sepgroup;
+GRANT SELECT ON TABLE "MeterData" TO sepgroupreadonly;
+
+
+SET search_path = dz, pg_catalog;
+
+--
+-- Name: count_of_event_duplicates; Type: ACL; Schema: dz; Owner: daniel
+--
+
+REVOKE ALL ON TABLE count_of_event_duplicates FROM PUBLIC;
+REVOKE ALL ON TABLE count_of_event_duplicates FROM daniel;
+GRANT ALL ON TABLE count_of_event_duplicates TO daniel;
+GRANT ALL ON TABLE count_of_event_duplicates TO sepgroup;
+GRANT SELECT ON TABLE count_of_event_duplicates TO sepgroupreadonly;
+
+
+SET search_path = public, pg_catalog;
+
+--
 -- Name: Interval; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -2640,16 +2712,6 @@ REVOKE ALL ON TABLE "IntervalReadData" FROM PUBLIC;
 REVOKE ALL ON TABLE "IntervalReadData" FROM sepgroup;
 GRANT ALL ON TABLE "IntervalReadData" TO sepgroup;
 GRANT SELECT ON TABLE "IntervalReadData" TO sepgroupreadonly;
-
-
---
--- Name: MeterData; Type: ACL; Schema: public; Owner: sepgroup
---
-
-REVOKE ALL ON TABLE "MeterData" FROM PUBLIC;
-REVOKE ALL ON TABLE "MeterData" FROM sepgroup;
-GRANT ALL ON TABLE "MeterData" TO sepgroup;
-GRANT SELECT ON TABLE "MeterData" TO sepgroupreadonly;
 
 
 --
@@ -2675,14 +2737,47 @@ GRANT SELECT ON TABLE "Reading" TO sepgroupreadonly;
 SET search_path = dz, pg_catalog;
 
 --
--- Name: readings_by_meter_location_history; Type: ACL; Schema: dz; Owner: postgres
+-- Name: readings_by_meter_location_history; Type: ACL; Schema: dz; Owner: daniel
 --
 
 REVOKE ALL ON TABLE readings_by_meter_location_history FROM PUBLIC;
-REVOKE ALL ON TABLE readings_by_meter_location_history FROM postgres;
-GRANT ALL ON TABLE readings_by_meter_location_history TO postgres;
+REVOKE ALL ON TABLE readings_by_meter_location_history FROM daniel;
+GRANT ALL ON TABLE readings_by_meter_location_history TO daniel;
 GRANT ALL ON TABLE readings_by_meter_location_history TO sepgroup;
 GRANT SELECT ON TABLE readings_by_meter_location_history TO sepgroupreadonly;
+
+
+--
+-- Name: deprecated_readings_by_mlh_transposed_columns_opt1; Type: ACL; Schema: dz; Owner: daniel
+--
+
+REVOKE ALL ON TABLE deprecated_readings_by_mlh_transposed_columns_opt1 FROM PUBLIC;
+REVOKE ALL ON TABLE deprecated_readings_by_mlh_transposed_columns_opt1 FROM daniel;
+GRANT ALL ON TABLE deprecated_readings_by_mlh_transposed_columns_opt1 TO daniel;
+GRANT ALL ON TABLE deprecated_readings_by_mlh_transposed_columns_opt1 TO sepgroup;
+GRANT SELECT ON TABLE deprecated_readings_by_mlh_transposed_columns_opt1 TO sepgroupreadonly;
+
+
+--
+-- Name: readings_by_mlh_new_spid_for_ashkan_from_2013-07-01; Type: ACL; Schema: dz; Owner: daniel
+--
+
+REVOKE ALL ON TABLE "readings_by_mlh_new_spid_for_ashkan_from_2013-07-01" FROM PUBLIC;
+REVOKE ALL ON TABLE "readings_by_mlh_new_spid_for_ashkan_from_2013-07-01" FROM daniel;
+GRANT ALL ON TABLE "readings_by_mlh_new_spid_for_ashkan_from_2013-07-01" TO daniel;
+GRANT ALL ON TABLE "readings_by_mlh_new_spid_for_ashkan_from_2013-07-01" TO sepgroup;
+GRANT SELECT ON TABLE "readings_by_mlh_new_spid_for_ashkan_from_2013-07-01" TO sepgroupreadonly;
+
+
+--
+-- Name: readings_unfiltered; Type: ACL; Schema: dz; Owner: daniel
+--
+
+REVOKE ALL ON TABLE readings_unfiltered FROM PUBLIC;
+REVOKE ALL ON TABLE readings_unfiltered FROM daniel;
+GRANT ALL ON TABLE readings_unfiltered TO daniel;
+GRANT ALL ON TABLE readings_unfiltered TO sepgroup;
+GRANT SELECT ON TABLE readings_unfiltered TO sepgroupreadonly;
 
 
 SET search_path = public, pg_catalog;
@@ -2751,26 +2846,6 @@ GRANT SELECT ON TABLE "EgaugeInfo" TO sepgroupreadonly;
 
 
 --
--- Name: Event; Type: ACL; Schema: public; Owner: sepgroup
---
-
-REVOKE ALL ON TABLE "Event" FROM PUBLIC;
-REVOKE ALL ON TABLE "Event" FROM sepgroup;
-GRANT ALL ON TABLE "Event" TO sepgroup;
-GRANT SELECT ON TABLE "Event" TO sepgroupreadonly;
-
-
---
--- Name: EventData; Type: ACL; Schema: public; Owner: sepgroup
---
-
-REVOKE ALL ON TABLE "EventData" FROM PUBLIC;
-REVOKE ALL ON TABLE "EventData" FROM sepgroup;
-GRANT ALL ON TABLE "EventData" TO sepgroup;
-GRANT SELECT ON TABLE "EventData" TO sepgroupreadonly;
-
-
---
 -- Name: IrradianceData; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -2778,17 +2853,6 @@ REVOKE ALL ON TABLE "IrradianceData" FROM PUBLIC;
 REVOKE ALL ON TABLE "IrradianceData" FROM sepgroup;
 GRANT ALL ON TABLE "IrradianceData" TO sepgroup;
 GRANT SELECT ON TABLE "IrradianceData" TO sepgroupreadonly;
-
-
---
--- Name: IrradianceData_copy; Type: ACL; Schema: public; Owner: christian
---
-
-REVOKE ALL ON TABLE "IrradianceData_copy" FROM PUBLIC;
-REVOKE ALL ON TABLE "IrradianceData_copy" FROM christian;
-GRANT ALL ON TABLE "IrradianceData_copy" TO christian;
-GRANT ALL ON TABLE "IrradianceData_copy" TO sepgroup;
-GRANT SELECT ON TABLE "IrradianceData_copy" TO sepgroupreadonly;
 
 
 --
@@ -3317,17 +3381,6 @@ REVOKE ALL ON TABLE deprecated_meter_ids_for_houses_without_pv FROM postgres;
 GRANT ALL ON TABLE deprecated_meter_ids_for_houses_without_pv TO postgres;
 GRANT ALL ON TABLE deprecated_meter_ids_for_houses_without_pv TO sepgroup;
 GRANT SELECT ON TABLE deprecated_meter_ids_for_houses_without_pv TO sepgroupreadonly;
-
-
---
--- Name: dz.count_of_event_duplicates; Type: ACL; Schema: public; Owner: daniel
---
-
-REVOKE ALL ON TABLE "dz.count_of_event_duplicates" FROM PUBLIC;
-REVOKE ALL ON TABLE "dz.count_of_event_duplicates" FROM daniel;
-GRANT ALL ON TABLE "dz.count_of_event_duplicates" TO daniel;
-GRANT ALL ON TABLE "dz.count_of_event_duplicates" TO sepgroup;
-GRANT SELECT ON TABLE "dz.count_of_event_duplicates" TO sepgroupreadonly;
 
 
 --
