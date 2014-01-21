@@ -781,7 +781,7 @@ CREATE TABLE "PVServicePointIDs" (
     bat character varying,
     sub character varying,
     circuit smallint,
-    date_uploaded timestamp without time zone,
+    date_uploaded timestamp without time zone DEFAULT '2014-01-19 19:53:55.497375'::timestamp without time zone,
     has_meter smallint,
     has_separate_pv_meter smallint,
     "add_cap_kW" real,
@@ -796,7 +796,8 @@ CREATE TABLE "PVServicePointIDs" (
     pv_service_point_id character varying,
     house_service_point_id character varying,
     new_spid character varying(50),
-    new_spid_pv character varying(50)
+    new_spid_pv character varying(50),
+    nem_agreement_date date
 );
 
 
@@ -1885,6 +1886,41 @@ CREATE VIEW power_meter_events_with_spid AS
 
 
 ALTER TABLE public.power_meter_events_with_spid OWNER TO dave;
+
+--
+-- Name: pv_backup; Type: TABLE; Schema: public; Owner: dave; Tablespace: 
+--
+
+CREATE TABLE pv_backup (
+    old_pv_service_point_id character varying,
+    old_house_service_point_id character varying,
+    "PV_Mod_size_kW" double precision,
+    inverter_model character varying,
+    "size_kW" real,
+    "system_cap_kW" real,
+    bat character varying,
+    sub character varying,
+    circuit smallint,
+    date_uploaded timestamp without time zone,
+    has_meter smallint,
+    has_separate_pv_meter smallint,
+    "add_cap_kW" real,
+    upgraded_total_kw real,
+    street character varying,
+    city character varying,
+    state character varying,
+    zip integer,
+    month_installed integer,
+    year_installed integer,
+    notes character varying,
+    pv_service_point_id character varying,
+    house_service_point_id character varying,
+    new_spid character varying(50),
+    new_spid_pv character varying(50)
+);
+
+
+ALTER TABLE public.pv_backup OWNER TO dave;
 
 --
 -- Name: pv_service_points_specifications_view; Type: VIEW; Schema: public; Owner: eileen
@@ -3706,6 +3742,17 @@ REVOKE ALL ON TABLE power_meter_events_with_spid FROM dave;
 GRANT ALL ON TABLE power_meter_events_with_spid TO dave;
 GRANT ALL ON TABLE power_meter_events_with_spid TO sepgroup;
 GRANT SELECT ON TABLE power_meter_events_with_spid TO sepgroupreadonly;
+
+
+--
+-- Name: pv_backup; Type: ACL; Schema: public; Owner: dave
+--
+
+REVOKE ALL ON TABLE pv_backup FROM PUBLIC;
+REVOKE ALL ON TABLE pv_backup FROM dave;
+GRANT ALL ON TABLE pv_backup TO dave;
+GRANT ALL ON TABLE pv_backup TO sepgroup;
+GRANT SELECT ON TABLE pv_backup TO sepgroupreadonly;
 
 
 --
