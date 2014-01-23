@@ -11,7 +11,7 @@ from msg_logger import MSGLogger
 from msg_time_util import MSGTimeUtil
 import subprocess
 from msg_configer import MSGConfiger
-import gzip
+# import gzip
 import os
 import httplib2
 from apiclient.discovery import build
@@ -103,7 +103,8 @@ class MSGDBExporter(object):
         self.logger.log('md5sum: %s' % md5sum)
 
 
-    def exportDB(self, databases = None, toCloud = False, testing = False):
+    def exportDB(self, databases = None, toCloud = False, localExport = True,
+                 testing = False):
         """
         Export a set of DBs to local storage.
 
@@ -111,10 +112,11 @@ class MSGDBExporter(object):
 
         pg_dump -s -h ${HOST} ${DB_NAME} > ${DUMP_TIMESTAMP}_{DB_NAME}.sql
 
-        :param databases: List of database names.
+        :param databases: List of database names that will be exported.
         :param toCloud: If set to True, then the export will also be copied to
         cloud storage.
-        :param testing: Flag for testing mode.
+        :param localExport: When set to True, the DB is exported locally.
+        :param testing: Flag for testing mode. (NOT USED)
         :returns: True if no errors have occurred, False otherwise.
         """
 
@@ -126,10 +128,7 @@ class MSGDBExporter(object):
             self.logger.log('Exporting %s.' % db, 'info')
             conciseNow = self.timeUtil.conciseNow()
 
-            if not testing:
-                dumpName = "%s_%s" % (conciseNow, db)
-            else:
-                dumpName = 'meco_v3.sql'
+            dumpName = "%s_%s" % (conciseNow, db)
 
             command = """pg_dump -h %s %s > %s/%s.sql""" % (host, db,
                                                             self.configer
@@ -138,18 +137,14 @@ class MSGDBExporter(object):
                                                                 'db_export_path'),
                                                             dumpName)
 
-            if not testing:
-                fullPath = '%s/%s' % (
-                    self.configer.configOptionValue('Export', 'db_export_path'),
-                    dumpName)
-            else:
-                fullPath = '%s/%s' % (self.configer.configOptionValue('Testing',
-                                                                      'export_test_data_path'),
-                                      dumpName)
-                self.logger.log('fullPath: %s' % fullPath, 'DEBUG')
+            fullPath = '%s/%s.sql' % (
+                self.configer.configOptionValue('Export', 'db_export_path'),
+                dumpName)
+
+            self.logger.log('fullPath: %s' % fullPath, 'DEBUG')
 
             try:
-                if not testing:
+                if localExport:
                     # Generate the SQL script export.
                     subprocess.check_call(command, shell = True)
             except subprocess.CalledProcessError, e:
@@ -158,55 +153,60 @@ class MSGDBExporter(object):
 
             # Obtain the checksum for the export prior to compression.
             md5sum1 = self.fileUtil.md5Checksum(fullPath)
-            self.logger.log("mtime: %s, md5sum1: %s" % (
-                time.ctime(os.path.getmtime(fullPath)), md5sum1), 'INFO')
+
+            try:
+                self.logger.log("mtime: %s, md5sum1: %s" % (
+                    time.ctime(os.path.getmtime(fullPath)), md5sum1), 'INFO')
+            except OSError as detail:
+                self.logger.log('Exception while accessing %s.' % fullPath,
+                                'ERROR')
 
             # Perform compression of the file.
             self.logger.log("Compressing %s using gzip." % db, 'info')
-            # if not testing:
             self.logger.log('fullpath: %s' % fullPath, 'DEBUG')
-            if testing:
-                self.gzipCompressFile(fullPath, dontAddExtension = True)
-            else:
-                self.gzipCompressFile(fullPath)
+
+            self.fileUtil.gzipCompressFile(fullPath)
 
             # Verify the compressed file by uncompressing it and verifying its
             # checksum against the original checksum.
-            if testing:
-                self.logger.log('reading: %s' % fullPath + '.gz', 'DEBUG')
-                self.logger.log('writing: %s' % os.path.join(
-                    self.configer.configOptionValue('Testing',
-                                                    'export_test_data_path'),
-                    os.path.splitext(os.path.basename(fullPath))[0]), 'DEBUG')
-                self.fileUtil.gzipUncompressFile(fullPath + '.gz', os.path.join(
-                    self.configer.configOptionValue('Testing',
-                                                    'export_test_data_path'),
-                    fullPath))
 
-                time.sleep(1)
-                md5sum2 = self.fileUtil.md5Checksum(fullPath)
-                self.logger.log("mtime: %s, md5sum2: %s" % (
-                    time.ctime(os.path.getmtime(fullPath)), md5sum2), 'INFO')
+            # @todo Data paths should be changed to a non-testing path.
+            self.logger.log('reading: %s' % fullPath + '.gz', 'DEBUG')
+            self.logger.log('writing: %s' % os.path.join(
+                self.configer.configOptionValue('Testing',
+                                                'export_test_data_path'),
+                os.path.splitext(os.path.basename(fullPath))[0]), 'DEBUG')
+            self.fileUtil.gzipUncompressFile(fullPath + '.gz', os.path.join(
+                self.configer.configOptionValue('Testing',
+                                                'export_test_data_path'),
+                fullPath))
 
-                if md5sum1 == md5sum2:
-                    self.logger.log(
-                        'Compressed file has been validated by checksum.',
-                        'INFO')
-                else:
-                    raise (Exception, 'Checksum comparison failed.')
+            time.sleep(1)
+            md5sum2 = self.fileUtil.md5Checksum(fullPath)
 
-                if toCloud:
-                    fileID = self.uploadDBToCloudStorage('%s.sql.gz' % fullPath,
-                                                         testing = testing)
+            self.logger.log("mtime: %s, md5sum2: %s" % (
+                time.ctime(os.path.getmtime(fullPath)), md5sum2), 'INFO')
+
+            if md5sum1 == md5sum2:
+                self.logger.log(
+                    'Compressed file has been validated by checksum.', 'INFO')
+            else:
+                noErrors = False
+
+            if toCloud:
+                fileID = self.uploadDBToCloudStorage('%s.sql.gz' % fullPath,
+                                                     testing = testing)
 
             # Remove the uncompressed file.
             try:
                 if not testing:
-                    os.remove('%s.sql' % fullPath)
-            except OSError, e:
+                    os.remove('%s' % fullPath)
+            except OSError as e:
                 self.logger.log(
-                    'Exception while removing %s.sql: %s.' % (fullPath, e))
+                    'Exception while removing %s: %s.' % (fullPath, e))
                 noErrors = False
+
+        # End for db in databases.
 
         self.deleteOutdatedFiles(minAge = datetime.timedelta(days = int(
             self.configer.configOptionValue('Export', 'days_to_keep'))))
@@ -280,31 +280,6 @@ class MSGDBExporter(object):
 
         print "refresh_token = %s" % self.googleAPICredentials.refresh_token
         print "expiry = %s" % self.googleAPICredentials.token_expiry
-
-
-    def gzipCompressFile(self, fullPath, dontAddExtension = False):
-        """
-        @todo Test valid compression.
-        @todo Move to file utils.
-
-        :param fullPath: Full path of the file to be compressed. The full
-        path is mislabeled here and refers to the full path minus the
-        extension of the data to be compressed.
-        :param dontAddExtension: Don't add the SQL extension if set to True.
-        """
-
-        try:
-            if dontAddExtension:
-                extension = ''
-            else:
-                extension = '.sql'
-            f_in = open('%s%s' % (fullPath, extension), 'rb')
-            f_out = gzip.open('%s%s.gz' % (fullPath, extension), 'wb')
-            f_out.writelines(f_in)
-            f_out.close()
-            f_in.close()
-        except IOError as detail:
-            self.logger.log('Exception while gzipping: %s' % detail, 'ERROR')
 
 
     def freeSpace(self):
