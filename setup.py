@@ -90,9 +90,11 @@ setup(name = 'Maui-Smart-Grid', version = '1.0.0',
                  'src/insertSingleMECOEnergyDataFile.py',
                  'src/retrieveNOAAWeatherData.py',
                  'src/static-data-insert/insertAggregatedSCADAWeatherData.py',
+                 'src/static-data-insert/insertCleanSCADAVoltageAndTapData.py',
                  'src/static-data-insert/insertLocationRecords.py',
                  'src/static-data-insert/insertMECOMeterLocationHistoryData.py',
                  'src/static-data-insert/insertMeterRecords.py',
+                 'src/static-data-insert/insertNRELIrradianceData.py',
                  'src/static-data-insert/insertPowerMeterEvents.py',
                  'src/static-data-insert/insertSCADAWeatherData.py'
       ])
