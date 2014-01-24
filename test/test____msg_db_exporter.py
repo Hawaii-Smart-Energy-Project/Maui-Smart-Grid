@@ -227,7 +227,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
         self.logger.log('Testing exportDB')
         dbs = ['test_meco']
-        success = self.exporter.exportDB(databases = dbs, toCloud = False,
+        success = self.exporter.exportDB(databases = dbs, toCloud = True,
                                          localExport = True)
         self.logger.log('Success: %s' % success)
         self.assertTrue(success, "Export was successful.")
