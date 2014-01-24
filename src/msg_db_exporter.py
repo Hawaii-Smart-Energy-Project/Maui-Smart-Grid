@@ -194,7 +194,7 @@ class MSGDBExporter(object):
                 noErrors = False
 
             if toCloud:
-                fileID = self.uploadDBToCloudStorage('%s.sql.gz' % fullPath,
+                fileID = self.uploadDBToCloudStorage('%s.gz' % fullPath,
                                                      testing = testing)
 
             # Remove the uncompressed file.
