@@ -80,7 +80,7 @@ A custom automatic installation script, `install-msg.py`, has been developed to 
 
 It is intended to facilitate the maintenace of the software installation, **and** updating, while at the same time allowing development of the source code base. It is used like so
 
-	python install-msg.py --sourcePath ${SOURCE_CODE_BASE_PATH} --installUserPath ${DESTINATION_BASE_PATH}
+	python install-msg.py --sourcePath ${SOURCE_CODE_BASE_PATH} --installPathUser ${DESTINATION_BASE_PATH}
 
 If the tilde symbol (~) is used as the destination base path, then the software will be installed into a directory titled after the package name and version in the user's home directory. 
 
@@ -100,6 +100,7 @@ The software has the following dependencies and they can be satisfied through va
 * psycopg2
 * pycurl
 * pylab
+* xlrd
 
 ### Python-Based Scripts and Modules ###
 
@@ -182,7 +183,7 @@ The reference template can be found in `config/sample-dot-msg-data-operations.cf
 
     [Executable Paths]
     bin_path=${MECO_BIN_DIR}
-	  ## Example: ~/Maui-Smart-Grid-1.0.0/bin
+    ## Example: ~/Maui-Smart-Grid-1.0.0/bin
     
     [Notifications]
     email_fromaddr=${EMAIL_ADDRESS}
@@ -368,7 +369,7 @@ When invalid data exists, all other data is not loaded. This is a limitation of 
 
 ### Database Exports ###
 
-Exports of MSG databases and other databases occur according to a predefined schedule. The exports consist of gzip compressed SQL scripts that are stored both on local storage and cloud storage. Storage to the Google Drive service is supported at this time. Database exports are verified by their MD5 checksums. Individual export archives are shared to a predefined recipient list at the time of export.
+Exports of MSG databases _and other databases_ occur according to a predefined schedule. The exports consist of gzip compressed SQL scripts that are stored both on local storage and cloud storage. Storage to the Google Drive service is supported at this time. Database exports are verified by their MD5 checksums. Individual export archives are shared with reader permissions to a predefined recipient list at the time of export. The list of databases that are exported are found in the local config option under **[Exports]** as **dbs_to_export**.
 
 ### Utility Scripts ###
 
