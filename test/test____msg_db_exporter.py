@@ -29,6 +29,8 @@ class MSGDBExporterTester(unittest.TestCase):
         self.testDir = 'db_exporter_test'
         self.uncompressedTestFilename = 'meco_v3_test_data.sql'
         self.compressedTestFilename = 'meco_v3_test_data.sql.gz'
+        self.exportTestDataPath = self.configer.configOptionValue('Testing',
+                                                                  'export_test_data_path')
         self.fileUtil = MSGFileUtil()
 
         # Create a temporary working directory.
@@ -71,7 +73,8 @@ class MSGDBExporterTester(unittest.TestCase):
         # @todo Upload file for testing.
         self.logger.log("Uploading test data.")
 
-        filePath = "../test-data/db-export/%s" % self.uncompressedTestFilename
+        filePath = "%s/%s" % (
+            self.exportTestDataPath, self.uncompressedTestFilename)
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
 
@@ -94,7 +97,8 @@ class MSGDBExporterTester(unittest.TestCase):
 
         self.logger.log("Uploading test data.")
 
-        filePath = "../test-data/db-export/%s" % self.compressedTestFilename
+        filePath = "%s/%s" % (
+            self.exportTestDataPath, self.compressedTestFilename)
         # print hashlib.md5(filePath).hexdigest()
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
@@ -121,7 +125,8 @@ class MSGDBExporterTester(unittest.TestCase):
 
         self.logger.log("Uploading test data.")
 
-        filePath = "../test-data/db-export/%s" % self.compressedTestFilename
+        filePath = "%s/%s" % (
+            self.exportTestDataPath, self.compressedTestFilename)
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
 
@@ -140,7 +145,8 @@ class MSGDBExporterTester(unittest.TestCase):
 
         self.logger.log("Testing adding reader permissions.")
         self.logger.log("Uploading test data.")
-        filePath = "../test-data/db-export/meco_v3.sql.gz"
+        filePath = "%s/%s" % (
+            self.exportTestDataPath, self.compressedTestFilename)
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
         email = self.configer.configOptionValue('Testing', 'tester_email')
         service = self.exporter.driveService
@@ -156,7 +162,7 @@ class MSGDBExporterTester(unittest.TestCase):
         try:
             self.logger.log('Adding reader permission', 'INFO')
             fileIDToAddTo = self.exporter.fileIDForFileName(
-                'meco_v3.sql_test1.gz')
+                self.compressedTestFilename)
 
             # The permission dict is being output to stdout here.
             resp = service.permissions().insert(fileId = fileIDToAddTo,
@@ -184,7 +190,7 @@ class MSGDBExporterTester(unittest.TestCase):
             os.path.join(os.getcwd(), self.testDir,
                          self.uncompressedTestFilename))
         shutil.copyfile(
-            '../test-data/db-export/%s' % self.uncompressedTestFilename,
+            '%s/%s' % (self.exportTestDataPath, self.uncompressedTestFilename),
             fullPath)
 
         md5sum1 = self.fileUtil.md5Checksum(fullPath)
@@ -269,9 +275,9 @@ if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
-        # selected_tests = ['testExportDB', 'testDeleteOutdatedFiles',
-        #                   'testCreateCompressedArchived']
-        selected_tests = ['testCreateCompressedArchived']
+        selected_tests = ['testExportDB', 'testDeleteOutdatedFiles',
+                          'testCreateCompressedArchived']
+        # selected_tests = ['testCreateCompressedArchived']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDBExporterTester(t))
