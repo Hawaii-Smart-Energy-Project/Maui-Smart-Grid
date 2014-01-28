@@ -13,10 +13,7 @@ from msg_configer import MSGConfiger
 import os
 import shutil
 import re
-# import hashlib
-# from functools import partial
 import gzip
-# import time
 from msg_file_util import MSGFileUtil
 
 
@@ -180,6 +177,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
         @todo Needs update after cloud export restoration.
         """
+
         self.logger.log('Testing verification of a compressed archive.')
 
         self.logger.log('cwd %s' % os.getcwd())
@@ -226,7 +224,7 @@ class MSGDBExporterTester(unittest.TestCase):
         """
 
         self.logger.log('Testing exportDB')
-        dbs = ['test_meco']
+        dbs = ['test_meco', 'sinclair']
         success = self.exporter.exportDB(databases = dbs, toCloud = True,
                                          localExport = True)
         self.logger.log('Success: %s' % success)
