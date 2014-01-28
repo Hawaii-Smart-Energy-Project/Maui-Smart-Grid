@@ -99,13 +99,8 @@ class MSGDBExporterTester(unittest.TestCase):
 
         filePath = "%s/%s" % (
             self.exportTestDataPath, self.compressedTestFilename)
-        # print hashlib.md5(filePath).hexdigest()
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
-
-        # for item in self.exporter.cloudFiles['items']:
-        #     print 'item: %s' % item['title']
-        #     print 'md5: %s' % item['md5Checksum']
 
         self.assertTrue(uploadResult)
 
@@ -246,7 +241,7 @@ class MSGDBExporterTester(unittest.TestCase):
             except OSError as detail:
                 self.logger.log(
                     'Exception while removing temporary files: %s' % detail,
-                    'ERROR')
+                    'SILENT')
 
         try:
             # Might need recursive delete here to handle unexpected cases.
@@ -277,7 +272,7 @@ if __name__ == '__main__':
     if RUN_SELECTED_TESTS:
         selected_tests = ['testExportDB', 'testDeleteOutdatedFiles',
                           'testCreateCompressedArchived']
-        # selected_tests = ['testCreateCompressedArchived']
+        selected_tests = ['testUploadTestData']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDBExporterTester(t))
