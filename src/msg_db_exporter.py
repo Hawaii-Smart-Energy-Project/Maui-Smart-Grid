@@ -24,6 +24,7 @@ import hashlib
 from functools import partial
 from msg_file_util import MSGFileUtil
 import time
+from httplib import BadStatusLine
 
 
 class MSGDBExporter(object):
@@ -230,28 +231,23 @@ class MSGDBExporter(object):
         self.logger.log("Uploading %s." % dbName)
 
         try:
+            media_body = MediaFileUpload(fullPath,
+                                         mimetype =
+                                         'application/gzip-compressed',
+                                         resumable = True)
+            body = {'title': dbName,
+                    'description': 'Hawaii Smart Energy Project gzip '
+                                   'compressed DB export.',
+                    'mimeType': 'application/gzip-compressed'}
 
-            if not testing:
-                media_body = MediaFileUpload(fullPath,
-                                             mimetype =
-                                             'application/gzip-compressed',
-                                             resumable = True)
-                body = {'title': dbName,
-                        'description': 'Hawaii Smart Energy Project gzip '
-                                       'compressed DB export.',
-                        'mimeType': 'application/gzip-compressed'}
+            result = self.driveService.files().insert(body = body,
+                                                      media_body =
+                                                      media_body).execute()
 
-                result = self.driveService.files().insert(body = body,
-                                                          media_body =
-                                                          media_body).execute()
-
-                # print "Result = %s" % result
-
-            else:
-                self.logger.log("Called upload with testing flag on.")
-
-        except (errors.ResumableUploadError):
-            self.logger.log("Cannot initiate upload of %s." % dbName, 'error')
+        except (errors.ResumableUploadError, BadStatusLine) as detail:
+            # Upload failures can result in a BadStatusLine.
+            self.logger.log(
+                "Exception while uploading %s: %s." % (dbName, detail), 'error')
             success = False
 
         if not self.verifyMD5Sum(fullPath, self.fileIDForFileName(dbName)):
