@@ -116,13 +116,11 @@ class MSGDBExporterTester(unittest.TestCase):
         # @todo Prevent deleting files uploaded today.
         # @todo Prevent deleting NON-testing files.
 
-        return
-
         self.logger.log("Test deleting outdated files.")
 
         self.logger.log("Uploading test data.")
 
-        filePath = "../test-data/db-export/meco_v3_test1.sql.gz"
+        filePath = "../test-data/db-export/meco_v3_test_data.sql.gz"
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
 
@@ -218,13 +216,10 @@ class MSGDBExporterTester(unittest.TestCase):
     def testExportDB(self):
         """
         Perform a quick test of the DB export method using Testing Mode.
-
-        Want to test the ability to verify the newly archived file using a
-        checksum.
         """
 
         self.logger.log('Testing exportDB')
-        dbs = ['test_meco', 'sinclair']
+        dbs = ['test_meco']
         success = self.exporter.exportDB(databases = dbs, toCloud = True,
                                          localExport = True)
         self.logger.log('Success: %s' % success)
@@ -238,18 +233,17 @@ class MSGDBExporterTester(unittest.TestCase):
         @todo Needs re-evaluation after cloud export restoration.
         """
 
-        return
-
-        try:
-            pass
-            os.remove(os.path.join(os.getcwd(), self.testDir,
-                                   self.uncompressedTestFilename))
-            os.remove(os.path.join(os.getcwd(), self.testDir, '%s%s' % (
-                self.uncompressedTestFilename, '.gz')))
-        except OSError as detail:
-            self.logger.log(
-                'Exception while removing temporary files: %s' % detail,
-                'ERROR')
+        REMOVE_TEMPORARY_FILES = False
+        if REMOVE_TEMPORARY_FILES:
+            try:
+                os.remove(os.path.join(os.getcwd(), self.testDir,
+                                       self.uncompressedTestFilename))
+                os.remove(os.path.join(os.getcwd(), self.testDir, '%s%s' % (
+                    self.uncompressedTestFilename, '.gz')))
+            except OSError as detail:
+                self.logger.log(
+                    'Exception while removing temporary files: %s' % detail,
+                    'ERROR')
 
         try:
             # Might need recursive delete here to handle unexpected cases.
@@ -275,14 +269,12 @@ class MSGDBExporterTester(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    # This flag is during development of tests.
-    runSingleTest = True
+    RUN_SELECTED_TESTS = True
 
-    if runSingleTest:
-        # Run a single test:
+    if RUN_SELECTED_TESTS:
         mySuite = unittest.TestSuite()
         mySuite.addTest(MSGDBExporterTester('testExportDB'))
+        mySuite.addTest(MSGDBExporterTester('testDeleteOutdatedFiles'))
         unittest.TextTestRunner().run(mySuite)
     else:
-        # Run all tests.
         unittest.main()
