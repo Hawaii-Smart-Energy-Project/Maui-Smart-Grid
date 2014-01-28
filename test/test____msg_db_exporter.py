@@ -64,8 +64,6 @@ class MSGDBExporterTester(unittest.TestCase):
     def testGetFileIDsForFilename(self):
         """
         Retrieve the matching file IDs for the given file name.
-
-        @todo Needs update after cloud export restoration.
         """
 
         # @todo Upload file for testing.
@@ -157,8 +155,10 @@ class MSGDBExporterTester(unittest.TestCase):
             # The permission dict is being output to stdout here.
             resp = service.permissions().insert(fileId = fileIDToAddTo,
                                                 body = new_permission).execute()
-        except errors.HttpError, error:
-            print 'An error occurred: %s' % error
+        except (errors.HttpError, error) as detail:
+            self.logger.log(
+                'Exception while adding reader permissions: %s' % detail,
+                'error')
 
 
     def testCreateCompressedArchived(self):
@@ -267,8 +267,9 @@ if __name__ == '__main__':
     if RUN_SELECTED_TESTS:
         selected_tests = ['testExportDB', 'testDeleteOutdatedFiles',
                           'testCreateCompressedArchived', 'testUploadTestData',
-                          'testGetFileIDsForFilename', 'testListRemoteFiles']
-        selected_tests = ['testGetMD5SumFromCloud']
+                          'testGetFileIDsForFilename', 'testListRemoteFiles',
+                          'testGetMD5SumFromCloud']
+        selected_tests = ['testAddingReaderPermissions']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDBExporterTester(t))
