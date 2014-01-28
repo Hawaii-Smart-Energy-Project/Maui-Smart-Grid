@@ -262,14 +262,14 @@ class MSGDBExporterTester(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    RUN_SELECTED_TESTS = True
+    RUN_SELECTED_TESTS = False
 
     if RUN_SELECTED_TESTS:
         selected_tests = ['testExportDB', 'testDeleteOutdatedFiles',
                           'testCreateCompressedArchived', 'testUploadTestData',
                           'testGetFileIDsForFilename', 'testListRemoteFiles',
-                          'testGetMD5SumFromCloud']
-        selected_tests = ['testAddingReaderPermissions']
+                          'testGetMD5SumFromCloud',
+                          'testAddingReaderPermissions']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDBExporterTester(t))
