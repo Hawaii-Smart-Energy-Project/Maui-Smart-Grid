@@ -27,7 +27,8 @@ class MSGDBExporterTester(unittest.TestCase):
         self.configer = MSGConfiger()
         self.exporter = MSGDBExporter()
         self.testDir = 'db_exporter_test'
-        self.uncompressedTestFilename = 'meco_v3_test1.sql'
+        self.uncompressedTestFilename = 'meco_v3_test_data.sql'
+        self.compressedTestFilename = 'meco_v3_test_data.sql.gz'
         self.fileUtil = MSGFileUtil()
 
         # Create a temporary working directory.
@@ -70,7 +71,7 @@ class MSGDBExporterTester(unittest.TestCase):
         # @todo Upload file for testing.
         self.logger.log("Uploading test data.")
 
-        filePath = "../test-data/db-export/meco_v3_test1.sql.gz"
+        filePath = "../test-data/db-export/%s" % self.uncompressedTestFilename
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
 
@@ -78,7 +79,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
         self.logger.log('Testing getting the file ID for a filename.')
 
-        fileIDs = self.exporter.fileIDForFileName('meco_v3_test1.sql.gz')
+        fileIDs = self.exporter.fileIDForFileName(self.compressedTestFilename)
         self.logger.log("file ids = %s" % fileIDs, 'info')
 
         self.assertIsNotNone(fileIDs)
@@ -93,7 +94,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
         self.logger.log("Uploading test data.")
 
-        filePath = "../test-data/db-export/meco_v3_test1.sql.gz"
+        filePath = "../test-data/db-export/%s" % self.compressedTestFilename
         # print hashlib.md5(filePath).hexdigest()
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
@@ -120,7 +121,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
         self.logger.log("Uploading test data.")
 
-        filePath = "../test-data/db-export/meco_v3_test_data.sql.gz"
+        filePath = "../test-data/db-export/%s" % self.compressedTestFilename
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
 
@@ -182,23 +183,19 @@ class MSGDBExporterTester(unittest.TestCase):
         fullPath = '%s' % (
             os.path.join(os.getcwd(), self.testDir,
                          self.uncompressedTestFilename))
-        shutil.copyfile('../test-data/db-export/meco_v3_test1.sql', fullPath)
+        shutil.copyfile(
+            '../test-data/db-export/%s' % self.uncompressedTestFilename,
+            fullPath)
 
         md5sum1 = self.fileUtil.md5Checksum(fullPath)
 
-        pattern = '(.*)\..*'
-        result = re.match(pattern, fullPath).group(1)
-        self.logger.log('base name: %s' % result)
-        self.exporter.fileUtil.gzipCompressFile(result)
+        self.exporter.fileUtil.gzipCompressFile(fullPath)
 
         try:
             os.remove(os.path.join(os.getcwd(), self.testDir,
                                    self.uncompressedTestFilename))
         except OSError as detail:
-            self.logger.log('Exception: %s' % detail, 'ERROR')
-
-            # Test should fail at this point.
-            pass
+            self.logger.log('Exception while removing: %s' % detail, 'ERROR')
 
         # Extract archived data and generate checksum.
         src = gzip.open('%s%s' % (fullPath, '.gz'), "rb")
@@ -233,13 +230,13 @@ class MSGDBExporterTester(unittest.TestCase):
         @todo Needs re-evaluation after cloud export restoration.
         """
 
-        REMOVE_TEMPORARY_FILES = False
+        REMOVE_TEMPORARY_FILES = True
         if REMOVE_TEMPORARY_FILES:
             try:
                 os.remove(os.path.join(os.getcwd(), self.testDir,
                                        self.uncompressedTestFilename))
-                os.remove(os.path.join(os.getcwd(), self.testDir, '%s%s' % (
-                    self.uncompressedTestFilename, '.gz')))
+                os.remove(os.path.join(os.getcwd(), self.testDir,
+                                       self.compressedTestFilename))
             except OSError as detail:
                 self.logger.log(
                     'Exception while removing temporary files: %s' % detail,
@@ -258,7 +255,7 @@ class MSGDBExporterTester(unittest.TestCase):
         while deleteSuccessful:
             try:
                 fileIDToDelete = self.exporter.fileIDForFileName(
-                    'meco_v3.sql.gz')
+                    self.compressedTestFilename)
                 self.logger.log("file ID to delete: %s" % fileIDToDelete,
                                 'DEBUG')
                 self.exporter.driveService.files().delete(
@@ -272,9 +269,12 @@ if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
+        # selected_tests = ['testExportDB', 'testDeleteOutdatedFiles',
+        #                   'testCreateCompressedArchived']
+        selected_tests = ['testCreateCompressedArchived']
         mySuite = unittest.TestSuite()
-        mySuite.addTest(MSGDBExporterTester('testExportDB'))
-        mySuite.addTest(MSGDBExporterTester('testDeleteOutdatedFiles'))
+        for t in selected_tests:
+            mySuite.addTest(MSGDBExporterTester(t))
         unittest.TextTestRunner().run(mySuite)
     else:
         unittest.main()
