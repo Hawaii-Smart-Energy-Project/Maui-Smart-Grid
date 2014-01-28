@@ -47,9 +47,7 @@ class MSGDBExporterTester(unittest.TestCase):
         id = ''
         for item in self.exporter.cloudFiles['items']:
             title = item['title']
-            # print title
             id = item['id']
-            # print "id = %s" % id
             self.assertIsNot(title, '')
             self.assertIsNot(id, '')
 
@@ -268,8 +266,9 @@ if __name__ == '__main__':
 
     if RUN_SELECTED_TESTS:
         selected_tests = ['testExportDB', 'testDeleteOutdatedFiles',
-                          'testCreateCompressedArchived', 'testUploadTestData']
-        selected_tests = ['testGetFileIDsForFilename']
+                          'testCreateCompressedArchived', 'testUploadTestData',
+                          'testGetFileIDsForFilename']
+        selected_tests = ['testListRemoteFiles']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDBExporterTester(t))
