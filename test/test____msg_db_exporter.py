@@ -74,7 +74,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.logger.log("Uploading test data.")
 
         filePath = "%s/%s" % (
-            self.exportTestDataPath, self.uncompressedTestFilename)
+            self.exportTestDataPath, self.compressedTestFilename)
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
 
@@ -91,14 +91,13 @@ class MSGDBExporterTester(unittest.TestCase):
     def testUploadTestData(self):
         """
         Upload a test data file for unit testing of DB export.
-
-        @todo Needs update after cloud export restoration.
         """
 
         self.logger.log("Uploading test data.")
 
         filePath = "%s/%s" % (
             self.exportTestDataPath, self.compressedTestFilename)
+        self.logger.log('Uploaded %s.' % filePath, 'info')
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
 
@@ -109,8 +108,6 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         The timestamp of an uploaded file should be set in the past to provide
         the ability to test the deleting of outdated files.
-
-        @todo Needs update after cloud export restoration.
         """
 
         # @todo Prevent deleting files uploaded today.
@@ -271,8 +268,8 @@ if __name__ == '__main__':
 
     if RUN_SELECTED_TESTS:
         selected_tests = ['testExportDB', 'testDeleteOutdatedFiles',
-                          'testCreateCompressedArchived']
-        selected_tests = ['testUploadTestData']
+                          'testCreateCompressedArchived', 'testUploadTestData']
+        selected_tests = ['testGetFileIDsForFilename']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDBExporterTester(t))
