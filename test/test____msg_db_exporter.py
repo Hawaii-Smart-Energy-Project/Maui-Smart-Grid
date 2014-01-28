@@ -267,8 +267,8 @@ if __name__ == '__main__':
     if RUN_SELECTED_TESTS:
         selected_tests = ['testExportDB', 'testDeleteOutdatedFiles',
                           'testCreateCompressedArchived', 'testUploadTestData',
-                          'testGetFileIDsForFilename']
-        selected_tests = ['testListRemoteFiles']
+                          'testGetFileIDsForFilename', 'testListRemoteFiles']
+        selected_tests = ['testGetMD5SumFromCloud']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDBExporterTester(t))
