@@ -299,7 +299,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    RUN_SELECTED_TESTS = True
+    RUN_SELECTED_TESTS = False
 
     if RUN_SELECTED_TESTS:
         selected_tests = ['testSplitArchive']
