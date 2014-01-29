@@ -232,13 +232,11 @@ class MSGDBExporterTester(unittest.TestCase):
         fullPath = '%s/%s' % (
             self.testDir, self.compressedTestFilename)
 
-        numChunks = self.fileUtil.splitFile(fullPath = fullPath,
-                                            chunkSize = 6000)
+        self.fileChunks = self.fileUtil.splitFile(fullPath = fullPath,
+                                                  chunkSize = 6000)
 
-        self.assertGreater(numChunks, 0, 'Chunk number is greater than zero.')
-
-        for i in range(numChunks):
-            self.fileChunks.append('%s.%s' % (fullPath, i))
+        self.assertGreater(len(self.fileChunks), 0,
+                           'Chunk number is greater than zero.')
 
 
     def tearDown(self):

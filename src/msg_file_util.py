@@ -112,9 +112,10 @@ class MSGFileUtil(object):
 
         :param fullPath:
         :param chunkSize:
-        :returns: number of chunks
+        :returns: a list of file chunks in full path form
         """
 
+        fChunks = []
         basePath = os.path.dirname(fullPath)
         baseName = os.path.basename(fullPath)
 
@@ -139,6 +140,7 @@ class MSGFileUtil(object):
         for i in range(0, bytes + 1, chunkSize):
             fn1 = "%s/%s.%s" % (basePath, baseName, fCnt)
             print "writing to %s" % fn1
+            fChunks.append(fn1)
             chunkNames.append(fn1)
 
             try:
@@ -150,4 +152,4 @@ class MSGFileUtil(object):
 
             fCnt += 1
 
-        return numChunks
+        return fChunks
