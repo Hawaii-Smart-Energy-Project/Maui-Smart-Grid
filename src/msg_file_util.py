@@ -103,27 +103,30 @@ class MSGFileUtil(object):
             self.logger.log('Exception while gzipping: %s' % detail, 'ERROR')
 
 
-    def splitFile(self, baseName = '', inputFile = '', chunkSize = 0):
+    def splitFile(self, fullPath = '', chunkSize = 0):
         """
         Split a file into chunks. Write output files to base path of the
         input file.
 
         Adapted from https://gist.github.com/mattiasostmar/7883550.
 
-        :param baseName:
-        :param inputFile:
+        :param fullPath:
         :param chunkSize:
         :returns: number of chunks
         """
 
-        basePath = os.path.dirname(inputFile)
+        basePath = os.path.dirname(fullPath)
+        baseName = os.path.basename(fullPath)
 
-        f = open(inputFile, 'rb')
+        f = open(fullPath, 'rb')
         data = f.read()
         f.close()
 
-        # Get the length of the data in bytes.
         bytes = len(data)
+
+        # Ensure splitting doesn't happen if it's not needed.
+        if bytes <= chunkSize:
+            return 0
 
         # Calculate the number of chunks to be created.
         numChunks = bytes / chunkSize

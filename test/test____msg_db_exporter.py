@@ -232,9 +232,8 @@ class MSGDBExporterTester(unittest.TestCase):
         fullPath = '%s/%s' % (
             self.testDir, self.compressedTestFilename)
 
-        numChunks = self.fileUtil.splitFile(
-            baseName = self.compressedTestFilename, inputFile = fullPath,
-            chunkSize = 6000)
+        numChunks = self.fileUtil.splitFile(fullPath = fullPath,
+                                            chunkSize = 6000)
 
         self.assertGreater(numChunks, 0, 'Chunk number is greater than zero.')
 
@@ -259,14 +258,14 @@ class MSGDBExporterTester(unittest.TestCase):
             except OSError as detail:
                 self.logger.log(
                     'Exception while removing temporary files: %s' % detail,
-                    'DEBUG')
+                    'SILENT')
             try:
                 os.remove(os.path.join(os.getcwd(), self.testDir,
                                        self.compressedTestFilename))
             except OSError as detail:
                 self.logger.log(
                     'Exception while removing temporary files: %s' % detail,
-                    'DEBUG')
+                    'SILENT')
             try:
                 for f in self.fileChunks:
                     os.remove(f)
@@ -299,7 +298,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    RUN_SELECTED_TESTS = False
+    RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
         selected_tests = ['testSplitArchive']
