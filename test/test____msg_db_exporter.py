@@ -12,7 +12,6 @@ from apiclient import errors
 from msg_configer import MSGConfiger
 import os
 import shutil
-import re
 import gzip
 from msg_file_util import MSGFileUtil
 
@@ -219,6 +218,17 @@ class MSGDBExporterTester(unittest.TestCase):
         self.assertTrue(success, "Export was successful.")
 
 
+    def testSplitArchive(self):
+        """
+        Test splitting an archive into chunks.
+        """
+        fullPath = '%s/%s' % (
+            self.exportTestDataPath, self.compressedTestFilename)
+        numChunks = splitFile(baseName = self.compressedTestFilename,
+                              inputFile = fullPath, chunkSize = 6000)
+        self.assertGreater(numChunks, 0, 'Chunk number is greater than zero.')
+
+
     def tearDown(self):
         """
         Delete all test items.
@@ -261,15 +271,54 @@ class MSGDBExporterTester(unittest.TestCase):
                 break
 
 
+def splitFile(baseName = '', inputFile = '', chunkSize = 0):
+    """
+    Split a file into chunks.
+
+    Adapted from https://gist.github.com/mattiasostmar/7883550.
+
+    :param baseName:
+    :param inputFile:
+    :param chunkSize:
+    :returns: number of chunks
+    """
+
+    f = open(inputFile, 'rb')
+    data = f.read()
+    f.close()
+
+    # Get the length of the data in bytes.
+    bytes = len(data)
+
+    # Calculate the number of chunks to be created.
+    numChunks = bytes / chunkSize
+    if (bytes % chunkSize):
+        numChunks += 1
+
+    chunkNames = []
+
+    fCnt = 0
+    for i in range(0, bytes + 1, chunkSize):
+        fn1 = "%s.%s" % (baseName, fCnt)
+        chunkNames.append(fn1)
+
+        try:
+            f = open(fn1, 'wb')
+            f.write(data[i:i + chunkSize])
+            f.close()
+        except Exception as detail:
+            print "Exception during writing split file: %s" % detail
+
+        fCnt += 1
+
+    return numChunks
+
+
 if __name__ == '__main__':
-    RUN_SELECTED_TESTS = False
+    RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
-        selected_tests = ['testExportDB', 'testDeleteOutdatedFiles',
-                          'testCreateCompressedArchived', 'testUploadTestData',
-                          'testGetFileIDsForFilename', 'testListRemoteFiles',
-                          'testGetMD5SumFromCloud',
-                          'testAddingReaderPermissions']
+        selected_tests = ['testSplitArchive']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDBExporterTester(t))
