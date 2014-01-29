@@ -101,3 +101,50 @@ class MSGFileUtil(object):
             f_in.close()
         except IOError as detail:
             self.logger.log('Exception while gzipping: %s' % detail, 'ERROR')
+
+
+    def splitFile(self, baseName = '', inputFile = '', chunkSize = 0):
+        """
+        Split a file into chunks. Write output files to base path of the
+        input file.
+
+        Adapted from https://gist.github.com/mattiasostmar/7883550.
+
+        :param baseName:
+        :param inputFile:
+        :param chunkSize:
+        :returns: number of chunks
+        """
+
+        basePath = os.path.dirname(inputFile)
+
+        f = open(inputFile, 'rb')
+        data = f.read()
+        f.close()
+
+        # Get the length of the data in bytes.
+        bytes = len(data)
+
+        # Calculate the number of chunks to be created.
+        numChunks = bytes / chunkSize
+        if (bytes % chunkSize):
+            numChunks += 1
+
+        chunkNames = []
+
+        fCnt = 0
+        for i in range(0, bytes + 1, chunkSize):
+            fn1 = "%s/%s.%s" % (basePath, baseName, fCnt)
+            print "writing to %s" % fn1
+            chunkNames.append(fn1)
+
+            try:
+                f = open(fn1, 'wb')
+                f.write(data[i:i + chunkSize])
+                f.close()
+            except Exception as detail:
+                print "Exception during writing split file: %s" % detail
+
+            fCnt += 1
+
+        return numChunks
