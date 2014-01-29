@@ -31,6 +31,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.exportTestDataPath = self.configer.configOptionValue('Testing',
                                                                   'export_test_data_path')
         self.fileUtil = MSGFileUtil()
+        self.fileChunks = []
 
         # Create a temporary working directory.
         try:
@@ -222,11 +223,22 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         Test splitting an archive into chunks.
         """
+
         fullPath = '%s/%s' % (
             self.exportTestDataPath, self.compressedTestFilename)
+        self.logger.log('fullpath: %s' % fullPath)
+        shutil.copyfile(fullPath, '%s/%s' % (
+            self.testDir, self.compressedTestFilename))
+        fullPath = '%s/%s' % (
+            self.testDir, self.compressedTestFilename)
+
         numChunks = splitFile(baseName = self.compressedTestFilename,
                               inputFile = fullPath, chunkSize = 6000)
+
         self.assertGreater(numChunks, 0, 'Chunk number is greater than zero.')
+
+        for i in range(numChunks):
+            self.fileChunks.append('%s.%s' % (fullPath, i))
 
 
     def tearDown(self):
@@ -246,7 +258,21 @@ class MSGDBExporterTester(unittest.TestCase):
             except OSError as detail:
                 self.logger.log(
                     'Exception while removing temporary files: %s' % detail,
-                    'SILENT')
+                    'DEBUG')
+            try:
+                os.remove(os.path.join(os.getcwd(), self.testDir,
+                                       self.compressedTestFilename))
+            except OSError as detail:
+                self.logger.log(
+                    'Exception while removing temporary files: %s' % detail,
+                    'DEBUG')
+            try:
+                for f in self.fileChunks:
+                    os.remove(f)
+            except OSError as detail:
+                self.logger.log(
+                    'Exception while removing temporary files: %s' % detail,
+                    'DEBUG')
 
         try:
             # Might need recursive delete here to handle unexpected cases.
@@ -273,7 +299,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
 def splitFile(baseName = '', inputFile = '', chunkSize = 0):
     """
-    Split a file into chunks.
+    Split a file into chunks. Write output files to base path of the input file.
 
     Adapted from https://gist.github.com/mattiasostmar/7883550.
 
@@ -282,6 +308,8 @@ def splitFile(baseName = '', inputFile = '', chunkSize = 0):
     :param chunkSize:
     :returns: number of chunks
     """
+
+    basePath = os.path.dirname(inputFile)
 
     f = open(inputFile, 'rb')
     data = f.read()
@@ -299,7 +327,8 @@ def splitFile(baseName = '', inputFile = '', chunkSize = 0):
 
     fCnt = 0
     for i in range(0, bytes + 1, chunkSize):
-        fn1 = "%s.%s" % (baseName, fCnt)
+        fn1 = "%s/%s.%s" % (basePath, baseName, fCnt)
+        print "writing to %s" % fn1
         chunkNames.append(fn1)
 
         try:
