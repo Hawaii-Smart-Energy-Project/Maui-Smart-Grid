@@ -66,7 +66,8 @@ class MSGFileUtil(object):
         """
         Gzip uncompress a file given by fullPath.
 
-        :param fullPath: Full path of the file to be uncompressed.
+        :param srcPath: Full path of the file to be uncompressed.
+        :param destPath: Full path of file to be written to.
         """
 
         self.logger.log('Writing to %s' % destPath, 'DEBUG')
@@ -79,3 +80,24 @@ class MSGFileUtil(object):
             self.logger.log("Exception while writing uncompressed file.")
         gzipFile.close()
         uncompressedFile.close()
+
+
+    def gzipCompressFile(self, fullPath):
+        """
+        Perform gzip compression on a file at fullPath.
+
+        @todo Generalize this method.
+
+        :param fullPath: Full path of the file to be compressed. The full
+        path is mislabeled here and refers to the full path minus the
+        extension of the data to be compressed.
+        """
+
+        try:
+            f_in = open('%s' % (fullPath), 'rb')
+            f_out = gzip.open('%s.gz' % (fullPath), 'wb')
+            f_out.writelines(f_in)
+            f_out.close()
+            f_in.close()
+        except IOError as detail:
+            self.logger.log('Exception while gzipping: %s' % detail, 'ERROR')

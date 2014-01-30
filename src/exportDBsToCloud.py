@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
     startTime = time.time()
     exporter.exportDB(
-        [exporter.configer.configOptionValue('Export', 'dbs_to_export')],
+        databases = [exporter.configer.configOptionValue('Export', 'dbs_to_export')],
         toCloud = True, testing = commandLineArgs.testing)
     wallTime = time.time() - startTime
     wallTimeMin = int(wallTime / 60.0)
