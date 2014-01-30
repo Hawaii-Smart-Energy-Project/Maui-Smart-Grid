@@ -119,6 +119,7 @@ sub mapCSVColumnsToDatabaseColumns {
     $colAssoc{"Large AC [kW]"} = "large_ac_kw";
     $colAssoc{"Large AC.Usage [kW]"}
         = "large_ac_usage_kw";     # Likely duplicate.
+    $colAssoc{"Load Control [kW]"}        = "dhw_load_control";
     $colAssoc{"Oven [kW]"}                = "oven_kw";
     $colAssoc{"Oven and Microwave [kW]"}  = "oven_and_microwave_kw";
     $colAssoc{"Oven and Microwave+ [kW]"} = "oven_and_microwave_plus_kw";
@@ -355,7 +356,9 @@ sub verifyData {
     if ( $lineCnt > 0 ) {
         return 1;
     }
-    return 1;   # Empty files are accepted because they don't kill the insertion process.
+    return 1;            # Empty files are accepted because they don't kill
+                         # the insertion process.
 }
 
 1;
+
