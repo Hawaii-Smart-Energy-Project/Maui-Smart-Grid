@@ -213,7 +213,7 @@ class MSGDBExporter(object):
                                     'DEBUG')
                     filesToUpload = self.fileUtil.splitLargeFile(
                         fullPath = compressedFullPath, chunkSize = chunkSize,
-                        numChunks = 4)
+                        numChunks = self.numberOfChunksToUse(fullPath))
                     if not filesToUpload:
                         raise (Exception, 'Exception during file splitting.')
                     self.logger.log('to upload: %s' % filesToUpload, 'debug')
@@ -242,6 +242,12 @@ class MSGDBExporter(object):
             self.configer.configOptionValue('Export', 'days_to_keep'))))
 
         return noErrors
+
+
+    def numberOfChunksToUse(self, fullPath):
+        fsize = os.path.getsize(fullPath)
+        self.logger.log('fullpath: %s, fsize: %s' % (fullPath, fsize))
+        return 4
 
 
     def uploadDBToCloudStorage(self, fullPath = '', testing = False):
