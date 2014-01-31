@@ -128,7 +128,7 @@ class MSGFileUtil(object):
 
         # Ensure splitting doesn't happen if it's not needed.
         if bytes <= chunkSize:
-            return fullPath
+            return [fullPath]
 
         # Calculate the number of chunks to be created.
         # numChunks = bytes / chunkSize
