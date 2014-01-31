@@ -11,7 +11,6 @@ from msg_logger import MSGLogger
 from msg_time_util import MSGTimeUtil
 import subprocess
 from msg_configer import MSGConfiger
-# import gzip
 import os
 import httplib2
 from apiclient.discovery import build
@@ -86,6 +85,7 @@ class MSGDBExporter(object):
 
         self._driveService = None
         self._cloudFiles = None
+        self.filesToUpload = []
 
 
     def verifyExportChecksum(self, testing = False):
@@ -105,7 +105,7 @@ class MSGDBExporter(object):
 
 
     def exportDB(self, databases = None, toCloud = False, localExport = True,
-                 testing = False):
+                 testing = False, chunkSize = 0):
         """
         Export a set of DBs to local storage.
 
@@ -117,7 +117,8 @@ class MSGDBExporter(object):
         :param toCloud: If set to True, then the export will also be copied to
         cloud storage.
         :param localExport: When set to True, the DB is exported locally.
-        :param testing: Flag for testing mode. (NOT USED)
+        :param testing: Flag for testing mode. (@DEPRECATED)
+        :param chunkSize: size in bytes of chunk size used for splitting.
         :returns: True if no errors have occurred, False otherwise.
         """
 
@@ -167,17 +168,16 @@ class MSGDBExporter(object):
             self.logger.log('fullpath: %s' % fullPath, 'DEBUG')
 
             self.fileUtil.gzipCompressFile(fullPath)
+            compressedFullPath = '%s%s' % (fullPath, '.gz')
 
             # Verify the compressed file by uncompressing it and verifying its
             # checksum against the original checksum.
-
-            # @todo Data paths should be changed to a non-testing path.
-            self.logger.log('reading: %s' % fullPath + '.gz', 'DEBUG')
+            self.logger.log('reading: %s' % compressedFullPath, 'DEBUG')
             self.logger.log('writing: %s' % os.path.join(
                 self.configer.configOptionValue('Testing',
                                                 'export_test_data_path'),
                 os.path.splitext(os.path.basename(fullPath))[0]), 'DEBUG')
-            self.fileUtil.gzipUncompressFile(fullPath + '.gz', os.path.join(
+            self.fileUtil.gzipUncompressFile(compressedFullPath, os.path.join(
                 self.configer.configOptionValue('Testing',
                                                 'export_test_data_path'),
                 fullPath))
@@ -195,8 +195,23 @@ class MSGDBExporter(object):
                 noErrors = False
 
             if toCloud:
-                fileID = self.uploadDBToCloudStorage('%s.gz' % fullPath,
-                                                     testing = testing)
+                if chunkSize != 0:
+                    self.logger.log('Splitting %s' % compressedFullPath, 'DEBUG')
+                    filesToUpload = self.fileUtil.splitFile(
+                        fullPath = compressedFullPath, chunkSize = chunkSize)
+                    if not filesToUpload:
+                        raise (Exception, 'Exception during file splitting.')
+                    self.logger.log('to upload: %s' % filesToUpload, 'debug')
+                else:
+                    filesToUpload = [compressedFullPath]
+
+                # Upload the files to the cloud.
+
+                self.logger.log('files to upload: %s' % filesToUpload, 'debug')
+                for f in filesToUpload:
+                    self.logger.log('Uploading %s.' % f, 'info')
+                    fileID = self.uploadDBToCloudStorage('%s' % f,
+                                                         testing = testing)
 
             # Remove the uncompressed file.
             try:

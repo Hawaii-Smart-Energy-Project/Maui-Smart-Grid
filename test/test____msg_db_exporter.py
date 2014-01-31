@@ -143,8 +143,8 @@ class MSGDBExporterTester(unittest.TestCase):
                 email = email).execute()
             print id_resp
 
-        except errors.HttpError, error:
-            print 'An error occured: %s' % error
+        except errors.HttpError as detail:
+            print 'Exception while getting ID for email: %s' % detail
 
         new_permission = {'value': email, 'type': 'user', 'role': 'reader'}
         try:
@@ -155,7 +155,7 @@ class MSGDBExporterTester(unittest.TestCase):
             # The permission dict is being output to stdout here.
             resp = service.permissions().insert(fileId = fileIDToAddTo,
                                                 body = new_permission).execute()
-        except (errors.HttpError, error) as detail:
+        except errors.HttpError as detail:
             self.logger.log(
                 'Exception while adding reader permissions: %s' % detail,
                 'error')
@@ -214,7 +214,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.logger.log('Testing exportDB')
         dbs = ['test_meco']
         success = self.exporter.exportDB(databases = dbs, toCloud = True,
-                                         localExport = True)
+                                         localExport = True, chunkSize = 14000)
         self.logger.log('Success: %s' % success)
         self.assertTrue(success, "Export was successful.")
 
@@ -299,7 +299,7 @@ if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
-        selected_tests = ['testSplitArchive']
+        selected_tests = ['testSplitArchive', 'testExportDB']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDBExporterTester(t))

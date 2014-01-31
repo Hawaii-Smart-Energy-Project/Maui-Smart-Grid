@@ -112,12 +112,13 @@ class MSGFileUtil(object):
 
         :param fullPath:
         :param chunkSize:
-        :returns: a list of file chunks in full path form
+        :returns: A list of file chunks in full path form.
         """
 
         fChunks = []
         basePath = os.path.dirname(fullPath)
         baseName = os.path.basename(fullPath)
+        self.logger.log('basename: %s' % baseName)
 
         f = open(fullPath, 'rb')
         data = f.read()
@@ -127,19 +128,19 @@ class MSGFileUtil(object):
 
         # Ensure splitting doesn't happen if it's not needed.
         if bytes <= chunkSize:
-            return 0
+            return fullPath
 
         # Calculate the number of chunks to be created.
-        numChunks = bytes / chunkSize
-        if (bytes % chunkSize):
-            numChunks += 1
+        # numChunks = bytes / chunkSize
+        # if (bytes % chunkSize):
+        #     numChunks += 1
 
         chunkNames = []
 
         fCnt = 0
         for i in range(0, bytes + 1, chunkSize):
             fn1 = "%s/%s.%s" % (basePath, baseName, fCnt)
-            print "writing to %s" % fn1
+            self.logger.log("Splitter writing to %s" % fn1, 'INFO')
             fChunks.append(fn1)
             chunkNames.append(fn1)
 
