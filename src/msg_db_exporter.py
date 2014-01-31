@@ -196,7 +196,8 @@ class MSGDBExporter(object):
 
             if toCloud:
                 if chunkSize != 0:
-                    self.logger.log('Splitting %s' % compressedFullPath, 'DEBUG')
+                    self.logger.log('Splitting %s' % compressedFullPath,
+                                    'DEBUG')
                     filesToUpload = self.fileUtil.splitFile(
                         fullPath = compressedFullPath, chunkSize = chunkSize)
                     if not filesToUpload:
@@ -210,8 +211,7 @@ class MSGDBExporter(object):
                 self.logger.log('files to upload: %s' % filesToUpload, 'debug')
                 for f in filesToUpload:
                     self.logger.log('Uploading %s.' % f, 'info')
-                    fileID = self.uploadDBToCloudStorage('%s' % f,
-                                                         testing = testing)
+                    fileID = self.uploadDBToCloudStorage(f, testing = testing)
 
             # Remove the uncompressed file.
             try:
