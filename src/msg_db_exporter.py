@@ -105,7 +105,7 @@ class MSGDBExporter(object):
 
 
     def exportDB(self, databases = None, toCloud = False, localExport = True,
-                 testing = False, chunkSize = 0):
+                 testing = False, chunkSize = 0, numChunks = 0):
         """
         Export a set of DBs to local storage.
 
@@ -127,7 +127,7 @@ class MSGDBExporter(object):
         host = self.configer.configOptionValue('Database', 'db_host')
 
         for db in databases:
-            self.logger.log('Exporting %s.' % db, 'info')
+            self.logger.log('Exporting %s using pg_dump.' % db, 'info')
             conciseNow = self.timeUtil.conciseNow()
 
             dumpName = "%s_%s" % (conciseNow, db)
@@ -177,29 +177,43 @@ class MSGDBExporter(object):
                 self.configer.configOptionValue('Testing',
                                                 'export_test_data_path'),
                 os.path.splitext(os.path.basename(fullPath))[0]), 'DEBUG')
-            self.fileUtil.gzipUncompressFile(compressedFullPath, os.path.join(
-                self.configer.configOptionValue('Testing',
-                                                'export_test_data_path'),
-                fullPath))
+
+            # Gzip uncompress and verify by checksum is disabled until a more
+            # efficient, non-memory-based, uncompress is implemented.
+
+            GZIP_UNCOMPRESS_FILE = False
+            if GZIP_UNCOMPRESS_FILE:
+                self.fileUtil.gzipUncompressFile(compressedFullPath,
+                                                 os.path.join(
+                                                     self.configer
+                                                     .configOptionValue(
+                                                         'Testing',
+                                                         'export_test_data_path'),
+                                                     fullPath))
 
             time.sleep(1)
-            md5sum2 = self.fileUtil.md5Checksum(fullPath)
 
-            self.logger.log("mtime: %s, md5sum2: %s" % (
-                time.ctime(os.path.getmtime(fullPath)), md5sum2), 'INFO')
+            VERIFY_BY_CHECKSUM = False
+            if VERIFY_BY_CHECKSUM:
+                md5sum2 = self.fileUtil.md5Checksum(fullPath)
 
-            if md5sum1 == md5sum2:
-                self.logger.log(
-                    'Compressed file has been validated by checksum.', 'INFO')
-            else:
-                noErrors = False
+                self.logger.log("mtime: %s, md5sum2: %s" % (
+                    time.ctime(os.path.getmtime(fullPath)), md5sum2), 'INFO')
+
+                if md5sum1 == md5sum2:
+                    self.logger.log(
+                        'Compressed file has been validated by checksum.',
+                        'INFO')
+                else:
+                    noErrors = False
 
             if toCloud:
-                if chunkSize != 0:
+                if numChunks != 0:
                     self.logger.log('Splitting %s' % compressedFullPath,
                                     'DEBUG')
-                    filesToUpload = self.fileUtil.splitFile(
-                        fullPath = compressedFullPath, chunkSize = chunkSize)
+                    filesToUpload = self.fileUtil.splitLargeFile(
+                        fullPath = compressedFullPath, chunkSize = chunkSize,
+                        numChunks = 4)
                     if not filesToUpload:
                         raise (Exception, 'Exception during file splitting.')
                     self.logger.log('to upload: %s' % filesToUpload, 'debug')
