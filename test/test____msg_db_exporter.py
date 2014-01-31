@@ -214,7 +214,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.logger.log('Testing exportDB')
         dbs = ['test_meco']
         success = self.exporter.exportDB(databases = dbs, toCloud = True,
-                                         localExport = True, chunkSize = 14000)
+                                         localExport = True, numChunks = 4)
         self.logger.log('Success: %s' % success)
         self.assertTrue(success, "Export was successful.")
 
@@ -232,8 +232,8 @@ class MSGDBExporterTester(unittest.TestCase):
         fullPath = '%s/%s' % (
             self.testDir, self.compressedTestFilename)
 
-        self.fileChunks = self.fileUtil.splitFile(fullPath = fullPath,
-                                                  chunkSize = 6000)
+        self.fileChunks = self.fileUtil.splitLargeFile(fullPath = fullPath,
+                                                       numChunks = 3)
 
         self.assertGreater(len(self.fileChunks), 0,
                            'Chunk number is greater than zero.')
@@ -300,6 +300,7 @@ if __name__ == '__main__':
 
     if RUN_SELECTED_TESTS:
         selected_tests = ['testSplitArchive', 'testExportDB']
+        # selected_tests = ['testSplitArchive']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDBExporterTester(t))
