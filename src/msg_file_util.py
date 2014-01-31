@@ -12,6 +12,7 @@ import hashlib
 from functools import partial
 import gzip
 import os
+import fileinput
 
 
 class MSGFileUtil(object):
@@ -66,11 +67,14 @@ class MSGFileUtil(object):
         """
         Gzip uncompress a file given by fullPath.
 
+        @todo Need to deal with large file sizes. Stop reading into memory.
+
         :param srcPath: Full path of the file to be uncompressed.
         :param destPath: Full path of file to be written to.
         """
 
-        self.logger.log('Writing to %s' % destPath, 'DEBUG')
+        self.logger.log(
+            'Uncompressing gzip source %s to %s' % (srcPath, destPath), 'DEBUG')
         gzipFile = gzip.open(srcPath, "rb")
         uncompressedFile = open(destPath, "wb")
         decoded = gzipFile.read()
@@ -93,6 +97,7 @@ class MSGFileUtil(object):
         extension of the data to be compressed.
         """
 
+        self.logger.log('Gzip compressing %s.' % fullPath)
         try:
             f_in = open('%s' % (fullPath), 'rb')
             f_out = gzip.open('%s.gz' % (fullPath), 'wb')
@@ -130,11 +135,6 @@ class MSGFileUtil(object):
         if bytes <= chunkSize:
             return [fullPath]
 
-        # Calculate the number of chunks to be created.
-        # numChunks = bytes / chunkSize
-        # if (bytes % chunkSize):
-        #     numChunks += 1
-
         chunkNames = []
 
         fCnt = 0
@@ -152,5 +152,44 @@ class MSGFileUtil(object):
                 print "Exception during writing split file: %s" % detail
 
             fCnt += 1
+
+        return fChunks
+
+    def splitLargeFile(self, fullPath = '', numChunks = 0, chunkSize = 0):
+        """
+        Split a large file into chunks.
+
+        :param fullPath:
+        :param numChunks: number of files to be split into.
+        :param chunkSize: @DEPRECATED
+        :return: A list of file chunks in full path form.
+        """
+
+        fChunks = []
+        basePath = os.path.dirname(fullPath)
+        baseName = os.path.basename(fullPath)
+        self.logger.log('basename: %s' % baseName)
+
+        fp = open(fullPath, 'rb')
+        fsize = os.path.getsize(fullPath)
+        chunkSize = int(float(fsize) / float(numChunks))
+        totalBytes = 0
+
+        self.logger.log('chunk size: %s' % chunkSize)
+
+        for x in range(numChunks):
+
+            if x == numChunks - 1:
+                chunkSize = fsize - totalBytes
+
+            data = fp.read(chunkSize)
+            totalBytes += len(data)
+            fout = open("%s/%s.%s" % (basePath, baseName, x), "wb")
+            self.logger.log('Writing %s/%s.%s' % (basePath, baseName, x),
+                            'debug')
+            fChunks.append("%s/%s.%s" % (basePath, baseName, x))
+
+            fout.write(data)
+            fout.close()
 
         return fChunks
