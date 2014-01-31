@@ -53,8 +53,7 @@ if __name__ == '__main__':
     startTime = time.time()
     exporter.exportDB(databases = exporter.configer.configOptionValue('Export',
                                                                       'dbs_to_export').split(
-        ','), toCloud = True, testing = commandLineArgs.testing,
-                      chunkSize = 300000000)
+        ','), toCloud = True, testing = commandLineArgs.testing, numChunks = 4)
     wallTime = time.time() - startTime
     wallTimeMin = int(wallTime / 60.0)
     wallTimeSec = (wallTime - wallTimeMin * 60.0)
