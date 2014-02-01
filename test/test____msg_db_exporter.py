@@ -160,7 +160,6 @@ class MSGDBExporterTester(unittest.TestCase):
                 'Exception while adding reader permissions: %s' % detail,
                 'error')
 
-
     def testCreateCompressedArchived(self):
         """
         * Copy test data to a temp directory.
@@ -238,6 +237,13 @@ class MSGDBExporterTester(unittest.TestCase):
         self.assertGreater(len(self.fileChunks), 0,
                            'Chunk number is greater than zero.')
 
+    def testGetFileSize(self):
+        fullPath = '%s/%s' % (
+            self.exportTestDataPath, self.compressedTestFilename)
+        fSize = self.fileUtil.fileSize(fullPath)
+        self.logger.log('size: %s' % fSize)
+        self.assertEqual(fSize, 12279, 'File size is correct.')
+
 
     def tearDown(self):
         """
@@ -296,11 +302,11 @@ class MSGDBExporterTester(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    RUN_SELECTED_TESTS = True
+    RUN_SELECTED_TESTS = False
 
     if RUN_SELECTED_TESTS:
-        selected_tests = ['testSplitArchive', 'testExportDB']
-        # selected_tests = ['testSplitArchive']
+        selected_tests = ['testGetFileSize']
+
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDBExporterTester(t))

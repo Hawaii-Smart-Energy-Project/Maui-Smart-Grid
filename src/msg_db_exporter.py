@@ -247,7 +247,9 @@ class MSGDBExporter(object):
     def numberOfChunksToUse(self, fullPath):
         fsize = os.path.getsize(fullPath)
         self.logger.log('fullpath: %s, fsize: %s' % (fullPath, fsize))
-        return 4
+        if (fsize >= 300000000):
+            return 4
+        return 1
 
 
     def uploadDBToCloudStorage(self, fullPath = '', testing = False):

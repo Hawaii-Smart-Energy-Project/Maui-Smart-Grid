@@ -12,7 +12,6 @@ import hashlib
 from functools import partial
 import gzip
 import os
-import fileinput
 
 
 class MSGFileUtil(object):
@@ -193,3 +192,14 @@ class MSGFileUtil(object):
             fout.close()
 
         return fChunks
+
+
+    def fileSize(self, fullPath = ''):
+        """
+        Get the size in bytes for the file at fullPath.
+
+        :param fullPath:
+        :return: size in bytes
+        """
+
+        return os.path.getsize(fullPath)
