@@ -154,6 +154,7 @@ class MSGFileUtil(object):
 
         return fChunks
 
+
     def splitLargeFile(self, fullPath = '', numChunks = 0, chunkSize = 0):
         """
         Split a large file into chunks.
@@ -175,6 +176,9 @@ class MSGFileUtil(object):
         totalBytes = 0
 
         self.logger.log('chunk size: %s' % chunkSize)
+
+        if numChunks == 0 or numChunks == 1:
+            return [fullPath]
 
         for x in range(numChunks):
 
