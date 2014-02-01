@@ -5,7 +5,7 @@
 MSG Install Script
 
 This script is useful for updating an existing MSG software installation from an
-active development code base.
+active development code base (the most recent source code base).
 
 This is an interface to the install process that automates the following
 operations.
@@ -14,9 +14,6 @@ operations.
 2. Extract the distribution archive.
 2. Install the distribution from extracted archive.
 
-This is useful to automatically maintain an existing installation based on
-the most recent source code base.
-
 Usage:
 
     python install-msg.py --sourcePath ${ROOT_PATH_TO_SOURCE}
@@ -24,11 +21,14 @@ Usage:
 
 The distribution archive is placed in ${ROOT_PATH_TO_SOURCE}/dist.
 
+Important Note:
+*****************************************************************************
 The software is installed to path given by the base path to a directory named
 after the software including its version number. For example, if the user
 install path is  given as ~/software the software will be installed to
 ~/software/Maui-Smart-Grid-1.x.x where 1.x.x represents the appropriate
 version number.
+*****************************************************************************
 
 The external dependencies, documented at
 

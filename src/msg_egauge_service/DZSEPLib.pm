@@ -1,16 +1,16 @@
 ###
 # DZ Smart Energy Project Library for Perl.
 #
-# This module provides data processing functions for the
+# This module provides eGauge data processing functions for the
 #
 # Forest City Military Community Energy Audit
 #
-# and the
+# AND the
 #
 # Maui Smart Grid project.
 #
 # @author Daniel Zhang (張道博)
-# @copyright Copyright (c) 2013, University of Hawaii Smart Energy Project
+# @copyright Copyright (c) 2014, University of Hawaii Smart Energy Project
 # @license https://raw.github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD-LICENSE.txt
 ##
 
@@ -91,7 +91,10 @@ sub mapEgaugeNumbersToHouseID {
 ###
 # Map header columns to DB columns for eGauge energy data.
 #
-# Data header columns are matched to $colAssoc->{HEADER_NAME}
+# Data header columns are matched to $colAssoc->{HEADER_NAME}.
+#
+# These column associations are based on the source data provided by individual
+# eGauge devices where the columns may be varied based on the particular device.
 #
 # @return hash reference
 ##
