@@ -12,7 +12,6 @@ from apiclient import errors
 from msg_configer import MSGConfiger
 import os
 import shutil
-import re
 import gzip
 from msg_file_util import MSGFileUtil
 
@@ -32,6 +31,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.exportTestDataPath = self.configer.configOptionValue('Testing',
                                                                   'export_test_data_path')
         self.fileUtil = MSGFileUtil()
+        self.fileChunks = []
 
         # Create a temporary working directory.
         try:
@@ -143,8 +143,8 @@ class MSGDBExporterTester(unittest.TestCase):
                 email = email).execute()
             print id_resp
 
-        except errors.HttpError, error:
-            print 'An error occured: %s' % error
+        except errors.HttpError as detail:
+            print 'Exception while getting ID for email: %s' % detail
 
         new_permission = {'value': email, 'type': 'user', 'role': 'reader'}
         try:
@@ -155,11 +155,10 @@ class MSGDBExporterTester(unittest.TestCase):
             # The permission dict is being output to stdout here.
             resp = service.permissions().insert(fileId = fileIDToAddTo,
                                                 body = new_permission).execute()
-        except (errors.HttpError, error) as detail:
+        except errors.HttpError as detail:
             self.logger.log(
                 'Exception while adding reader permissions: %s' % detail,
                 'error')
-
 
     def testCreateCompressedArchived(self):
         """
@@ -214,9 +213,36 @@ class MSGDBExporterTester(unittest.TestCase):
         self.logger.log('Testing exportDB')
         dbs = ['test_meco']
         success = self.exporter.exportDB(databases = dbs, toCloud = True,
-                                         localExport = True)
+                                         localExport = True, numChunks = 4)
         self.logger.log('Success: %s' % success)
         self.assertTrue(success, "Export was successful.")
+
+
+    def testSplitArchive(self):
+        """
+        Test splitting an archive into chunks.
+        """
+
+        fullPath = '%s/%s' % (
+            self.exportTestDataPath, self.compressedTestFilename)
+        self.logger.log('fullpath: %s' % fullPath)
+        shutil.copyfile(fullPath, '%s/%s' % (
+            self.testDir, self.compressedTestFilename))
+        fullPath = '%s/%s' % (
+            self.testDir, self.compressedTestFilename)
+
+        self.fileChunks = self.fileUtil.splitLargeFile(fullPath = fullPath,
+                                                       numChunks = 3)
+
+        self.assertGreater(len(self.fileChunks), 0,
+                           'Chunk number is greater than zero.')
+
+    def testGetFileSize(self):
+        fullPath = '%s/%s' % (
+            self.exportTestDataPath, self.compressedTestFilename)
+        fSize = self.fileUtil.fileSize(fullPath)
+        self.logger.log('size: %s' % fSize)
+        self.assertEqual(fSize, 12279, 'File size is correct.')
 
 
     def tearDown(self):
@@ -237,6 +263,20 @@ class MSGDBExporterTester(unittest.TestCase):
                 self.logger.log(
                     'Exception while removing temporary files: %s' % detail,
                     'SILENT')
+            try:
+                os.remove(os.path.join(os.getcwd(), self.testDir,
+                                       self.compressedTestFilename))
+            except OSError as detail:
+                self.logger.log(
+                    'Exception while removing temporary files: %s' % detail,
+                    'SILENT')
+            try:
+                for f in self.fileChunks:
+                    os.remove(f)
+            except OSError as detail:
+                self.logger.log(
+                    'Exception while removing temporary files: %s' % detail,
+                    'DEBUG')
 
         try:
             # Might need recursive delete here to handle unexpected cases.
@@ -265,11 +305,8 @@ if __name__ == '__main__':
     RUN_SELECTED_TESTS = False
 
     if RUN_SELECTED_TESTS:
-        selected_tests = ['testExportDB', 'testDeleteOutdatedFiles',
-                          'testCreateCompressedArchived', 'testUploadTestData',
-                          'testGetFileIDsForFilename', 'testListRemoteFiles',
-                          'testGetMD5SumFromCloud',
-                          'testAddingReaderPermissions']
+        selected_tests = ['testGetFileSize']
+
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDBExporterTester(t))

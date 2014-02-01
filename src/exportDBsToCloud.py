@@ -4,7 +4,7 @@
 """
 Usage:
 
-python exportDBsToCloud.py
+    python exportDBsToCloud.py
 
 """
 
@@ -51,9 +51,9 @@ if __name__ == '__main__':
     exporter.logger.shouldRecord = True
 
     startTime = time.time()
-    exporter.exportDB(
-        databases = [exporter.configer.configOptionValue('Export', 'dbs_to_export')],
-        toCloud = True, testing = commandLineArgs.testing)
+    exporter.exportDB(databases = exporter.configer.configOptionValue('Export',
+                                                                      'dbs_to_export').split(
+        ','), toCloud = True, testing = commandLineArgs.testing, numChunks = 4)
     wallTime = time.time() - startTime
     wallTimeMin = int(wallTime / 60.0)
     wallTimeSec = (wallTime - wallTimeMin * 60.0)
