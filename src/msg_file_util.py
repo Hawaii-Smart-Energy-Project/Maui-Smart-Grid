@@ -109,6 +109,8 @@ class MSGFileUtil(object):
 
     def splitFile(self, fullPath = '', chunkSize = 0):
         """
+        @DEPRECATED
+
         Split a file into chunks. Write output files to base path of the
         input file.
 
