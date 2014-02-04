@@ -483,7 +483,8 @@ class MSGDBExporter(object):
             if fileID:
                 try:
                     resp = self.driveService.permissions().insert(
-                        fileId = fileID, body = permission).execute()
+                        fileId = fileID, sendNotificationEmails = False,
+                        body = permission).execute()
                 except errors.HttpError, error:
                     print 'An error occurred: %s' % error
                     success = False
