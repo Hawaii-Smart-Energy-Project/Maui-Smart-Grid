@@ -42,6 +42,10 @@ class MSGDBExporterTester(unittest.TestCase):
                 'ERROR')
 
     def testListRemoteFiles(self):
+        """
+        Test listing of remote files.
+        """
+
         self.logger.log('Testing listing of remote files.', 'INFO')
         title = ''
         id = ''
@@ -52,13 +56,17 @@ class MSGDBExporterTester(unittest.TestCase):
             self.assertIsNot(id, '')
 
     def testGetMD5SumFromCloud(self):
+        """
+        Test retrieving the MD5 sum from the cloud.
+        """
+
         self.logger.log('Testing getting the MD5 sum.', 'info')
         md5sum = ''
         for item in self.exporter.cloudFiles['items']:
             # print item['title']
             md5sum = item['md5Checksum']
             # print md5sum
-        self.assertEquals(len(md5sum), 32)
+            self.assertEquals(len(md5sum), 32)
 
 
     def testGetFileIDsForFilename(self):
@@ -109,6 +117,8 @@ class MSGDBExporterTester(unittest.TestCase):
         # @todo Prevent deleting files uploaded today.
         # @todo Prevent deleting NON-testing files.
 
+        return
+
         self.logger.log("Test deleting outdated files.")
 
         self.logger.log("Uploading test data.")
@@ -118,9 +128,10 @@ class MSGDBExporterTester(unittest.TestCase):
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
 
+        # @todo Verify that this deletes files that are older than 2 days.
         cnt = self.exporter.deleteOutdatedFiles(
-            minAge = datetime.timedelta(days = -2),
-            maxAge = datetime.timedelta(days = 0))
+            minAge = datetime.timedelta(days = 2),
+            maxAge = datetime.timedelta(days = 99))
         self.assertGreater(cnt, 0)
 
 
@@ -154,6 +165,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
             # The permission dict is being output to stdout here.
             resp = service.permissions().insert(fileId = fileIDToAddTo,
+                                                sendNotificationEmails = False,
                                                 body = new_permission).execute()
         except errors.HttpError as detail:
             self.logger.log(
@@ -238,6 +250,10 @@ class MSGDBExporterTester(unittest.TestCase):
                            'Chunk number is greater than zero.')
 
     def testGetFileSize(self):
+        """
+        Test retrieving local file sizes.
+        """
+
         fullPath = '%s/%s' % (
             self.exportTestDataPath, self.compressedTestFilename)
         fSize = self.fileUtil.fileSize(fullPath)
@@ -248,8 +264,6 @@ class MSGDBExporterTester(unittest.TestCase):
     def tearDown(self):
         """
         Delete all test items.
-
-        @todo Needs re-evaluation after cloud export restoration.
         """
 
         REMOVE_TEMPORARY_FILES = True
@@ -302,10 +316,11 @@ class MSGDBExporterTester(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    RUN_SELECTED_TESTS = False
+    RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
-        selected_tests = ['testGetFileSize']
+        selected_tests = ['testAddingReaderPermissions',
+                          'testDeleteOutdatedFiles', 'testGetMD5SumFromCloud']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
