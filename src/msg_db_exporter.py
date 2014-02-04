@@ -248,6 +248,13 @@ class MSGDBExporter(object):
 
 
     def numberOfChunksToUse(self, fullPath):
+        """
+        Return the number of chunks to be used by the file splitter based on
+        the file size of the file at fullPath.
+        :param fullPath
+        :returns: Number of chunks to create.
+        """
+
         fsize = os.path.getsize(fullPath)
         self.logger.log('fullpath: %s, fsize: %s' % (fullPath, fsize))
         if (fsize >= 300000000):
@@ -332,19 +339,6 @@ class MSGDBExporter(object):
             aboutData['quotaBytesUsedInTrash'])
 
 
-    def uploadWasSuccessful(self, file):
-        """
-        @DEPRECATED
-
-        Determine upload success.
-
-        This is not used.
-        """
-
-        success = False
-        return success
-
-
     def deleteFile(self, fileID = ''):
         """
         Delete the file with ID fileID.
@@ -400,6 +394,13 @@ class MSGDBExporter(object):
 
         pass
 
+
+    def listOfDownloadableFiles(self):
+        """
+        Create a list of downloadable files.
+        """
+
+        pass
 
     def verifyMD5Sum(self, localFilePath, remoteFileID):
         """
@@ -475,6 +476,8 @@ class MSGDBExporter(object):
         """
         Add reader permission to an export file for the given list of email
         addresses.
+
+        Email notification is suppressed by default.
 
         :param fileID: Cloud file ID to be processed.
         :param emailAddressList: A list of email addresses.
