@@ -226,6 +226,9 @@ class MSGDBExporter(object):
                 for f in filesToUpload:
                     self.logger.log('Uploading %s.' % f, 'info')
                     fileID = self.uploadDBToCloudStorage(f, testing = testing)
+                    self.addReaders(fileID,
+                                    self.configer.configOptionValue().split(
+                                        ','))
 
             # Remove the uncompressed file.
             try:
@@ -349,7 +352,7 @@ class MSGDBExporter(object):
         :param fileID: Googe API file ID.
         """
 
-        self.logger.log('Deleting File ID: %s' % fileID, 'debug')
+        self.logger.log('Deleting file with file ID: %s' % fileID, 'debug')
 
         try:
             self.driveService.files().delete(fileId = fileID).execute()
@@ -376,9 +379,12 @@ class MSGDBExporter(object):
         for item in self.cloudFiles['items']:
             t1 = datetime.datetime.strptime(item['createdDate'],
                                             "%Y-%m-%dT%H:%M:%S.%fZ")
+            self.logger.log(
+                't1: %s' % datetime.datetime.strftime(t1, '%Y-%m-%d %H:%M:%S'),
+                'debug')
             t2 = datetime.datetime.now()
             tdelta = t2 - t1
-
+            self.logger.log('tdelta: %s' % tdelta, 'debug')
             if tdelta > minAge and tdelta < maxAge:
                 deleteCnt += 1
                 self.deleteFile(fileID = item['id'])
