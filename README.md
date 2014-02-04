@@ -410,7 +410,7 @@ The final group, after the `---`, is a summary report of the operations performe
 
 ## License ##
 
-Copyright (c) 2013, University of Hawaii Smart Energy Project  
+Copyright (c) 2014, University of Hawaii Smart Energy Project  
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
