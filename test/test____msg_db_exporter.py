@@ -55,6 +55,34 @@ class MSGDBExporterTester(unittest.TestCase):
             self.assertIsNot(title, '')
             self.assertIsNot(id, '')
 
+    def testDownloadURLList(self):
+        """
+        Test obtaining a list of downloadble URLs.
+        """
+
+        self.logger.log('Testing listing of downloadable files.', 'INFO')
+
+        title = ''
+        id = ''
+        url = ''
+        for item in self.exporter.cloudFiles['items']:
+            title = item['title']
+            url = item['webContentLink']
+            id = item['id']
+            self.logger.log('title: %s, link: %s, id: %s' % (title, url, id))
+            self.assertIsNot(title, '')
+            self.assertIsNot(url, '')
+            self.assertIsNot(id, '')
+
+
+    def testListOfDownloadableFiles(self):
+        for row in self.exporter.listOfDownloadableFiles():
+            print row
+            self.assertIsNotNone(row['id'])
+            self.assertIsNotNone(row['title'])
+            self.assertIsNotNone(row['webContentLink'])
+
+
     def testGetMD5SumFromCloud(self):
         """
         Test retrieving the MD5 sum from the cloud.
@@ -319,8 +347,9 @@ if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
-        selected_tests = ['testAddingReaderPermissions',
-                          'testDeleteOutdatedFiles', 'testGetMD5SumFromCloud']
+        # selected_tests = ['testAddingReaderPermissions',
+        #                   'testDeleteOutdatedFiles', 'testGetMD5SumFromCloud']
+        selected_tests = ['testDownloadURLList','testListOfDownloadableFiles']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:

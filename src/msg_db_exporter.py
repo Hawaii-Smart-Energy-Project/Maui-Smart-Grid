@@ -407,6 +407,8 @@ class MSGDBExporter(object):
         for i in self.cloudFiles['items']:
             item['title'] = i['title']
             item['webContentLink'] = i['webContentLink']
+            item['id'] = i['id']
+            files.append(item)
         return files
 
 
