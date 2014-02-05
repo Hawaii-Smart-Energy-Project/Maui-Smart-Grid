@@ -257,8 +257,10 @@ class MSGDBExporter(object):
 
         fsize = os.path.getsize(fullPath)
         self.logger.log('fullpath: %s, fsize: %s' % (fullPath, fsize))
-        if (fsize >= 300000000):
-            return 4
+        if (fsize >= self.configer.configOptionValue('Export',
+                                                     'max_bytes_before_split')):
+            return self.configer.configOptionValue('Export',
+                                                   'num_split_sections')
         return 1
 
 
@@ -400,7 +402,13 @@ class MSGDBExporter(object):
         Create a list of downloadable files.
         """
 
-        pass
+        files = []
+        item = dict()
+        for i in self.cloudFiles['items']:
+            item['title'] = i['title']
+            item['webContentLink'] = i['webContentLink']
+        return files
+
 
     def verifyMD5Sum(self, localFilePath, remoteFileID):
         """
