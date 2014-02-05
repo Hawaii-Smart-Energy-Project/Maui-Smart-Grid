@@ -11,6 +11,7 @@ import ConfigParser
 import os
 import stat
 import sys
+from msg_logger import MSGLogger
 
 
 class MSGConfiger(object):
@@ -25,6 +26,7 @@ class MSGConfiger(object):
         """
 
         self._config = ConfigParser.ConfigParser()
+        self.logger = MSGLogger(__name__, 'INFO')
 
         # Define tables that will have data inserted. Data will only be inserted
         # to tables that are defined here.
@@ -39,14 +41,16 @@ class MSGConfiger(object):
 
         if self.isMoreThanOwnerReadableAndWritable(
                 os.path.expanduser(configFilePath)):
-            print "Configuration file permissions are too permissive. " \
-                  "Operation will not continue."
+            self.logger.log(
+                "Configuration file permissions are too permissive. Operation "
+                "will not continue.", 'error')
             sys.exit()
 
         try:
             self._config.read(['site.cfg', os.path.expanduser(configFilePath)])
         except:
-            print "Critical error: Failed to read site _config"
+            self.logger.log("Critical error: The data in %s cannot be "
+                            "accessed successfully." % configFilePath, 'ERROR')
             sys.exit()
 
 
@@ -56,6 +60,7 @@ class MSGConfiger(object):
 
         :param section
         :param option
+        :returns: The value contained in the configuration file.
         """
 
         try:
