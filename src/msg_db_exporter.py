@@ -416,6 +416,23 @@ class MSGDBExporter(object):
         return files
 
 
+    def markdownListOfDownloadableFiles(self):
+        """
+        Generate list of downloadable files in Markdown format.
+
+        :returns: Content in Markdown format.
+        """
+
+        content = ''
+        for i in self.listOfDownloadableFiles():
+            content += "Name: [%s](%s)\n" % (i['title'], i['webContentLink'])
+            content += "Created: %s\n" % i['createdDate']
+            content += "Size: %d B\n" % int(i['fileSize'])
+            content += '\n'
+
+        return content
+
+
     def verifyMD5Sum(self, localFilePath, remoteFileID):
         """
         Verify that the local MD5 sum matches the MD5 sum for the remote file
