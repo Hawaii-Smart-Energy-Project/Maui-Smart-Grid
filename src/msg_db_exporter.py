@@ -403,12 +403,16 @@ class MSGDBExporter(object):
         """
 
         files = []
-        item = dict()
+
         for i in self.cloudFiles['items']:
+            item = dict()
             item['title'] = i['title']
             item['webContentLink'] = i['webContentLink']
             item['id'] = i['id']
+            item['createdDate'] = i['createdDate']
+            item['fileSize'] = i['fileSize']
             files.append(item)
+
         return files
 
 
@@ -436,7 +440,7 @@ class MSGDBExporter(object):
 
         self.logger.log('local md5: %s' % localMD5Sum, 'DEBUG')
 
-        # Get the md5sum for the remote file.
+        # Get the MD5 sum for the remote file.
         for item in self.cloudFiles['items']:
             if (item['id'] == remoteFileID):
                 self.logger.log('remote md5: %s' % item['md5Checksum'], 'DEBUG')
