@@ -522,10 +522,10 @@ def insertData(files, table, cols):
 	for file in files:
 
 		with open(file, 'rb') as csvfile:
-			myReader = csv.reader(csvfile, delimiter = ',')
+			reader = csv.reader(csvfile, delimiter = ',')
 			# Skip the header line.
 			reader.next()
-			for row in myReader:
+			for row in reader:
 				sql = """INSERT INTO "%s" (%s) VALUES (%s)""" % (
 					table, ','.join(cols),
 					','.join("'" + item.strip() + "'" for item in row))
@@ -547,7 +547,7 @@ def insertDataCaller():
 	cols = ['transformer', 'timestamp', 'vlt_a', 'vlt_b', 'vlt_c', 'volt']
 	insertData(['transformerOutput.csv'], 'TransformerData', cols)
 
-	cols = ['circuit', 'timestamp', 'amp_a','amp_b', 'amp_c' , 'mvar', 'mw']
+	cols = ['circuit', 'timestamp', 'amp_a', 'amp_b', 'amp_c', 'mvar', 'mw']
 	insertData(['circuitOutput.csv'], 'CircuitData', cols)
 
 	cols = ['sensor_id', 'timestamp', 'irradiance_w_per_m2']
@@ -558,6 +558,29 @@ def insertDataCaller():
 
 	cols = ['timestamp', 'met_air_temp_degf', 'met_rel_humid_pct']
 	insertData(['weatherOutput.csv'], 'KiheiSCADATemperatureHumidity', cols)
+
+
+def writeNullsCaller(trimmedFileName, badDataFileName, dataColumnNumber, 
+					 timestampColumnNumber):
+	""" 
+	Convenience function to call the writeNullsIntoCsv function and handles
+	the file I/O.
+
+	:param trimmedFileName: Name of the CSV file stripped of blank entries
+	:param badDataFileName: Name of the CSV file containing flat data
+	:param dataColumnNumber: The col. # to be overwritten w/ null value
+	:param timestampColumnNumber: The col. # of the timestamp 
+	"""
+	trimmedFile = open(trimmedFileName, 'r')
+	newFile = open('output.csv', 'w+')
+	badDataFile = open(badDataFileName, 'r')
+	writeNullsIntoCsv(badDataFile, trimmedFile, newFile, 
+		dataColumnNumber, timestampColumnNumber)
+	subprocess.call(['rm', '-f', badDataFile.name])
+	subprocess.call(['mv', newFile.name, trimmedFile.name])
+	trimmedFile.close()
+	newFile.close()
+	badDataFile.close()
 
 #----------------#
 # Body of script #
@@ -612,54 +635,49 @@ for filename in fileNames:
 		reader = csv.reader(trimmedFile)
 		voltageStandardDeviationAlgorithm(reader, 'wailea_voltage_c.csv', 
 			'voltage', columns['transformerVltCCol'], columns['timestampCol'])
+	with open(trimmedFilename, 'r') as trimmedFile:
+		reader = csv.reader(trimmedFile)
+		voltageStandardDeviationAlgorithm(reader, 'circuit_1517_mw.csv', 
+			'voltage', columns['mw1517Col'], columns['timestampCol'])
+	with open(trimmedFilename, 'r') as trimmedFile:
+		reader = csv.reader(trimmedFile)
+		voltageStandardDeviationAlgorithm(reader, 'circuit_1518_mw.csv', 
+			'voltage', columns['mw1518Col'], columns['timestampCol'])
+	with open(trimmedFilename, 'r') as trimmedFile:
+		reader = csv.reader(trimmedFile)
+		voltageStandardDeviationAlgorithm(reader, 'circuit_1517_mvar.csv', 
+			'voltage', columns['mvar1517Col'], columns['timestampCol'])
+	with open(trimmedFilename, 'r') as trimmedFile:
+		reader = csv.reader(trimmedFile)
+		voltageStandardDeviationAlgorithm(reader, 'circuit_1518_mvar.csv', 
+			'voltage', columns['mvar1518Col'], columns['timestampCol'])
 
 	# And finally we overwrite places the CSV file where we had bad data with 
 	# null values. Yes, this could be broken out into a function...
-	trimmedFile = open(trimmedFilename, 'r')
-	newFile = open('output.csv', 'w+')
-	badDataFile = open('wailea_voltage_a.csv', 'r')
-	writeNullsIntoCsv(badDataFile, trimmedFile, newFile, 
-		columns['transformerVltACol'], columns['timestampCol'])
-	subprocess.call(['rm', '-f', badDataFile.name])
-	subprocess.call(['mv', newFile.name, trimmedFile.name])
-	trimmedFile.close()
-	newFile.close()
-	badDataFile.close()
 
-	trimmedFile = open(trimmedFilename, 'r')
-	newFile = open('output.csv', 'w+')
-	badDataFile = open('wailea_voltage_b.csv', 'r')
-	writeNullsIntoCsv(badDataFile, trimmedFile, newFile, \
-					  columns['transformerVltBCol'], columns['timestampCol'])
-	subprocess.call(['rm', '-f', badDataFile.name])
-	subprocess.call(['mv', newFile.name, trimmedFile.name])
-	trimmedFile.close()
-	newFile.close()
-	badDataFile.close()
-
-	trimmedFile = open(trimmedFilename, 'r')
-	newFile = open('output.csv', 'w+')
-	badDataFile = open('wailea_voltage_c.csv', 'r')
-	writeNullsIntoCsv(badDataFile, trimmedFile, newFile, 
-		columns['transformerVltCCol'], columns['timestampCol'])
-	subprocess.call(['rm', '-f', badDataFile.name])
-	subprocess.call(['mv', newFile.name, trimmedFile.name])
-	trimmedFile.close()
-	newFile.close()
-	badDataFile.close()
+	writeNullsCaller(trimmedFileName, 'wailea_voltage_a', 
+					columns['transformerVltACol'], columns['timestampCol'])
+	writeNullsCaller(trimmedFileName, 'wailea_voltage_b', 
+					columns['transformerVltBCol'], columns['timestampCol'])
+	writeNullsCaller(trimmedFileName, 'wailea_voltage_c', 
+					columns['transformerVltCCol'], columns['timestampCol'])
+	writeNullsCaller(trimmedFileName, 'circuit_1517_mw.csv', 
+					columns['mw1518Col'], columns['timestampCol'])
+	writeNullsCaller(trimmedFileName, 'circuit_1518_mw.csv', 
+					columns['mw1518Col'], columns['timestampCol'])
+	writeNullsCaller(trimmedFileName, 'circuit_1517_mvar.csv', 
+					columns['mvar1517Col'], columns['timestampCol'])
+	writeNullsCaller(trimmedFileName, 'circuit_1518_mvar.csv', 
+					columns['mvar1518Col'], columns['timestampCol'])
 
 	trimmedFile = open(trimmedFilename, 'r')
 	reader = csv.reader(trimmedFile)
 	writeSeparateFiles(reader, columns)
 	insertDataCaller()
 
-	newFile.close()
-	trimmedFile.close()
-	badDataFile.close()
 	subprocess.call(['rm', '-f', filename])
 	subprocess.call(['rm', '-f', 'circuitOutput.csv'])
 	subprocess.call(['rm', '-f', 'transformerOutput.csv'])
 	subprocess.call(['rm', '-f', 'tapOutput.csv'])
 	subprocess.call(['rm', '-f', 'irradianceOutput.csv'])
 	subprocess.call(['rm', '-f', 'weatherOutput.csv'])
-
