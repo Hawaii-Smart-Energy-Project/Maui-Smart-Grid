@@ -2,6 +2,11 @@
 # -*- coding: utf-8 -*-
 
 """
+Grab the list of databases to be exported in the MSG configuration file and
+export them to cloud storage.
+
+Files beyond a maximum limit are split according to the number of chunks set in the config file.
+
 Usage:
 
     python exportDBsToCloud.py
