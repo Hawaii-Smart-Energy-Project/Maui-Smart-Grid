@@ -138,7 +138,7 @@ def get_timestamp(row):
 
 def is_leap_year(year):
 	"""
-	Helper methed for get_timestamp.
+	Helper function for get_timestamp.
 
 	:param year: The year.
 	:returns True if the year is a leap year.
