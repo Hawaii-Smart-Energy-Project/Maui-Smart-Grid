@@ -156,6 +156,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
 
+        # @TO BE REVIEWED: Test should not be run until verified.
         # @todo Verify that this deletes files that are older than 2 days.
         cnt = self.exporter.deleteOutdatedFiles(
             minAge = datetime.timedelta(days = 2),
