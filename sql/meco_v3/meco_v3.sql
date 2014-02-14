@@ -393,6 +393,31 @@ CREATE TABLE "AverageFifteenMinKiheiSCADATemperatureHumidity" (
 ALTER TABLE public."AverageFifteenMinKiheiSCADATemperatureHumidity" OWNER TO postgres;
 
 --
+-- Name: BatteryWailea; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "BatteryWailea" (
+    datetime timestamp without time zone,
+    kvar double precision,
+    kw double precision,
+    soc double precision,
+    pwr_ref_volt double precision
+);
+
+
+ALTER TABLE public."BatteryWailea" OWNER TO sepgroup;
+
+--
+-- Name: TABLE "BatteryWailea"; Type: COMMENT; Schema: public; Owner: sepgroup
+--
+
+COMMENT ON TABLE "BatteryWailea" IS 'KVAR – This is the var output of the battery system (- is absorbing vars, + is discharging vars)
+KW – This is the kilowatt output of the battery system (- is absorbing kW, + is discharging kW)
+SOC – This is the state of charge for the battery system (100% is full charged, 0% is fully discharged)
+PWR_REF/VOLT – This is the measurement of voltage (volts) at the protection relay for circuit breaker 1517.';
+
+
+--
 -- Name: CircuitData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -409,6 +434,24 @@ CREATE TABLE "CircuitData" (
 
 
 ALTER TABLE public."CircuitData" OWNER TO sepgroup;
+
+--
+-- Name: CircuitDataCopy; Type: TABLE; Schema: public; Owner: dave; Tablespace: 
+--
+
+CREATE TABLE "CircuitDataCopy" (
+    circuit integer,
+    "timestamp" timestamp without time zone,
+    amp_a integer,
+    amp_b integer,
+    amp_c integer,
+    mvar double precision,
+    mw double precision,
+    upload_date date
+);
+
+
+ALTER TABLE public."CircuitDataCopy" OWNER TO dave;
 
 --
 -- Name: EgaugeEnergyAutoload; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
@@ -448,7 +491,8 @@ CREATE TABLE "EgaugeEnergyAutoload" (
     oven_and_microwave_plus_kw double precision,
     house_kw double precision,
     shop_kw double precision,
-    addition_kw double precision
+    addition_kw double precision,
+    dhw_load_control double precision
 );
 
 
@@ -1642,24 +1686,14 @@ COMMENT ON VIEW dz_summary_pv_readings_in_nonpv_mlh IS 'Summary of service point
 
 
 --
--- Name: eGauge_view_filter_outliers; Type: TABLE; Schema: public; Owner: eileen; Tablespace: 
+-- Name: eGauge_view_with_filters; Type: VIEW; Schema: public; Owner: eileen
 --
 
-CREATE TABLE "eGauge_view_filter_outliers" (
-    egauge_id integer,
-    address character varying,
-    svc_pt_id character varying,
-    datetime timestamp(6) without time zone,
-    use_kw double precision,
-    ac_kw double precision,
-    large_ac_kw double precision,
-    garage_ac_kw double precision,
-    clotheswasher_kw double precision,
-    dryer_kw double precision
-);
+CREATE VIEW "eGauge_view_with_filters" AS
+    SELECT "EgaugeEnergyAutoload".egauge_id AS "eGauge ID", "EgaugeEnergyAutoload".use_kw, "EgaugeEnergyAutoload".ac_kw, "EgaugeEnergyAutoload".clotheswasher_kw, "EgaugeEnergyAutoload".dryer_kw, "EgaugeEnergyAutoload".garage_ac_kw, "EgaugeEnergyAutoload".large_ac_kw, "EgaugeEnergyAutoload".large_ac_usage_kw, "EgaugeEnergyAutoload".oven_kw, "EgaugeEnergyAutoload".range_kw, "EgaugeEnergyAutoload".refrigerator_kw, "EgaugeEnergyAutoload".rest_of_house_usage_kw AS rest_of_house_kw, "EgaugeEnergyAutoload".stove_kw, "EgaugeEnergyAutoload".oven_and_microwave_kw AS oven_and_microwave, "EgaugeEnergyAutoload".shop_kw, "EgaugeEnergyAutoload".addition_kw, "EgaugeEnergyAutoload".dhw_load_control, "EgaugeEnergyAutoload".datetime FROM "EgaugeEnergyAutoload" WHERE (((((("EgaugeEnergyAutoload".use_kw < (20)::double precision) OR ("EgaugeEnergyAutoload".clotheswasher_kw < (7)::double precision)) OR ("EgaugeEnergyAutoload".dryer_kw < (7)::double precision)) OR ("EgaugeEnergyAutoload".ac_kw < (6)::double precision)) OR ("EgaugeEnergyAutoload".large_ac_kw < (6)::double precision)) OR ("EgaugeEnergyAutoload".garage_ac_kw < (6)::double precision));
 
 
-ALTER TABLE public."eGauge_view_filter_outliers" OWNER TO eileen;
+ALTER TABLE public."eGauge_view_with_filters" OWNER TO eileen;
 
 --
 -- Name: egauge_energy_autoload_dates; Type: VIEW; Schema: public; Owner: postgres
@@ -2572,13 +2606,6 @@ CREATE RULE "_RETURN" AS ON SELECT TO dates_irradiance_data DO INSTEAD SELECT "I
 
 
 --
--- Name: _RETURN; Type: RULE; Schema: public; Owner: eileen
---
-
-CREATE RULE "_RETURN" AS ON SELECT TO "eGauge_view_filter_outliers" DO INSTEAD SELECT "EgaugeEnergyAutoload".egauge_id, "EgaugeInfo".address, "EgaugeInfo".svc_pt_id, "EgaugeEnergyAutoload".datetime, "EgaugeEnergyAutoload".use_kw, "EgaugeEnergyAutoload".ac_kw, "EgaugeEnergyAutoload".large_ac_kw, "EgaugeEnergyAutoload".garage_ac_kw, "EgaugeEnergyAutoload".clotheswasher_kw, "EgaugeEnergyAutoload".dryer_kw FROM ("EgaugeEnergyAutoload" JOIN "EgaugeInfo" ON (("EgaugeEnergyAutoload".egauge_id = "EgaugeInfo".egauge_id))) WHERE (((((("EgaugeEnergyAutoload".use_kw < (20)::double precision) OR ("EgaugeEnergyAutoload".clotheswasher_kw < (7)::double precision)) OR ("EgaugeEnergyAutoload".dryer_kw < (7)::double precision)) OR ("EgaugeEnergyAutoload".ac_kw < (6)::double precision)) OR ("EgaugeEnergyAutoload".large_ac_kw < (6)::double precision)) OR ("EgaugeEnergyAutoload".garage_ac_kw < (6)::double precision)) GROUP BY "EgaugeEnergyAutoload".egauge_id, "EgaugeInfo".address, "EgaugeInfo".svc_pt_id, "EgaugeEnergyAutoload".datetime;
-
-
---
 -- Name: EventData_meter_data_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: sepgroup
 --
 
@@ -2851,6 +2878,16 @@ GRANT SELECT ON TABLE "AverageFifteenMinKiheiSCADATemperatureHumidity" TO sepgro
 
 
 --
+-- Name: BatteryWailea; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE "BatteryWailea" FROM PUBLIC;
+REVOKE ALL ON TABLE "BatteryWailea" FROM sepgroup;
+GRANT ALL ON TABLE "BatteryWailea" TO sepgroup;
+GRANT SELECT ON TABLE "BatteryWailea" TO sepgroupreadonly;
+
+
+--
 -- Name: CircuitData; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -2858,6 +2895,17 @@ REVOKE ALL ON TABLE "CircuitData" FROM PUBLIC;
 REVOKE ALL ON TABLE "CircuitData" FROM sepgroup;
 GRANT ALL ON TABLE "CircuitData" TO sepgroup;
 GRANT SELECT ON TABLE "CircuitData" TO sepgroupreadonly;
+
+
+--
+-- Name: CircuitDataCopy; Type: ACL; Schema: public; Owner: dave
+--
+
+REVOKE ALL ON TABLE "CircuitDataCopy" FROM PUBLIC;
+REVOKE ALL ON TABLE "CircuitDataCopy" FROM dave;
+GRANT ALL ON TABLE "CircuitDataCopy" TO dave;
+GRANT ALL ON TABLE "CircuitDataCopy" TO sepgroup;
+GRANT SELECT ON TABLE "CircuitDataCopy" TO sepgroupreadonly;
 
 
 --
@@ -3574,14 +3622,14 @@ GRANT SELECT ON TABLE dz_summary_pv_readings_in_nonpv_mlh TO sepgroupreadonly;
 
 
 --
--- Name: eGauge_view_filter_outliers; Type: ACL; Schema: public; Owner: eileen
+-- Name: eGauge_view_with_filters; Type: ACL; Schema: public; Owner: eileen
 --
 
-REVOKE ALL ON TABLE "eGauge_view_filter_outliers" FROM PUBLIC;
-REVOKE ALL ON TABLE "eGauge_view_filter_outliers" FROM eileen;
-GRANT ALL ON TABLE "eGauge_view_filter_outliers" TO eileen;
-GRANT ALL ON TABLE "eGauge_view_filter_outliers" TO sepgroup;
-GRANT SELECT ON TABLE "eGauge_view_filter_outliers" TO sepgroupreadonly;
+REVOKE ALL ON TABLE "eGauge_view_with_filters" FROM PUBLIC;
+REVOKE ALL ON TABLE "eGauge_view_with_filters" FROM eileen;
+GRANT ALL ON TABLE "eGauge_view_with_filters" TO eileen;
+GRANT ALL ON TABLE "eGauge_view_with_filters" TO sepgroup;
+GRANT SELECT ON TABLE "eGauge_view_with_filters" TO sepgroupreadonly;
 
 
 --
