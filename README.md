@@ -213,6 +213,8 @@ The reference template can be found in `config/sample-dot-msg-data-operations.cf
     google_api_credentials_path=${GOOGLE_CLIENT_CREDENTIALS_PATH}
     days_to_keep=${NUMBER_OF_DAYS_OF_EXPORTS_TO_KEEP}
     read_permission=${EMAIL_ADDRESSES_TO_GRANT_READER_PERMISSION}
+    max_bytes_before_split=${NUM_BYTES}
+    num_split_sections=${NUM_FILES}
 
     [Database]
     db_password=${PASSWORD}
