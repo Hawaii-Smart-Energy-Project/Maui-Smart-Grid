@@ -155,6 +155,8 @@ class MSGDBUtil(object):
 
     def tableColumns(self, cursor, table):
         """
+        Access column names as a tuple with the names being at index 0.
+
         :param: cursor: A DB cursor
         :param: table: Name of table to retrieve columns from.
         :returns: List of tuples with column names in the first position.
@@ -165,3 +167,22 @@ class MSGDBUtil(object):
         self.executeSQL(cursor, sql)
 
         return cursor.fetchall() # Each column is an n-tuple.
+
+    def columns(self, cursor=None, table=None):
+        """
+        Return column names for a given table.
+
+        :param cursor:
+        :param table:
+        :return:
+        """
+
+        if not cursor:
+            raise('Cursor not defined.')
+        if not table:
+            raise('Table not defined.')
+
+        cols = []
+        for col in self.tableColumns(cursor, table):
+            cols.append(col[0])
+        return cols

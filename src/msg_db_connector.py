@@ -22,7 +22,9 @@ class MSGDBConnector(object):
         """
         Constructor.
 
-        :param testing: Boolean indicating if Testing Mode is on.
+        :param testing: Boolean indicating if Testing Mode is on. When
+        testing mode is on, a connection to the testing database will be made
+        instead of the normal database.
         :param logLevel
         """
 
