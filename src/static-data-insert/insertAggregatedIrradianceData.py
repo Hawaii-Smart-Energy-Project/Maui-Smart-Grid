@@ -30,7 +30,8 @@ if __name__ == '__main__':
     files = ['avg-irradiance-15-min-2012-first-half.csv',
              'avg-irradiance-15-min-2012-second-half.csv',
              'avg-irradiance-15-min-2013-first-half.csv',
-             'avg-irradiance-15-min-2013-second-half.csv']
+             'avg-irradiance-15-min-2013-second-half.csv',
+             'avg-irradiance-15-min-2014-first-half.csv']
     table = 'AverageFifteenMinIrradianceData'
     cols = ['sensor_id', 'timestamp', 'irradiance_w_per_m2']
 

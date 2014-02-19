@@ -226,6 +226,9 @@ class MSGDBExporter(object):
                 for f in filesToUpload:
                     self.logger.log('Uploading %s.' % f, 'info')
                     fileID = self.uploadDBToCloudStorage(f, testing = testing)
+                    self.addReaders(fileID,
+                                    self.configer.configOptionValue().split(
+                                        ','))
 
             # Remove the uncompressed file.
             try:
@@ -245,10 +248,19 @@ class MSGDBExporter(object):
 
 
     def numberOfChunksToUse(self, fullPath):
+        """
+        Return the number of chunks to be used by the file splitter based on
+        the file size of the file at fullPath.
+        :param fullPath
+        :returns: Number of chunks to create.
+        """
+
         fsize = os.path.getsize(fullPath)
         self.logger.log('fullpath: %s, fsize: %s' % (fullPath, fsize))
-        if (fsize >= 300000000):
-            return 4
+        if (fsize >= self.configer.configOptionValue('Export',
+                                                     'max_bytes_before_split')):
+            return self.configer.configOptionValue('Export',
+                                                   'num_split_sections')
         return 1
 
 
@@ -329,19 +341,6 @@ class MSGDBExporter(object):
             aboutData['quotaBytesUsedInTrash'])
 
 
-    def uploadWasSuccessful(self, file):
-        """
-        @DEPRECATED
-
-        Determine upload success.
-
-        This is not used.
-        """
-
-        success = False
-        return success
-
-
     def deleteFile(self, fileID = ''):
         """
         Delete the file with ID fileID.
@@ -349,7 +348,7 @@ class MSGDBExporter(object):
         :param fileID: Googe API file ID.
         """
 
-        self.logger.log('Deleting File ID: %s' % fileID, 'debug')
+        self.logger.log('Deleting file with file ID: %s' % fileID, 'debug')
 
         try:
             self.driveService.files().delete(fileId = fileID).execute()
@@ -376,9 +375,12 @@ class MSGDBExporter(object):
         for item in self.cloudFiles['items']:
             t1 = datetime.datetime.strptime(item['createdDate'],
                                             "%Y-%m-%dT%H:%M:%S.%fZ")
+            self.logger.log(
+                't1: %s' % datetime.datetime.strftime(t1, '%Y-%m-%d %H:%M:%S'),
+                'debug')
             t2 = datetime.datetime.now()
             tdelta = t2 - t1
-
+            self.logger.log('tdelta: %s' % tdelta, 'debug')
             if tdelta > minAge and tdelta < maxAge:
                 deleteCnt += 1
                 self.deleteFile(fileID = item['id'])
@@ -393,6 +395,42 @@ class MSGDBExporter(object):
         """
 
         pass
+
+
+    def listOfDownloadableFiles(self):
+        """
+        Create a list of downloadable files.
+        """
+
+        files = []
+
+        for i in self.cloudFiles['items']:
+            item = dict()
+            item['title'] = i['title']
+            item['webContentLink'] = i['webContentLink']
+            item['id'] = i['id']
+            item['createdDate'] = i['createdDate']
+            item['fileSize'] = i['fileSize']
+            files.append(item)
+
+        return files
+
+
+    def markdownListOfDownloadableFiles(self):
+        """
+        Generate list of downloadable files in Markdown format.
+
+        :returns: Content in Markdown format.
+        """
+
+        content = ''
+        for i in self.listOfDownloadableFiles():
+            content += "Name: [%s](%s)\n" % (i['title'], i['webContentLink'])
+            content += "Created: %s\n" % i['createdDate']
+            content += "Size: %d B\n" % int(i['fileSize'])
+            content += '\n'
+
+        return content
 
 
     def verifyMD5Sum(self, localFilePath, remoteFileID):
@@ -419,7 +457,7 @@ class MSGDBExporter(object):
 
         self.logger.log('local md5: %s' % localMD5Sum, 'DEBUG')
 
-        # Get the md5sum for the remote file.
+        # Get the MD5 sum for the remote file.
         for item in self.cloudFiles['items']:
             if (item['id'] == remoteFileID):
                 self.logger.log('remote md5: %s' % item['md5Checksum'], 'DEBUG')
@@ -470,6 +508,8 @@ class MSGDBExporter(object):
         Add reader permission to an export file for the given list of email
         addresses.
 
+        Email notification is suppressed by default.
+
         :param fileID: Cloud file ID to be processed.
         :param emailAddressList: A list of email addresses.
         :returns: True if successful, otherwise False.
@@ -483,7 +523,8 @@ class MSGDBExporter(object):
             if fileID:
                 try:
                     resp = self.driveService.permissions().insert(
-                        fileId = fileID, body = permission).execute()
+                        fileId = fileID, sendNotificationEmails = False,
+                        body = permission).execute()
                 except errors.HttpError, error:
                     print 'An error occurred: %s' % error
                     success = False

@@ -16,7 +16,8 @@ class TestMECOConfig(unittest.TestCase):
         self.configer = MSGConfiger()
 
     def test_init(self):
-        # @todo Improve this test by using direct introspection instead of this roundabout method.
+        # @todo Improve this test by using direct introspection instead of
+        # this roundabout method.
         localConfiger = MSGConfiger()
         self.assertIsInstance(self.configer, type(localConfiger))
 
@@ -25,14 +26,15 @@ class TestMECOConfig(unittest.TestCase):
         Verify the debugging option in the configuration file.
         """
 
-        debugging = self.configer.configOptionValue("Debugging","debug")
+        debugging = self.configer.configOptionValue("Debugging", "debug")
 
         if debugging is False:
             self.assertFalse(debugging, "Debugging/debug is not set to False.")
         elif debugging is True:
             self.assertTrue(debugging, "Debugging/debug is not set to True.")
         else:
-            self.assertTrue(False, "Debugging/debug does not have a valid value.")
+            self.assertTrue(False,
+                            "Debugging/debug does not have a valid value.")
 
 
 if __name__ == '__main__':
