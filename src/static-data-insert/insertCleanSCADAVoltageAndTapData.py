@@ -432,19 +432,13 @@ def writeSeparateFiles(reader, columns):
 
 	# Not all the CSV files had tap or weather data, so we check for it and set
 	# things up if found.
-	try:
-		columns['tapCol']
-	except KeyError:
+	if columns.has_key('tapCol'):
 		tapDataPresent = False
 
-	try:
-		columns['humidityCol']
-	except KeyError:
+	if columns.has_key('humidityCol'):
 		weatherDataPresent = False
 
-	try:
-		columns['batteryVolt']
-	except KeyError:
+	if columns.has_key('batteryVolt'):
 		batteryDataPresent = False
 
 	if tapDataPresent:
@@ -569,7 +563,7 @@ def insertData(files, table, cols, testing = False):
 		conn.commit()
 		cnt = 0
 
-def insertDataCaller():
+def insertDataCaller(columns):
 	"""Calls the insertData function a few times to insert info into the DB."""
 
 	cols = ['transformer', 'timestamp', 'vlt_a', 'vlt_b', 'vlt_c', 'volt']
@@ -584,11 +578,13 @@ def insertDataCaller():
 	cols = ['timestamp', 'tap_setting', 'substation', 'transformer']
 	insertData(['tapOutput.csv'], 'TapData', cols)
 
-	cols = ['timestamp', 'met_air_temp_degf', 'met_rel_humid_pct']
-	insertData(['weatherOutput.csv'], 'KiheiSCADATemperatureHumidity', cols)
+	if columns.has_key('humidityCol'):
+		cols = ['timestamp', 'met_air_temp_degf', 'met_rel_humid_pct']
+		insertData(['weatherOutput.csv'], 'KiheiSCADATemperatureHumidity', cols)
 
-	cols = ['timestamp', 'kvar', 'kw', 'soc', 'pwr_ref_volt']
-	insertData(['batteryOutput.csv'], 'BatteryWailea', cols)
+	if columns.has_key('batterySoc'):
+		cols = ['timestamp', 'kvar', 'kw', 'soc', 'pwr_ref_volt']
+		insertData(['batteryOutput.csv'], 'BatteryWailea', cols)
 
 def writeNullsCaller(trimmedFileName, badDataFileName, dataColumnNumber, 
 					 timestampColumnNumber):
@@ -681,38 +677,26 @@ for filename in fileNames:
 		reader = csv.reader(trimmedFile)
 		voltageStandardDeviationAlgorithm(reader, 'circuit_1518_mvar.csv', 
 			'voltage', columns['mvar1518Col'], columns['timestampCol'])
-		try:
-			columns['batteryKvar']
+		if columns.has_key('batteryKvar'):
 			trimmedFile.seek(0)
 			reader = csv.reader(trimmedFile)
 			voltageStandardDeviationAlgorithm(reader, 'battery_kvar.csv', 
 				'voltage', columns['batteryKvar'], columns['timestampCol'])
-		except KeyError:
-			pass
-		try:
-			columns['batteryKw']
+		if columns.has_key('batteryKw'):
 			trimmedFile.seek(0)
 			reader = csv.reader(trimmedFile)
 			voltageStandardDeviationAlgorithm(reader, 'battery_kw.csv', 
 				'voltage', columns['batteryKw'], columns['timestampCol'])
-		except KeyError:
-			pass
-		try:
-			columns['batterySoc']
+		if columns.has_key('batterySoc'):
 			trimmedFile.seek(0)
 			reader = csv.reader(trimmedFile)
 			voltageStandardDeviationAlgorithm(reader, 'battery_soc.csv', 
 				'voltage', columns['batterySoc'], columns['timestampCol'])
-		except KeyError:
-			pass
-		try:
-			columns['batteryVolt']
+		if columns.has_key('batteryVolt'):
 			trimmedFile.seek(0)
 			reader = csv.reader(trimmedFile)
 			voltageStandardDeviationAlgorithm(reader, 'battery_volt.csv', 
 				'voltage', columns['batteryVolt'], columns['timestampCol'])
-		except KeyError:
-			pass
 
 	# And finally we overwrite places the CSV file where we had bad data with 
 	# null values. Yes, this could be broken out into a function...
@@ -743,7 +727,7 @@ for filename in fileNames:
 	trimmedFile = open(trimmedFileName, 'r')
 	reader = csv.reader(trimmedFile)
 	writeSeparateFiles(reader, columns)
-	insertDataCaller()
+	insertDataCaller(columns)
 
 	subprocess.call(['rm', '-f', filename])
 	subprocess.call(['rm', '-f', '*Output.csv'])
