@@ -166,23 +166,30 @@ class MSGDBUtil(object):
         table_name='%s';""" % table
         self.executeSQL(cursor, sql)
 
-        return cursor.fetchall() # Each column is an n-tuple.
+        return cursor.fetchall()  # Each column is an n-tuple.
 
-    def columns(self, cursor=None, table=None):
+    def columns(self, cursor = None, table = None):
         """
         Return column names for a given table.
 
         :param cursor:
         :param table:
-        :return:
+        :return: List of columns.
         """
 
         if not cursor:
-            raise('Cursor not defined.')
+            raise ('Cursor not defined.')
         if not table:
-            raise('Table not defined.')
+            raise ('Table not defined.')
 
         cols = []
         for col in self.tableColumns(cursor, table):
             cols.append(col[0])
         return cols
+
+    def columnsString(self, cursor = None, table = None):
+        if not cursor:
+            raise ('Cursor not defined.')
+        if not table:
+            raise ('Table not defined.')
+        return ','.join(item for item in self.columns(cursor, table))
