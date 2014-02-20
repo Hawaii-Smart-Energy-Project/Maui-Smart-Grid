@@ -25,59 +25,6 @@ class MSGDataAggregator(object):
     beneficial.
     """
 
-    @property
-    def rawIrradianceCols(self):
-        self._rawIrradianceCols = self.dbUtil.columnsString(self.cursor,
-                                                            self.tables[
-                                                                'irradiance'])
-        return self._rawIrradianceCols
-
-    @property
-    def aggregatedIrradianceCols(self):
-        self._aggregatedIrradianceCols = self.dbUtil.columnsString(self.cursor,
-                                                                   self.tables[
-                                                                       'agg_irradiance'])
-        return self._aggregatedIrradianceCols
-
-    @property
-    def rawWeatherCols(self):
-        self._rawWeatherCols = self.dbUtil.columnsString(self.cursor,
-                                                         self.tables['weather'])
-        return self._rawWeatherCols
-
-    @property
-    def aggregatedWeatherCols(self):
-        self._aggregatedWeatherCols = self.dbUtil.columnsString(self.cursor,
-                                                                self.tables[
-                                                                    'agg_weather'])
-        return self._aggregatedWeatherCols
-
-    @property
-    def rawCircuitCols(self):
-        self._rawCircuitCols = self.dbUtil.columnsString(self.cursor,
-                                                         self.tables['circuit'])
-        return self._rawCircuitCols
-
-    @property
-    def aggregatedCircuitCols(self):
-        self._aggregatedCircuitCols = self.dbUtil.columnsString(self.cursor,
-                                                                self.tables[
-                                                                    'agg_circuit'])
-        return self._aggregatedCircuitCols
-
-    @property
-    def rawEgaugeCols(self):
-        self._rawEgaugeCols = self.dbUtil.columnsString(self.cursor,
-                                                        self.tables['egauge'])
-        return self._rawEgaugeCols
-
-    @property
-    def aggregatedEgaugeCols(self):
-        self._aggregatedEgaugeCols = self.dbUtil.columnsString(self.cursor,
-                                                               self.tables[
-                                                                   'agg_egauge'])
-        return self._aggregatedEgaugeCols
-
     def __init__(self):
         """
         Constructor.
@@ -93,9 +40,18 @@ class MSGDataAggregator(object):
         tableList = ['irradiance', 'agg_irradiance', 'weather', 'agg_weather',
                      'circuit', 'agg_circuit', 'egauge', 'agg_egauge']
         self.tables = {}
+        self.columns = {}
         for t in tableList:
             self.tables[t] = self.configer.configOptionValue(section,
                                                              '%s_table' % t)
+        for t in self.tables.keys():
+            self.logger.log('t:%s' % t, 'DEBUG')
+            try:
+                self.columns[t] = self.dbUtil.columnsString(self.cursor,
+                                                            self.tables[t])
+            except TypeError as error:
+                self.logger.log('Ignoring missing table.')
+
 
     def aggregateIrradianceData(self, startDate = '', endDate = ''):
         """
@@ -130,23 +86,30 @@ class MSGDataAggregator(object):
 
     def __intervalCrossed(self, minute):
         """
+        Determine interval crossing.
+
+        :param minute: The integer value of the minute.
         :returns: True if an interval was crossed, False otherwise.
         """
 
-        if minute >= self.__nextMinuteCrossing and minute <= 60 and self\
-                .__nextMinuteCrossing != 0:
-            self.__nextMinuteCrossing += 15
-            if self.__nextMinuteCrossing >= 60:
-                self.__nextMinuteCrossing = 0
+        intervalSize = 15
+        first = 0
+        last = 60
+        if minute >= self.__nextMinuteCrossing and minute <= last and self\
+                .__nextMinuteCrossing != first:
+            self.__nextMinuteCrossing += intervalSize
+            if self.__nextMinuteCrossing >= last:
+                self.__nextMinuteCrossing = first
             return True
-        elif self.__nextMinuteCrossing == 0 and minute >= 0 and minute <= 15:
-            self.__nextMinuteCrossing = 15
+        elif self.__nextMinuteCrossing == first and minute >= first and \
+                        minute <= intervalSize:
+            self.__nextMinuteCrossing = intervalSize
             return True
         return False
 
-    def __dataAverage(self, sum, cnt, timestamp):
+    def averageIrradianceInterval(self, sum, cnt, timestamp):
         """
-        Return the averaged data along with the timestamp.
+        Perform averaging of an irradiance data interval.
 
         :param sum
         :param cnt
@@ -176,21 +139,57 @@ class MSGDataAggregator(object):
         :returns:
         """
 
+        dataType = 'irradiance'
         sql = """SELECT (%s) FROM
         "%s" WHERE timestamp BETWEEN '%s' AND '%s' ORDER BY
         timestamp, sensor_id""" % (
-            self.rawIrradianceCols, self.tables['irradiance'], startDate,
-            endDate)
-        self.logger.log('sql: %s' % sql)
-        self.dbUtil.executeSQL(self.cursor, sql)
-        rows = self.cursor.fetchall()
-        return rows
+            self.columns[dataType], self.tables[dataType], startDate, endDate)
+        return self.__fetch(sql)
 
     def fetchWeatherData(self, startDate, endDate):
         """
         :returns:
         """
 
+        dataType = 'weather'
         sql = """SELECT %s FROM
         "%s" WHERE timestamp BETWEEN '%s' AND '%s' ORDER BY timestamp""" % (
-            self.rawWeatherCols, self.tables['weather'], startDate, endDate)
+            self.columns[dataType], self.tables[dataType], startDate, endDate)
+        return self.__fetch(sql)
+
+    def fetchCircuitData(self, startDate, endDate):
+        """
+        :returns:
+        """
+
+        dataType = 'circuit'
+        sql = """SELECT (%s) FROM
+        "%s" WHERE timestamp BETWEEN '%s' AND '%s' ORDER BY
+        timestamp""" % (
+            self.columns[dataType], self.tables[dataType], startDate, endDate)
+        return self.__fetch(sql)
+
+    def fetchEgaugeData(self, startDate, endDate):
+        """
+        :returns:
+        """
+
+        dataType = 'egauge'
+        sql = """SELECT (%s) FROM
+        "%s" WHERE datetime BETWEEN '%s' AND '%s' ORDER BY
+        datetime""" % (
+            self.columns[dataType], self.tables[dataType], startDate, endDate)
+        return self.__fetch(sql)
+
+
+    def __fetch(self, sql):
+        """
+
+        :param sql: Command to be executed.
+        :returns: DB result set.
+        """
+
+        self.logger.log('sql: %s' % sql)
+        self.dbUtil.executeSQL(self.cursor, sql)
+        rows = self.cursor.fetchall()
+        return rows

@@ -27,21 +27,44 @@ class MSGDataAggregatorTester(unittest.TestCase):
     def testIrradianceFetch(self):
         """
         """
+        rows = []
         for row in self.aggregator.fetchIrradianceData(startDate = '2014-01-01',
                                                        endDate = '2014-01-05'):
-            print row[0]
+            rows.append(row)
+        self.assertIsNotNone(rows, 'Rows are present.')
 
     def testWeatherFetch(self):
         """
         """
-        pass
+        rows = []
+        for row in self.aggregator.fetchWeatherData(startDate = '2014-01-01',
+                                                    endDate = '2014-01-05'):
+            rows.append(row)
+        self.assertIsNotNone(rows, 'Rows are present.')
+
+    def testCircuitFetch(self):
+        """
+        """
+        rows = []
+        for row in self.aggregator.fetchWeatherData(startDate = '2014-01-01',
+                                                    endDate = '2014-01-05'):
+            rows.append(row)
+        self.assertIsNotNone(rows, 'Rows are present.')
+
+    def testEgaugeFetch(self):
+        rows = []
+
+        for row in self.aggregator.fetchEgaugeData(startDate = '2014-01-01',
+                                               endDate = '2014-01-05'):
+            rows.append(row)
+        self.assertIsNotNone(rows, 'Rows are present.')
 
 
 if __name__ == '__main__':
-    RUN_SELECTED_TESTS = True
+    RUN_SELECTED_TESTS = False
 
     if RUN_SELECTED_TESTS:
-        selected_tests = ['testIrradianceFetch']
+        selected_tests = ['testIrradianceFetch', 'testWeatherFetch']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDataAggregatorTester(t))
