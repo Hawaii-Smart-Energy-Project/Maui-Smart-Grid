@@ -10,16 +10,8 @@ __license__ = 'https://raw.github' \
 from msg_logger import MSGLogger
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
-
-
-IRRADIANCE_TABLE = 'IrradianceData'
-AGG_IRRADIANCE_TABLE = 'AverageFifteenMinIrradianceData'
-WEATHER_TABLE = 'KiheiSCADATemperatureHumidity'
-AGG_WEATHER_TABLE = 'AverageFifteenMinKiheiSCADATemperatureHumidity'
-CIRCUIT_TABLE = 'CircuitData'
-AGG_CIRCUIT_TABLE = ''
-EGAUGE_TABLE = 'EgaugeEnergyAutoload'
-AGG_EGAUGE_TABLE = ''
+from msg_notifier import MSGNotifier
+from msg_configer import MSGConfiger
 
 
 class MSGDataAggregator(object):
@@ -36,60 +28,74 @@ class MSGDataAggregator(object):
     @property
     def rawIrradianceCols(self):
         self._rawIrradianceCols = self.dbUtil.columnsString(self.cursor,
-                                                            IRRADIANCE_TABLE)
+                                                            self.tables[
+                                                                'irradiance'])
         return self._rawIrradianceCols
 
     @property
     def aggregatedIrradianceCols(self):
         self._aggregatedIrradianceCols = self.dbUtil.columnsString(self.cursor,
-                                                                   AGG_IRRADIANCE_TABLE)
+                                                                   self.tables[
+                                                                       'agg_irradiance'])
         return self._aggregatedIrradianceCols
 
     @property
     def rawWeatherCols(self):
         self._rawWeatherCols = self.dbUtil.columnsString(self.cursor,
-                                                         WEATHER_TABLE)
+                                                         self.tables['weather'])
         return self._rawWeatherCols
 
     @property
     def aggregatedWeatherCols(self):
         self._aggregatedWeatherCols = self.dbUtil.columnsString(self.cursor,
-                                                                AGG_WEATHER_TABLE)
+                                                                self.tables[
+                                                                    'agg_weather'])
         return self._aggregatedWeatherCols
 
     @property
     def rawCircuitCols(self):
         self._rawCircuitCols = self.dbUtil.columnsString(self.cursor,
-                                                         CIRCUIT_TABLE)
+                                                         self.tables['circuit'])
         return self._rawCircuitCols
 
     @property
     def aggregatedCircuitCols(self):
         self._aggregatedCircuitCols = self.dbUtil.columnsString(self.cursor,
-                                                                AGG_CIRCUIT_TABLE)
+                                                                self.tables[
+                                                                    'agg_circuit'])
         return self._aggregatedCircuitCols
 
     @property
     def rawEgaugeCols(self):
         self._rawEgaugeCols = self.dbUtil.columnsString(self.cursor,
-                                                        AGG_EGAUGE_TABLE)
+                                                        self.tables['egauge'])
         return self._rawEgaugeCols
 
     @property
     def aggregatedEgaugeCols(self):
         self._aggregatedEgaugeCols = self.dbUtil.columnsString(self.cursor,
-                                                               AGG_EGAUGE_TABLE)
+                                                               self.tables[
+                                                                   'agg_egauge'])
         return self._aggregatedEgaugeCols
 
     def __init__(self):
         """
         Constructor.
         """
+
         self.logger = MSGLogger(__name__, 'DEBUG')
+        self.configer = MSGConfiger()
         self.connector = MSGDBConnector()
         self.cursor = self.connector.conn.cursor()
         self.dbUtil = MSGDBUtil()
         self.__nextMinuteCrossing = 0
+        section = 'Aggregation'
+        tableList = ['irradiance', 'agg_irradiance', 'weather', 'agg_weather',
+                     'circuit', 'agg_circuit', 'egauge', 'agg_egauge']
+        self.tables = {}
+        for t in tableList:
+            self.tables[t] = self.configer.configOptionValue(section,
+                                                             '%s_table' % t)
 
     def aggregateIrradianceData(self, startDate = '', endDate = ''):
         """
@@ -173,7 +179,8 @@ class MSGDataAggregator(object):
         sql = """SELECT (%s) FROM
         "%s" WHERE timestamp BETWEEN '%s' AND '%s' ORDER BY
         timestamp, sensor_id""" % (
-            self.rawIrradianceCols, IRRADIANCE_TABLE, startDate, endDate)
+            self.rawIrradianceCols, self.tables['irradiance'], startDate,
+            endDate)
         self.logger.log('sql: %s' % sql)
         self.dbUtil.executeSQL(self.cursor, sql)
         rows = self.cursor.fetchall()
@@ -186,4 +193,4 @@ class MSGDataAggregator(object):
 
         sql = """SELECT %s FROM
         "%s" WHERE timestamp BETWEEN '%s' AND '%s' ORDER BY timestamp""" % (
-            self.rawWeatherCols, WEATHER_TABLE, startDate, endDate)
+            self.rawWeatherCols, self.tables['weather'], startDate, endDate)
