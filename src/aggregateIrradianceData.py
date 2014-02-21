@@ -110,12 +110,12 @@ rows = cursor.fetchall()
 sum = []
 
 for i in range(4):
-    sum.append(list())
+    sum.append([])
     sum[i] = 0
 
-cnt = list()
+cnt = []
 for i in range(4):
-    cnt.append(list())
+    cnt.append([])
     cnt[i] = 0
 
 rowCnt = 0
@@ -147,13 +147,13 @@ for row in rows:
         emitAverage(sum, cnt, row[2])
 
         cnt = 0
-        sum = list()
+        sum = []
         for i in range(4):
-            sum.append(list())
+            sum.append([])
             sum[i] = 0
-        cnt = list()
+        cnt = []
         for i in range(4):
-            cnt.append(list())
+            cnt.append([])
             cnt[i] = 0
 
     rowCnt += 1

@@ -61,8 +61,9 @@ class MSGDataAggregatorTester(unittest.TestCase):
         self.assertIsNotNone(rows, 'Rows are present.')
 
     def testIrradianceAggregation(self):
-        self.aggregator.aggregateIrradianceData(startDate = self.testStart,
-                                                endDate = self.testEnd)
+        for row in self.aggregator.aggregatedIrradianceData(
+                startDate = self.testStart, endDate = self.testEnd):
+            print row
 
 
 if __name__ == '__main__':

@@ -100,25 +100,27 @@ class MSGDataAggregator(object):
             return True
         return False
 
-    def __averageIrradianceInterval(self, sum, cnt, timestamp):
+    def __irradianceIntervalAverages(self, sum, cnt, timestamp):
         """
         Perform averaging of an irradiance data interval.
 
-        :param sum
-        :param cnt
+        :param sum[]: Totals of values.
+        :param cnt[]: Numbers of records
         :param timestamp: This is the timestamp that is emitted.
-        :returns: None
+        :returns: averaged data tuple
         """
 
+        myAvgs = []
         myCount = 0
         idx = 0
         for item in sum:
             myCount += 1
             if cnt[idx] != 0:
-                print '%s, %s, %s' % (myCount, timestamp, item / cnt[idx])
+                myAvgs.append((myCount, timestamp, item / cnt[idx]))
             else:
-                print '%s, %s, %s' % (myCount, timestamp, 'NULL')
+                myAvgs.append((myCount, timestamp, 'NULL'))
             idx += 1
+        return myAvgs
 
     def __generateAggregatedIrradianceData(self):
         """
@@ -172,16 +174,17 @@ class MSGDataAggregator(object):
             self.columns[dataType], self.tables[dataType], startDate, endDate))
 
 
-    def aggregateIrradianceData(self, startDate, endDate):
+    def aggregatedIrradianceData(self, startDate, endDate):
         """
         Perform aggregation of irradiance data And insert or update,
         as necessary, the aggregated data table in the database.
 
         :param startDate
         :param endDate
-        :returns:
+        :returns: aggregated data
         """
 
+        aggData = []
         ci = lambda col_name: self.columns['irradiance'].split(',').index(
             col_name)
         assert (
@@ -196,7 +199,7 @@ class MSGDataAggregator(object):
             sum.append([])
             sum[i] = 0
 
-        cnt = list()
+        cnt = []
 
         for i in range(sensorCount):
             cnt.append([])
@@ -225,10 +228,11 @@ class MSGDataAggregator(object):
 
             if (self.__intervalCrossed(minute)):
                 # Emit the average for the current sum.
-                # Use the current timestamp.
-                self.__averageIrradianceInterval(sum, cnt, row[ci('timestamp')])
+                # Use the current timestamp that is the trailing timestamp
+                # for the interval.
+                aggData += self.__irradianceIntervalAverages(sum, cnt, row[
+                    ci('timestamp')])
 
-                cnt = 0
                 sum = []
                 for i in range(sensorCount):
                     sum.append([])
@@ -242,8 +246,9 @@ class MSGDataAggregator(object):
 
             # @REVIEWED
             # Useful for debugging:
-            if rowCnt > 40000:
-                exit(0)
+            # if rowCnt > 40000:
+            #     return aggData
+        return aggData
 
     def __fetch(self, sql):
         """
