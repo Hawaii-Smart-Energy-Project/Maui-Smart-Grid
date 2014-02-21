@@ -23,13 +23,15 @@ class MSGDataAggregatorTester(unittest.TestCase):
         """
         self.logger = MSGLogger(__name__, 'DEBUG')
         self.aggregator = MSGDataAggregator()
+        self.testStart = '2014-01-01'
+        self.testEnd = '2014-01-02'
 
     def testIrradianceFetch(self):
         """
         """
         rows = []
-        for row in self.aggregator.fetchIrradianceData(startDate = '2014-01-01',
-                                                       endDate = '2014-01-05'):
+        for row in self.aggregator.fetchIrradianceData(
+                startDate = self.testStart, endDate = self.testEnd):
             rows.append(row)
         self.assertIsNotNone(rows, 'Rows are present.')
 
@@ -37,8 +39,8 @@ class MSGDataAggregatorTester(unittest.TestCase):
         """
         """
         rows = []
-        for row in self.aggregator.fetchWeatherData(startDate = '2014-01-01',
-                                                    endDate = '2014-01-05'):
+        for row in self.aggregator.fetchWeatherData(startDate = self.testStart,
+                                                    endDate = self.testEnd):
             rows.append(row)
         self.assertIsNotNone(rows, 'Rows are present.')
 
@@ -46,25 +48,28 @@ class MSGDataAggregatorTester(unittest.TestCase):
         """
         """
         rows = []
-        for row in self.aggregator.fetchWeatherData(startDate = '2014-01-01',
-                                                    endDate = '2014-01-05'):
+        for row in self.aggregator.fetchWeatherData(startDate = self.testStart,
+                                                    endDate = self.testEnd):
             rows.append(row)
         self.assertIsNotNone(rows, 'Rows are present.')
 
     def testEgaugeFetch(self):
         rows = []
-
-        for row in self.aggregator.fetchEgaugeData(startDate = '2014-01-01',
-                                               endDate = '2014-01-05'):
+        for row in self.aggregator.fetchEgaugeData(startDate = self.testStart,
+                                                   endDate = self.testEnd):
             rows.append(row)
         self.assertIsNotNone(rows, 'Rows are present.')
 
+    def testIrradianceAggregation(self):
+        self.aggregator.aggregateIrradianceData(startDate = self.testStart,
+                                                endDate = self.testEnd)
+
 
 if __name__ == '__main__':
-    RUN_SELECTED_TESTS = False
+    RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
-        selected_tests = ['testIrradianceFetch', 'testWeatherFetch']
+        selected_tests = ['testIrradianceAggregation']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDataAggregatorTester(t))

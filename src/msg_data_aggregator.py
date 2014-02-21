@@ -12,12 +12,15 @@ from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 from msg_notifier import MSGNotifier
 from msg_configer import MSGConfiger
+from msg_math_util import MSGMathUtil
 
 
 class MSGDataAggregator(object):
     """
     Use for continuous data aggregation of diverse data types relevant to the
     Maui Smart Grid project.
+
+    Aggregation is performed in-memory and saved to the DB.
 
     This is being implemented externally for performance and flexibility
     advantages over alternative approaches such as creating a view. It may be
@@ -32,9 +35,11 @@ class MSGDataAggregator(object):
 
         self.logger = MSGLogger(__name__, 'DEBUG')
         self.configer = MSGConfiger()
-        self.connector = MSGDBConnector()
-        self.cursor = self.connector.conn.cursor()
+        # self.connector =
+        self.cursor = MSGDBConnector().connectDB().cursor()
         self.dbUtil = MSGDBUtil()
+        self.notifier = MSGNotifier()
+        self.mathUtil = MSGMathUtil()
         self.__nextMinuteCrossing = 0
         section = 'Aggregation'
         tableList = ['irradiance', 'agg_irradiance', 'weather', 'agg_weather',
@@ -52,18 +57,6 @@ class MSGDataAggregator(object):
             except TypeError as error:
                 self.logger.log('Ignoring missing table.')
 
-
-    def aggregateIrradianceData(self, startDate = '', endDate = ''):
-        """
-        Perform aggregation of irradiance data And insert or update,
-        as necessary, the aggregated data table in the database.
-
-        :param startDate
-        :param endDate
-        :returns:
-        """
-
-        pass
 
     def aggregateWeatherData(self):
         """
@@ -107,7 +100,7 @@ class MSGDataAggregator(object):
             return True
         return False
 
-    def averageIrradianceInterval(self, sum, cnt, timestamp):
+    def __averageIrradianceInterval(self, sum, cnt, timestamp):
         """
         Perform averaging of an irradiance data interval.
 
@@ -140,11 +133,10 @@ class MSGDataAggregator(object):
         """
 
         dataType = 'irradiance'
-        sql = """SELECT (%s) FROM
-        "%s" WHERE timestamp BETWEEN '%s' AND '%s' ORDER BY
-        timestamp, sensor_id""" % (
-            self.columns[dataType], self.tables[dataType], startDate, endDate)
-        return self.__fetch(sql)
+        return self.__fetch("""SELECT %s FROM "%s" WHERE timestamp BETWEEN
+        '%s' AND '%s'
+            ORDER BY timestamp, sensor_id""" % (
+            self.columns[dataType], self.tables[dataType], startDate, endDate))
 
     def fetchWeatherData(self, startDate, endDate):
         """
@@ -152,10 +144,10 @@ class MSGDataAggregator(object):
         """
 
         dataType = 'weather'
-        sql = """SELECT %s FROM
-        "%s" WHERE timestamp BETWEEN '%s' AND '%s' ORDER BY timestamp""" % (
-            self.columns[dataType], self.tables[dataType], startDate, endDate)
-        return self.__fetch(sql)
+        return self.__fetch("""SELECT %s FROM "%s" WHERE timestamp BETWEEN
+        '%s' AND '%s'
+            ORDER BY timestamp""" % (
+            self.columns[dataType], self.tables[dataType], startDate, endDate))
 
     def fetchCircuitData(self, startDate, endDate):
         """
@@ -163,11 +155,10 @@ class MSGDataAggregator(object):
         """
 
         dataType = 'circuit'
-        sql = """SELECT (%s) FROM
-        "%s" WHERE timestamp BETWEEN '%s' AND '%s' ORDER BY
-        timestamp""" % (
-            self.columns[dataType], self.tables[dataType], startDate, endDate)
-        return self.__fetch(sql)
+        return self.__fetch("""SELECT %s FROM "%s" WHERE timestamp BETWEEN
+        '%s' AND '%s'
+            ORDER BY timestamp""" % (
+            self.columns[dataType], self.tables[dataType], startDate, endDate))
 
     def fetchEgaugeData(self, startDate, endDate):
         """
@@ -175,12 +166,84 @@ class MSGDataAggregator(object):
         """
 
         dataType = 'egauge'
-        sql = """SELECT (%s) FROM
-        "%s" WHERE datetime BETWEEN '%s' AND '%s' ORDER BY
-        datetime""" % (
-            self.columns[dataType], self.tables[dataType], startDate, endDate)
-        return self.__fetch(sql)
+        return self.__fetch("""SELECT %s FROM "%s" WHERE datetime BETWEEN
+        '%s' AND '%s'
+            ORDER BY datetime""" % (
+            self.columns[dataType], self.tables[dataType], startDate, endDate))
 
+
+    def aggregateIrradianceData(self, startDate, endDate):
+        """
+        Perform aggregation of irradiance data And insert or update,
+        as necessary, the aggregated data table in the database.
+
+        :param startDate
+        :param endDate
+        :returns:
+        """
+
+        ci = lambda col_name: self.columns['irradiance'].split(',').index(
+            col_name)
+        assert (
+            map(ci,
+                ['sensor_id', 'timestamp', 'irradiance_w_per_m2']) is not None)
+
+        sensorCount = 4
+
+        sum = []
+
+        for i in range(sensorCount):
+            sum.append([])
+            sum[i] = 0
+
+        cnt = list()
+
+        for i in range(sensorCount):
+            cnt.append([])
+            cnt[i] = 0
+
+        rowCnt = 0
+
+        for row in self.fetchIrradianceData(startDate, endDate):
+
+            if self.mathUtil.isNumber(row[ci('irradiance_w_per_m2')]):
+                # Add up the values for each sensor.
+                cnt[row[ci('sensor_id')] - 1] += 1
+                sum[row[ci('sensor_id')] - 1] += row[ci('irradiance_w_per_m2')]
+
+            minute = row[ci('timestamp')].timetuple()[4]
+
+            if rowCnt == 0:
+                if minute < 15:
+                    NEXT_MINUTE_CROSSING = 15
+                elif minute < 30:
+                    NEXT_MINUTE_CROSSING = 30
+                elif minute < 45:
+                    NEXT_MINUTE_CROSSING = 45
+                else:
+                    NEXT_MINUTE_CROSSING = 0
+
+            if (self.__intervalCrossed(minute)):
+                # Emit the average for the current sum.
+                # Use the current timestamp.
+                self.__averageIrradianceInterval(sum, cnt, row[ci('timestamp')])
+
+                cnt = 0
+                sum = []
+                for i in range(sensorCount):
+                    sum.append([])
+                    sum[i] = 0
+                cnt = []
+                for i in range(sensorCount):
+                    cnt.append([])
+                    cnt[i] = 0
+
+            rowCnt += 1
+
+            # @REVIEWED
+            # Useful for debugging:
+            if rowCnt > 40000:
+                exit(0)
 
     def __fetch(self, sql):
         """
@@ -191,5 +254,4 @@ class MSGDataAggregator(object):
 
         self.logger.log('sql: %s' % sql)
         self.dbUtil.executeSQL(self.cursor, sql)
-        rows = self.cursor.fetchall()
-        return rows
+        return self.cursor.fetchall()

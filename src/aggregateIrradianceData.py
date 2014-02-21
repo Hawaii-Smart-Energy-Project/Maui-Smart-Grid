@@ -106,7 +106,8 @@ cursor = conn.cursor()
 dbUtil.executeSQL(cursor, sql)
 
 rows = cursor.fetchall()
-sum = list()
+
+sum = []
 
 for i in range(4):
     sum.append(list())
@@ -120,6 +121,8 @@ for i in range(4):
 rowCnt = 0
 
 for row in rows:
+
+    print row
 
     if mUtil.isNumber(row[1]):
         # Add up the values for each sensor.
@@ -156,6 +159,6 @@ for row in rows:
     rowCnt += 1
 
     # @REVIEWED
-    # Used for debugging:
+    # Useful for debugging:
     # if rowCnt > 40000:
     #     exit(0)
