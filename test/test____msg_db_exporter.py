@@ -142,10 +142,10 @@ class MSGDBExporterTester(unittest.TestCase):
         the ability to test the deleting of outdated files.
         """
 
-        # @todo Prevent deleting files uploaded today.
-        # @todo Prevent deleting NON-testing files.
-
         return
+
+        # @TO BE REVIEWED  Prevent deleting files uploaded today.
+        # @IMPORTANT Prevent deleting NON-testing files.
 
         self.logger.log("Test deleting outdated files.")
 
@@ -156,11 +156,9 @@ class MSGDBExporterTester(unittest.TestCase):
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
 
-        # @TO BE REVIEWED: Test should not be run until verified.
-        # @todo Verify that this deletes files that are older than 2 days.
         cnt = self.exporter.deleteOutdatedFiles(
-            minAge = datetime.timedelta(days = 2),
-            maxAge = datetime.timedelta(days = 99))
+            minAge = datetime.timedelta(days = 5),
+            maxAge = datetime.timedelta(days = 99999))
         self.assertGreater(cnt, 0)
 
 
@@ -350,8 +348,8 @@ if __name__ == '__main__':
     if RUN_SELECTED_TESTS:
         # selected_tests = ['testAddingReaderPermissions',
         #                   'testDeleteOutdatedFiles', 'testGetMD5SumFromCloud']
-        selected_tests = ['testDownloadURLList','testListOfDownloadableFiles']
-
+        # selected_tests = ['testDownloadURLList','testListOfDownloadableFiles']
+        selected_tests = ['testDeleteOutdatedFiles']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDBExporterTester(t))

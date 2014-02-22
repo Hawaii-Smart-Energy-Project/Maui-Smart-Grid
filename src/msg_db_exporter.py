@@ -362,11 +362,18 @@ class MSGDBExporter(object):
         """
         Remove outdated files from cloud storage.
 
+        @TO BE REVIEWED
+        This requires a recursive implementation to always completely
+        remove all files older than minAge.
+
+        This may be an issue with the Google Drive SDK.
+
         :param minAge: Minimum age before a file is considered outdated.
         :param maxAge: Maximum age to consider for a file.
         :returns: Count of deleted items.
         """
 
+        self.logger.log('Deleting outdated.', 'DEBUG')
         deleteCnt = 0
 
         if minAge == datetime.timedelta(days = 0):
@@ -375,9 +382,8 @@ class MSGDBExporter(object):
         for item in self.cloudFiles['items']:
             t1 = datetime.datetime.strptime(item['createdDate'],
                                             "%Y-%m-%dT%H:%M:%S.%fZ")
-            self.logger.log(
-                't1: %s' % datetime.datetime.strftime(t1, '%Y-%m-%d %H:%M:%S'),
-                'debug')
+            self.logger.log('t1: %s' % t1.strftime('%Y-%m-%d %H:%M:%S'),
+                            'debug')
             t2 = datetime.datetime.now()
             tdelta = t2 - t1
             self.logger.log('tdelta: %s' % tdelta, 'debug')
