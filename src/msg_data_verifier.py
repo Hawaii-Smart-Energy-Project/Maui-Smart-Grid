@@ -68,8 +68,7 @@ class MSGDataVerifier(object):
                             "Reading".channel
                      FROM "MeterData"
                      INNER JOIN "IntervalReadData" ON "MeterData"
-                     .meter_data_id =
-                     "IntervalReadData".meter_data_id
+                     .meter_data_id = "IntervalReadData".meter_data_id
                      INNER JOIN "Interval" ON "IntervalReadData"
                      .interval_read_data_id = "Interval".interval_read_data_id
                      INNER JOIN "Reading" ON "Interval".interval_id = "Reading"
