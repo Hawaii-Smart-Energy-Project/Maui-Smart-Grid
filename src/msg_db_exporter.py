@@ -24,6 +24,9 @@ from functools import partial
 from msg_file_util import MSGFileUtil
 import time
 from httplib import BadStatusLine
+import requests
+from io import StringIO
+from requests.adapters import SSLError
 
 
 class MSGDBExporter(object):
@@ -227,7 +230,8 @@ class MSGDBExporter(object):
                     self.logger.log('Uploading %s.' % f, 'info')
                     fileID = self.uploadDBToCloudStorage(f, testing = testing)
                     self.addReaders(fileID,
-                                    self.configer.configOptionValue().split(
+                                    self.configer.configOptionValue('Export',
+                                                                    'read_permission').split(
                                         ','))
 
             # Remove the uncompressed file.
@@ -403,6 +407,23 @@ class MSGDBExporter(object):
         pass
 
 
+    def sendDownloadableFiles(self):
+        output = StringIO()
+        output.write(self.markdownListOfDownloadableFiles())
+        headers = {'User-Agent': 'Maui Smart Grid 1.0.0 DB Exporter',
+                   'Content-Type': 'text/html'}
+        try:
+            r = requests.post(self.configer.configOptionValue('Export',
+                                                              'export_list_post_url'),
+                              output.getvalue(), headers = headers)
+        except requests.adapters.SSLError as error:
+            # @todo Implement alternative verification.
+            pass
+
+        # print 'text: %s' % r.text
+        output.close()
+
+
     def listOfDownloadableFiles(self):
         """
         Create a list of downloadable files.
@@ -424,16 +445,17 @@ class MSGDBExporter(object):
 
     def markdownListOfDownloadableFiles(self):
         """
-        Generate list of downloadable files in Markdown format.
+        Generate content containing list of downloadable files in Markdown
+        format.
 
         :returns: Content in Markdown format.
         """
 
-        content = ''
+        content = "||*Name*||*Created*||*Size*||\n"
         for i in self.listOfDownloadableFiles():
-            content += "Name: [%s](%s)\n" % (i['title'], i['webContentLink'])
-            content += "Created: %s\n" % i['createdDate']
-            content += "Size: %d B\n" % int(i['fileSize'])
+            content += "||[`%s`](%s)" % (i['title'], i['webContentLink'])
+            content += "||`%s`" % i['createdDate']
+            content += "||`%d B`||" % int(i['fileSize'])
             content += '\n'
 
         return content
