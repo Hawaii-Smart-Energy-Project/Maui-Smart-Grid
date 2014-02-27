@@ -553,6 +553,7 @@ class MSGDBExporter(object):
                     resp = self.driveService.permissions().insert(
                         fileId = fileID, sendNotificationEmails = False,
                         body = permission).execute()
+                    self.logger.log('Reader permission added for %s.' % addr)
                 except errors.HttpError, error:
                     print 'An error occurred: %s' % error
                     success = False
