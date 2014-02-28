@@ -245,8 +245,8 @@ class MSGDBExporter(object):
 
         # End for db in databases.
 
-        self.deleteOutdatedFiles(minAge = datetime.timedelta(days = int(
-            self.configer.configOptionValue('Export', 'days_to_keep'))))
+        # self.deleteOutdatedFiles(minAge = datetime.timedelta(days = int(
+        #     self.configer.configOptionValue('Export', 'days_to_keep'))))
 
         return noErrors
 
@@ -416,11 +416,11 @@ class MSGDBExporter(object):
             r = requests.post(self.configer.configOptionValue('Export',
                                                               'export_list_post_url'),
                               output.getvalue(), headers = headers)
+            print 'text: %s' % r.text
         except requests.adapters.SSLError as error:
             # @todo Implement alternative verification.
-            pass
+            self.logger.log('SSL error: %s' % error)
 
-        # print 'text: %s' % r.text
         output.close()
 
 
