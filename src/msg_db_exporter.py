@@ -216,7 +216,8 @@ class MSGDBExporter(object):
                                     'DEBUG')
                     filesToUpload = self.fileUtil.splitLargeFile(
                         fullPath = compressedFullPath, chunkSize = chunkSize,
-                        numChunks = self.numberOfChunksToUse(fullPath))
+                        numChunks = self.numberOfChunksToUse(
+                            compressedFullPath))
                     if not filesToUpload:
                         raise (Exception, 'Exception during file splitting.')
                     self.logger.log('to upload: %s' % filesToUpload, 'debug')
@@ -229,6 +230,7 @@ class MSGDBExporter(object):
                 for f in filesToUpload:
                     self.logger.log('Uploading %s.' % f, 'info')
                     fileID = self.uploadDBToCloudStorage(f, testing = testing)
+                    self.logger.log('file id after upload: %s' % fileID)
                     self.addReaders(fileID,
                                     self.configer.configOptionValue('Export',
                                                                     'read_permission').split(
@@ -237,6 +239,7 @@ class MSGDBExporter(object):
             # Remove the uncompressed file.
             try:
                 if not testing:
+                    self.logger.log('Removing %s' % fullPath)
                     os.remove('%s' % fullPath)
             except OSError as e:
                 self.logger.log(
@@ -245,6 +248,7 @@ class MSGDBExporter(object):
 
         # End for db in databases.
 
+        # @todo implement separate delete outdated runner
         # self.deleteOutdatedFiles(minAge = datetime.timedelta(days = int(
         #     self.configer.configOptionValue('Export', 'days_to_keep'))))
 
@@ -544,6 +548,9 @@ class MSGDBExporter(object):
         """
 
         success = True
+
+        self.logger.log('file id: %s' % fileID)
+        self.logger.log('address list: %s' % emailAddressList)
 
         for addr in emailAddressList:
             permission = {'value': addr, 'type': 'user', 'role': 'reader'}
