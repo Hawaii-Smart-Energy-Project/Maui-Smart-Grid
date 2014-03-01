@@ -214,10 +214,14 @@ class MSGDBExporter(object):
                 if numChunks != 0:
                     self.logger.log('Splitting %s' % compressedFullPath,
                                     'DEBUG')
+                    # filesToUpload = self.fileUtil.splitLargeFile(
+                    #     fullPath = compressedFullPath, chunkSize = chunkSize,
+                    #     numChunks = self.numberOfChunksToUse(
+                    #         compressedFullPath))
                     filesToUpload = self.fileUtil.splitLargeFile(
                         fullPath = compressedFullPath, chunkSize = chunkSize,
-                        numChunks = self.numberOfChunksToUse(
-                            compressedFullPath))
+                        numChunks = numChunks)
+
                     if not filesToUpload:
                         raise (Exception, 'Exception during file splitting.')
                     self.logger.log('to upload: %s' % filesToUpload, 'debug')
@@ -267,8 +271,10 @@ class MSGDBExporter(object):
         self.logger.log('fullpath: %s, fsize: %s' % (fullPath, fsize))
         if (fsize >= self.configer.configOptionValue('Export',
                                                      'max_bytes_before_split')):
+            self.logger.log('will split with config defined num chunks')
             return self.configer.configOptionValue('Export',
                                                    'num_split_sections')
+        self.logger.log('will NOT split file')
         return 1
 
 

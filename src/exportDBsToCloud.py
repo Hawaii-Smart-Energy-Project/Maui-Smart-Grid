@@ -5,7 +5,8 @@
 Grab the list of databases to be exported in the MSG configuration file and
 export them to cloud storage.
 
-Files beyond a maximum limit are split according to the number of chunks set in the config file.
+Files beyond a maximum limit are split according to the number of chunks set
+in the config file.
 
 Usage:
 
@@ -58,7 +59,10 @@ if __name__ == '__main__':
     startTime = time.time()
     exporter.exportDB(databases = exporter.configer.configOptionValue('Export',
                                                                       'dbs_to_export').split(
-        ','), toCloud = True, testing = commandLineArgs.testing, numChunks = 4)
+        ','), toCloud = True, testing = commandLineArgs.testing,
+                      numChunks = exporter.configer.configOptionValue('Export',
+                                                                      'num_split_sections'))
+
     wallTime = time.time() - startTime
     wallTimeMin = int(wallTime / 60.0)
     wallTimeSec = (wallTime - wallTimeMin * 60.0)
