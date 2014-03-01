@@ -278,7 +278,7 @@ class MSGDBExporter(object):
 
         :param fullPath of DB file to be exported.
         :param testing: When to to True, Testing Mode is used.
-        :returns: True on verified on upload; False if verification fails.
+        :returns: File ID on verified on upload; None if verification fails.
         """
 
         success = True
@@ -297,6 +297,7 @@ class MSGDBExporter(object):
                                    'compressed DB export.',
                     'mimeType': 'application/gzip-compressed'}
 
+            # Result is a Files resource.
             result = self.driveService.files().insert(body = body,
                                                       media_body =
                                                       media_body).execute()
@@ -314,7 +315,10 @@ class MSGDBExporter(object):
         if success:
             self.logger.log('Verification by MD5 checksum succeeded.', 'INFO')
             self.logger.log("Finished.")
-        return success
+
+        if not success:
+            return None
+        return result['id']
 
 
     def retrieveCredentials(self):
@@ -431,11 +435,12 @@ class MSGDBExporter(object):
     def listOfDownloadableFiles(self):
         """
         Create a list of downloadable files.
+        :returns: List of files.
         """
 
         files = []
-
-        for i in self.cloudFiles['items']:
+        for i in reversed(sorted(self.cloudFiles['items'],
+                                 key = lambda k: k['createdDate'])):
             item = dict()
             item['title'] = i['title']
             item['webContentLink'] = i['webContentLink']
@@ -443,7 +448,6 @@ class MSGDBExporter(object):
             item['createdDate'] = i['createdDate']
             item['fileSize'] = i['fileSize']
             files.append(item)
-
         return files
 
 
@@ -461,7 +465,6 @@ class MSGDBExporter(object):
             content += "||`%s`" % i['createdDate']
             content += "||`%d B`||" % int(i['fileSize'])
             content += '\n'
-
         return content
 
 
@@ -566,4 +569,3 @@ class MSGDBExporter(object):
                     success = False
 
         return success
-
