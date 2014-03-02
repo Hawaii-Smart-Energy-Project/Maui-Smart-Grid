@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__ = 'Daniel Zhang (張道博)'
-__copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
+__copyright__ = 'Copyright (c) 2014, University of Hawaii Smart Energy Project'
 __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
@@ -12,10 +12,10 @@ from datetime import datetime
 from msg_configer import MSGConfiger
 import sys
 import os
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEBase import MIMEBase
-from email.MIMEText import MIMEText
-from email.Utils import formatdate
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email.mime.text import MIMEText
+from email.utils import formatdate
 from email import Encoders
 from msg_logger import MSGLogger
 
@@ -83,7 +83,7 @@ class MSGNotifier(object):
             errorOccurred = True
             self.logger.log("Exception during SMTP login: %s" % detail, 'ERROR')
 
-        senddate = datetime.strftime(datetime.now(), '%Y-%m-%d')
+        senddate = datetime.now().strftime('%Y-%m-%d')
         subject = "HISEP Notification"
 
         msgHeader = "Date: %s\r\nFrom: %s\r\nTo: %s\r\nSubject: " \
