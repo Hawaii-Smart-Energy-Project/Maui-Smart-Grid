@@ -74,3 +74,5 @@ if __name__ == '__main__':
     exporter.logger.log(
         'Wall time: {:d} min {:.2f} s.'.format(wallTimeMin, wallTimeSec),
         'info')
+
+    exporter.sendDownloadableFiles()
