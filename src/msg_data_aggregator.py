@@ -55,6 +55,7 @@ class MSGDataAggregator(object):
         self.dbUtil = MSGDBUtil()
         self.notifier = MSGNotifier()
         self.mathUtil = MSGMathUtil()
+        self.irradianceSensorCount = 4
         self.__nextMinuteCrossing = 0
         section = 'Aggregation'
         tableList = ['irradiance', 'agg_irradiance', 'weather', 'agg_weather',
@@ -98,6 +99,7 @@ class MSGDataAggregator(object):
     def __irradianceIntervalAverages(self, sum, cnt, timestamp):
         """
         Perform averaging of an irradiance data interval.
+        Return one collection per sensor.
 
         :param sum[]: Totals of values.
         :param cnt[]: Numbers of records
@@ -118,18 +120,28 @@ class MSGDataAggregator(object):
         return myAvgs
 
 
-    def __weatherIntervalAverages(self, sum, cnt, timestamp):
+    def __weatherIntervalAverages(self, sum, cnt, timestamp, tempIndex,
+                                  humIndex):
+        """
+        Return one collection per timestamp.
+
+        :param sum:
+        :param cnt:
+        :param timestamp:
+        :param tempIndex: temperature index
+        :param humIndex: humidity index
+        :returns:
+        """
         myAvgs = []
-        myCount = 0
-        idx = 0
-        for item in sum:
-            myCount += 1
-            if cnt[idx] != 0:
-                myAvgs.append((myCount, timestamp, item / cnt[idx]))
-            else:
-                myAvgs.append((myCount, timestamp, 'NULL'))
-            idx += 1
+        tAvg = 'NULL'
+        hAvg = 'NULL'
+        if cnt[tempIndex] != 0:
+            tAvg = sum[tempIndex] / cnt[tempIndex]
+        if cnt[humIndex] != 0:
+            hAvg = sum[humIndex] / cnt[humIndex]
+        myAvgs.append([timestamp, tAvg, hAvg])
         return myAvgs
+
 
     def __intervalAverages(self, sum, cnt, timestamp):
         """
@@ -222,25 +234,37 @@ class MSGDataAggregator(object):
         rowCnt = 0
 
         def __initSumAndCount():
+            """
+            Initialize storage arrays.
+            """
             sum = []
             cnt = []
-            for col in ['met_air_temp_degf', 'met_rel_humid_pct']:
-                sum[ci(col)].append(0)
-                cnt[ci(col)].append(0)
+
+            # An extra column is created for generalization convenience.
+            for i in range(len(self.columns['weather'].split(','))):
+                sum.append(0)
+                cnt.append(0)
+            return (sum, cnt)
 
         (sum, cnt) = __initSumAndCount()
 
         for row in self.__rawWeatherData(startDate, endDate):
-            for col in ['met_air_temp_degf', 'met_rel_humid_pct']:
+            # col_i = 0
+            for col in self.columns['weather'].split(','):
                 if self.mathUtil.isNumber(row[ci(col)]):
                     sum[ci(col)] += row[ci(col)]
                     cnt[ci(col)] += 1
+                    # col_i+=1
 
-            minute = row[0].timetuple()[4]
+            minute = row[ci('timestamp')].timetuple()[4]
 
             if (self.__intervalCrossed(minute)):
-                aggData += self.__intervalAverages(sum, cnt,
-                                                   row[ci('timestamp')])
+                aggData += self.__weatherIntervalAverages(sum, cnt,
+                                                          row[ci('timestamp')],
+                                                          ci(
+                                                              'met_air_temp_degf'),
+                                                          ci(
+                                                              'met_rel_humid_pct'))
                 __initSumAndCount()
             rowCnt += 1
 
@@ -264,9 +288,12 @@ class MSGDataAggregator(object):
             map(ci,
                 ['sensor_id', 'timestamp', 'irradiance_w_per_m2']) is not None)
 
-        sensorCount = 4
+        sensorCount = self.irradianceSensorCount
 
         def __initSumAndCount():
+            """
+            Initialize storage arrays.
+            """
             sum = []
             cnt = []
             for i in range(sensorCount):
@@ -294,8 +321,8 @@ class MSGDataAggregator(object):
                 # Emit the average for the current sum.
                 # Use the current timestamp that is the trailing timestamp
                 # for the interval.
-                aggData += self.__intervalAverages(sum, cnt,
-                                                   row[ci('timestamp')])
+                aggData += self.__irradianceIntervalAverages(sum, cnt, row[
+                    ci('timestamp')])
                 __initSumAndCount()
 
             rowCnt += 1

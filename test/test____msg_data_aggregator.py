@@ -24,7 +24,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
         self.logger = MSGLogger(__name__, 'DEBUG')
         self.aggregator = MSGDataAggregator()
         self.testStart = '2014-01-02 12:00'
-        self.testEnd = '2014-01-02 13:00'
+        self.testEnd = '2014-01-02 12:59'
 
     def testIrradianceFetch(self):
         """
@@ -64,15 +64,16 @@ class MSGDataAggregatorTester(unittest.TestCase):
         rowCnt = 0
         for row in self.aggregator.aggregatedIrradianceData(
                 startDate = self.testStart, endDate = self.testEnd):
-            print '%d %s' % (rowCnt, row)
+            print '%d: %s' % (rowCnt, row)
             rowCnt += 1
-        self.assertEqual(rowCnt, 20, 'Row count does not reflect four sensors.')
+        self.assertEqual(rowCnt, self.aggregator.irradianceSensorCount * 4,
+                         'Row count does not reflect four sensors.')
 
     def testWeatherAggregation(self):
         rowCnt = 0
         for row in self.aggregator.aggregatedWeatherData(
                 startDate = self.testStart, endDate = self.testEnd):
-            print '%d %s' % (rowCnt, row)
+            print '%d: %s' % (rowCnt, row)
             rowCnt += 1
 
 
