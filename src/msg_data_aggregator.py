@@ -218,13 +218,13 @@ class MSGDataAggregator(object):
 
             if rowCnt == 0:
                 if minute < 15:
-                    NEXT_MINUTE_CROSSING = 15
+                    self.__nextMinuteCrossing = 15
                 elif minute < 30:
-                    NEXT_MINUTE_CROSSING = 30
+                    self.__nextMinuteCrossing = 30
                 elif minute < 45:
-                    NEXT_MINUTE_CROSSING = 45
+                    self.__nextMinuteCrossing = 45
                 else:
-                    NEXT_MINUTE_CROSSING = 0
+                    self.__nextMinuteCrossing = 0
 
             if (self.__intervalCrossed(minute)):
                 # Emit the average for the current sum.
