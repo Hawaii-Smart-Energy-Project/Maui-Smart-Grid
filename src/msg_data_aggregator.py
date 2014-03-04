@@ -20,12 +20,25 @@ class MSGDataAggregator(object):
     Use for continuous data aggregation of diverse data types relevant to the
     Maui Smart Grid project.
 
+    Four data types are supported:
+
+    1. Irradiance
+    2. Temperature/Humidity
+    3. Circuit
+    4. eGauge
+
     Aggregation is performed in-memory and saved to the DB.
 
     This is being implemented externally for performance and flexibility
     advantages over alternative approaches such as creating a view. It may be
     rolled into an internal function at future time if that proves to be
     beneficial.
+
+    Usage:
+
+        from msg_data_aggregator import MSGDataAggregator
+        aggregator = MSGDataAggregator()
+
     """
 
     def __init__(self):
@@ -35,8 +48,10 @@ class MSGDataAggregator(object):
 
         self.logger = MSGLogger(__name__, 'DEBUG')
         self.configer = MSGConfiger()
-        # self.connector =
-        self.cursor = MSGDBConnector().connectDB().cursor()
+        try:
+            self.cursor = MSGDBConnector().connectDB().cursor()
+        except AttributeError as error:
+            self.logger.log('Error while getting cursor: %s' % error,'ERROR')
         self.dbUtil = MSGDBUtil()
         self.notifier = MSGNotifier()
         self.mathUtil = MSGMathUtil()
@@ -57,29 +72,9 @@ class MSGDataAggregator(object):
             except TypeError as error:
                 self.logger.log('Ignoring missing table.')
 
-
-    def aggregateWeatherData(self):
-        """
-        :returns:
-        """
-        pass
-
-    def aggregateCircuitData(self):
-        """
-        :returns:
-        """
-        pass
-
-    def aggregateEgaugeData(self):
-        """
-        :returns:
-        """
-        pass
-
-
     def __intervalCrossed(self, minute):
         """
-        Determine interval crossing.
+        Determine interval crossing. Intervals are at 0, 15, 45, 60 min.
 
         :param minute: The integer value of the minute.
         :returns: True if an interval was crossed, False otherwise.
@@ -107,7 +102,7 @@ class MSGDataAggregator(object):
         :param sum[]: Totals of values.
         :param cnt[]: Numbers of records
         :param timestamp: This is the timestamp that is emitted.
-        :returns: averaged data tuple
+        :returns: Averaged data tuple.
         """
 
         myAvgs = []
@@ -181,7 +176,7 @@ class MSGDataAggregator(object):
 
         :param startDate
         :param endDate
-        :returns: aggregated data
+        :returns: List of tuples for aggregated data.
         """
 
         aggData = []

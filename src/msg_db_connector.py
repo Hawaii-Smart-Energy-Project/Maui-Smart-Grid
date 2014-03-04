@@ -52,8 +52,12 @@ class MSGDBConnector(object):
                                                           'db_username')
 
         self.conn = self.connectDB()
-        self.dictCur = self.conn.cursor(
-            cursor_factory = psycopg2.extras.DictCursor)
+
+        try:
+            self.dictCur = self.conn.cursor(
+                cursor_factory = psycopg2.extras.DictCursor)
+        except AttributeError as error:
+            self.logger.log('Error while getting DictCursor: %s' % error)
 
 
     def connectDB(self):
