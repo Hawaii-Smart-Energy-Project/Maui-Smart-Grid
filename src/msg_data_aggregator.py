@@ -51,7 +51,7 @@ class MSGDataAggregator(object):
         try:
             self.cursor = MSGDBConnector().connectDB().cursor()
         except AttributeError as error:
-            self.logger.log('Error while getting cursor: %s' % error,'ERROR')
+            self.logger.log('Error while getting cursor: %s' % error, 'ERROR')
         self.dbUtil = MSGDBUtil()
         self.notifier = MSGNotifier()
         self.mathUtil = MSGMathUtil()
@@ -124,9 +124,9 @@ class MSGDataAggregator(object):
 
         pass
 
-    def fetchIrradianceData(self, startDate, endDate):
+    def __rawIrradianceData(self, startDate, endDate):
         """
-        :returns:
+        :returns: Raw irradiance data as DB rows.
         """
 
         dataType = 'irradiance'
@@ -135,9 +135,9 @@ class MSGDataAggregator(object):
             ORDER BY timestamp, sensor_id""" % (
             self.columns[dataType], self.tables[dataType], startDate, endDate))
 
-    def fetchWeatherData(self, startDate, endDate):
+    def __rawWeatherData(self, startDate, endDate):
         """
-        :returns:
+        :returns: Raw weather data as DB rows.
         """
 
         dataType = 'weather'
@@ -146,9 +146,9 @@ class MSGDataAggregator(object):
             ORDER BY timestamp""" % (
             self.columns[dataType], self.tables[dataType], startDate, endDate))
 
-    def fetchCircuitData(self, startDate, endDate):
+    def __rawCircuitData(self, startDate, endDate):
         """
-        :returns:
+        :returns: Raw circuit data as DB rows.
         """
 
         dataType = 'circuit'
@@ -157,9 +157,9 @@ class MSGDataAggregator(object):
             ORDER BY timestamp""" % (
             self.columns[dataType], self.tables[dataType], startDate, endDate))
 
-    def fetchEgaugeData(self, startDate, endDate):
+    def __rawEgaugeData(self, startDate, endDate):
         """
-        :returns:
+        :returns: Raw eGauge data as DB rows.
         """
 
         dataType = 'egauge'
@@ -167,6 +167,49 @@ class MSGDataAggregator(object):
         '%s' AND '%s'
             ORDER BY datetime""" % (
             self.columns[dataType], self.tables[dataType], startDate, endDate))
+
+
+    def __getNextMinuteCrossing(self, minute):
+        if minute < 15:
+            return 15
+        elif minute < 30:
+            return 30
+        elif minute < 45:
+            return 45
+        else:
+            return 0
+
+    def aggregatedWeatherData(self, startDate, endDate):
+        """
+
+        :param startDate:
+        :param endDate:
+        :returns: List of tuples for aggregated data.
+        """
+
+        aggData = []
+        ci = lambda col_name: self.columns['weather'].split(',').index(col_name)
+        assert (
+            map(ci, ['timestamp', 'met_air_temp_degf',
+                     'met_rel_humid_pct']) is not None)
+
+        rowCnt = 0
+        sum = []
+        cnt = []
+
+        for col in ['met_air_temp_degf', 'met_rel_humid_pct']:
+            sum[ci(col)].append(0)
+            cnt[ci(col)].append(0)
+
+        for row in self.__rawWeatherData(startDate, endDate):
+            for col in ['met_air_temp_degf', 'met_rel_humid_pct']:
+                if self.mathUtil.isNumber(row[ci(col)]):
+                    sum[ci(col)] += row[ci(col)]
+                    cnt[ci(col)] += 1
+
+            minute = row[0].timetuple()[4]
+
+        return aggData
 
 
     def aggregatedIrradianceData(self, startDate, endDate):
@@ -189,20 +232,17 @@ class MSGDataAggregator(object):
         sensorCount = 4
 
         sum = []
+        cnt = []
 
         for i in range(sensorCount):
             sum.append([])
             sum[i] = 0
-
-        cnt = []
-
-        for i in range(sensorCount):
             cnt.append([])
             cnt[i] = 0
 
         rowCnt = 0
 
-        for row in self.fetchIrradianceData(startDate, endDate):
+        for row in self.__rawIrradianceData(startDate, endDate):
 
             if self.mathUtil.isNumber(row[ci('irradiance_w_per_m2')]):
                 # Add up the values for each sensor.
@@ -210,16 +250,6 @@ class MSGDataAggregator(object):
                 sum[row[ci('sensor_id')] - 1] += row[ci('irradiance_w_per_m2')]
 
             minute = row[ci('timestamp')].timetuple()[4]
-
-            if rowCnt == 0:
-                if minute < 15:
-                    self.__nextMinuteCrossing = 15
-                elif minute < 30:
-                    self.__nextMinuteCrossing = 30
-                elif minute < 45:
-                    self.__nextMinuteCrossing = 45
-                else:
-                    self.__nextMinuteCrossing = 0
 
             if (self.__intervalCrossed(minute)):
                 # Emit the average for the current sum.
@@ -229,11 +259,10 @@ class MSGDataAggregator(object):
                     ci('timestamp')])
 
                 sum = []
+                cnt = []
                 for i in range(sensorCount):
                     sum.append([])
                     sum[i] = 0
-                cnt = []
-                for i in range(sensorCount):
                     cnt.append([])
                     cnt[i] = 0
 
