@@ -76,12 +76,20 @@ class MSGDataAggregatorTester(unittest.TestCase):
             print '%d: %s' % (rowCnt, row)
             rowCnt += 1
 
+    def testCircuitAggregation(self):
+        rowCnt = 0
+        for row in self.aggregator.aggregatedCircuitData(
+                startDate = self.testStart, endDate = self.testEnd):
+            print '%d: %s' % (rowCnt, row)
+            rowCnt += 1
+
+
 
 if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
-        selected_tests = ['testIrradianceAggregation', 'testWeatherAggregation']
+        selected_tests = ['testIrradianceAggregation', 'testWeatherAggregation','testCircuitAggregation']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDataAggregatorTester(t))

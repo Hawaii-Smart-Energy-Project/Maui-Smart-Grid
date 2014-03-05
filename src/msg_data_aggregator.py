@@ -73,13 +73,16 @@ class MSGDataAggregator(object):
             except TypeError as error:
                 self.logger.log('Ignoring missing table.')
 
-    def __intervalCrossed(self, minute):
+    def __intervalCrossed(self, minute = None):
         """
         Determine interval crossing. Intervals are at 0, 15, 45, 60 min.
 
         :param minute: The integer value of the minute.
         :returns: True if an interval was crossed, False otherwise.
         """
+
+        if not minute and minute != 0:
+            raise (Exception, 'Minute not defined.')
 
         intervalSize = 15
         first = 0
@@ -216,6 +219,41 @@ class MSGDataAggregator(object):
             ORDER BY datetime""" % (
             self.columns[dataType], self.tables[dataType], startDate, endDate))
 
+    def aggregatedCircuitData(self, startDate, endDate):
+
+        aggData = []
+        ci = lambda col_name: self.columns['circuit'].split(',').index(col_name)
+        assert (
+            map(ci, ['timestamp', 'circuit', 'amp_a', 'amp_b', 'amp_c', 'mvar',
+                     'mw']) is not None)
+
+        rowCnt = 0
+
+        def __initSumAndCount():
+            """
+            Initialize storage arrays.
+            """
+            sum = []
+            cnt = []
+
+            for i in range(len(self.columns['circuit'].split(','))):
+                sum.append(0)
+                cnt.append(0)
+            return (sum, cnt)
+
+        (sum, cnt) = __initSumAndCount()
+
+        for row in self.__rawCircuitData(startDate, endDate):
+            for col in self.columns['circuit'].split(','):
+                if self.mathUtil.isNumber(row[ci(col)]):
+                    sum[ci(col)] += row[ci(col)]
+                    cnt[ci(col)] += 1
+
+        if (
+                self.__intervalCrossed(
+                        minute = row[ci('timestamp')].timetuple()[4])):
+            pass
+
 
     def aggregatedWeatherData(self, startDate, endDate):
         """
@@ -256,9 +294,8 @@ class MSGDataAggregator(object):
                     cnt[ci(col)] += 1
                     # col_i+=1
 
-            minute = row[ci('timestamp')].timetuple()[4]
-
-            if (self.__intervalCrossed(minute)):
+            if (self.__intervalCrossed(
+                    minute = row[ci('timestamp')].timetuple()[4])):
                 aggData += self.__weatherIntervalAverages(sum, cnt,
                                                           row[ci('timestamp')],
                                                           ci(
@@ -315,9 +352,8 @@ class MSGDataAggregator(object):
                 cnt[row[ci('sensor_id')] - 1] += 1
                 sum[row[ci('sensor_id')] - 1] += row[ci('irradiance_w_per_m2')]
 
-            minute = row[ci('timestamp')].timetuple()[4]
-
-            if (self.__intervalCrossed(minute)):
+            if (self.__intervalCrossed(
+                    minute = row[ci('timestamp')].timetuple()[4])):
                 # Emit the average for the current sum.
                 # Use the current timestamp that is the trailing timestamp
                 # for the interval.
