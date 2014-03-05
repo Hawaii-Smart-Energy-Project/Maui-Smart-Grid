@@ -63,6 +63,7 @@ class MSGDBConnector(object):
     def connectDB(self):
         """
         Make the DB connection.
+        :returns: DB connection object if successful, otherwise None.
         """
 
         # @todo Make this method private since the init makes the connection.
