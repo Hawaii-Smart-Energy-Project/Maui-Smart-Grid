@@ -254,8 +254,8 @@ class MSGDBExporter(object):
         # End for db in databases.
 
         # @todo implement separate delete outdated runner
-        # self.deleteOutdatedFiles(minAge = datetime.timedelta(days = int(
-        #     self.configer.configOptionValue('Export', 'days_to_keep'))))
+        self.deleteOutdatedFiles(minAge = datetime.timedelta(days = int(
+            self.configer.configOptionValue('Export', 'days_to_keep'))))
 
         return noErrors
 
@@ -294,6 +294,7 @@ class MSGDBExporter(object):
         self.logger.log('full path %s' % os.path.dirname(fullPath), 'DEBUG')
         self.logger.log("Uploading %s." % dbName)
 
+        result = {}
         try:
             media_body = MediaFileUpload(fullPath,
                                          mimetype =
@@ -315,7 +316,7 @@ class MSGDBExporter(object):
                 "Exception while uploading %s: %s." % (dbName, detail), 'error')
             success = False
 
-        if not self.verifyMD5Sum(fullPath, self.fileIDForFileName(dbName)):
+        if not self.__verifyMD5Sum(fullPath, self.__fileIDForFileName(dbName)):
             self.logger.log('Failed MD5 checksum verification.', 'INFO')
             success = False
 
@@ -325,10 +326,11 @@ class MSGDBExporter(object):
 
         if not success:
             return None
+
         return result['id']
 
 
-    def retrieveCredentials(self):
+    def __retrieveCredentials(self):
         """
         Perform authorization at the server.
 
@@ -367,6 +369,7 @@ class MSGDBExporter(object):
         :param fileID: Googe API file ID.
         """
 
+        # @todo Report filename.
         self.logger.log('Deleting file with file ID: %s' % fileID, 'debug')
 
         try:
@@ -405,7 +408,8 @@ class MSGDBExporter(object):
                             'debug')
             t2 = datetime.datetime.now()
             tdelta = t2 - t1
-            self.logger.log('tdelta: %s' % tdelta, 'debug')
+            self.logger.log('tdelta: %s, min age: %s, max age: %s' % (
+                tdelta, minAge, maxAge), 'debug')
             if tdelta > minAge and tdelta < maxAge:
                 deleteCnt += 1
                 self.deleteFile(fileID = item['id'])
@@ -423,6 +427,10 @@ class MSGDBExporter(object):
 
 
     def sendDownloadableFiles(self):
+        """
+        Send available files via POST.
+        :returns:
+        """
         output = StringIO()
         output.write(self.markdownListOfDownloadableFiles())
         headers = {'User-Agent': 'Maui Smart Grid 1.0.0 DB Exporter',
@@ -439,7 +447,7 @@ class MSGDBExporter(object):
         output.close()
 
 
-    def listOfDownloadableFiles(self):
+    def __listOfDownloadableFiles(self):
         """
         Create a list of downloadable files.
         :returns: List of files.
@@ -467,7 +475,7 @@ class MSGDBExporter(object):
         """
 
         content = "||*Name*||*Created*||*Size*||\n"
-        for i in self.listOfDownloadableFiles():
+        for i in self.__listOfDownloadableFiles():
             content += "||[`%s`](%s)" % (i['title'], i['webContentLink'])
             content += "||`%s`" % i['createdDate']
             content += "||`%d B`||" % int(i['fileSize'])
@@ -475,7 +483,7 @@ class MSGDBExporter(object):
         return content
 
 
-    def verifyMD5Sum(self, localFilePath, remoteFileID):
+    def __verifyMD5Sum(self, localFilePath, remoteFileID):
         """
         Verify that the local MD5 sum matches the MD5 sum for the remote file
         corresponding to an ID.
@@ -510,7 +518,7 @@ class MSGDBExporter(object):
         return False
 
 
-    def fileIDForFileName(self, filename):
+    def __fileIDForFileName(self, filename):
         """
         Get the file ID for the given filename.
 
