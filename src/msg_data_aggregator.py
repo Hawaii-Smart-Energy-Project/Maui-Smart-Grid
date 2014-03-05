@@ -14,6 +14,8 @@ from msg_notifier import MSGNotifier
 from msg_configer import MSGConfiger
 from msg_math_util import MSGMathUtil
 
+MINUTE_POSITION = 4  # In time tuple.
+
 
 class MSGDataAggregator(object):
     """
@@ -99,88 +101,14 @@ class MSGDataAggregator(object):
             return True
         return False
 
-    def __irradianceIntervalAverages(self, sum, cnt, timestamp):
-        """
-        Perform averaging of an irradiance data interval.
-        Return one collection per sensor.
-
-        :param sum[]: Totals of values.
-        :param cnt[]: Numbers of records
-        :param timestamp: This is the timestamp that is emitted.
-        :returns: Averaged data tuple.
-        """
-
-        myAvgs = []
-        myCount = 0
-        idx = 0
-        for item in sum:
-            myCount += 1
-            if cnt[idx] != 0:
-                myAvgs.append((myCount, timestamp, item / cnt[idx]))
-            else:
-                myAvgs.append((myCount, timestamp, 'NULL'))
-            idx += 1
-        return myAvgs
-
-
-    def __weatherIntervalAverages(self, sum, cnt, timestamp, tempIndex,
-                                  humIndex):
-        """
-        Return one collection per timestamp.
-
-        :param sum:
-        :param cnt:
-        :param timestamp:
-        :param tempIndex: temperature index
-        :param humIndex: humidity index
-        :returns:
-        """
-        myAvgs = []
-        tAvg = 'NULL'
-        hAvg = 'NULL'
-        if cnt[tempIndex] != 0:
-            tAvg = sum[tempIndex] / cnt[tempIndex]
-        if cnt[humIndex] != 0:
-            hAvg = sum[humIndex] / cnt[humIndex]
-        myAvgs.append([timestamp, tAvg, hAvg])
-        return myAvgs
-
-
-    def __intervalAverages(self, sum, cnt, timestamp):
-        """
-        Perform averaging of a data interval.
-
-        :param sum[]: Totals of values.
-        :param cnt[]: Numbers of records
-        :param timestamp: This is the timestamp that is emitted.
-        :returns: Averaged data tuple.
-        """
-
-        myAvgs = []
-        myCount = 0
-        idx = 0
-        for item in sum:
-            myCount += 1
-            if cnt[idx] != 0:
-                myAvgs.append((myCount, timestamp, item / cnt[idx]))
-            else:
-                myAvgs.append((myCount, timestamp, 'NULL'))
-            idx += 1
-        return myAvgs
-
-    def __generateAggregatedIrradianceData(self):
-        """
-        :returns:
-        """
-
-        pass
-
     def __rawIrradianceData(self, startDate, endDate):
         """
         :returns: Raw irradiance data as DB rows.
         """
 
         dataType = 'irradiance'
+        # @CRITICAL: sensor_id ascending is critical to the correct
+        # functioning of aggregation due to __irradianceIntervalAverages.
         return self.__fetch("""SELECT %s FROM "%s" WHERE timestamp BETWEEN
         '%s' AND '%s'
             ORDER BY timestamp, sensor_id""" % (
@@ -205,7 +133,7 @@ class MSGDataAggregator(object):
         dataType = 'circuit'
         return self.__fetch("""SELECT %s FROM "%s" WHERE timestamp BETWEEN
         '%s' AND '%s'
-            ORDER BY timestamp""" % (
+            ORDER BY timestamp, circuit""" % (
             self.columns[dataType], self.tables[dataType], startDate, endDate))
 
     def __rawEgaugeData(self, startDate, endDate):
@@ -216,11 +144,175 @@ class MSGDataAggregator(object):
         dataType = 'egauge'
         return self.__fetch("""SELECT %s FROM "%s" WHERE datetime BETWEEN
         '%s' AND '%s'
-            ORDER BY datetime""" % (
+            ORDER BY datetime, egauge_id""" % (
             self.columns[dataType], self.tables[dataType], startDate, endDate))
 
-    def aggregatedCircuitData(self, startDate, endDate):
+    def __irradianceIntervalAverages(self, sum, cnt, timestamp):
+        """
+        Perform averaging of an irradiance data interval.
+        Return one collection per sensor.
 
+        :param sum[]: Totals of values.
+        :param cnt[]: Numbers of records
+        :param timestamp: This is the timestamp that is emitted.
+        :returns: Averaged data tuple.
+        """
+
+        myAvgs = []
+        myCount = 0
+        idx = 0
+        for item in sum:
+            myCount += 1
+            if cnt[idx] != 0:
+                myAvgs.append((myCount, timestamp, item / cnt[idx]))
+            else:
+                myAvgs.append((myCount, timestamp, 'NULL'))
+            idx += 1
+        return myAvgs
+
+    def __weatherIntervalAverages(self, sum, cnt, timestamp, tempIndex,
+                                  humIndex):
+        """
+        Return one collection per timestamp.
+
+        :param sum:
+        :param cnt:
+        :param timestamp:
+        :param tempIndex: temperature index
+        :param humIndex: humidity index
+        :returns:
+        """
+
+        myAvgs = []
+        tAvg = 'NULL'
+        hAvg = 'NULL'
+        if cnt[tempIndex] != 0:
+            tAvg = sum[tempIndex] / cnt[tempIndex]
+        if cnt[humIndex] != 0:
+            hAvg = sum[humIndex] / cnt[humIndex]
+        myAvgs.append([timestamp, tAvg, hAvg])
+        return myAvgs
+
+
+    def __circuitIntervalAverages(self, sums, cnts, timestamp, timestampIndex):
+        """
+
+        :param sums: dict
+        :param cnts: dict
+        :param timestamp: datetime
+        :param timestampIndex: int
+        :return: dict with circuits as keys for lists of aggregated values.
+        """
+
+        myAvgs = {}
+
+        for k in sums.keys():
+
+            myAvgs[k] = []
+            sumIndex = 0
+            for s in sums[k]:
+                if sumIndex == timestampIndex:
+                    myAvgs[k].append(timestamp)
+                else:
+                    if cnts[k][sumIndex] != 0:
+                        myAvgs[k].append(s / cnts[k][sumIndex])
+                    else:
+                        myAvgs[k].append('NULL')
+                sumIndex += 1
+
+        return myAvgs
+
+    def __egaugeIntervalAverages(self, sums, cnts, timestamp, timestampIndex):
+        """
+
+        :param sums:
+        :param cnts:
+        :param timestamp:
+        :param timestampIndex:
+        :returns:
+        """
+
+        myAvgs = {}
+
+        for k in sums.keys():
+            myAvgs[k] = []
+            sumIndex = 0
+            for s in sums[k]:
+                if sumIndex == timestampIndex:
+                    myAvgs[k].append(timestamp)
+                else:
+                    if cnts[k][sumIndex] != 0:
+                        myAvgs[k].append(s / cnts[k][sumIndex])
+                    else:
+                        myAvgs[k].append('NULL')
+                sumIndex += 1
+        return myAvgs
+
+
+    def aggregatedEgaugeData(self, startDate, endDate):
+        """
+
+        :param startDate:
+        :param endDate:
+        :returns:
+        """
+
+        timeCol = 'datetime'
+        idCol = 'egauge_id'
+        aggData = []
+        ci = lambda col_name: self.columns['egauge'].split(',').index(col_name)
+
+        rowCnt = 0
+
+        def __egaugeIDs():
+            egauges = set()
+            # @todo Optimize using a distinct query.
+            for row in self.__rawEgaugeData(startDate, endDate):
+                egauges.add(row[ci('egauge_id')])
+            return egauges
+
+        egauges = __egaugeIDs()
+
+        def __initSumAndCount():
+            sums = {}
+            cnts = {}
+
+            for i in range(len(self.columns['egauge'].split(','))):
+                for e in egauges:
+                    if e not in sums.keys():
+                        sums[e] = []
+                        cnts[e] = []
+                    sums[e].append(0)
+                    cnts[e].append(0)
+            return (sums, cnts)
+
+        (sum, cnt) = __initSumAndCount()
+        for row in self.__rawEgaugeData(startDate, endDate):
+            for col in self.columns['egauge'].split(','):
+                if self.mathUtil.isNumber(row[ci(col)]):
+                    sum[row[ci(idCol)]][ci(col)] += row[ci(col)]
+                    cnt[row[ci(idCol)]][ci(col)] += 1
+
+            if (self.__intervalCrossed(
+                    minute = row[ci(timeCol)].timetuple()[MINUTE_POSITION])):
+                aggData += [
+                    self.__egaugeIntervalAverages(sum, cnt, row[ci(timeCol)],
+                                                  ci(timeCol))]
+                __initSumAndCount()
+            rowCnt += 1
+
+        return aggData
+
+
+    def aggregatedCircuitData(self, startDate, endDate):
+        """
+
+        :param startDate: str
+        :param endDate: str
+        :returns: List of dicts for aggregated data where each circuit is a key.
+        """
+
+        timeCol = 'timestamp'
         aggData = []
         ci = lambda col_name: self.columns['circuit'].split(',').index(col_name)
         assert (
@@ -229,40 +321,61 @@ class MSGDataAggregator(object):
 
         rowCnt = 0
 
+        def __circuits():
+            circuits = set()
+            # @todo Optimize using a distinct query.
+            for row in self.__rawCircuitData(startDate, endDate):
+                circuits.add(row[ci('circuit')])
+            return circuits
+
+        circuits = __circuits()
+        self.logger.log('circuits %s' % circuits)
+
         def __initSumAndCount():
             """
-            Initialize storage arrays.
+            Initialize storage dicts.
             """
-            sum = []
-            cnt = []
+            sum = {}
+            cnt = {}
 
             for i in range(len(self.columns['circuit'].split(','))):
-                sum.append(0)
-                cnt.append(0)
+                for c in circuits:
+                    if c not in sum.keys():
+                        sum[c] = []
+                        cnt[c] = []
+                    sum[c].append(0)
+                    cnt[c].append(0)
             return (sum, cnt)
 
         (sum, cnt) = __initSumAndCount()
 
         for row in self.__rawCircuitData(startDate, endDate):
+
             for col in self.columns['circuit'].split(','):
                 if self.mathUtil.isNumber(row[ci(col)]):
-                    sum[ci(col)] += row[ci(col)]
-                    cnt[ci(col)] += 1
+                    sum[row[ci('circuit')]][ci(col)] += row[ci(col)]
+                    cnt[row[ci('circuit')]][ci(col)] += 1
 
-        if (
-                self.__intervalCrossed(
-                        minute = row[ci('timestamp')].timetuple()[4])):
-            pass
+            if (self.__intervalCrossed(
+                    minute = row[ci(timeCol)].timetuple()[MINUTE_POSITION])):
+                aggData += [
+                    self.__circuitIntervalAverages(sum, cnt, row[ci(timeCol)],
+                                                   ci(timeCol))]
 
+                __initSumAndCount()
+            rowCnt += 1
+
+        return aggData
 
     def aggregatedWeatherData(self, startDate, endDate):
         """
 
-        :param startDate:
-        :param endDate:
+        :param startDate: str
+        :param endDate: str
         :returns: List of tuples for aggregated data.
         """
 
+        timeCol = 'timestamp'
         aggData = []
         ci = lambda col_name: self.columns['weather'].split(',').index(col_name)
         assert (
@@ -287,21 +400,16 @@ class MSGDataAggregator(object):
         (sum, cnt) = __initSumAndCount()
 
         for row in self.__rawWeatherData(startDate, endDate):
-            # col_i = 0
             for col in self.columns['weather'].split(','):
                 if self.mathUtil.isNumber(row[ci(col)]):
                     sum[ci(col)] += row[ci(col)]
                     cnt[ci(col)] += 1
-                    # col_i+=1
 
             if (self.__intervalCrossed(
-                    minute = row[ci('timestamp')].timetuple()[4])):
+                    minute = row[ci(timeCol)].timetuple()[MINUTE_POSITION])):
                 aggData += self.__weatherIntervalAverages(sum, cnt,
-                                                          row[ci('timestamp')],
-                                                          ci(
-                                                              'met_air_temp_degf'),
-                                                          ci(
-                                                              'met_rel_humid_pct'))
+                                                          row[ci(timeCol)], ci(
+                        'met_air_temp_degf'), ci('met_rel_humid_pct'))
                 __initSumAndCount()
             rowCnt += 1
 
@@ -313,11 +421,12 @@ class MSGDataAggregator(object):
         Perform aggregation of irradiance data And insert or update,
         as necessary, the aggregated data table in the database.
 
-        :param startDate
-        :param endDate
+        :param startDate: str
+        :param endDate: str
         :returns: List of tuples for aggregated data.
         """
 
+        timeCol = 'timestamp'
         aggData = []
         ci = lambda col_name: self.columns['irradiance'].split(',').index(
             col_name)
@@ -353,12 +462,12 @@ class MSGDataAggregator(object):
                 sum[row[ci('sensor_id')] - 1] += row[ci('irradiance_w_per_m2')]
 
             if (self.__intervalCrossed(
-                    minute = row[ci('timestamp')].timetuple()[4])):
+                    minute = row[ci(timeCol)].timetuple()[MINUTE_POSITION])):
                 # Emit the average for the current sum.
                 # Use the current timestamp that is the trailing timestamp
                 # for the interval.
-                aggData += self.__irradianceIntervalAverages(sum, cnt, row[
-                    ci('timestamp')])
+                aggData += self.__irradianceIntervalAverages(sum, cnt,
+                                                             row[ci(timeCol)])
                 __initSumAndCount()
 
             rowCnt += 1
@@ -376,6 +485,6 @@ class MSGDataAggregator(object):
         :returns: DB result set.
         """
 
-        self.logger.log('sql: %s' % sql)
+        self.logger.log('sql: %s' % sql, 'debug')
         self.dbUtil.executeSQL(self.cursor, sql)
         return self.cursor.fetchall()

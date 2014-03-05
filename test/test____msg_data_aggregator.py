@@ -78,18 +78,34 @@ class MSGDataAggregatorTester(unittest.TestCase):
 
     def testCircuitAggregation(self):
         rowCnt = 0
+
         for row in self.aggregator.aggregatedCircuitData(
                 startDate = self.testStart, endDate = self.testEnd):
-            print '%d: %s' % (rowCnt, row)
+            print row
             rowCnt += 1
 
+        self.assertEqual(rowCnt, 4,
+                         'Rows are not equal to the number of intervals.')
 
+
+    def testEgaugeAggregation(self):
+        rowCnt = 0
+
+        for row in self.aggregator.aggregatedEgaugeData(
+                startDate = self.testStart, endDate = self.testEnd):
+            print row
+            rowCnt += 1
+
+        # self.assertEqual(rowCnt, 4,
+        #                  'Rows are not equal to the number of intervals.')
 
 if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
-        selected_tests = ['testIrradianceAggregation', 'testWeatherAggregation','testCircuitAggregation']
+        selected_tests = ['testIrradianceAggregation', 'testWeatherAggregation',
+                          'testCircuitAggregation']
+        selected_tests = ['testEgaugeAggregation']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDataAggregatorTester(t))
