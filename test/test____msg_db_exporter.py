@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 
 __author__ = 'Daniel Zhang (張道博)'
+__copyright__ = 'Copyright (c) 2014, University of Hawaii Smart Energy Project'
+__license__ = 'https://raw.github' \
+              '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
+              '-LICENSE.txt'
 
 import unittest
 from msg_logger import MSGLogger
@@ -76,7 +80,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
 
     def testListOfDownloadableFiles(self):
-        for row in self.exporter.listOfDownloadableFiles():
+        for row in self.exporter.__listOfDownloadableFiles():
             print row
             self.assertIsNotNone(row['id'])
             self.assertIsNotNone(row['title'])
@@ -114,7 +118,8 @@ class MSGDBExporterTester(unittest.TestCase):
 
         self.logger.log('Testing getting the file ID for a filename.')
 
-        fileIDs = self.exporter.fileIDForFileName(self.compressedTestFilename)
+        fileIDs = self.exporter._MSGDBExporter__fileIDForFileName(
+            self.compressedTestFilename)
         self.logger.log("file ids = %s" % fileIDs, 'info')
 
         self.assertIsNotNone(fileIDs)
@@ -132,6 +137,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.logger.log('Uploaded %s.' % filePath, 'info')
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
+        self.logger.log('upload result: %s' % uploadResult)
 
         self.assertTrue(uploadResult)
 
@@ -142,10 +148,12 @@ class MSGDBExporterTester(unittest.TestCase):
         the ability to test the deleting of outdated files.
         """
 
-        # @todo Prevent deleting files uploaded today.
-        # @todo Prevent deleting NON-testing files.
+        # return
 
-        return
+        # @TO BE REVIEWED  Prevent deleting files uploaded today.
+        # @IMPORTANT Prevent deleting NON-testing files.
+        # Need to have a test file uploaded that has an explicitly set upload
+        #  date.
 
         self.logger.log("Test deleting outdated files.")
 
@@ -156,12 +164,10 @@ class MSGDBExporterTester(unittest.TestCase):
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
 
-        # @TO BE REVIEWED: Test should not be run until verified.
-        # @todo Verify that this deletes files that are older than 2 days.
         cnt = self.exporter.deleteOutdatedFiles(
-            minAge = datetime.timedelta(days = 2),
-            maxAge = datetime.timedelta(days = 99))
-        self.assertGreater(cnt, 0)
+            minAge = datetime.timedelta(days = 5),
+            maxAge = datetime.timedelta(days = 99999))
+        # self.assertGreater(cnt, 0)
 
 
     def testAddingReaderPermissions(self):
@@ -189,7 +195,7 @@ class MSGDBExporterTester(unittest.TestCase):
         new_permission = {'value': email, 'type': 'user', 'role': 'reader'}
         try:
             self.logger.log('Adding reader permission', 'INFO')
-            fileIDToAddTo = self.exporter.fileIDForFileName(
+            fileIDToAddTo = self.exporter._MSGDBExporter__fileIDForFileName(
                 self.compressedTestFilename)
 
             # The permission dict is being output to stdout here.
@@ -200,6 +206,7 @@ class MSGDBExporterTester(unittest.TestCase):
             self.logger.log(
                 'Exception while adding reader permissions: %s' % detail,
                 'error')
+
 
     def testCreateCompressedArchived(self):
         """
@@ -289,6 +296,11 @@ class MSGDBExporterTester(unittest.TestCase):
         self.logger.log('size: %s' % fSize)
         self.assertEqual(fSize, 12279, 'File size is correct.')
 
+    def testUploadExportFilesList(self):
+        """
+        """
+        self.exporter.sendDownloadableFiles()
+
 
     def tearDown(self):
         """
@@ -333,7 +345,8 @@ class MSGDBExporterTester(unittest.TestCase):
         # Keep deleting from the cloud until there is no more to delete.
         while deleteSuccessful:
             try:
-                fileIDToDelete = self.exporter.fileIDForFileName(
+                fileIDToDelete = self.exporter\
+                    ._MSGDBExporter__fileIDForFileName(
                     self.compressedTestFilename)
                 self.logger.log("file ID to delete: %s" % fileIDToDelete,
                                 'DEBUG')
@@ -350,7 +363,12 @@ if __name__ == '__main__':
     if RUN_SELECTED_TESTS:
         # selected_tests = ['testAddingReaderPermissions',
         #                   'testDeleteOutdatedFiles', 'testGetMD5SumFromCloud']
-        selected_tests = ['testDownloadURLList','testListOfDownloadableFiles']
+        # selected_tests = ['testDownloadURLList','testListOfDownloadableFiles']
+        # selected_tests = ['testDeleteOutdatedFiles']
+        selected_tests = ['testDeleteOutdatedFiles',
+                          'testUploadExportFilesList']
+        # selected_tests = ['testUploadExportFilesList']
+        # selected_tests = ['testUploadTestData']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:

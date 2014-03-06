@@ -22,7 +22,9 @@ class MSGDBConnector(object):
         """
         Constructor.
 
-        :param testing: Boolean indicating if Testing Mode is on.
+        :param testing: Boolean indicating if Testing Mode is on. When
+        testing mode is on, a connection to the testing database will be made
+        instead of the normal database.
         :param logLevel
         """
 
@@ -50,13 +52,18 @@ class MSGDBConnector(object):
                                                           'db_username')
 
         self.conn = self.connectDB()
-        self.dictCur = self.conn.cursor(
-            cursor_factory = psycopg2.extras.DictCursor)
+
+        try:
+            self.dictCur = self.conn.cursor(
+                cursor_factory = psycopg2.extras.DictCursor)
+        except AttributeError as error:
+            self.logger.log('Error while getting DictCursor: %s' % error)
 
 
     def connectDB(self):
         """
         Make the DB connection.
+        :returns: DB connection object if successful, otherwise None.
         """
 
         # @todo Make this method private since the init makes the connection.

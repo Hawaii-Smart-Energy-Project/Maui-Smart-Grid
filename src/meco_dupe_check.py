@@ -122,10 +122,10 @@ class MECODupeChecker(object):
                                 DEBUG = False):
         """
         Duplicate cases:
-        1. meterID and endTime combination exists in the database.
-            @deprecated in favor of full meterName-endTime-channel query
+        1. Tuple (meterID, endTime) exists in the database.
+        @DEPRECATED in favor of (2), full meterName-endTime-channel query.
 
-        2. meterID, endTime, channel combination exists in the database.
+        2. Tuple (meterID, endTime, channel) exists in the database.
 
         :param conn: Database connection.
         :param meterName: Meter name in MeterData table.
@@ -158,7 +158,7 @@ class MECODupeChecker(object):
                      channel = '%s'""" % (
                 endTime, meterName, channel)
 
-        else: # deprecated query
+        else:  # deprecated query
             sql = """SELECT	"Interval".end_time,
                             "MeterData".meter_name,
                             "MeterData".meter_data_id
@@ -230,7 +230,7 @@ class MECODupeChecker(object):
 
         # assert len(rows) == 1 or len(rows) == 0
         assert len(
-            rows) == 1, "Didn't find a matching reading for reading ID %s." % \
+            rows) == 1, "Didn't find a matching reading for reading ID %s." %\
                         self.currentReadingID
         if len(rows) == 1:
             self.logger.log("Found %s existing matches." % len(rows), 'silent')

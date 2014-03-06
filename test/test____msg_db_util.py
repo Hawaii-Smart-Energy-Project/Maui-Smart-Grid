@@ -16,14 +16,17 @@ from msg_configer import MSGConfiger
 from msg_logger import MSGLogger
 
 
-class TestMECODBUtil(unittest.TestCase):
+class MSGDBUtilTester(unittest.TestCase):
     """
     Unit tests for MECO DB Utils.
     """
 
     def setUp(self):
         self.i = MECODBInserter()
+
+        # Connect to the testing database.
         self.connector = MSGDBConnector(testing = True)
+
         self.conn = self.connector.connectDB()
         self.lastSeqVal = None
 
@@ -57,8 +60,6 @@ class TestMECODBUtil(unittest.TestCase):
                                                         self.columnName)
         print "lastSeqVal = %s" % self.lastSeqVal
 
-        #sql = "select * from \"%s\" where %s = %s" % (self.tableName,
-        # self.columnName, self.lastSeqVal)
         sql = """SELECT * FROM "%s" WHERE %s = %s""" % (
         self.tableName, self.columnName, self.lastSeqVal)
         dictCur = self.connector.dictCur
@@ -75,6 +76,10 @@ class TestMECODBUtil(unittest.TestCase):
 
 
     def testEraseTestingDatabase(self):
+        """
+        Test that calls to eraseTestMeco() work correctly.
+        """
+
         dbName = self.dbUtil.getDBName(self.cursor)[0]
         self.logger.log("DB name is %s" % dbName, 'info')
         self.assertEqual(dbName, "test_meco",
@@ -90,6 +95,14 @@ class TestMECODBUtil(unittest.TestCase):
                              "No records should be present in the %s table."
                              % table)
 
+    def testColumns(self):
+        """
+        Test the ability to retrieve the column names from a database.
+        """
+
+        print self.dbUtil.columns(self.cursor, 'Event')
+
+
     def tearDown(self):
         """
         Delete the record that was inserted.
@@ -102,4 +115,14 @@ class TestMECODBUtil(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    RUN_SELECTED_TESTS = True
+
+    if RUN_SELECTED_TESTS:
+        selected_tests = ['testColumns']
+
+        mySuite = unittest.TestSuite()
+        for t in selected_tests:
+            mySuite.addTest(MSGDBUtilTester(t))
+        unittest.TextTestRunner().run(mySuite)
+    else:
+        unittest.main()

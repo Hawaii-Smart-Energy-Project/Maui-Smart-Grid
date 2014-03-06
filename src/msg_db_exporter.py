@@ -24,6 +24,9 @@ from functools import partial
 from msg_file_util import MSGFileUtil
 import time
 from httplib import BadStatusLine
+import requests
+from io import StringIO
+from requests.adapters import SSLError
 
 
 class MSGDBExporter(object):
@@ -211,9 +214,15 @@ class MSGDBExporter(object):
                 if numChunks != 0:
                     self.logger.log('Splitting %s' % compressedFullPath,
                                     'DEBUG')
+                    # filesToUpload = self.fileUtil.splitLargeFile(
+                    #     fullPath = compressedFullPath, chunkSize = chunkSize,
+                    #     numChunks = self.numberOfChunksToUse(
+                    #         compressedFullPath))
                     filesToUpload = self.fileUtil.splitLargeFile(
                         fullPath = compressedFullPath, chunkSize = chunkSize,
-                        numChunks = self.numberOfChunksToUse(fullPath))
+                        numChunks = self.numberOfChunksToUse(
+                            compressedFullPath))
+
                     if not filesToUpload:
                         raise (Exception, 'Exception during file splitting.')
                     self.logger.log('to upload: %s' % filesToUpload, 'debug')
@@ -226,13 +235,16 @@ class MSGDBExporter(object):
                 for f in filesToUpload:
                     self.logger.log('Uploading %s.' % f, 'info')
                     fileID = self.uploadDBToCloudStorage(f, testing = testing)
+                    self.logger.log('file id after upload: %s' % fileID)
                     self.addReaders(fileID,
-                                    self.configer.configOptionValue().split(
+                                    self.configer.configOptionValue('Export',
+                                                                    'read_permission').split(
                                         ','))
 
             # Remove the uncompressed file.
             try:
                 if not testing:
+                    self.logger.log('Removing %s' % fullPath)
                     os.remove('%s' % fullPath)
             except OSError as e:
                 self.logger.log(
@@ -241,6 +253,7 @@ class MSGDBExporter(object):
 
         # End for db in databases.
 
+        # @todo implement separate delete outdated runner
         self.deleteOutdatedFiles(minAge = datetime.timedelta(days = int(
             self.configer.configOptionValue('Export', 'days_to_keep'))))
 
@@ -252,15 +265,17 @@ class MSGDBExporter(object):
         Return the number of chunks to be used by the file splitter based on
         the file size of the file at fullPath.
         :param fullPath
-        :returns: Number of chunks to create.
+        :returns: int Number of chunks to create.
         """
 
         fsize = os.path.getsize(fullPath)
         self.logger.log('fullpath: %s, fsize: %s' % (fullPath, fsize))
-        if (fsize >= self.configer.configOptionValue('Export',
-                                                     'max_bytes_before_split')):
-            return self.configer.configOptionValue('Export',
-                                                   'num_split_sections')
+        if (fsize >= int(self.configer.configOptionValue('Export',
+                                                         'max_bytes_before_split'))):
+            self.logger.log('will split with config defined num chunks')
+            return int(
+                self.configer.configOptionValue('Export', 'num_split_sections'))
+        self.logger.log('will NOT split file')
         return 1
 
 
@@ -270,7 +285,7 @@ class MSGDBExporter(object):
 
         :param fullPath of DB file to be exported.
         :param testing: When to to True, Testing Mode is used.
-        :returns: True on verified on upload; False if verification fails.
+        :returns: File ID on verified on upload; None if verification fails.
         """
 
         success = True
@@ -279,6 +294,7 @@ class MSGDBExporter(object):
         self.logger.log('full path %s' % os.path.dirname(fullPath), 'DEBUG')
         self.logger.log("Uploading %s." % dbName)
 
+        result = {}
         try:
             media_body = MediaFileUpload(fullPath,
                                          mimetype =
@@ -289,6 +305,7 @@ class MSGDBExporter(object):
                                    'compressed DB export.',
                     'mimeType': 'application/gzip-compressed'}
 
+            # Result is a Files resource.
             result = self.driveService.files().insert(body = body,
                                                       media_body =
                                                       media_body).execute()
@@ -299,17 +316,21 @@ class MSGDBExporter(object):
                 "Exception while uploading %s: %s." % (dbName, detail), 'error')
             success = False
 
-        if not self.verifyMD5Sum(fullPath, self.fileIDForFileName(dbName)):
+        if not self.__verifyMD5Sum(fullPath, self.__fileIDForFileName(dbName)):
             self.logger.log('Failed MD5 checksum verification.', 'INFO')
             success = False
 
         if success:
             self.logger.log('Verification by MD5 checksum succeeded.', 'INFO')
             self.logger.log("Finished.")
-        return success
+
+        if not success:
+            return None
+
+        return result['id']
 
 
-    def retrieveCredentials(self):
+    def __retrieveCredentials(self):
         """
         Perform authorization at the server.
 
@@ -348,6 +369,7 @@ class MSGDBExporter(object):
         :param fileID: Googe API file ID.
         """
 
+        # @todo Report filename.
         self.logger.log('Deleting file with file ID: %s' % fileID, 'debug')
 
         try:
@@ -362,11 +384,18 @@ class MSGDBExporter(object):
         """
         Remove outdated files from cloud storage.
 
+        @TO BE REVIEWED
+        This requires a recursive implementation to always completely
+        remove all files older than minAge.
+
+        This may be an issue with the Google Drive SDK.
+
         :param minAge: Minimum age before a file is considered outdated.
         :param maxAge: Maximum age to consider for a file.
         :returns: Count of deleted items.
         """
 
+        self.logger.log('Deleting outdated.', 'DEBUG')
         deleteCnt = 0
 
         if minAge == datetime.timedelta(days = 0):
@@ -375,12 +404,12 @@ class MSGDBExporter(object):
         for item in self.cloudFiles['items']:
             t1 = datetime.datetime.strptime(item['createdDate'],
                                             "%Y-%m-%dT%H:%M:%S.%fZ")
-            self.logger.log(
-                't1: %s' % datetime.datetime.strftime(t1, '%Y-%m-%d %H:%M:%S'),
-                'debug')
+            self.logger.log('t1: %s' % t1.strftime('%Y-%m-%d %H:%M:%S'),
+                            'debug')
             t2 = datetime.datetime.now()
             tdelta = t2 - t1
-            self.logger.log('tdelta: %s' % tdelta, 'debug')
+            self.logger.log('tdelta: %s, min age: %s, max age: %s' % (
+                tdelta, minAge, maxAge), 'debug')
             if tdelta > minAge and tdelta < maxAge:
                 deleteCnt += 1
                 self.deleteFile(fileID = item['id'])
@@ -397,14 +426,36 @@ class MSGDBExporter(object):
         pass
 
 
-    def listOfDownloadableFiles(self):
+    def sendDownloadableFiles(self):
+        """
+        Send available files via POST.
+        :returns:
+        """
+        output = StringIO()
+        output.write(self.markdownListOfDownloadableFiles())
+        headers = {'User-Agent': 'Maui Smart Grid 1.0.0 DB Exporter',
+                   'Content-Type': 'text/html'}
+        try:
+            r = requests.post(self.configer.configOptionValue('Export',
+                                                              'export_list_post_url'),
+                              output.getvalue(), headers = headers)
+            print 'text: %s' % r.text
+        except requests.adapters.SSLError as error:
+            # @todo Implement alternative verification.
+            self.logger.log('SSL error: %s' % error)
+
+        output.close()
+
+
+    def __listOfDownloadableFiles(self):
         """
         Create a list of downloadable files.
+        :returns: List of files.
         """
 
         files = []
-
-        for i in self.cloudFiles['items']:
+        for i in reversed(sorted(self.cloudFiles['items'],
+                                 key = lambda k: k['createdDate'])):
             item = dict()
             item['title'] = i['title']
             item['webContentLink'] = i['webContentLink']
@@ -412,28 +463,27 @@ class MSGDBExporter(object):
             item['createdDate'] = i['createdDate']
             item['fileSize'] = i['fileSize']
             files.append(item)
-
         return files
 
 
     def markdownListOfDownloadableFiles(self):
         """
-        Generate list of downloadable files in Markdown format.
+        Generate content containing list of downloadable files in Markdown
+        format.
 
         :returns: Content in Markdown format.
         """
 
-        content = ''
-        for i in self.listOfDownloadableFiles():
-            content += "Name: [%s](%s)\n" % (i['title'], i['webContentLink'])
-            content += "Created: %s\n" % i['createdDate']
-            content += "Size: %d B\n" % int(i['fileSize'])
+        content = "||*Name*||*Created*||*Size*||\n"
+        for i in self.__listOfDownloadableFiles():
+            content += "||[`%s`](%s)" % (i['title'], i['webContentLink'])
+            content += "||`%s`" % i['createdDate']
+            content += "||`%d B`||" % int(i['fileSize'])
             content += '\n'
-
         return content
 
 
-    def verifyMD5Sum(self, localFilePath, remoteFileID):
+    def __verifyMD5Sum(self, localFilePath, remoteFileID):
         """
         Verify that the local MD5 sum matches the MD5 sum for the remote file
         corresponding to an ID.
@@ -468,7 +518,7 @@ class MSGDBExporter(object):
         return False
 
 
-    def fileIDForFileName(self, filename):
+    def __fileIDForFileName(self, filename):
         """
         Get the file ID for the given filename.
 
@@ -517,6 +567,9 @@ class MSGDBExporter(object):
 
         success = True
 
+        self.logger.log('file id: %s' % fileID)
+        self.logger.log('address list: %s' % emailAddressList)
+
         for addr in emailAddressList:
             permission = {'value': addr, 'type': 'user', 'role': 'reader'}
 
@@ -525,9 +578,9 @@ class MSGDBExporter(object):
                     resp = self.driveService.permissions().insert(
                         fileId = fileID, sendNotificationEmails = False,
                         body = permission).execute()
+                    self.logger.log('Reader permission added for %s.' % addr)
                 except errors.HttpError, error:
                     print 'An error occurred: %s' % error
                     success = False
 
         return success
-
