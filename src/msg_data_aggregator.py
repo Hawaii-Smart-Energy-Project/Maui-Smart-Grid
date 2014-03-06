@@ -101,51 +101,26 @@ class MSGDataAggregator(object):
             return True
         return False
 
-    def __rawIrradianceData(self, startDate, endDate):
-        """
-        :returns: Raw irradiance data as DB rows.
+
+    def __rawData(self, dataType = '', orderBy = None, timestampCol = '',
+                  startDate = '', endDate = ''):
         """
 
-        dataType = 'irradiance'
-        # @CRITICAL: sensor_id ascending is critical to the correct
-        # functioning of aggregation due to __irradianceIntervalAverages.
-        return self.__fetch("""SELECT %s FROM "%s" WHERE timestamp BETWEEN
-        '%s' AND '%s'
-            ORDER BY timestamp, sensor_id""" % (
-            self.columns[dataType], self.tables[dataType], startDate, endDate))
-
-    def __rawWeatherData(self, startDate, endDate):
-        """
-        :returns: Raw weather data as DB rows.
+        :param dataType: string
+        :param orderBy: list
+        :param timestampCol: string
+        :param startDate: string
+        :param endDate: string
+        :return: DB rows.
         """
 
-        dataType = 'weather'
-        return self.__fetch("""SELECT %s FROM "%s" WHERE timestamp BETWEEN
-        '%s' AND '%s'
-            ORDER BY timestamp""" % (
-            self.columns[dataType], self.tables[dataType], startDate, endDate))
+        # @todo Validate args.
 
-    def __rawCircuitData(self, startDate, endDate):
-        """
-        :returns: Raw circuit data as DB rows.
-        """
-
-        dataType = 'circuit'
-        return self.__fetch("""SELECT %s FROM "%s" WHERE timestamp BETWEEN
-        '%s' AND '%s'
-            ORDER BY timestamp, circuit""" % (
-            self.columns[dataType], self.tables[dataType], startDate, endDate))
-
-    def __rawEgaugeData(self, startDate, endDate):
-        """
-        :returns: Raw eGauge data as DB rows.
-        """
-
-        dataType = 'egauge'
-        return self.__fetch("""SELECT %s FROM "%s" WHERE datetime BETWEEN
-        '%s' AND '%s'
-            ORDER BY datetime, egauge_id""" % (
-            self.columns[dataType], self.tables[dataType], startDate, endDate))
+        return self.__fetch("""SELECT %s FROM "%s" WHERE %s BETWEEN '%s' AND
+        '%s' ORDER BY
+            %s""" % (
+            self.columns[dataType], self.tables[dataType], timestampCol,
+            startDate, endDate, ','.join(orderBy)))
 
     def __irradianceIntervalAverages(self, sum, cnt, timestamp):
         """
@@ -287,7 +262,10 @@ class MSGDataAggregator(object):
             return (sums, cnts)
 
         (sum, cnt) = __initSumAndCount()
-        for row in self.__rawEgaugeData(startDate, endDate):
+        for row in self.__rawData(dataType = 'egauge',
+                                  orderBy = [timeCol, 'egauge_id'],
+                                  timestampCol = timeCol, startDate = startDate,
+                                  endDate = endDate):
             for col in self.columns['egauge'].split(','):
                 if self.mathUtil.isNumber(row[ci(col)]):
                     sum[row[ci(idCol)]][ci(col)] += row[ci(col)]
@@ -349,8 +327,10 @@ class MSGDataAggregator(object):
 
         (sum, cnt) = __initSumAndCount()
 
-        for row in self.__rawCircuitData(startDate, endDate):
-
+        for row in self.__rawData(dataType = 'circuit',
+                                  orderBy = [timeCol, 'circuit'],
+                                  timestampCol = timeCol, startDate = startDate,
+                                  endDate = endDate):
             for col in self.columns['circuit'].split(','):
                 if self.mathUtil.isNumber(row[ci(col)]):
                     sum[row[ci('circuit')]][ci(col)] += row[ci(col)]
@@ -399,7 +379,9 @@ class MSGDataAggregator(object):
 
         (sum, cnt) = __initSumAndCount()
 
-        for row in self.__rawWeatherData(startDate, endDate):
+        for row in self.__rawData(dataType = 'weather', orderBy = [timeCol],
+                                  timestampCol = timeCol, startDate = startDate,
+                                  endDate = endDate):
             for col in self.columns['weather'].split(','):
                 if self.mathUtil.isNumber(row[ci(col)]):
                     sum[ci(col)] += row[ci(col)]
@@ -453,8 +435,10 @@ class MSGDataAggregator(object):
 
         rowCnt = 0
 
-        for row in self.__rawIrradianceData(startDate, endDate):
-
+        for row in self.__rawData(dataType = 'irradiance',
+                                  orderBy = [timeCol, 'sensor_id'],
+                                  timestampCol = timeCol, startDate = startDate,
+                                  endDate = endDate):
             # cnt is used for sensor ID here.
             if self.mathUtil.isNumber(row[ci('irradiance_w_per_m2')]):
                 # Add up the values for each sensor.
