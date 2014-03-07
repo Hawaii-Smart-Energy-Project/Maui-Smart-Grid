@@ -242,7 +242,10 @@ class MSGDataAggregator(object):
         def __egaugeIDs():
             egauges = set()
             # @todo Optimize using a distinct query.
-            for row in self.__rawEgaugeData(startDate, endDate):
+            for row in  self.__rawData(dataType = 'egauge',
+                                  orderBy = [timeCol, 'egauge_id'],
+                                  timestampCol = timeCol, startDate = startDate,
+                                  endDate = endDate):
                 egauges.add(row[ci('egauge_id')])
             return egauges
 
@@ -302,7 +305,10 @@ class MSGDataAggregator(object):
         def __circuits():
             circuits = set()
             # @todo Optimize using a distinct query.
-            for row in self.__rawCircuitData(startDate, endDate):
+            for row in self.__rawData(dataType = 'circuit',
+                                  orderBy = [timeCol, 'circuit'],
+                                  timestampCol = timeCol, startDate = startDate,
+                                  endDate = endDate):
                 circuits.add(row[ci('circuit')])
             return circuits
 
