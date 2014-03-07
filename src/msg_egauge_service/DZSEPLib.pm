@@ -127,6 +127,7 @@ sub mapCSVColumnsToDatabaseColumns {
     $colAssoc{"Oven and Microwave [kW]"}  = "oven_and_microwave_kw";
     $colAssoc{"Oven and Microwave+ [kW]"} = "oven_and_microwave_plus_kw";
     $colAssoc{"Oven.Usage [kW]"}   = "oven_usage_kw";     # Likely duplicate.
+    $colAssoc{"PV system [kW]"}    = "pv_system_kw";
     $colAssoc{"Range [kW]"}        = "range_kw";
     $colAssoc{"Range.Usage [kW]"}  = "range_usage_kw";    # Likely duplicate.
     $colAssoc{"Refrigerator [kW]"} = "refrigerator_kw";
