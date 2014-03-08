@@ -62,11 +62,11 @@ class MSGDataAggregator(object):
         section = 'Aggregation'
         tableList = ['irradiance', 'agg_irradiance', 'weather', 'agg_weather',
                      'circuit', 'agg_circuit', 'egauge', 'agg_egauge']
-        self.tables = {}
         self.columns = {}
-        for t in tableList:
-            self.tables[t] = self.configer.configOptionValue(section,
-                                                             '%s_table' % t)
+        self.tables = {
+            t: self.configer.configOptionValue(section, '%s_table' % t) for t in
+            tableList}
+
         for t in self.tables.keys():
             self.logger.log('t:%s' % t, 'DEBUG')
             try:
@@ -102,6 +102,18 @@ class MSGDataAggregator(object):
         return False
 
 
+    def __fetch(self, sql):
+        """
+
+        :param sql: Command to be executed.
+        :returns: DB result set.
+        """
+
+        self.logger.log('sql: %s' % sql, 'debug')
+        self.dbUtil.executeSQL(self.cursor, sql)
+        return self.cursor.fetchall()
+
+
     def __rawData(self, dataType = '', orderBy = None, timestampCol = '',
                   startDate = '', endDate = ''):
         """
@@ -121,6 +133,27 @@ class MSGDataAggregator(object):
             %s""" % (
             self.columns[dataType], self.tables[dataType], timestampCol,
             startDate, endDate, ','.join(orderBy)))
+
+    def __writeAggregatedData(self, dataType = '', aggDataCols = None,
+                              aggData = None):
+
+        if not aggDataCols:
+            raise (Exception, 'aggDataCols not defined.')
+        if not aggData:
+            raise (Exception, 'aggData not defined.')
+
+        dataCols = ','.join(aggDataCols)
+        for row in aggData:
+            success = True
+            self.logger.log(
+                'sql: %s' % ("""INSERT INTO "%s" (%s) VALUES (%s)""" % (
+                    self.tables[dataType], dataCols, row)))
+            # success = self.dbUtil.executeSQL(
+            # """INSERT INTO "%s" (%s) VALUES (%s)""" % (
+            #     self.tables[dataType], dataCols, row))
+            if not success:
+                raise (Exception, 'Failure during aggregated data insert.')
+
 
     def __irradianceIntervalAverages(self, sum, cnt, timestamp):
         """
@@ -144,6 +177,7 @@ class MSGDataAggregator(object):
                 myAvgs.append((myCount, timestamp, 'NULL'))
             idx += 1
         return myAvgs
+
 
     def __weatherIntervalAverages(self, sum, cnt, timestamp, tempIndex,
                                   humIndex):
@@ -197,6 +231,7 @@ class MSGDataAggregator(object):
 
         return myAvgs
 
+
     def __egaugeIntervalAverages(self, sums, cnts, timestamp, timestampIndex):
         """
 
@@ -242,10 +277,10 @@ class MSGDataAggregator(object):
         def __egaugeIDs():
             egauges = set()
             # @todo Optimize using a distinct query.
-            for row in  self.__rawData(dataType = 'egauge',
-                                  orderBy = [timeCol, 'egauge_id'],
-                                  timestampCol = timeCol, startDate = startDate,
-                                  endDate = endDate):
+            for row in self.__rawData(dataType = 'egauge',
+                                      orderBy = [timeCol, 'egauge_id'],
+                                      timestampCol = timeCol,
+                                      startDate = startDate, endDate = endDate):
                 egauges.add(row[ci('egauge_id')])
             return egauges
 
@@ -306,9 +341,9 @@ class MSGDataAggregator(object):
             circuits = set()
             # @todo Optimize using a distinct query.
             for row in self.__rawData(dataType = 'circuit',
-                                  orderBy = [timeCol, 'circuit'],
-                                  timestampCol = timeCol, startDate = startDate,
-                                  endDate = endDate):
+                                      orderBy = [timeCol, 'circuit'],
+                                      timestampCol = timeCol,
+                                      startDate = startDate, endDate = endDate):
                 circuits.add(row[ci('circuit')])
             return circuits
 
@@ -352,6 +387,7 @@ class MSGDataAggregator(object):
             rowCnt += 1
 
         return aggData
+
 
     def aggregatedWeatherData(self, startDate, endDate):
         """
@@ -468,13 +504,5 @@ class MSGDataAggregator(object):
             #     return aggData
         return aggData
 
-    def __fetch(self, sql):
-        """
 
-        :param sql: Command to be executed.
-        :returns: DB result set.
-        """
 
-        self.logger.log('sql: %s' % sql, 'debug')
-        self.dbUtil.executeSQL(self.cursor, sql)
-        return self.cursor.fetchall()
