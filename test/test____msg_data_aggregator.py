@@ -31,7 +31,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
         """
         timeCol = 'timestamp'
         rows = []
-        for row in self.aggregator._MSGDataAggregator__rawIrradianceData(
+        for row in self.aggregator._MSGDataAggregator__rawData(
                 dataType = 'irradiance', orderBy = [timeCol, 'sensor_id'],
                 timestampCol = timeCol, startDate = self.testStart,
                 endDate = self.testEnd):
@@ -43,7 +43,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
         """
         timeCol = 'timestamp'
         rows = []
-        for row in self.aggregator._MSGDataAggregator__rawWeatherData(
+        for row in self.aggregator._MSGDataAggregator__rawData(
                 dataType = 'weather', orderBy = [timeCol],
                 timestampCol = timeCol, startDate = self.testStart,
                 endDate = self.testEnd):

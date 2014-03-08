@@ -50,10 +50,7 @@ class MSGDataAggregator(object):
 
         self.logger = MSGLogger(__name__, 'DEBUG')
         self.configer = MSGConfiger()
-        try:
-            self.cursor = MSGDBConnector().connectDB().cursor()
-        except AttributeError as error:
-            self.logger.log('Error while getting cursor: %s' % error, 'ERROR')
+        self.cursor = MSGDBConnector().connectDB().cursor()
         self.dbUtil = MSGDBUtil()
         self.notifier = MSGNotifier()
         self.mathUtil = MSGMathUtil()
