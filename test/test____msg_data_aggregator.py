@@ -126,8 +126,11 @@ class MSGDataAggregatorTester(unittest.TestCase):
                          'Rows are not equal to the number of intervals.')
 
     def testWriteIrradianceAggregation(self):
-        # self.aggregator._MSGDataAggregator__writeAggregatedData(
-        # dataType='irradiance', aggDataCols)
+        agg = self.aggregator.aggregatedEgaugeData(startDate = self.testStart,
+                                                   endDate = self.testEnd)
+        self.aggregator._MSGDataAggregator__writeAggregatedData(agg.type,
+                                                                agg.columns,
+                                                                agg.data)
         pass
 
 

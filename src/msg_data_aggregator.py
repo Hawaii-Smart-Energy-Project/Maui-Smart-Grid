@@ -322,7 +322,8 @@ class MSGDataAggregator(object):
                 __initSumAndCount()
             rowCnt += 1
 
-        return MSGAggregatedData(columns = self.columns[myDataType].split(','),
+        return MSGAggregatedData(type = myDataType,
+                                 columns = self.columns[myDataType].split(','),
                                  data = aggData)
 
 
@@ -394,7 +395,7 @@ class MSGDataAggregator(object):
                 __initSumAndCount()
             rowCnt += 1
 
-        return MSGAggregatedData(columns = self.columns[myDataType].split(','),
+        return MSGAggregatedData(type=myDataType,columns = self.columns[myDataType].split(','),
                                  data = aggData)
 
 
@@ -448,7 +449,7 @@ class MSGDataAggregator(object):
                 __initSumAndCount()
             rowCnt += 1
 
-        return MSGAggregatedData(columns = self.columns[myDataType].split(','),
+        return MSGAggregatedData(type=myDataType,columns = self.columns[myDataType].split(','),
                                  data = aggData)
 
 
@@ -516,7 +517,7 @@ class MSGDataAggregator(object):
             # Useful for debugging:
             # if rowCnt > 40000:
             #     return aggData
-        return MSGAggregatedData(columns = self.columns[myDataType].split(','),
+        return MSGAggregatedData(type=myDataType,columns = self.columns[myDataType].split(','),
                                  data = aggData)
 
 
