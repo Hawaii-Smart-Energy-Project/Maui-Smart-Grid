@@ -52,6 +52,8 @@ class MSGDBConnector(object):
                                                           'db_username')
 
         self.conn = self.connectDB()
+        if not self.conn:
+            raise Exception('DB connection not available.')
 
         try:
             self.dictCur = self.conn.cursor(

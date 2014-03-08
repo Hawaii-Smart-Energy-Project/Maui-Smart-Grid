@@ -178,9 +178,9 @@ class MSGDBUtil(object):
         """
 
         if not cursor:
-            raise ('Cursor not defined.')
+            raise Exception('Cursor not defined.')
         if not table:
-            raise ('Table not defined.')
+            raise Exception('Table not defined.')
 
         cols = []
         for col in self.tableColumns(cursor, table):
@@ -189,7 +189,7 @@ class MSGDBUtil(object):
 
     def columnsString(self, cursor = None, table = None):
         if not cursor:
-            raise ('Cursor not defined.')
+            raise Exception('Cursor not defined.')
         if not table:
-            raise ('Table not defined.')
+            raise Exception('Table not defined.')
         return ','.join(item for item in self.columns(cursor, table))

@@ -14,6 +14,7 @@ from msg_notifier import MSGNotifier
 from msg_configer import MSGConfiger
 from msg_math_util import MSGMathUtil
 from msg_aggregated_data import MSGAggregatedData
+from datetime import datetime
 
 MINUTE_POSITION = 4  # In time tuple.
 
@@ -56,7 +57,8 @@ class MSGDataAggregator(object):
 
         self.logger = MSGLogger(__name__, 'DEBUG')
         self.configer = MSGConfiger()
-        self.cursor = MSGDBConnector().connectDB().cursor()
+        self.conn = MSGDBConnector().connectDB()
+        self.cursor = self.conn.cursor()
         self.dbUtil = MSGDBUtil()
         self.notifier = MSGNotifier()
         self.mathUtil = MSGMathUtil()
@@ -87,7 +89,7 @@ class MSGDataAggregator(object):
         """
 
         if not minute and minute != 0:
-            raise (Exception, 'Minute not defined.')
+            raise Exception('Minute not defined.')
 
         intervalSize = 15
         first = 0
@@ -137,25 +139,51 @@ class MSGDataAggregator(object):
             self.columns[dataType], self.tables[dataType], timestampCol,
             startDate, endDate, ','.join(orderBy)))
 
-    def __writeAggregatedData(self, dataType = '', aggDataCols = None,
+    def __insertAggregatedData(self, dataType = '', aggDataCols = None,
                               aggData = None):
 
         if not aggDataCols:
-            raise (Exception, 'aggDataCols not defined.')
+            raise Exception('aggDataCols not defined.')
         if not aggData:
-            raise (Exception, 'aggData not defined.')
+            raise Exception('aggData not defined.')
 
-        dataCols = ','.join(aggDataCols)
+        print 'aggdata: %s' % aggData
+
         for row in aggData:
-            success = True
-            self.logger.log(
-                'sql: %s' % ("""INSERT INTO "%s" (%s) VALUES (%s)""" % (
-                    self.tables[dataType], dataCols, row)))
-            # success = self.dbUtil.executeSQL(
-            # """INSERT INTO "%s" (%s) VALUES (%s)""" % (
-            #     self.tables[dataType], dataCols, row))
-            if not success:
-                raise (Exception, 'Failure during aggregated data insert.')
+
+            for key in row.keys():
+                values = ''
+                valCnt = 0
+                for val in row[key]:
+                    if val == 'NULL':
+                        values += val
+                    elif type(val) == type(''):
+                        values += "'" + val.strip() + "'"
+                    elif isinstance(val, datetime):
+                        values += "'" + val.isoformat() + "'"
+                    elif type(val) == type(0):
+                        values += str(val)
+                    elif type(val) == type(0.0):
+                        values += str(val)
+                    else:
+                        values += val
+                    if valCnt < len(aggDataCols) - 1:
+                        values += ","
+                    valCnt += 1
+
+                success = True
+                self.logger.log('sql: %s' % (
+                    """INSERT INTO "%s" (%s) VALUES (%s)""" % (
+                        self.tables[dataType], ','.join(aggDataCols), values)))
+
+                success = self.dbUtil.executeSQL(self.cursor,
+                                                 """INSERT INTO "%s" (%s)
+                                                 VALUES (%s)""" % (
+                                                 self.tables[dataType],
+                                                 ','.join(aggDataCols), values))
+                if not success:
+                    raise Exception('Failure during aggregated data insert.')
+        self.conn.commit()
 
 
     def __irradianceIntervalAverages(self, sum, cnt, timestamp):
@@ -235,13 +263,15 @@ class MSGDataAggregator(object):
         return myAvgs
 
 
-    def __egaugeIntervalAverages(self, sums, cnts, timestamp, timestampIndex):
+    def __egaugeIntervalAverages(self, sums, cnts, timestamp,
+                                 timestampIndex, egaugeIDIndex):
         """
-
-        :param sums:
-        :param cnts:
-        :param timestamp:
-        :param timestampIndex:
+        :param sums: list
+        :param cnts: list
+        :param timestamp: datetime
+        :param egaugeID:
+        :param timestampIndex: int
+        :param egaugeIDIndex: int
         :returns:
         """
 
@@ -253,6 +283,8 @@ class MSGDataAggregator(object):
             for s in sums[k]:
                 if sumIndex == timestampIndex:
                     myAvgs[k].append(timestamp)
+                elif sumIndex == egaugeIDIndex:
+                    myAvgs[k].append(k)
                 else:
                     if cnts[k][sumIndex] != 0:
                         myAvgs[k].append(s / cnts[k][sumIndex])
@@ -318,11 +350,12 @@ class MSGDataAggregator(object):
                     minute = row[ci(timeCol)].timetuple()[MINUTE_POSITION])):
                 aggData += [
                     self.__egaugeIntervalAverages(sum, cnt, row[ci(timeCol)],
-                                                  ci(timeCol))]
+                                                   ci(timeCol),
+                                                  ci(idCol))]
                 __initSumAndCount()
             rowCnt += 1
 
-        return MSGAggregatedData(type = myDataType,
+        return MSGAggregatedData(type = 'agg_egauge',
                                  columns = self.columns[myDataType].split(','),
                                  data = aggData)
 
@@ -395,7 +428,8 @@ class MSGDataAggregator(object):
                 __initSumAndCount()
             rowCnt += 1
 
-        return MSGAggregatedData(type=myDataType,columns = self.columns[myDataType].split(','),
+        return MSGAggregatedData(type = myDataType,
+                                 columns = self.columns[myDataType].split(','),
                                  data = aggData)
 
 
@@ -449,7 +483,8 @@ class MSGDataAggregator(object):
                 __initSumAndCount()
             rowCnt += 1
 
-        return MSGAggregatedData(type=myDataType,columns = self.columns[myDataType].split(','),
+        return MSGAggregatedData(type = myDataType,
+                                 columns = self.columns[myDataType].split(','),
                                  data = aggData)
 
 
@@ -517,7 +552,8 @@ class MSGDataAggregator(object):
             # Useful for debugging:
             # if rowCnt > 40000:
             #     return aggData
-        return MSGAggregatedData(type=myDataType,columns = self.columns[myDataType].split(','),
+        return MSGAggregatedData(type = myDataType,
+                                 columns = self.columns[myDataType].split(','),
                                  data = aggData)
 
 

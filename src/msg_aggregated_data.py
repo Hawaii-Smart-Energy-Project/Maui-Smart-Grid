@@ -19,11 +19,11 @@ class MSGAggregatedData(object):
         """
 
         if type == '':
-            raise (Exception, 'Data type not provided.')
+            raise Exception('Data type not provided.')
         if not columns:
-            raise (Exception, 'Columns not provided.')
+            raise Exception('Columns not provided.')
         if not data:
-            raise (Exception, 'Data not provided.')
+            raise Exception('Data not provided.')
 
         self.type = type
         self.columns = columns
