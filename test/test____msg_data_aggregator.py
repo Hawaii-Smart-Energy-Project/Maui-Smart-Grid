@@ -75,42 +75,55 @@ class MSGDataAggregatorTester(unittest.TestCase):
 
     def testIrradianceAggregation(self):
         rowCnt = 0
-        for row in self.aggregator.aggregatedIrradianceData(
-                startDate = self.testStart, endDate = self.testEnd).data:
+        agg = self.aggregator.aggregatedIrradianceData(
+            startDate = self.testStart, endDate = self.testEnd)
+        for row in agg.data:
             print '%d: %s' % (rowCnt, row)
             rowCnt += 1
         self.assertEqual(rowCnt, self.aggregator.irradianceSensorCount * 4,
                          'Row count does not reflect four sensors.')
+        self.logger.log('agg cols: %d' % len(agg.columns))
+        self.assertEqual(len(agg.columns), 3,
+                         'Irradiance columns not equal to 3.')
 
     def testWeatherAggregation(self):
         rowCnt = 0
-        for row in self.aggregator.aggregatedWeatherData(
-                startDate = self.testStart, endDate = self.testEnd).data:
+        agg = self.aggregator.aggregatedWeatherData(startDate = self.testStart,
+                                                    endDate = self.testEnd)
+        for row in agg.data:
             print '%d: %s' % (rowCnt, row)
             rowCnt += 1
+        self.logger.log('agg cols: %d' % len(agg.columns))
+        self.assertEqual(len(agg.columns), 3, 'Weather columns not equal to 3.')
 
     def testCircuitAggregation(self):
         rowCnt = 0
-
-        for row in self.aggregator.aggregatedCircuitData(
-                startDate = self.testStart, endDate = self.testEnd).data:
+        agg = self.aggregator.aggregatedCircuitData(startDate = self.testStart,
+                                                    endDate = self.testEnd)
+        for row in agg.data:
             print row
             rowCnt += 1
 
         self.assertEqual(rowCnt, 4,
                          'Rows are not equal to the number of intervals.')
+        self.logger.log('agg cols: %d' % len(agg.columns))
+        self.assertEqual(len(agg.columns), 8, 'Circuit columns not equal to 8.')
 
 
     def testEgaugeAggregation(self):
+        self.logger.log('Testing egauge aggregation.')
         rowCnt = 0
-
-        for row in self.aggregator.aggregatedEgaugeData(
-                startDate = self.testStart, endDate = self.testEnd).data:
+        agg = self.aggregator.aggregatedEgaugeData(startDate = self.testStart,
+                                                   endDate = self.testEnd)
+        for row in agg.data:
             print row
             rowCnt += 1
-
-            # self.assertEqual(rowCnt, 4,
-            #                  'Rows are not equal to the number of intervals.')
+        self.logger.log('row cnt %d' % rowCnt)
+        self.logger.log('agg cols: %d' % len(agg.columns))
+        self.assertEqual(len(agg.columns), 36,
+                         'Egauge columns not equal to 36.')
+        self.assertEqual(rowCnt, 4,
+                         'Rows are not equal to the number of intervals.')
 
     def testWriteIrradianceAggregation(self):
         # self.aggregator._MSGDataAggregator__writeAggregatedData(
@@ -123,8 +136,7 @@ if __name__ == '__main__':
 
     if RUN_SELECTED_TESTS:
         selected_tests = ['testWeatherAggregation', 'testIrradianceAggregation',
-                          'testEgaugeAggregation', 'testCircuitAggregation',
-                          'testCircuitFetch']
+                          'testCircuitAggregation', 'testEgaugeAggregation']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDataAggregatorTester(t))

@@ -10,7 +10,7 @@ __license__ = 'https://raw.github' \
 
 class MSGAggregatedData(object):
     """
-    Data type representing aggregating data.
+    Data type representing aggregated data.
     """
 
     def __init__(self, columns = None, data = None):

@@ -30,7 +30,12 @@ class MSGDataAggregator(object):
     3. Circuit
     4. eGauge
 
-    Aggregation is performed in-memory and saved to the DB.
+    Aggregation is performed in-memory and saved to the DB. The time range is
+    delimited by start date and end date where the values are included in the
+    range.
+
+    @todo Generalize to a single aggregation provider and single averaging
+    method.
 
     This is being implemented externally for performance and flexibility
     advantages over alternative approaches such as creating a view. It may be
@@ -317,7 +322,7 @@ class MSGDataAggregator(object):
                 __initSumAndCount()
             rowCnt += 1
 
-        return MSGAggregatedData(columns = self.columns[myDataType],
+        return MSGAggregatedData(columns = self.columns[myDataType].split(','),
                                  data = aggData)
 
 
@@ -389,7 +394,7 @@ class MSGDataAggregator(object):
                 __initSumAndCount()
             rowCnt += 1
 
-        return MSGAggregatedData(columns = self.columns[myDataType],
+        return MSGAggregatedData(columns = self.columns[myDataType].split(','),
                                  data = aggData)
 
 
@@ -443,7 +448,7 @@ class MSGDataAggregator(object):
                 __initSumAndCount()
             rowCnt += 1
 
-        return MSGAggregatedData(columns = self.columns[myDataType],
+        return MSGAggregatedData(columns = self.columns[myDataType].split(','),
                                  data = aggData)
 
 
@@ -511,7 +516,7 @@ class MSGDataAggregator(object):
             # Useful for debugging:
             # if rowCnt > 40000:
             #     return aggData
-        return MSGAggregatedData(columns = self.columns[myDataType],
+        return MSGAggregatedData(columns = self.columns[myDataType].split(','),
                                  data = aggData)
 
 
