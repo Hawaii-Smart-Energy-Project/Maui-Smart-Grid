@@ -13,6 +13,7 @@ from msg_db_util import MSGDBUtil
 from msg_notifier import MSGNotifier
 from msg_configer import MSGConfiger
 from msg_math_util import MSGMathUtil
+from msg_aggregated_data import MSGAggregatedData
 
 MINUTE_POSITION = 4  # In time tuple.
 
@@ -261,24 +262,26 @@ class MSGDataAggregator(object):
 
         :param startDate:
         :param endDate:
-        :returns:
+        :returns: MSGAggregatedData
         """
 
+        myDataType = 'egauge'
         timeCol = 'datetime'
         idCol = 'egauge_id'
         aggData = []
-        ci = lambda col_name: self.columns['egauge'].split(',').index(col_name)
+        ci = lambda col_name: self.columns[myDataType].split(',').index(
+            col_name)
 
         rowCnt = 0
 
         def __egaugeIDs():
             egauges = set()
             # @todo Optimize using a distinct query.
-            for row in self.__rawData(dataType = 'egauge',
-                                      orderBy = [timeCol, 'egauge_id'],
+            for row in self.__rawData(dataType = myDataType,
+                                      orderBy = [timeCol, idCol],
                                       timestampCol = timeCol,
                                       startDate = startDate, endDate = endDate):
-                egauges.add(row[ci('egauge_id')])
+                egauges.add(row[ci(idCol)])
             return egauges
 
         egauges = __egaugeIDs()
@@ -287,7 +290,7 @@ class MSGDataAggregator(object):
             sums = {}
             cnts = {}
 
-            for i in range(len(self.columns['egauge'].split(','))):
+            for i in range(len(self.columns[myDataType].split(','))):
                 for e in egauges:
                     if e not in sums.keys():
                         sums[e] = []
@@ -297,11 +300,11 @@ class MSGDataAggregator(object):
             return (sums, cnts)
 
         (sum, cnt) = __initSumAndCount()
-        for row in self.__rawData(dataType = 'egauge',
-                                  orderBy = [timeCol, 'egauge_id'],
+        for row in self.__rawData(dataType = myDataType,
+                                  orderBy = [timeCol, idCol],
                                   timestampCol = timeCol, startDate = startDate,
                                   endDate = endDate):
-            for col in self.columns['egauge'].split(','):
+            for col in self.columns[myDataType].split(','):
                 if self.mathUtil.isNumber(row[ci(col)]):
                     sum[row[ci(idCol)]][ci(col)] += row[ci(col)]
                     cnt[row[ci(idCol)]][ci(col)] += 1
@@ -314,7 +317,8 @@ class MSGDataAggregator(object):
                 __initSumAndCount()
             rowCnt += 1
 
-        return aggData
+        return MSGAggregatedData(columns = self.columns[myDataType],
+                                 data = aggData)
 
 
     def aggregatedCircuitData(self, startDate, endDate):
@@ -322,10 +326,12 @@ class MSGDataAggregator(object):
 
         :param startDate: str
         :param endDate: str
-        :returns: List of dicts for aggregated data where each circuit is a key.
+        :returns: MSGAggregatedData
         """
 
+        myDataType = 'circuit'
         timeCol = 'timestamp'
+        idCol = 'circuit'
         aggData = []
         ci = lambda col_name: self.columns['circuit'].split(',').index(col_name)
         assert (
@@ -337,11 +343,11 @@ class MSGDataAggregator(object):
         def __circuits():
             circuits = set()
             # @todo Optimize using a distinct query.
-            for row in self.__rawData(dataType = 'circuit',
-                                      orderBy = [timeCol, 'circuit'],
+            for row in self.__rawData(dataType = myDataType,
+                                      orderBy = [timeCol, idCol],
                                       timestampCol = timeCol,
                                       startDate = startDate, endDate = endDate):
-                circuits.add(row[ci('circuit')])
+                circuits.add(row[ci(idCol)])
             return circuits
 
         circuits = __circuits()
@@ -354,7 +360,7 @@ class MSGDataAggregator(object):
             sum = {}
             cnt = {}
 
-            for i in range(len(self.columns['circuit'].split(','))):
+            for i in range(len(self.columns[myDataType].split(','))):
                 for c in circuits:
                     if c not in sum.keys():
                         sum[c] = []
@@ -365,14 +371,14 @@ class MSGDataAggregator(object):
 
         (sum, cnt) = __initSumAndCount()
 
-        for row in self.__rawData(dataType = 'circuit',
-                                  orderBy = [timeCol, 'circuit'],
+        for row in self.__rawData(dataType = myDataType,
+                                  orderBy = [timeCol, idCol],
                                   timestampCol = timeCol, startDate = startDate,
                                   endDate = endDate):
-            for col in self.columns['circuit'].split(','):
+            for col in self.columns[myDataType].split(','):
                 if self.mathUtil.isNumber(row[ci(col)]):
-                    sum[row[ci('circuit')]][ci(col)] += row[ci(col)]
-                    cnt[row[ci('circuit')]][ci(col)] += 1
+                    sum[row[ci(idCol)]][ci(col)] += row[ci(col)]
+                    cnt[row[ci(idCol)]][ci(col)] += 1
 
             if (self.__intervalCrossed(
                     minute = row[ci(timeCol)].timetuple()[MINUTE_POSITION])):
@@ -383,7 +389,8 @@ class MSGDataAggregator(object):
                 __initSumAndCount()
             rowCnt += 1
 
-        return aggData
+        return MSGAggregatedData(columns = self.columns[myDataType],
+                                 data = aggData)
 
 
     def aggregatedWeatherData(self, startDate, endDate):
@@ -391,12 +398,14 @@ class MSGDataAggregator(object):
 
         :param startDate: str
         :param endDate: str
-        :returns: List of tuples for aggregated data.
+        :returns: MSGAggregatedData
         """
 
+        myDataType = 'weather'
         timeCol = 'timestamp'
         aggData = []
-        ci = lambda col_name: self.columns['weather'].split(',').index(col_name)
+        ci = lambda col_name: self.columns[myDataType].split(',').index(
+            col_name)
         assert (
             map(ci, ['timestamp', 'met_air_temp_degf',
                      'met_rel_humid_pct']) is not None)
@@ -411,17 +420,17 @@ class MSGDataAggregator(object):
             cnt = []
 
             # An extra column is created for generalization convenience.
-            for i in range(len(self.columns['weather'].split(','))):
+            for i in range(len(self.columns[myDataType].split(','))):
                 sum.append(0)
                 cnt.append(0)
             return (sum, cnt)
 
         (sum, cnt) = __initSumAndCount()
 
-        for row in self.__rawData(dataType = 'weather', orderBy = [timeCol],
+        for row in self.__rawData(dataType = myDataType, orderBy = [timeCol],
                                   timestampCol = timeCol, startDate = startDate,
                                   endDate = endDate):
-            for col in self.columns['weather'].split(','):
+            for col in self.columns[myDataType].split(','):
                 if self.mathUtil.isNumber(row[ci(col)]):
                     sum[ci(col)] += row[ci(col)]
                     cnt[ci(col)] += 1
@@ -434,7 +443,8 @@ class MSGDataAggregator(object):
                 __initSumAndCount()
             rowCnt += 1
 
-        return aggData
+        return MSGAggregatedData(columns = self.columns[myDataType],
+                                 data = aggData)
 
 
     def aggregatedIrradianceData(self, startDate, endDate):
@@ -444,12 +454,14 @@ class MSGDataAggregator(object):
 
         :param startDate: str
         :param endDate: str
-        :returns: List of tuples for aggregated data.
+        :returns: MSGAggregatedData
         """
 
+        myDataType = 'irradiance'
+        idCol = 'sensor_id'
         timeCol = 'timestamp'
         aggData = []
-        ci = lambda col_name: self.columns['irradiance'].split(',').index(
+        ci = lambda col_name: self.columns[myDataType].split(',').index(
             col_name)
         assert (
             map(ci,
@@ -474,15 +486,15 @@ class MSGDataAggregator(object):
 
         rowCnt = 0
 
-        for row in self.__rawData(dataType = 'irradiance',
-                                  orderBy = [timeCol, 'sensor_id'],
+        for row in self.__rawData(dataType = myDataType,
+                                  orderBy = [timeCol, idCol],
                                   timestampCol = timeCol, startDate = startDate,
                                   endDate = endDate):
             # cnt is used for sensor ID here.
             if self.mathUtil.isNumber(row[ci('irradiance_w_per_m2')]):
                 # Add up the values for each sensor.
-                cnt[row[ci('sensor_id')] - 1] += 1
-                sum[row[ci('sensor_id')] - 1] += row[ci('irradiance_w_per_m2')]
+                cnt[row[ci(idCol)] - 1] += 1
+                sum[row[ci(idCol)] - 1] += row[ci('irradiance_w_per_m2')]
 
             if (self.__intervalCrossed(
                     minute = row[ci(timeCol)].timetuple()[MINUTE_POSITION])):
@@ -499,7 +511,8 @@ class MSGDataAggregator(object):
             # Useful for debugging:
             # if rowCnt > 40000:
             #     return aggData
-        return aggData
+        return MSGAggregatedData(columns = self.columns[myDataType],
+                                 data = aggData)
 
 
 

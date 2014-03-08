@@ -10,6 +10,7 @@ __license__ = 'https://raw.github' \
 import unittest
 from msg_logger import MSGLogger
 from msg_data_aggregator import MSGDataAggregator
+from msg_aggregated_data import MSGAggregatedData
 
 
 class MSGDataAggregatorTester(unittest.TestCase):
@@ -75,7 +76,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
     def testIrradianceAggregation(self):
         rowCnt = 0
         for row in self.aggregator.aggregatedIrradianceData(
-                startDate = self.testStart, endDate = self.testEnd):
+                startDate = self.testStart, endDate = self.testEnd).data:
             print '%d: %s' % (rowCnt, row)
             rowCnt += 1
         self.assertEqual(rowCnt, self.aggregator.irradianceSensorCount * 4,
@@ -84,7 +85,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
     def testWeatherAggregation(self):
         rowCnt = 0
         for row in self.aggregator.aggregatedWeatherData(
-                startDate = self.testStart, endDate = self.testEnd):
+                startDate = self.testStart, endDate = self.testEnd).data:
             print '%d: %s' % (rowCnt, row)
             rowCnt += 1
 
@@ -92,7 +93,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
         rowCnt = 0
 
         for row in self.aggregator.aggregatedCircuitData(
-                startDate = self.testStart, endDate = self.testEnd):
+                startDate = self.testStart, endDate = self.testEnd).data:
             print row
             rowCnt += 1
 
@@ -104,22 +105,25 @@ class MSGDataAggregatorTester(unittest.TestCase):
         rowCnt = 0
 
         for row in self.aggregator.aggregatedEgaugeData(
-                startDate = self.testStart, endDate = self.testEnd):
+                startDate = self.testStart, endDate = self.testEnd).data:
             print row
             rowCnt += 1
 
             # self.assertEqual(rowCnt, 4,
             #                  'Rows are not equal to the number of intervals.')
 
+    def testWriteIrradianceAggregation(self):
+        # self.aggregator._MSGDataAggregator__writeAggregatedData(
+        # dataType='irradiance', aggDataCols)
+        pass
+
 
 if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
-        selected_tests = ['testIrradianceAggregation', 'testWeatherAggregation',
-                          'testCircuitAggregation']
-        selected_tests = ['testEgaugeAggregation', 'testIrradianceAggregation']
         selected_tests = ['testWeatherAggregation', 'testIrradianceAggregation',
+                          'testEgaugeAggregation', 'testCircuitAggregation',
                           'testCircuitFetch']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
