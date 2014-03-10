@@ -138,6 +138,7 @@ sub mapCSVColumnsToDatabaseColumns {
     $colAssoc{"Shop [kW]"}       = "shop_kw";
     $colAssoc{"Solar [kW]"}      = "solarpump_kw";
     $colAssoc{"Solar Pump [kW]"} = "solarpump_kw";
+    $colAssoc{"Solar+ [kW]"}     = "solar_plus_kw";
     $colAssoc{"Stove [kW]"}      = "stove_kw";
     $colAssoc{"Stove Top [kW]"}  = "stove_kw";
     $colAssoc{"use [kW]"}        = "use_kw";
