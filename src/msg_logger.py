@@ -31,7 +31,7 @@ in each class.
 """
 
 __author__ = 'Daniel Zhang (張道博)'
-__copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
+__copyright__ = 'Copyright (c) 2014, University of Hawaii Smart Energy Project'
 __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
@@ -39,6 +39,7 @@ __license__ = 'https://raw.github' \
 import sys
 import logging
 from io import StringIO
+from colorlog import ColoredFormatter
 
 
 def enum(**enums):
@@ -53,7 +54,8 @@ class MSGLogger(object):
     The recorded output is then available in self.recording.
 
     :param caller: The object that is calling this class.
-    :param level: Logger level string in ('info', 'error', 'silent', 'debug')
+    :param level: Logger level string in ('info', 'error', 'warning',
+    'silent', 'debug')
     """
 
     def __init__(self, caller, level = 'info'):
@@ -75,10 +77,17 @@ class MSGLogger(object):
         self.streamHandlerStdErr.setLevel(logging.DEBUG)
         self.streamHandlerString.setLevel(logging.DEBUG)
 
-        formatterStdErr = logging.Formatter(
+        originalFormatterStdErr = logging.Formatter(
             u'%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         formatterString = logging.Formatter(
             u'%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+        formatterStdErr = ColoredFormatter(
+            u'%(log_color)s%(asctime)s - %(name)s - %(bold)s%(levelname)s: '
+            u'%(reset)s%(message)s',
+            reset = True,
+            log_colors = {'DEBUG': 'green', 'INFO': 'blue', 'WARNING': 'yellow',
+                          'ERROR': 'red', 'CRITICAL': 'red', })
 
         self.streamHandlerStdErr.setFormatter(formatterStdErr)
         self.streamHandlerString.setFormatter(formatterString)
@@ -95,6 +104,8 @@ class MSGLogger(object):
 
         if level == 'info':
             self.loggerLevel = logging.INFO
+        elif level == 'warning':
+            self.loggerLevel = logging.WARNING
         elif level == 'error':
             self.loggerLevel = logging.ERROR
         elif level == 'silent':
@@ -132,7 +143,7 @@ class MSGLogger(object):
         return message
 
 
-    def log(self, message, level = None):
+    def log(self, message, level = None, color = None):
         """
         Write a log message.
 
@@ -154,7 +165,6 @@ class MSGLogger(object):
         if level:
             level = level.lower()
 
-        #loggerLevel = None
         if level == 'info':
             loggerLevel = logging.INFO
         elif level == 'debug':
@@ -164,7 +174,7 @@ class MSGLogger(object):
         elif level == 'silent':
             loggerLevel = logging.NOTSET
         else:
-            loggerLevel = logging.INFO # Default logger level.
+            loggerLevel = logging.INFO  # Default logger level.
 
         if loggerLevel != None:
             # For debugging:
