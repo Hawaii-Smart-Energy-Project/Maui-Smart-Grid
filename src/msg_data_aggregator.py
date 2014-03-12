@@ -18,7 +18,6 @@ from datetime import datetime
 
 MINUTE_POSITION = 4  # In time tuple.
 
-
 class MSGDataAggregator(object):
     """
     Use for continuous data aggregation of diverse data types relevant to the
@@ -34,6 +33,8 @@ class MSGDataAggregator(object):
     Aggregation is performed in-memory and saved to the DB. The time range is
     delimited by start date and end date where the values are included in the
     range.
+
+    Aggregation subkeys are values such as eGauge IDs or circuit numbers.
 
     @todo Generalize to a single aggregation provider and single averaging
     method.
@@ -63,7 +64,7 @@ class MSGDataAggregator(object):
         self.notifier = MSGNotifier()
         self.mathUtil = MSGMathUtil()
         self.irradianceSensorCount = 4
-        self.__nextMinuteCrossing = 0
+        self.nextMinuteCrossing = {}
         section = 'Aggregation'
         tableList = ['irradiance', 'agg_irradiance', 'weather', 'agg_weather',
                      'circuit', 'agg_circuit', 'egauge', 'agg_egauge']
@@ -80,11 +81,13 @@ class MSGDataAggregator(object):
             except TypeError as error:
                 self.logger.log('Ignoring missing table.')
 
-    def __intervalCrossed(self, minute = None):
+
+    def intervalCrossed(self, minute = None, subkey = None):
         """
         Determine interval crossing. Intervals are at 0, 15, 45, 60 min.
 
         :param minute: The integer value of the minute.
+        :param subkey: The key for the subkey used for aggregation.
         :returns: True if an interval was crossed, False otherwise.
         """
 
@@ -94,17 +97,24 @@ class MSGDataAggregator(object):
         intervalSize = 15
         first = 0
         last = 60
-        if minute >= self.__nextMinuteCrossing and minute <= last and self\
-                .__nextMinuteCrossing != first:
-            self.__nextMinuteCrossing += intervalSize
-            if self.__nextMinuteCrossing >= last:
-                self.__nextMinuteCrossing = first
-            return True
-        elif self.__nextMinuteCrossing == first and minute >= first and \
-                        minute <= intervalSize:
-            self.__nextMinuteCrossing = intervalSize
-            return True
-        return False
+
+        if subkey is not None:
+            if minute >= self.nextMinuteCrossing[subkey] and minute <= last \
+                    and \
+                            self.nextMinuteCrossing[subkey] != first:
+                self.nextMinuteCrossing[subkey] += intervalSize
+                if self.nextMinuteCrossing[subkey] >= last:
+                    self.nextMinuteCrossing[subkey] = first
+                self.logger.log('minute crossed at #1.')
+                return True
+            elif self.nextMinuteCrossing[
+                subkey] == first and minute >= first and minute <= intervalSize:
+                self.nextMinuteCrossing[subkey] = intervalSize
+                self.logger.log('minute crossed at #2.')
+                return True
+            return False
+        else:
+            raise Exception('Subkey is None.')
 
 
     def __fetch(self, sql):
@@ -140,7 +150,7 @@ class MSGDataAggregator(object):
             startDate, endDate, ','.join(orderBy)))
 
     def __insertAggregatedData(self, dataType = '', aggDataCols = None,
-                              aggData = None):
+                               aggData = None):
 
         if not aggDataCols:
             raise Exception('aggDataCols not defined.')
@@ -148,6 +158,10 @@ class MSGDataAggregator(object):
             raise Exception('aggData not defined.')
 
         print 'aggdata: %s' % aggData
+
+        # @HIGHLIGHTED For debugging.
+        self.dbUtil.executeSQL(self.cursor,
+                               """DELETE FROM \"%s\"""" % self.tables[dataType])
 
         for row in aggData:
 
@@ -172,15 +186,15 @@ class MSGDataAggregator(object):
                     valCnt += 1
 
                 success = True
-                self.logger.log('sql: %s' % (
-                    """INSERT INTO "%s" (%s) VALUES (%s)""" % (
-                        self.tables[dataType], ','.join(aggDataCols), values)))
+                # self.logger.log('sql: %s' % (
+                #     """INSERT INTO "%s" (%s) VALUES (%s)""" % (
+                #         self.tables[dataType], ','.join(aggDataCols),
+                # values)))
 
-                success = self.dbUtil.executeSQL(self.cursor,
-                                                 """INSERT INTO "%s" (%s)
+                success = self.dbUtil.executeSQL(self.cursor, """INSERT INTO
+                "%s" (%s)
                                                  VALUES (%s)""" % (
-                                                 self.tables[dataType],
-                                                 ','.join(aggDataCols), values))
+                    self.tables[dataType], ','.join(aggDataCols), values))
                 if not success:
                     raise Exception('Failure during aggregated data insert.')
         self.conn.commit()
@@ -262,40 +276,57 @@ class MSGDataAggregator(object):
 
         return myAvgs
 
+    def reportAggregation(self, rowCnt = 0):
+        self.logger.log('Aggregating %d rows of data.' % rowCnt, 'warning')
 
-    def __egaugeIntervalAverages(self, sums, cnts, timestamp,
-                                 timestampIndex, egaugeIDIndex):
+
+    def egaugeIntervalAverages(self, sums, cnts, timestamp, timestampIndex,
+                               egaugeIDIndex, egaugeID):
         """
+        Aggregates all data for the current interval for the given eGauge ID.
+
         :param sums: list
         :param cnts: list
         :param timestamp: datetime
-        :param egaugeID:
         :param timestampIndex: int
         :param egaugeIDIndex: int
-        :returns:
+        :param egaugeID: int
+        :returns: Averaged data as a dict.
         """
 
         myAvgs = {}
 
-        for k in sums.keys():
-            myAvgs[k] = []
-            sumIndex = 0
-            for s in sums[k]:
-                if sumIndex == timestampIndex:
-                    myAvgs[k].append(timestamp)
-                elif sumIndex == egaugeIDIndex:
-                    myAvgs[k].append(k)
+        reportedAgg = False
+
+        myAvgs[egaugeID] = []
+
+        sumIndex = 0
+
+        self.logger.log('key: %s' % egaugeID, 'critical')
+        # Iterate over sums.
+        for s in sums[egaugeID]:
+            if sumIndex == timestampIndex:
+                myAvgs[egaugeID].append(timestamp)
+            elif sumIndex == egaugeIDIndex:
+                myAvgs[egaugeID].append(egaugeID)
+            else:
+                if cnts[egaugeID][sumIndex] != 0:
+                    if not reportedAgg:
+                        self.logger.log(
+                            'Aggregating %d rows of data.' % cnts[egaugeID][
+                                sumIndex], 'warning')
+                        reportedAgg = True
+
+                    myAvgs[egaugeID].append(s / cnts[egaugeID][sumIndex])
                 else:
-                    if cnts[k][sumIndex] != 0:
-                        myAvgs[k].append(s / cnts[k][sumIndex])
-                    else:
-                        myAvgs[k].append('NULL')
-                sumIndex += 1
+                    myAvgs[egaugeID].append('NULL')
+            sumIndex += 1
         return myAvgs
 
 
     def aggregatedEgaugeData(self, startDate, endDate):
         """
+        Provide aggregated eGauge data.
 
         :param startDate:
         :param endDate:
@@ -314,6 +345,7 @@ class MSGDataAggregator(object):
         def __egaugeIDs():
             egauges = set()
             # @todo Optimize using a distinct query.
+            # @REVIEWED Verified that correct order by is used.
             for row in self.__rawData(dataType = myDataType,
                                       orderBy = [timeCol, idCol],
                                       timestampCol = timeCol,
@@ -323,38 +355,93 @@ class MSGDataAggregator(object):
 
         egauges = __egaugeIDs()
 
-        def __initSumAndCount():
+        def __initSumAndCount(initEgaugeID = None):
             sums = {}
             cnts = {}
 
-            for i in range(len(self.columns[myDataType].split(','))):
-                for e in egauges:
-                    if e not in sums.keys():
-                        sums[e] = []
-                        cnts[e] = []
-                    sums[e].append(0)
-                    cnts[e].append(0)
+            if not initEgaugeID:
+                for i in range(len(self.columns[myDataType].split(','))):
+                    for e in egauges:
+                        if e not in sums.keys():
+                            sums[e] = []
+                            cnts[e] = []
+                        sums[e].append(0)
+                        cnts[e].append(0)
+            else:
+                self.logger.log('resetting subkey %s' % initEgaugeID,
+                                'critical')
+                sums[initEgaugeID] = []
+                sums[initEgaugeID].append(0)
+                cnts[initEgaugeID] = []
+                cnts[initEgaugeID].append(0)
             return (sums, cnts)
 
         (sum, cnt) = __initSumAndCount()
+
+        def __initIntervalCrossings():
+            rowCnt = 0
+            for row in self.__rawData(dataType = myDataType,
+                                      orderBy = [timeCol, idCol],
+                                      timestampCol = timeCol,
+                                      startDate = startDate, endDate = endDate):
+
+                # @CRITICAL
+                # @todo Need to accurately determine subkey quantity here!
+                if rowCnt > 4:
+                    continue
+                else:
+                    minute = row[ci(timeCol)].timetuple()[MINUTE_POSITION]
+                    if minute <= 15:
+                        self.nextMinuteCrossing[row[ci(idCol)]] = 15
+                    elif minute <= 30:
+                        self.nextMinuteCrossing[row[ci(idCol)]] = 30
+                    elif minute <= 45:
+                        self.nextMinuteCrossing[row[ci(idCol)]] = 45
+                    elif minute == 0 or minute <= 59:
+                        self.nextMinuteCrossing[row[ci(idCol)]] = 0
+                    else:
+                        raise Exception(
+                            'Unable to determine next minute crossing')
+                    self.logger.log('next min crossing for %s = %s' % (
+                        row[ci(idCol)],
+                        self.nextMinuteCrossing[row[ci(idCol)]]), 'debug')
+                rowCnt += 1
+
+        __initIntervalCrossings()
+
         for row in self.__rawData(dataType = myDataType,
                                   orderBy = [timeCol, idCol],
                                   timestampCol = timeCol, startDate = startDate,
                                   endDate = endDate):
+            self.logger.log('row: %d ----> %s' % (rowCnt, str(row)))
+
             for col in self.columns[myDataType].split(','):
                 if self.mathUtil.isNumber(row[ci(col)]):
                     sum[row[ci(idCol)]][ci(col)] += row[ci(col)]
                     cnt[row[ci(idCol)]][ci(col)] += 1
 
-            if (self.__intervalCrossed(
-                    minute = row[ci(timeCol)].timetuple()[MINUTE_POSITION])):
+            minute = row[ci(timeCol)].timetuple()[MINUTE_POSITION]
+
+            if self.intervalCrossed(minute = minute, subkey = row[ci(idCol)]):
+                self.logger.log('==> row: %s' % str(row), 'critical')
+                minuteCrossed = minute
+
+                # Perform aggregation on all of the previous data including
+                # the current data. Aggregation should occur after all
+                # interval crossings have taken place.
+                self.logger.log('key: %s' % row[ci(idCol)], 'warning')
                 aggData += [
-                    self.__egaugeIntervalAverages(sum, cnt, row[ci(timeCol)],
-                                                   ci(timeCol),
-                                                  ci(idCol))]
-                __initSumAndCount()
+                    self.egaugeIntervalAverages(sum, cnt, row[ci(timeCol)],
+                                                ci(timeCol), ci(idCol),
+                                                row[ci(idCol)])]
+                self.logger.log('minute crossed %d' % minuteCrossed, 'DEBUG')
+
+                # Init current sum&cnt that is finished.
+                __initSumAndCount(initEgaugeID = row[ci(idCol)])
+
             rowCnt += 1
 
+        self.logger.log('aggdata = %s' % aggData, 'debug')
         return MSGAggregatedData(type = 'agg_egauge',
                                  columns = self.columns[myDataType].split(','),
                                  data = aggData)
@@ -419,7 +506,7 @@ class MSGDataAggregator(object):
                     sum[row[ci(idCol)]][ci(col)] += row[ci(col)]
                     cnt[row[ci(idCol)]][ci(col)] += 1
 
-            if (self.__intervalCrossed(
+            if (self.intervalCrossed(
                     minute = row[ci(timeCol)].timetuple()[MINUTE_POSITION])):
                 aggData += [
                     self.__circuitIntervalAverages(sum, cnt, row[ci(timeCol)],
@@ -475,7 +562,7 @@ class MSGDataAggregator(object):
                     sum[ci(col)] += row[ci(col)]
                     cnt[ci(col)] += 1
 
-            if (self.__intervalCrossed(
+            if (self.intervalCrossed(
                     minute = row[ci(timeCol)].timetuple()[MINUTE_POSITION])):
                 aggData += self.__weatherIntervalAverages(sum, cnt,
                                                           row[ci(timeCol)], ci(
@@ -537,7 +624,7 @@ class MSGDataAggregator(object):
                 cnt[row[ci(idCol)] - 1] += 1
                 sum[row[ci(idCol)] - 1] += row[ci('irradiance_w_per_m2')]
 
-            if (self.__intervalCrossed(
+            if (self.intervalCrossed(
                     minute = row[ci(timeCol)].timetuple()[MINUTE_POSITION])):
                 # Emit the average for the current sum.
                 # Use the current timestamp that is the trailing timestamp

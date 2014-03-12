@@ -24,8 +24,8 @@ class MSGDataAggregatorTester(unittest.TestCase):
         """
         self.logger = MSGLogger(__name__, 'DEBUG')
         self.aggregator = MSGDataAggregator()
-        self.testStart = '2014-01-02 12:00'
-        self.testEnd = '2014-01-02 12:59'
+        self.testStart = '2014-01-02 11:59'
+        self.testEnd = '2014-01-02 12:14'
 
     def testIrradianceFetch(self):
         """
@@ -115,23 +115,24 @@ class MSGDataAggregatorTester(unittest.TestCase):
         rowCnt = 0
         agg = self.aggregator.aggregatedEgaugeData(startDate = self.testStart,
                                                    endDate = self.testEnd)
+        print [col for col in agg.columns]
         for row in agg.data:
             print row
             rowCnt += 1
         self.logger.log('row cnt %d' % rowCnt)
         self.logger.log('agg cols: %d' % len(agg.columns))
-        self.assertEqual(len(agg.columns), 36,
-                         'Egauge columns not equal to 36.')
-        self.assertEqual(rowCnt, 4,
-                         'Rows are not equal to the number of intervals.')
+        self.assertEqual(len(agg.columns), 37,
+                         'Egauge columns not equal to 37.')
+        # self.assertEqual(rowCnt, 4,
+        #                  'Rows are not equal to the number of intervals.')
 
-    def testWriteIrradianceAggregation(self):
+    def testWriteEgaugeAggregation(self):
         agg = self.aggregator.aggregatedEgaugeData(startDate = self.testStart,
                                                    endDate = self.testEnd)
-        self.aggregator._MSGDataAggregator__writeAggregatedData(agg.type,
-                                                                agg.columns,
-                                                                agg.data)
-        pass
+        self.aggregator._MSGDataAggregator__insertAggregatedData(agg.type,
+                                                                 agg.columns,
+                                                                 agg.data)
+
 
 
 if __name__ == '__main__':
@@ -140,6 +141,7 @@ if __name__ == '__main__':
     if RUN_SELECTED_TESTS:
         selected_tests = ['testWeatherAggregation', 'testIrradianceAggregation',
                           'testCircuitAggregation', 'testEgaugeAggregation']
+        selected_tests = ['testEgaugeAggregation','testWriteEgaugeAggregation']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDataAggregatorTester(t))

@@ -112,6 +112,8 @@ class MSGLogger(object):
             self.loggerLevel = logging.NOTSET
         elif level == 'debug':
             self.loggerLevel = logging.DEBUG
+        elif level == 'critical':
+            loggerLevel = logging.CRITICAL
         else:
             self.loggerLevel = logging.INFO
 
@@ -154,8 +156,9 @@ class MSGLogger(object):
         * error
         * silent
 
-        :params message: A message to be logged.
-        :params level: (optional) Logging level.
+        :param message: A message to be logged.
+        :param level: (optional) Logging level.
+        :param color: not supported yet.
         """
 
         self.logger.addHandler(self.streamHandlerStdErr)
@@ -167,12 +170,16 @@ class MSGLogger(object):
 
         if level == 'info':
             loggerLevel = logging.INFO
+        elif level == 'warning':
+            loggerLevel = logging.WARNING
         elif level == 'debug':
             loggerLevel = logging.DEBUG
         elif level == 'error':
             loggerLevel = logging.ERROR
         elif level == 'silent':
             loggerLevel = logging.NOTSET
+        elif level == 'critical':
+            loggerLevel = logging.CRITICAL
         else:
             loggerLevel = logging.INFO  # Default logger level.
 
