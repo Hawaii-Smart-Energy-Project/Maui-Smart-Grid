@@ -13,18 +13,18 @@ class MSGAggregatedData(object):
     Data type representing aggregated data.
     """
 
-    def __init__(self, type = '', columns = None, data = None):
+    def __init__(self, aggregationType = '', columns = None, data = None):
         """
         Constructor.
         """
 
-        if type == '':
-            raise Exception('Data type not provided.')
+        if aggregationType == '':
+            raise Exception('Aggregation type not provided.')
         if not columns:
             raise Exception('Columns not provided.')
         if not data:
             raise Exception('Data not provided.')
 
-        self.type = type
+        self.aggregationType = aggregationType
         self.columns = columns
         self.data = data

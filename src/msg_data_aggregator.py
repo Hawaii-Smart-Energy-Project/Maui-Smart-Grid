@@ -348,6 +348,136 @@ class MSGDataAggregator(object):
             sumIndex += 1
         return myAvgs
 
+    def aggregatedData(self, dataType = '', aggregationType = '',
+                       timeColumnName = '', subkeyColumnName = '',
+                       startDate = '', endDate = ''):
+        """
+        ***********************************************************************
+        Provide aggregated data.
+        ***********************************************************************
+
+        :param dataType: string
+        :param aggregationType: string
+        :param timeColumnName: string
+        :param subkeyColumnName: string
+        :param startDate: string
+        :param endDate: string
+        :returns: MSGAggregatedData
+        """
+
+        aggData = []
+        ci = lambda col_name: self.columns[dataType].split(',').index(col_name)
+
+        rowCnt = 0
+
+        mySubkeys = self.subkeys(dataType = dataType,
+                                 timestampCol = timeColumnName,
+                                 subkeyCol = subkeyColumnName,
+                                 startDate = startDate, endDate = endDate)
+
+        def __initSumAndCount(subkey = None):
+            """
+            """
+
+            sums = {}
+            cnts = {}
+
+            if not subkey:
+                for i in range(len(self.columns[dataType].split(','))):
+                    for k in mySubkeys:
+                        if k not in sums.keys():
+                            sums[k] = []
+                            cnts[k] = []
+                        sums[k].append(0)
+                        cnts[k].append(0)
+            else:
+                self.logger.log('resetting subkey %s' % subkey, 'critical')
+                sums[subkey] = []
+                sums[subkey].append(0)
+                cnts[subkey] = []
+                cnts[subkey].append(0)
+            return (sums, cnts)
+
+        (sum, cnt) = __initSumAndCount()
+
+        def __initIntervalCrossings():
+            """
+            """
+
+            subkeysToCheck = mySubkeys
+
+            for row in self.rawData(dataType = dataType,
+                                    orderBy = [timeColumnName,
+                                               subkeyColumnName],
+                                    timestampCol = timeColumnName,
+                                    startDate = startDate, endDate = endDate):
+
+                # @CRITICAL: Exit after every subkey has been visited.
+                if subkeysToCheck != []:
+                    subkeysToCheck.remove(row[ci(subkeyColumnName)])
+                    minute = row[ci(timeColumnName)].timetuple()[
+                        MINUTE_POSITION]
+
+                    if minute <= 15:
+                        self.nextMinuteCrossing[row[ci(subkeyColumnName)]] = 15
+                    elif minute <= 30:
+                        self.nextMinuteCrossing[row[ci(subkeyColumnName)]] = 30
+                    elif minute <= 45:
+                        self.nextMinuteCrossing[row[ci(subkeyColumnName)]] = 45
+                    elif minute == 0 or minute <= 59:
+                        self.nextMinuteCrossing[row[ci(subkeyColumnName)]] = 0
+                    else:
+                        raise Exception(
+                            'Unable to determine next minute crossing')
+                    self.logger.log('next min crossing for %s = %s' % (
+                        row[ci(subkeyColumnName)],
+                        self.nextMinuteCrossing[row[ci(subkeyColumnName)]]),
+                                    'debug')
+                else:
+                    break
+
+        __initIntervalCrossings()
+
+        for row in self.rawData(dataType = dataType,
+                                orderBy = [timeColumnName, subkeyColumnName],
+                                timestampCol = timeColumnName,
+                                startDate = startDate, endDate = endDate):
+            self.logger.log('row: %d ----> %s' % (rowCnt, str(row)))
+
+            for col in self.columns[dataType].split(','):
+                if self.mathUtil.isNumber(row[ci(col)]):
+                    sum[row[ci(subkeyColumnName)]][ci(col)] += row[ci(col)]
+                    cnt[row[ci(subkeyColumnName)]][ci(col)] += 1
+
+            minute = row[ci(timeColumnName)].timetuple()[MINUTE_POSITION]
+
+            if self.intervalCrossed(minute = minute,
+                                    subkey = row[ci(subkeyColumnName)]):
+                self.logger.log('==> row: %s' % str(row), 'critical')
+                minuteCrossed = minute
+
+                # Perform aggregation on all of the previous data including
+                # the current data for the current subkey.
+                self.logger.log('key: %s' % row[ci(subkeyColumnName)],
+                                'warning')
+                aggData += [self.egaugeIntervalAverages(sum, cnt,
+                                                        row[ci(timeColumnName)],
+                                                        ci(timeColumnName),
+                                                        ci(subkeyColumnName),
+                                                        row[ci(
+                                                            subkeyColumnName)])]
+                self.logger.log('minute crossed %d' % minuteCrossed, 'DEBUG')
+
+                # Init current sum and cnt for subkey that has a completed
+                # interval.
+                __initSumAndCount(subkey = row[ci(subkeyColumnName)])
+
+            rowCnt += 1
+
+        self.logger.log('aggdata = %s' % aggData, 'debug')
+        return MSGAggregatedData(aggregationType = aggregationType,
+                                 columns = self.columns[dataType].split(','),
+                                 data = aggData)
 
     def aggregatedEgaugeData(self, startDate, endDate):
         """
@@ -369,9 +499,9 @@ class MSGDataAggregator(object):
 
         rowCnt = 0
 
-        egauges = self.subkeys(dataType = myDataType,
-                                   timestampCol = timeCol, subkeyCol = idCol,
-                                   startDate = startDate, endDate = endDate)
+        egauges = self.subkeys(dataType = myDataType, timestampCol = timeCol,
+                               subkeyCol = idCol, startDate = startDate,
+                               endDate = endDate)
 
         def __initSumAndCount(initEgaugeID = None):
             sums = {}
@@ -461,7 +591,7 @@ class MSGDataAggregator(object):
             rowCnt += 1
 
         self.logger.log('aggdata = %s' % aggData, 'debug')
-        return MSGAggregatedData(type = 'agg_egauge',
+        return MSGAggregatedData(aggregationType = 'agg_egauge',
                                  columns = self.columns[myDataType].split(','),
                                  data = aggData)
 
@@ -534,7 +664,7 @@ class MSGDataAggregator(object):
                 __initSumAndCount()
             rowCnt += 1
 
-        return MSGAggregatedData(type = myDataType,
+        return MSGAggregatedData(aggregationType = myDataType,
                                  columns = self.columns[myDataType].split(','),
                                  data = aggData)
 
@@ -590,7 +720,7 @@ class MSGDataAggregator(object):
                 __initSumAndCount()
             rowCnt += 1
 
-        return MSGAggregatedData(type = myDataType,
+        return MSGAggregatedData(aggregationType = myDataType,
                                  columns = self.columns[myDataType].split(','),
                                  data = aggData)
 
@@ -659,7 +789,7 @@ class MSGDataAggregator(object):
             # Useful for debugging:
             # if rowCnt > 40000:
             #     return aggData
-        return MSGAggregatedData(type = myDataType,
+        return MSGAggregatedData(aggregationType = myDataType,
                                  columns = self.columns[myDataType].split(','),
                                  data = aggData)
 

@@ -114,7 +114,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
         self.assertEqual(len(agg.columns), 8, 'Circuit columns not equal to 8.')
 
 
-    def testEgaugeAggregation(self):
+    def testEgaugeAggregation1(self):
         self.logger.log('Testing egauge aggregation.')
         rowCnt = 0
         agg = self.aggregator.aggregatedEgaugeData(startDate = self.testStart,
@@ -130,10 +130,48 @@ class MSGDataAggregatorTester(unittest.TestCase):
         # self.assertEqual(rowCnt, 4,
         #                  'Rows are not equal to the number of intervals.')
 
+    def testEgaugeAggregation2(self):
+        self.logger.log('Testing egauge aggregation.')
+        rowCnt = 0
+        agg = self.aggregator.aggregatedData(dataType = 'egauge',
+                                             aggregationType = 'agg_egauge',
+                                             timeColumnName = 'datetime',
+                                             subkeyColumnName = 'egauge_id',
+                                             startDate = self.testStart,
+                                             endDate = self.testEnd)
+        print [col for col in agg.columns]
+        for row in agg.data:
+            print row
+            rowCnt += 1
+        self.logger.log('row cnt %d' % rowCnt)
+        self.logger.log('agg cols: %d' % len(agg.columns))
+        self.assertEqual(len(agg.columns), 37,
+                         'Egauge columns not equal to 37.')
+
+
     def testWriteEgaugeAggregation(self):
         agg = self.aggregator.aggregatedEgaugeData(startDate = self.testStart,
                                                    endDate = self.testEnd)
-        self.aggregator.insertAggregatedData(agg.type, agg.columns, agg.data)
+        self.aggregator.insertAggregatedData(agg.aggregationType, agg.columns,
+                                             agg.data)
+
+    def testCircuitAggregation2(self):
+        self.logger.log('Testing circuit aggregation.')
+        rowCnt = 0
+        agg = self.aggregator.aggregatedData(dataType = 'circuit',
+                                             aggregationType = 'agg_circuit',
+                                             timeColumnName = 'timestamp',
+                                             subkeyColumnName = 'circuit',
+                                             startDate = self.testStart,
+                                             endDate = self.testEnd)
+        print [col for col in agg.columns]
+        for row in agg.data:
+            print row
+            rowCnt += 1
+        self.logger.log('row cnt %d' % rowCnt)
+        self.logger.log('agg cols: %d' % len(agg.columns))
+        # self.assertEqual(len(agg.columns), 37,
+        #                  'Egauge columns not equal to 37.')
 
 
 if __name__ == '__main__':
@@ -142,7 +180,9 @@ if __name__ == '__main__':
     if RUN_SELECTED_TESTS:
         selected_tests = ['testWeatherAggregation', 'testIrradianceAggregation',
                           'testCircuitAggregation', 'testEgaugeAggregation']
-        selected_tests = ['testEgaugeAggregation', 'testWriteEgaugeAggregation']
+        selected_tests = ['testEgaugeAggregation2',
+                          'testWriteEgaugeAggregation']
+        # selected_tests = ['testCircuitAggregation2']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDataAggregatorTester(t))
