@@ -181,8 +181,8 @@ if __name__ == '__main__':
         selected_tests = ['testWeatherAggregation', 'testIrradianceAggregation',
                           'testCircuitAggregation', 'testEgaugeAggregation']
         selected_tests = ['testEgaugeAggregation2',
-                          'testWriteEgaugeAggregation']
-        # selected_tests = ['testCircuitAggregation2']
+                          'testWriteEgaugeAggregation','testCircuitAggregation2']
+
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDataAggregatorTester(t))

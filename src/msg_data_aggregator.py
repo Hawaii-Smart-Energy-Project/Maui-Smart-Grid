@@ -228,6 +228,8 @@ class MSGDataAggregator(object):
 
     def irradianceIntervalAverages(self, sum, cnt, timestamp):
         """
+        # @DEPRECATED
+        
         Perform averaging of an irradiance data interval.
         Return one collection per sensor.
 
@@ -252,6 +254,8 @@ class MSGDataAggregator(object):
 
     def weatherIntervalAverages(self, sum, cnt, timestamp, tempIndex, humIndex):
         """
+        # @DEPRECATED
+        
         Return one collection per timestamp.
 
         :param sum:
@@ -275,6 +279,7 @@ class MSGDataAggregator(object):
 
     def circuitIntervalAverages(self, sums, cnts, timestamp, timestampIndex):
         """
+        # @DEPRECATED
 
         :param sums: dict
         :param cnts: dict
@@ -308,6 +313,8 @@ class MSGDataAggregator(object):
     def egaugeIntervalAverages(self, sums, cnts, timestamp, timestampIndex,
                                egaugeIDIndex, egaugeID):
         """
+        # @DEPRECATED
+        
         Aggregates all data for the current interval for the given eGauge ID.
 
         :param sums: list
@@ -345,6 +352,49 @@ class MSGDataAggregator(object):
                     myAvgs[egaugeID].append(s / cnts[egaugeID][sumIndex])
                 else:
                     myAvgs[egaugeID].append('NULL')
+            sumIndex += 1
+        return myAvgs
+
+    def intervalAverages(self, sums, cnts, timestamp, timestampIndex,
+                         subkeyIndex, subkey):
+        """
+        Aggregates all data for the current interval for the given subkey.
+
+        :param sums: list
+        :param cnts: list
+        :param timestamp: datetime
+        :param timestampIndex: int
+        :param subkeyIndex: int
+        :param subkey: string
+        :returns: Averaged data as a dict with form {subkey:data}
+        """
+
+        myAvgs = {}
+
+        reportedAgg = False
+
+        myAvgs[subkey] = []
+
+        sumIndex = 0
+
+        self.logger.log('key: %s' % subkey, 'critical')
+        # Iterate over sums.
+        for s in sums[subkey]:
+            if sumIndex == timestampIndex:
+                myAvgs[subkey].append(timestamp)
+            elif sumIndex == subkeyIndex:
+                myAvgs[subkey].append(subkey)
+            else:
+                if cnts[subkey][sumIndex] != 0:
+                    if not reportedAgg:
+                        self.logger.log(
+                            'Aggregating %d rows of data.' % cnts[subkey][
+                                sumIndex], 'warning')
+                        reportedAgg = True
+
+                    myAvgs[subkey].append(s / cnts[subkey][sumIndex])
+                else:
+                    myAvgs[subkey].append('NULL')
             sumIndex += 1
         return myAvgs
 
@@ -460,12 +510,11 @@ class MSGDataAggregator(object):
                 # the current data for the current subkey.
                 self.logger.log('key: %s' % row[ci(subkeyColumnName)],
                                 'warning')
-                aggData += [self.egaugeIntervalAverages(sum, cnt,
-                                                        row[ci(timeColumnName)],
-                                                        ci(timeColumnName),
-                                                        ci(subkeyColumnName),
-                                                        row[ci(
-                                                            subkeyColumnName)])]
+                aggData += [
+                    self.intervalAverages(sum, cnt, row[ci(timeColumnName)],
+                                          ci(timeColumnName),
+                                          ci(subkeyColumnName),
+                                          row[ci(subkeyColumnName)])]
                 self.logger.log('minute crossed %d' % minuteCrossed, 'DEBUG')
 
                 # Init current sum and cnt for subkey that has a completed
@@ -481,9 +530,8 @@ class MSGDataAggregator(object):
 
     def aggregatedEgaugeData(self, startDate, endDate):
         """
-        ***********************************************************************
+        @DEPRECATED
         Provide aggregated eGauge data.
-        ***********************************************************************
 
         :param startDate:
         :param endDate:
@@ -598,7 +646,7 @@ class MSGDataAggregator(object):
 
     def aggregatedCircuitData(self, startDate, endDate):
         """
-
+        @DEPRECATED
         :param startDate: str
         :param endDate: str
         :returns: MSGAggregatedData
@@ -671,7 +719,7 @@ class MSGDataAggregator(object):
 
     def aggregatedWeatherData(self, startDate, endDate):
         """
-
+        @DEPRECATED
         :param startDate: str
         :param endDate: str
         :returns: MSGAggregatedData
@@ -727,6 +775,7 @@ class MSGDataAggregator(object):
 
     def aggregatedIrradianceData(self, startDate, endDate):
         """
+        @DEPRECATED
         Perform aggregation of irradiance data And insert or update,
         as necessary, the aggregated data table in the database.
 
