@@ -31,6 +31,10 @@ class MSGDataAggregator(object):
     3. Circuit
     4. eGauge
 
+    The general data form conforms to
+
+    timestamp, id, val1, val2, val3, ...
+
     Aggregation is performed in-memory and saved to the DB. The time range is
     delimited by start date and end date where the values are included in the
     range.
@@ -347,7 +351,9 @@ class MSGDataAggregator(object):
 
     def aggregatedEgaugeData(self, startDate, endDate):
         """
+        ***********************************************************************
         Provide aggregated eGauge data.
+        ***********************************************************************
 
         :param startDate:
         :param endDate:
@@ -363,18 +369,9 @@ class MSGDataAggregator(object):
 
         rowCnt = 0
 
-        def __egaugeIDs():
-            egauges = set()
-            # @todo Optimize using a distinct query.
-            # @REVIEWED Verified that correct order by is used.
-            for row in self.rawData(dataType = myDataType,
-                                    orderBy = [timeCol, idCol],
-                                    timestampCol = timeCol,
-                                    startDate = startDate, endDate = endDate):
-                egauges.add(row[ci(idCol)])
-            return egauges
-
-        egauges = __egaugeIDs()
+        egauges = self.subkeys(dataType = myDataType,
+                                   timestampCol = timeCol, subkeyCol = idCol,
+                                   startDate = startDate, endDate = endDate)
 
         def __initSumAndCount(initEgaugeID = None):
             sums = {}
@@ -399,11 +396,8 @@ class MSGDataAggregator(object):
 
         (sum, cnt) = __initSumAndCount()
 
-
         def __initIntervalCrossings():
-            subkeys = self.subkeys(dataType = myDataType,
-                                   timestampCol = timeCol, subkeyCol = idCol,
-                                   startDate = startDate, endDate = endDate)
+            subkeys = egauges
 
             for row in self.rawData(dataType = myDataType,
                                     orderBy = [timeCol, idCol],
