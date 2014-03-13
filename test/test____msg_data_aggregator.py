@@ -32,10 +32,11 @@ class MSGDataAggregatorTester(unittest.TestCase):
         """
         timeCol = 'timestamp'
         rows = []
-        for row in self.aggregator._MSGDataAggregator__rawData(
-                dataType = 'irradiance', orderBy = [timeCol, 'sensor_id'],
-                timestampCol = timeCol, startDate = self.testStart,
-                endDate = self.testEnd):
+        for row in self.aggregator.rawData(dataType = 'irradiance',
+                                           orderBy = [timeCol, 'sensor_id'],
+                                           timestampCol = timeCol,
+                                           startDate = self.testStart,
+                                           endDate = self.testEnd):
             rows.append(row)
         self.assertIsNotNone(rows, 'Rows are present.')
 
@@ -44,10 +45,11 @@ class MSGDataAggregatorTester(unittest.TestCase):
         """
         timeCol = 'timestamp'
         rows = []
-        for row in self.aggregator._MSGDataAggregator__rawData(
-                dataType = 'weather', orderBy = [timeCol],
-                timestampCol = timeCol, startDate = self.testStart,
-                endDate = self.testEnd):
+        for row in self.aggregator.rawData(dataType = 'weather',
+                                           orderBy = [timeCol],
+                                           timestampCol = timeCol,
+                                           startDate = self.testStart,
+                                           endDate = self.testEnd):
             rows.append(row)
         self.assertIsNotNone(rows, 'Rows are present.')
 
@@ -56,20 +58,22 @@ class MSGDataAggregatorTester(unittest.TestCase):
         """
         timeCol = 'timestamp'
         rows = []
-        for row in self.aggregator._MSGDataAggregator__rawData(
-                dataType = 'circuit', orderBy = [timeCol, 'circuit'],
-                timestampCol = timeCol, startDate = self.testStart,
-                endDate = self.testEnd):
+        for row in self.aggregator.rawData(dataType = 'circuit',
+                                           orderBy = [timeCol, 'circuit'],
+                                           timestampCol = timeCol,
+                                           startDate = self.testStart,
+                                           endDate = self.testEnd):
             rows.append(row)
         self.assertIsNotNone(rows, 'Rows are present.')
 
     def testEgaugeFetch(self):
         timeCol = 'datetime'
         rows = []
-        for row in self.aggregator._MSGDataAggregator__rawData(
-                dataType = 'egauge', orderBy = [timeCol, 'egauge_id'],
-                timestampCol = timeCol, startDate = self.testStart,
-                endDate = self.testEnd):
+        for row in self.aggregator.rawData(dataType = 'egauge',
+                                           orderBy = [timeCol, 'egauge_id'],
+                                           timestampCol = timeCol,
+                                           startDate = self.testStart,
+                                           endDate = self.testEnd):
             rows.append(row)
         self.assertIsNotNone(rows, 'Rows are present.')
 
@@ -129,10 +133,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
     def testWriteEgaugeAggregation(self):
         agg = self.aggregator.aggregatedEgaugeData(startDate = self.testStart,
                                                    endDate = self.testEnd)
-        self.aggregator._MSGDataAggregator__insertAggregatedData(agg.type,
-                                                                 agg.columns,
-                                                                 agg.data)
-
+        self.aggregator.insertAggregatedData(agg.type, agg.columns, agg.data)
 
 
 if __name__ == '__main__':
@@ -141,7 +142,7 @@ if __name__ == '__main__':
     if RUN_SELECTED_TESTS:
         selected_tests = ['testWeatherAggregation', 'testIrradianceAggregation',
                           'testCircuitAggregation', 'testEgaugeAggregation']
-        selected_tests = ['testEgaugeAggregation','testWriteEgaugeAggregation']
+        selected_tests = ['testEgaugeAggregation', 'testWriteEgaugeAggregation']
         mySuite = unittest.TestSuite()
         for t in selected_tests:
             mySuite.addTest(MSGDataAggregatorTester(t))

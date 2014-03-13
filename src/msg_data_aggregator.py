@@ -18,6 +18,7 @@ from datetime import datetime
 
 MINUTE_POSITION = 4  # In time tuple.
 
+
 class MSGDataAggregator(object):
     """
     Use for continuous data aggregation of diverse data types relevant to the
@@ -117,7 +118,7 @@ class MSGDataAggregator(object):
             raise Exception('Subkey is None.')
 
 
-    def __fetch(self, sql):
+    def rows(self, sql):
         """
 
         :param sql: Command to be executed.
@@ -129,8 +130,8 @@ class MSGDataAggregator(object):
         return self.cursor.fetchall()
 
 
-    def __rawData(self, dataType = '', orderBy = None, timestampCol = '',
-                  startDate = '', endDate = ''):
+    def rawData(self, dataType = '', orderBy = None, timestampCol = '',
+                startDate = '', endDate = ''):
         """
 
         :param dataType: string
@@ -138,19 +139,40 @@ class MSGDataAggregator(object):
         :param timestampCol: string
         :param startDate: string
         :param endDate: string
-        :return: DB rows.
+        :returns: DB rows.
         """
 
         # @todo Validate args.
 
-        return self.__fetch("""SELECT %s FROM "%s" WHERE %s BETWEEN '%s' AND
+        return self.rows("""SELECT %s FROM "%s" WHERE %s BETWEEN '%s' AND
         '%s' ORDER BY
             %s""" % (
             self.columns[dataType], self.tables[dataType], timestampCol,
             startDate, endDate, ','.join(orderBy)))
 
-    def __insertAggregatedData(self, dataType = '', aggDataCols = None,
-                               aggData = None):
+
+    def subkeys(self, dataType = '', timestampCol = '', subkeyCol = '',
+                startDate = '', endDate = ''):
+        """
+
+        :param dataType:
+        :param timestampCol:
+        :param subkeyCol:
+        :param startDate:
+        :param endDate:
+        :returns:
+        """
+
+        return [sk[0] for sk in self.rows("""SELECT DISTINCT(%s) FROM "%s"
+        WHERE %s BETWEEN
+        '%s' AND '%s'
+            ORDER BY %s""" % (
+            subkeyCol, self.tables[dataType], timestampCol, startDate, endDate,
+            subkeyCol))]
+
+
+    def insertAggregatedData(self, dataType = '', aggDataCols = None,
+                             aggData = None):
 
         if not aggDataCols:
             raise Exception('aggDataCols not defined.')
@@ -200,7 +222,7 @@ class MSGDataAggregator(object):
         self.conn.commit()
 
 
-    def __irradianceIntervalAverages(self, sum, cnt, timestamp):
+    def irradianceIntervalAverages(self, sum, cnt, timestamp):
         """
         Perform averaging of an irradiance data interval.
         Return one collection per sensor.
@@ -224,8 +246,7 @@ class MSGDataAggregator(object):
         return myAvgs
 
 
-    def __weatherIntervalAverages(self, sum, cnt, timestamp, tempIndex,
-                                  humIndex):
+    def weatherIntervalAverages(self, sum, cnt, timestamp, tempIndex, humIndex):
         """
         Return one collection per timestamp.
 
@@ -248,7 +269,7 @@ class MSGDataAggregator(object):
         return myAvgs
 
 
-    def __circuitIntervalAverages(self, sums, cnts, timestamp, timestampIndex):
+    def circuitIntervalAverages(self, sums, cnts, timestamp, timestampIndex):
         """
 
         :param sums: dict
@@ -346,10 +367,10 @@ class MSGDataAggregator(object):
             egauges = set()
             # @todo Optimize using a distinct query.
             # @REVIEWED Verified that correct order by is used.
-            for row in self.__rawData(dataType = myDataType,
-                                      orderBy = [timeCol, idCol],
-                                      timestampCol = timeCol,
-                                      startDate = startDate, endDate = endDate):
+            for row in self.rawData(dataType = myDataType,
+                                    orderBy = [timeCol, idCol],
+                                    timestampCol = timeCol,
+                                    startDate = startDate, endDate = endDate):
                 egauges.add(row[ci(idCol)])
             return egauges
 
@@ -378,19 +399,22 @@ class MSGDataAggregator(object):
 
         (sum, cnt) = __initSumAndCount()
 
-        def __initIntervalCrossings():
-            rowCnt = 0
-            for row in self.__rawData(dataType = myDataType,
-                                      orderBy = [timeCol, idCol],
-                                      timestampCol = timeCol,
-                                      startDate = startDate, endDate = endDate):
 
-                # @CRITICAL
-                # @todo Need to accurately determine subkey quantity here!
-                if rowCnt > 4:
-                    continue
-                else:
+        def __initIntervalCrossings():
+            subkeys = self.subkeys(dataType = myDataType,
+                                   timestampCol = timeCol, subkeyCol = idCol,
+                                   startDate = startDate, endDate = endDate)
+
+            for row in self.rawData(dataType = myDataType,
+                                    orderBy = [timeCol, idCol],
+                                    timestampCol = timeCol,
+                                    startDate = startDate, endDate = endDate):
+
+                # @CRITICAL: Exit after every subkey has been visited.
+                if subkeys != []:
+                    subkeys.remove(row[ci(idCol)])
                     minute = row[ci(timeCol)].timetuple()[MINUTE_POSITION]
+
                     if minute <= 15:
                         self.nextMinuteCrossing[row[ci(idCol)]] = 15
                     elif minute <= 30:
@@ -405,14 +429,15 @@ class MSGDataAggregator(object):
                     self.logger.log('next min crossing for %s = %s' % (
                         row[ci(idCol)],
                         self.nextMinuteCrossing[row[ci(idCol)]]), 'debug')
-                rowCnt += 1
+                else:
+                    break
 
         __initIntervalCrossings()
 
-        for row in self.__rawData(dataType = myDataType,
-                                  orderBy = [timeCol, idCol],
-                                  timestampCol = timeCol, startDate = startDate,
-                                  endDate = endDate):
+        for row in self.rawData(dataType = myDataType,
+                                orderBy = [timeCol, idCol],
+                                timestampCol = timeCol, startDate = startDate,
+                                endDate = endDate):
             self.logger.log('row: %d ----> %s' % (rowCnt, str(row)))
 
             for col in self.columns[myDataType].split(','):
@@ -469,10 +494,10 @@ class MSGDataAggregator(object):
         def __circuits():
             circuits = set()
             # @todo Optimize using a distinct query.
-            for row in self.__rawData(dataType = myDataType,
-                                      orderBy = [timeCol, idCol],
-                                      timestampCol = timeCol,
-                                      startDate = startDate, endDate = endDate):
+            for row in self.rawData(dataType = myDataType,
+                                    orderBy = [timeCol, idCol],
+                                    timestampCol = timeCol,
+                                    startDate = startDate, endDate = endDate):
                 circuits.add(row[ci(idCol)])
             return circuits
 
@@ -497,10 +522,10 @@ class MSGDataAggregator(object):
 
         (sum, cnt) = __initSumAndCount()
 
-        for row in self.__rawData(dataType = myDataType,
-                                  orderBy = [timeCol, idCol],
-                                  timestampCol = timeCol, startDate = startDate,
-                                  endDate = endDate):
+        for row in self.rawData(dataType = myDataType,
+                                orderBy = [timeCol, idCol],
+                                timestampCol = timeCol, startDate = startDate,
+                                endDate = endDate):
             for col in self.columns[myDataType].split(','):
                 if self.mathUtil.isNumber(row[ci(col)]):
                     sum[row[ci(idCol)]][ci(col)] += row[ci(col)]
@@ -509,8 +534,8 @@ class MSGDataAggregator(object):
             if (self.intervalCrossed(
                     minute = row[ci(timeCol)].timetuple()[MINUTE_POSITION])):
                 aggData += [
-                    self.__circuitIntervalAverages(sum, cnt, row[ci(timeCol)],
-                                                   ci(timeCol))]
+                    self.circuitIntervalAverages(sum, cnt, row[ci(timeCol)],
+                                                 ci(timeCol))]
 
                 __initSumAndCount()
             rowCnt += 1
@@ -554,9 +579,9 @@ class MSGDataAggregator(object):
 
         (sum, cnt) = __initSumAndCount()
 
-        for row in self.__rawData(dataType = myDataType, orderBy = [timeCol],
-                                  timestampCol = timeCol, startDate = startDate,
-                                  endDate = endDate):
+        for row in self.rawData(dataType = myDataType, orderBy = [timeCol],
+                                timestampCol = timeCol, startDate = startDate,
+                                endDate = endDate):
             for col in self.columns[myDataType].split(','):
                 if self.mathUtil.isNumber(row[ci(col)]):
                     sum[ci(col)] += row[ci(col)]
@@ -564,9 +589,10 @@ class MSGDataAggregator(object):
 
             if (self.intervalCrossed(
                     minute = row[ci(timeCol)].timetuple()[MINUTE_POSITION])):
-                aggData += self.__weatherIntervalAverages(sum, cnt,
-                                                          row[ci(timeCol)], ci(
-                        'met_air_temp_degf'), ci('met_rel_humid_pct'))
+                aggData += self.weatherIntervalAverages(sum, cnt,
+                                                        row[ci(timeCol)],
+                                                        ci('met_air_temp_degf'),
+                                                        ci('met_rel_humid_pct'))
                 __initSumAndCount()
             rowCnt += 1
 
@@ -614,10 +640,10 @@ class MSGDataAggregator(object):
 
         rowCnt = 0
 
-        for row in self.__rawData(dataType = myDataType,
-                                  orderBy = [timeCol, idCol],
-                                  timestampCol = timeCol, startDate = startDate,
-                                  endDate = endDate):
+        for row in self.rawData(dataType = myDataType,
+                                orderBy = [timeCol, idCol],
+                                timestampCol = timeCol, startDate = startDate,
+                                endDate = endDate):
             # cnt is used for sensor ID here.
             if self.mathUtil.isNumber(row[ci('irradiance_w_per_m2')]):
                 # Add up the values for each sensor.
@@ -629,8 +655,8 @@ class MSGDataAggregator(object):
                 # Emit the average for the current sum.
                 # Use the current timestamp that is the trailing timestamp
                 # for the interval.
-                aggData += self.__irradianceIntervalAverages(sum, cnt,
-                                                             row[ci(timeCol)])
+                aggData += self.irradianceIntervalAverages(sum, cnt,
+                                                           row[ci(timeCol)])
                 __initSumAndCount()
 
             rowCnt += 1
