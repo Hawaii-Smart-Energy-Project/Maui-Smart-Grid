@@ -15,6 +15,7 @@ from msg_configer import MSGConfiger
 from msg_math_util import MSGMathUtil
 from msg_aggregated_data import MSGAggregatedData
 from datetime import datetime
+import copy
 
 MINUTE_POSITION = 4  # In time tuple.
 
@@ -502,7 +503,7 @@ class MSGDataAggregator(object):
             """
             """
 
-            subkeysToCheck = mySubkeys
+            subkeysToCheck = copy.copy(mySubkeys)
             self.logger.log('subkeys to check: %s' % subkeysToCheck, 'debug')
 
             if mySubkeys:
@@ -575,7 +576,7 @@ class MSGDataAggregator(object):
                                 orderBy = [timeColumnName, subkeyColumnName],
                                 timestampCol = timeColumnName,
                                 startDate = startDate, endDate = endDate):
-            self.logger.log('row: %d ----> %s' % (rowCnt, str(row)))
+            self.logger.log('row: %d ----> %s' % (rowCnt, str(row)), 'debug')
 
             if mySubkeys:
                 for col in self.columns[dataType].split(','):

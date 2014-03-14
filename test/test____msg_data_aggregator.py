@@ -217,6 +217,7 @@ if __name__ == '__main__':
                           'testCircuitAggregation2',
                           'testIrradianceAggregation2']
         selected_tests=['testWeatherAggregation2']
+        selected_tests=['testIrradianceAggregation2']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
