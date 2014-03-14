@@ -33,7 +33,11 @@ class MSGDataAggregator(object):
 
     The general data form conforms to
 
-    timestamp, id, val1, val2, val3, ...
+    1. timestamp, subkey_id, val1, val2, val3, ...
+    2. timestamp, val1, val2, val3, ...
+
+    Case (2) is handled within the same space as (1) by testing for the
+    existence of subkeys.
 
     Aggregation is performed in-memory and saved to the DB. The time range is
     delimited by start date and end date where the values are included in the
@@ -70,6 +74,7 @@ class MSGDataAggregator(object):
         self.mathUtil = MSGMathUtil()
         self.irradianceSensorCount = 4
         self.nextMinuteCrossing = {}
+        self.nextMinuteCrossingWithoutSubkeys = None
         section = 'Aggregation'
         tableList = ['irradiance', 'agg_irradiance', 'weather', 'agg_weather',
                      'circuit', 'agg_circuit', 'egauge', 'agg_egauge']
@@ -119,7 +124,19 @@ class MSGDataAggregator(object):
                 return True
             return False
         else:
-            raise Exception('Subkey is None.')
+            if minute >= self.nextMinuteCrossingWithoutSubkeys and minute <= \
+                    last and self.nextMinuteCrossingWithoutSubkeys != first:
+                self.nextMinuteCrossingWithoutSubkeys += intervalSize
+                if self.nextMinuteCrossingWithoutSubkeys >= last:
+                    self.nextMinuteCrossingWithoutSubkeys = first
+                self.logger.log('minute crossed at #1.')
+                return True
+            elif self.nextMinuteCrossingWithoutSubkeys == first and minute >=\
+                    first and minute <= intervalSize:
+                self.nextMinuteCrossingWithoutSubkeys = intervalSize
+                self.logger.log('minute crossed at #2.')
+                return True
+            return False
 
 
     def rows(self, sql):
@@ -148,6 +165,8 @@ class MSGDataAggregator(object):
 
         # @todo Validate args.
 
+        orderBy = filter(None, orderBy)
+
         return self.rows("""SELECT %s FROM "%s" WHERE %s BETWEEN '%s' AND
         '%s' ORDER BY
             %s""" % (
@@ -168,8 +187,7 @@ class MSGDataAggregator(object):
         """
 
         return [sk[0] for sk in self.rows("""SELECT DISTINCT(%s) FROM "%s"
-        WHERE %s BETWEEN
-        '%s' AND '%s'
+        WHERE %s BETWEEN '%s' AND '%s'
             ORDER BY %s""" % (
             subkeyCol, self.tables[dataType], timestampCol, startDate, endDate,
             subkeyCol))]
@@ -356,7 +374,7 @@ class MSGDataAggregator(object):
         return myAvgs
 
     def intervalAverages(self, sums, cnts, timestamp, timestampIndex,
-                         subkeyIndex, subkey):
+                         subkeyIndex = None, subkey = None):
         """
         Aggregates all data for the current interval for the given subkey.
 
@@ -369,34 +387,54 @@ class MSGDataAggregator(object):
         :returns: Averaged data as a dict with form {subkey:data}
         """
 
-        myAvgs = {}
+        if subkey is not None:
 
-        reportedAgg = False
+            myAvgs = {}
+            reportedAgg = False
+            myAvgs[subkey] = []
+            sumIndex = 0
 
-        myAvgs[subkey] = []
-
-        sumIndex = 0
-
-        self.logger.log('key: %s' % subkey, 'critical')
-        # Iterate over sums.
-        for s in sums[subkey]:
-            if sumIndex == timestampIndex:
-                myAvgs[subkey].append(timestamp)
-            elif sumIndex == subkeyIndex:
-                myAvgs[subkey].append(subkey)
-            else:
-                if cnts[subkey][sumIndex] != 0:
-                    if not reportedAgg:
-                        self.logger.log(
-                            'Aggregating %d rows of data.' % cnts[subkey][
-                                sumIndex], 'warning')
-                        reportedAgg = True
-
-                    myAvgs[subkey].append(s / cnts[subkey][sumIndex])
+            self.logger.log('key: %s' % subkey, 'critical')
+            # Iterate over sums.
+            for s in sums[subkey]:
+                if sumIndex == timestampIndex:
+                    myAvgs[subkey].append(timestamp)
+                elif sumIndex == subkeyIndex:
+                    myAvgs[subkey].append(subkey)
                 else:
-                    myAvgs[subkey].append('NULL')
-            sumIndex += 1
-        return myAvgs
+                    if cnts[subkey][sumIndex] != 0:
+                        if not reportedAgg:
+                            self.logger.log(
+                                'Aggregating %d rows of data.' % cnts[subkey][
+                                    sumIndex], 'warning')
+                            reportedAgg = True
+
+                        myAvgs[subkey].append(s / cnts[subkey][sumIndex])
+                    else:
+                        myAvgs[subkey].append('NULL')
+                sumIndex += 1
+            return myAvgs
+
+        else:
+            myAvgs = []
+            reportedAgg = False
+            sumIndex = 0
+            for s in sums:
+                if sumIndex == timestampIndex:
+                    myAvgs.append(timestamp)
+                else:
+                    if cnts[sumIndex] != 0:
+                        if not reportedAgg:
+                            self.logger.log(
+                                'Aggregating %d rows of data.' % cnts[sumIndex],
+                                'warning')
+                            reportedAgg = True
+                        myAvgs.append(s / cnts[sumIndex])
+                    else:
+                        myAvgs.append('NULL')
+                sumIndex += 1
+            return myAvgs
+
 
     def aggregatedData(self, dataType = '', aggregationType = '',
                        timeColumnName = '', subkeyColumnName = '',
@@ -420,10 +458,14 @@ class MSGDataAggregator(object):
 
         rowCnt = 0
 
-        mySubkeys = self.subkeys(dataType = dataType,
-                                 timestampCol = timeColumnName,
-                                 subkeyCol = subkeyColumnName,
-                                 startDate = startDate, endDate = endDate)
+        mySubkeys = []
+        if subkeyColumnName:
+            mySubkeys = self.subkeys(dataType = dataType,
+                                     timestampCol = timeColumnName,
+                                     subkeyCol = subkeyColumnName,
+                                     startDate = startDate, endDate = endDate)
+
+        self.logger.log('subkeys: %s' % mySubkeys, 'debug')
 
         def __initSumAndCount(subkey = None):
             """
@@ -432,20 +474,28 @@ class MSGDataAggregator(object):
             sums = {}
             cnts = {}
 
-            if not subkey:
+            if not mySubkeys:
+                sums = []
+                cnts = []
                 for i in range(len(self.columns[dataType].split(','))):
-                    for k in mySubkeys:
-                        if k not in sums.keys():
-                            sums[k] = []
-                            cnts[k] = []
-                        sums[k].append(0)
-                        cnts[k].append(0)
+                    sums.append(0)
+                    cnts.append(0)
             else:
-                self.logger.log('resetting subkey %s' % subkey, 'critical')
-                sums[subkey] = []
-                sums[subkey].append(0)
-                cnts[subkey] = []
-                cnts[subkey].append(0)
+                if not subkey:
+                    for i in range(len(self.columns[dataType].split(','))):
+                        for k in mySubkeys:
+                            if k not in sums.keys():
+                                sums[k] = []
+                                cnts[k] = []
+                            sums[k].append(0)
+                            cnts[k].append(0)
+                else:
+                    self.logger.log('resetting subkey %s' % subkey, 'critical')
+                    sums[subkey] = []
+                    sums[subkey].append(0)
+                    cnts[subkey] = []
+                    cnts[subkey].append(0)
+
             return (sums, cnts)
 
         (sum, cnt) = __initSumAndCount()
@@ -455,36 +505,63 @@ class MSGDataAggregator(object):
             """
 
             subkeysToCheck = mySubkeys
+            self.logger.log('subkeys to check: %s' % subkeysToCheck, 'debug')
 
-            for row in self.rawData(dataType = dataType,
-                                    orderBy = [timeColumnName,
-                                               subkeyColumnName],
-                                    timestampCol = timeColumnName,
-                                    startDate = startDate, endDate = endDate):
-
-                # @CRITICAL: Exit after every subkey has been visited.
-                if subkeysToCheck != []:
-                    subkeysToCheck.remove(row[ci(subkeyColumnName)])
+            if not mySubkeys:
+                for row in self.rawData(dataType = dataType,
+                                        orderBy = [timeColumnName,
+                                                   subkeyColumnName],
+                                        timestampCol = timeColumnName,
+                                        startDate = startDate,
+                                        endDate = endDate):
                     minute = row[ci(timeColumnName)].timetuple()[
                         MINUTE_POSITION]
-
                     if minute <= 15:
-                        self.nextMinuteCrossing[row[ci(subkeyColumnName)]] = 15
+                        self.nextMinuteCrossingWithoutSubkeys = 15
                     elif minute <= 30:
-                        self.nextMinuteCrossing[row[ci(subkeyColumnName)]] = 30
+                        self.nextMinuteCrossingWithoutSubkeys = 30
                     elif minute <= 45:
-                        self.nextMinuteCrossing[row[ci(subkeyColumnName)]] = 45
+                        self.nextMinuteCrossingWithoutSubkeys = 45
                     elif minute == 0 or minute <= 59:
-                        self.nextMinuteCrossing[row[ci(subkeyColumnName)]] = 0
+                        self.nextMinuteCrossingWithoutSubkeys = 0
                     else:
                         raise Exception(
                             'Unable to determine next minute crossing')
-                    self.logger.log('next min crossing for %s = %s' % (
-                        row[ci(subkeyColumnName)],
-                        self.nextMinuteCrossing[row[ci(subkeyColumnName)]]),
-                                    'debug')
                 else:
-                    break
+                    for row in self.rawData(dataType = dataType,
+                                            orderBy = [timeColumnName,
+                                                       subkeyColumnName],
+                                            timestampCol = timeColumnName,
+                                            startDate = startDate,
+                                            endDate = endDate):
+
+                        # @CRITICAL: Exit after every subkey has been visited.
+                        if subkeysToCheck != []:
+                            subkeysToCheck.remove(row[ci(subkeyColumnName)])
+                            minute = row[ci(timeColumnName)].timetuple()[
+                                MINUTE_POSITION]
+
+                            if minute <= 15:
+                                self.nextMinuteCrossing[
+                                    row[ci(subkeyColumnName)]] = 15
+                            elif minute <= 30:
+                                self.nextMinuteCrossing[
+                                    row[ci(subkeyColumnName)]] = 30
+                            elif minute <= 45:
+                                self.nextMinuteCrossing[
+                                    row[ci(subkeyColumnName)]] = 45
+                            elif minute == 0 or minute <= 59:
+                                self.nextMinuteCrossing[
+                                    row[ci(subkeyColumnName)]] = 0
+                            else:
+                                raise Exception(
+                                    'Unable to determine next minute crossing')
+                            self.logger.log('next min crossing for %s = %s' % (
+                                row[ci(subkeyColumnName)],
+                                self.nextMinuteCrossing[
+                                    row[ci(subkeyColumnName)]]), 'debug')
+                        else:
+                            break
 
         __initIntervalCrossings()
 
@@ -494,32 +571,49 @@ class MSGDataAggregator(object):
                                 startDate = startDate, endDate = endDate):
             self.logger.log('row: %d ----> %s' % (rowCnt, str(row)))
 
-            for col in self.columns[dataType].split(','):
-                if self.mathUtil.isNumber(row[ci(col)]):
-                    sum[row[ci(subkeyColumnName)]][ci(col)] += row[ci(col)]
-                    cnt[row[ci(subkeyColumnName)]][ci(col)] += 1
+            if mySubkeys:
+                for col in self.columns[dataType].split(','):
+                    if self.mathUtil.isNumber(row[ci(col)]):
+                        sum[row[ci(subkeyColumnName)]][ci(col)] += row[ci(col)]
+                        cnt[row[ci(subkeyColumnName)]][ci(col)] += 1
 
-            minute = row[ci(timeColumnName)].timetuple()[MINUTE_POSITION]
+                minute = row[ci(timeColumnName)].timetuple()[MINUTE_POSITION]
 
-            if self.intervalCrossed(minute = minute,
-                                    subkey = row[ci(subkeyColumnName)]):
-                self.logger.log('==> row: %s' % str(row), 'critical')
-                minuteCrossed = minute
+                if self.intervalCrossed(minute = minute,
+                                        subkey = row[ci(subkeyColumnName)]):
+                    self.logger.log('==> row: %s' % str(row), 'critical')
+                    minuteCrossed = minute
 
-                # Perform aggregation on all of the previous data including
-                # the current data for the current subkey.
-                self.logger.log('key: %s' % row[ci(subkeyColumnName)],
-                                'warning')
-                aggData += [
-                    self.intervalAverages(sum, cnt, row[ci(timeColumnName)],
-                                          ci(timeColumnName),
-                                          ci(subkeyColumnName),
-                                          row[ci(subkeyColumnName)])]
-                self.logger.log('minute crossed %d' % minuteCrossed, 'DEBUG')
+                    # Perform aggregation on all of the previous data including
+                    # the current data for the current subkey.
+                    self.logger.log('key: %s' % row[ci(subkeyColumnName)],
+                                    'warning')
+                    aggData += [
+                        self.intervalAverages(sum, cnt, row[ci(timeColumnName)],
+                                              ci(timeColumnName),
+                                              ci(subkeyColumnName),
+                                              row[ci(subkeyColumnName)])]
+                    self.logger.log('minute crossed %d' % minuteCrossed,
+                                    'DEBUG')
 
-                # Init current sum and cnt for subkey that has a completed
-                # interval.
-                __initSumAndCount(subkey = row[ci(subkeyColumnName)])
+                    # Init current sum and cnt for subkey that has a completed
+                    # interval.
+                    __initSumAndCount(subkey = row[ci(subkeyColumnName)])
+            else:
+                for col in self.columns[dataType].split(','):
+                    if self.mathUtil.isNumber(row[ci(col)]):
+                        sum[ci(col)] += row[ci(col)]
+                        cnt[ci(col)] += 1
+
+                minute = row[ci(timeColumnName)].timetuple()[MINUTE_POSITION]
+
+                if self.intervalCrossed(minute = minute):
+                    self.logger.log('==> row: %s' % str(row), 'critical')
+                    minuteCrossed = minute
+
+                    aggData += [
+                        self.intervalAverages(sum, cnt, row[ci(timeColumnName)],
+                                              ci(timeColumnName))]
 
             rowCnt += 1
 
