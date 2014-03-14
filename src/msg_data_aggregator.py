@@ -97,7 +97,7 @@ class MSGDataAggregator(object):
         Determine interval crossing. Intervals are at 0, 15, 45, 60 min.
 
         :param minute: The integer value of the minute.
-        :param subkey: The key for the subkey used for aggregation.
+        :param subkey: The name for the subkey used for aggregation.
         :returns: True if an interval was crossed, False otherwise.
         """
 
@@ -115,12 +115,12 @@ class MSGDataAggregator(object):
                 self.nextMinuteCrossing[subkey] += intervalSize
                 if self.nextMinuteCrossing[subkey] >= last:
                     self.nextMinuteCrossing[subkey] = first
-                self.logger.log('minute crossed at #1.')
+                self.logger.log('minute crossed at #1.', 'debug')
                 return True
             elif self.nextMinuteCrossing[
                 subkey] == first and minute >= first and minute <= intervalSize:
                 self.nextMinuteCrossing[subkey] = intervalSize
-                self.logger.log('minute crossed at #2.')
+                self.logger.log('minute crossed at #2.', 'debug')
                 return True
             return False
         else:
@@ -129,12 +129,12 @@ class MSGDataAggregator(object):
                 self.nextMinuteCrossingWithoutSubkeys += intervalSize
                 if self.nextMinuteCrossingWithoutSubkeys >= last:
                     self.nextMinuteCrossingWithoutSubkeys = first
-                self.logger.log('minute crossed at #1.')
+                self.logger.log('minute crossed at #3.', 'debug')
                 return True
             elif self.nextMinuteCrossingWithoutSubkeys == first and minute >=\
                     first and minute <= intervalSize:
                 self.nextMinuteCrossingWithoutSubkeys = intervalSize
-                self.logger.log('minute crossed at #2.')
+                self.logger.log('minute crossed at #4.', 'debug')
                 return True
             return False
 
@@ -388,7 +388,6 @@ class MSGDataAggregator(object):
         """
 
         if subkey is not None:
-
             myAvgs = {}
             reportedAgg = False
             myAvgs[subkey] = []
@@ -414,7 +413,6 @@ class MSGDataAggregator(object):
                         myAvgs[subkey].append('NULL')
                 sumIndex += 1
             return myAvgs
-
         else:
             myAvgs = []
             reportedAgg = False
@@ -507,10 +505,47 @@ class MSGDataAggregator(object):
             subkeysToCheck = mySubkeys
             self.logger.log('subkeys to check: %s' % subkeysToCheck, 'debug')
 
-            if not mySubkeys:
+            if mySubkeys:
                 for row in self.rawData(dataType = dataType,
                                         orderBy = [timeColumnName,
                                                    subkeyColumnName],
+                                        timestampCol = timeColumnName,
+                                        startDate = startDate,
+                                        endDate = endDate):
+
+                    # @CRITICAL: Exit after every subkey has been visited.
+                    if subkeysToCheck != []:
+                        subkeysToCheck.remove(row[ci(subkeyColumnName)])
+                        minute = row[ci(timeColumnName)].timetuple()[
+                            MINUTE_POSITION]
+
+                        if minute <= 15:
+                            self.nextMinuteCrossing[
+                                row[ci(subkeyColumnName)]] = 15
+                        elif minute <= 30:
+                            self.nextMinuteCrossing[
+                                row[ci(subkeyColumnName)]] = 30
+                        elif minute <= 45:
+                            self.nextMinuteCrossing[
+                                row[ci(subkeyColumnName)]] = 45
+                        elif minute == 0 or minute <= 59:
+                            self.nextMinuteCrossing[
+                                row[ci(subkeyColumnName)]] = 0
+                        else:
+                            raise Exception(
+                                'Unable to determine next minute crossing')
+                        self.logger.log('next min crossing for %s = %s' % (
+                            row[ci(subkeyColumnName)],
+                            self.nextMinuteCrossing[row[ci(subkeyColumnName)]]),
+                                        'debug')
+                    else:
+                        break
+
+            else:
+                rowCnt = 0
+                # @todo Optimize by querying only the first row.
+                for row in self.rawData(dataType = dataType,
+                                        orderBy = [timeColumnName],
                                         timestampCol = timeColumnName,
                                         startDate = startDate,
                                         endDate = endDate):
@@ -527,41 +562,12 @@ class MSGDataAggregator(object):
                     else:
                         raise Exception(
                             'Unable to determine next minute crossing')
-                else:
-                    for row in self.rawData(dataType = dataType,
-                                            orderBy = [timeColumnName,
-                                                       subkeyColumnName],
-                                            timestampCol = timeColumnName,
-                                            startDate = startDate,
-                                            endDate = endDate):
+                    self.logger.log('next min crossing = %s' % (
+                        self.nextMinuteCrossingWithoutSubkeys), 'debug')
+                    rowCnt += 1
+                    if rowCnt > 0:
+                        break
 
-                        # @CRITICAL: Exit after every subkey has been visited.
-                        if subkeysToCheck != []:
-                            subkeysToCheck.remove(row[ci(subkeyColumnName)])
-                            minute = row[ci(timeColumnName)].timetuple()[
-                                MINUTE_POSITION]
-
-                            if minute <= 15:
-                                self.nextMinuteCrossing[
-                                    row[ci(subkeyColumnName)]] = 15
-                            elif minute <= 30:
-                                self.nextMinuteCrossing[
-                                    row[ci(subkeyColumnName)]] = 30
-                            elif minute <= 45:
-                                self.nextMinuteCrossing[
-                                    row[ci(subkeyColumnName)]] = 45
-                            elif minute == 0 or minute <= 59:
-                                self.nextMinuteCrossing[
-                                    row[ci(subkeyColumnName)]] = 0
-                            else:
-                                raise Exception(
-                                    'Unable to determine next minute crossing')
-                            self.logger.log('next min crossing for %s = %s' % (
-                                row[ci(subkeyColumnName)],
-                                self.nextMinuteCrossing[
-                                    row[ci(subkeyColumnName)]]), 'debug')
-                        else:
-                            break
 
         __initIntervalCrossings()
 
