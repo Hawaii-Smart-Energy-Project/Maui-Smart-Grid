@@ -77,60 +77,8 @@ class MSGDataAggregatorTester(unittest.TestCase):
             rows.append(row)
         self.assertIsNotNone(rows, 'Rows are present.')
 
-    def testIrradianceAggregation(self):
-        rowCnt = 0
-        agg = self.aggregator.aggregatedIrradianceData(
-            startDate = self.testStart, endDate = self.testEnd)
-        for row in agg.data:
-            print '%d: %s' % (rowCnt, row)
-            rowCnt += 1
-        self.assertEqual(rowCnt, self.aggregator.irradianceSensorCount * 4,
-                         'Row count does not reflect four sensors.')
-        self.logger.log('agg cols: %d' % len(agg.columns))
-        self.assertEqual(len(agg.columns), 3,
-                         'Irradiance columns not equal to 3.')
 
-    def testWeatherAggregation(self):
-        rowCnt = 0
-        agg = self.aggregator.aggregatedWeatherData(startDate = self.testStart,
-                                                    endDate = self.testEnd)
-        for row in agg.data:
-            print '%d: %s' % (rowCnt, row)
-            rowCnt += 1
-        self.logger.log('agg cols: %d' % len(agg.columns))
-        self.assertEqual(len(agg.columns), 3, 'Weather columns not equal to 3.')
-
-    def testCircuitAggregation(self):
-        rowCnt = 0
-        agg = self.aggregator.aggregatedCircuitData(startDate = self.testStart,
-                                                    endDate = self.testEnd)
-        for row in agg.data:
-            print row
-            rowCnt += 1
-
-        self.assertEqual(rowCnt, 4,
-                         'Rows are not equal to the number of intervals.')
-        self.logger.log('agg cols: %d' % len(agg.columns))
-        self.assertEqual(len(agg.columns), 8, 'Circuit columns not equal to 8.')
-
-
-    def testEgaugeAggregation1(self):
-        self.logger.log('Testing egauge aggregation.')
-        rowCnt = 0
-        agg = self.aggregator.aggregatedEgaugeData(startDate = self.testStart,
-                                                   endDate = self.testEnd)
-        print [col for col in agg.columns]
-        for row in agg.data:
-            print row
-            rowCnt += 1
-        self.logger.log('row cnt %d' % rowCnt)
-        self.logger.log('agg cols: %d' % len(agg.columns))
-        self.assertEqual(len(agg.columns), 37,
-                         'Egauge columns not equal to 37.')
-        # self.assertEqual(rowCnt, 4,
-        #                  'Rows are not equal to the number of intervals.')
-
-    def testEgaugeAggregation2(self):
+    def testEgaugeAggregation(self):
         self.logger.log('Testing Egauge aggregation.')
         rowCnt = 0
         agg = self.aggregator.aggregatedData(dataType = 'egauge',
@@ -157,7 +105,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
         self.aggregator.insertAggregatedData(agg.aggregationType, agg.columns,
                                              agg.data)
 
-    def testCircuitAggregation2(self):
+    def testCircuitAggregation(self):
         self.logger.log('Testing circuit aggregation.')
         rowCnt = 0
         agg = self.aggregator.aggregatedData(dataType = 'circuit',
@@ -175,7 +123,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
         self.assertEqual(rowCnt, 2, 'Row count not correct.')
         self.assertEqual(len(agg.columns), 8, 'Circuit columns not equal to 8.')
 
-    def testIrradianceAggregation2(self):
+    def testIrradianceAggregation(self):
         self.logger.log('Testing irradiance aggregation.')
         rowCnt = 0
         agg = self.aggregator.aggregatedData(dataType = 'irradiance',
@@ -194,7 +142,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
                          'Irradiance columns not equal to 3.')
 
 
-    def testWeatherAggregation2(self):
+    def testWeatherAggregation(self):
         rowCnt = 0
         agg = self.aggregator.aggregatedData(dataType = 'weather',
                                              aggregationType = 'agg_weather',
@@ -215,14 +163,9 @@ if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
-        selected_tests = ['testWeatherAggregation', 'testIrradianceAggregation',
-                          'testCircuitAggregation', 'testEgaugeAggregation']
-        selected_tests = ['testEgaugeAggregation2',
-                          'testWriteEgaugeAggregation']
 
-        selected_tests = ['testWeatherAggregation2', 'testEgaugeAggregation2',
-                          'testIrradianceAggregation2',
-                          'testCircuitAggregation2']
+        selected_tests = ['testWeatherAggregation', 'testEgaugeAggregation',
+                          'testIrradianceAggregation', 'testCircuitAggregation']
 
         mySuite = unittest.TestSuite()
 

@@ -179,12 +179,12 @@ class MSGDataAggregator(object):
                 startDate = '', endDate = ''):
         """
 
-        :param dataType:
-        :param timestampCol:
-        :param subkeyCol:
-        :param startDate:
-        :param endDate:
-        :returns:
+        :param dataType: string
+        :param timestampCol: string
+        :param subkeyCol: string
+        :param startDate: string
+        :param endDate: string
+        :returns: List of subkeys
         """
 
         return [sk[0] for sk in self.rows("""SELECT DISTINCT(%s) FROM "%s"
@@ -196,6 +196,15 @@ class MSGDataAggregator(object):
 
     def insertAggregatedData(self, dataType = '', aggDataCols = None,
                              aggData = None):
+        """
+
+        :param dataType: string
+        :param aggDataCols: list
+        :param aggData: dict or list
+        :return:
+        """
+
+        # @todo need to handle nonsubkey case for data insert
 
         if not aggDataCols:
             raise Exception('aggDataCols not defined.')
@@ -245,14 +254,12 @@ class MSGDataAggregator(object):
         self.conn.commit()
 
 
-    def reportAggregation(self, rowCnt = 0):
-        self.logger.log('Aggregating %d rows of data.' % rowCnt, 'warning')
-
-
     def intervalAverages(self, sums, cnts, timestamp, timestampIndex,
                          subkeyIndex = None, subkey = None):
         """
         Aggregates all data for the current interval for the given subkey.
+
+        For the case where there are no subkeys, subkeyIndex and subkey should be None.
 
         :param sums: list
         :param cnts: list
