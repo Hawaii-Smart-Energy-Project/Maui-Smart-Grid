@@ -17,7 +17,7 @@ from msg_aggregated_data import MSGAggregatedData
 from datetime import datetime
 import copy
 
-MINUTE_POSITION = 4  # In time tuple.
+MINUTE_POSITION = 4  # In a time tuple.
 
 
 class MSGDataAggregator(object):
@@ -44,12 +44,9 @@ class MSGDataAggregator(object):
     delimited by start date and end date where the values are included in the
     range.
 
-    Aggregation subkeys are values such as eGauge IDs or circuit numbers.
+    * Aggregation subkeys are values such as eGauge IDs or circuit numbers.
 
-    @todo Generalize to a single aggregation provider and single averaging
-    method.
-
-    This is being implemented externally for performance and flexibility
+    Aggregation is being implemented externally for performance and flexibility
     advantages over alternative approaches such as creating a view. It may be
     rolled into an internal function at future time if that proves to be
     beneficial.
@@ -66,7 +63,7 @@ class MSGDataAggregator(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__, 'INFO')
+        self.logger = MSGLogger(__name__, 'DEBUG')
         self.configer = MSGConfiger()
         self.conn = MSGDBConnector().connectDB()
         self.cursor = self.conn.cursor()
@@ -90,7 +87,8 @@ class MSGDataAggregator(object):
                 self.columns[t] = self.dbUtil.columnsString(self.cursor,
                                                             self.tables[t])
             except TypeError as error:
-                self.logger.log('Ignoring missing table.')
+                self.logger.log('Ignoring missing table: Error is %s.' % error,
+                                'error')
 
 
     def intervalCrossed(self, minute = None, subkey = None):
@@ -194,35 +192,73 @@ class MSGDataAggregator(object):
             subkeyCol))]
 
 
-    def insertAggregatedData(self, dataType = '', aggDataCols = None,
-                             aggData = None):
+    def insertAggregatedData(self, agg = None):
         """
-
-        :param dataType: string
-        :param aggDataCols: list
-        :param aggData: dict or list
+        :type agg: MSGAggregatedData
+        :param agg
         :return:
         """
 
         # @todo need to handle nonsubkey case for data insert
 
-        if not aggDataCols:
-            raise Exception('aggDataCols not defined.')
-        if not aggData:
-            raise Exception('aggData not defined.')
+        if not agg.columns:
+            raise Exception('agg columns not defined.')
+        if not agg.data:
+            raise Exception('agg data not defined.')
 
-        print 'aggdata: %s' % aggData
+        self.logger.log('agg data: %s' % agg.data)
+        self.logger.log('agg data type: %s' % type(agg.data))
 
         # @HIGHLIGHTED For debugging.
         self.dbUtil.executeSQL(self.cursor,
-                               """DELETE FROM \"%s\"""" % self.tables[dataType])
+                               """DELETE FROM \"%s\"""" % self.tables[
+                                   agg.aggregationType])
 
-        for row in aggData:
+        def __insertData(values = ''):
+            success = True
+            self.logger.log('sql: %s' % (
+                """INSERT INTO "%s" (%s) VALUES (%s)""" % (
+                    self.tables[agg.aggregationType], ','.join(agg.columns),
+                    values)), 'debug')
+            success = self.dbUtil.executeSQL(self.cursor,
+                                             """INSERT INTO "%s" (%s) VALUES(
+                                             %s)""" % (
+                                             self.tables[agg.aggregationType],
+                                             ','.join(agg.columns), values))
+            if not success:
+                raise Exception('Failure during aggregated data insert.')
 
-            for key in row.keys():
+
+        for row in agg.data:
+            if type(row) == type({}):
+                self.logger.log('row=%s' % row, 'debug')
+                self.logger.log('row type: %s' % type(row))
+
+                for key in row.keys():
+                    values = ''
+                    valCnt = 0
+                    for val in row[key]:
+                        if val == 'NULL':
+                            values += val
+                        elif type(val) == type(''):
+                            values += "'" + val.strip() + "'"
+                        elif isinstance(val, datetime):
+                            values += "'" + val.isoformat() + "'"
+                        elif type(val) == type(0):
+                            values += str(val)
+                        elif type(val) == type(0.0):
+                            values += str(val)
+                        else:
+                            values += val
+                        if valCnt < len(agg.columns) - 1:
+                            values += ","
+                        valCnt += 1
+                    __insertData(values = values)
+
+            elif type(row) == type([]):
                 values = ''
                 valCnt = 0
-                for val in row[key]:
+                for val in row:
                     if val == 'NULL':
                         values += val
                     elif type(val) == type(''):
@@ -235,22 +271,15 @@ class MSGDataAggregator(object):
                         values += str(val)
                     else:
                         values += val
-                    if valCnt < len(aggDataCols) - 1:
+                    if valCnt < len(agg.columns) - 1:
                         values += ","
                     valCnt += 1
+                __insertData(values = values)
+            else:
+                self.logger.log('row = %s' % row,'error')
+                raise Exception('Row type not matched.')
 
-                success = True
-                # self.logger.log('sql: %s' % (
-                #     """INSERT INTO "%s" (%s) VALUES (%s)""" % (
-                #         self.tables[dataType], ','.join(aggDataCols),
-                # values)))
-
-                success = self.dbUtil.executeSQL(self.cursor, """INSERT INTO
-                "%s" (%s)
-                                                 VALUES (%s)""" % (
-                    self.tables[dataType], ','.join(aggDataCols), values))
-                if not success:
-                    raise Exception('Failure during aggregated data insert.')
+        # End for row.
         self.conn.commit()
 
 
@@ -259,7 +288,8 @@ class MSGDataAggregator(object):
         """
         Aggregates all data for the current interval for the given subkey.
 
-        For the case where there are no subkeys, subkeyIndex and subkey should be None.
+        For the case where there are no subkeys, subkeyIndex and subkey
+        should be None.
 
         :param sums: list
         :param cnts: list
@@ -276,7 +306,7 @@ class MSGDataAggregator(object):
             myAvgs[subkey] = []
             sumIndex = 0
 
-            self.logger.log('key: %s' % subkey, 'critical')
+            self.logger.log('key: %s' % subkey, 'debug')
             # Iterate over sums.
             for s in sums[subkey]:
                 if sumIndex == timestampIndex:
@@ -288,7 +318,7 @@ class MSGDataAggregator(object):
                         if not reportedAgg:
                             self.logger.log(
                                 'Aggregating %d rows of data.' % cnts[subkey][
-                                    sumIndex], 'warning')
+                                    sumIndex], 'debug')
                             reportedAgg = True
 
                         myAvgs[subkey].append(s / cnts[subkey][sumIndex])
@@ -308,7 +338,7 @@ class MSGDataAggregator(object):
                         if not reportedAgg:
                             self.logger.log(
                                 'Aggregating %d rows of data.' % cnts[sumIndex],
-                                'warning')
+                                'debug')
                             reportedAgg = True
                         myAvgs.append(s / cnts[sumIndex])
                     else:
@@ -371,7 +401,7 @@ class MSGDataAggregator(object):
                             sums[k].append(0)
                             cnts[k].append(0)
                 else:
-                    self.logger.log('resetting subkey %s' % subkey, 'critical')
+                    self.logger.log('resetting subkey %s' % subkey, 'debug')
                     sums[subkey] = []
                     sums[subkey].append(0)
                     cnts[subkey] = []
@@ -451,7 +481,6 @@ class MSGDataAggregator(object):
                     if rowCnt > 0:
                         break
 
-
         __initIntervalCrossings()
 
         for row in self.rawData(dataType = dataType,
@@ -470,13 +499,13 @@ class MSGDataAggregator(object):
 
                 if self.intervalCrossed(minute = minute,
                                         subkey = row[ci(subkeyColumnName)]):
-                    self.logger.log('==> row: %s' % str(row), 'critical')
+                    self.logger.log('==> row: %s' % str(row), 'debug')
                     minuteCrossed = minute
 
                     # Perform aggregation on all of the previous data including
                     # the current data for the current subkey.
                     self.logger.log('key: %s' % row[ci(subkeyColumnName)],
-                                    'warning')
+                                    'debug')
                     aggData += [
                         self.intervalAverages(sum, cnt, row[ci(timeColumnName)],
                                               ci(timeColumnName),
@@ -497,8 +526,7 @@ class MSGDataAggregator(object):
                 minute = row[ci(timeColumnName)].timetuple()[MINUTE_POSITION]
 
                 if self.intervalCrossed(minute = minute):
-                    self.logger.log('==> row: %s' % str(row), 'critical')
-                    minuteCrossed = minute
+                    self.logger.log('==> row: %s' % str(row), 'debug')
 
                     aggData += [
                         self.intervalAverages(sum, cnt, row[ci(timeColumnName)],

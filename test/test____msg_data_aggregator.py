@@ -97,13 +97,8 @@ class MSGDataAggregatorTester(unittest.TestCase):
 
         self.assertEqual(len(agg.columns), 37,
                          'Egauge columns not equal to 37.')
+        self.aggregator.insertAggregatedData(agg=agg)
 
-
-    def testWriteEgaugeAggregation(self):
-        agg = self.aggregator.aggregatedEgaugeData(startDate = self.testStart,
-                                                   endDate = self.testEnd)
-        self.aggregator.insertAggregatedData(agg.aggregationType, agg.columns,
-                                             agg.data)
 
     def testCircuitAggregation(self):
         self.logger.log('Testing circuit aggregation.')
@@ -122,11 +117,14 @@ class MSGDataAggregatorTester(unittest.TestCase):
         self.logger.log('agg cols: %d' % len(agg.columns))
         self.assertEqual(rowCnt, 2, 'Row count not correct.')
         self.assertEqual(len(agg.columns), 8, 'Circuit columns not equal to 8.')
+        self.aggregator.insertAggregatedData(agg=agg)
+
 
     def testIrradianceAggregation(self):
         self.logger.log('Testing irradiance aggregation.')
         rowCnt = 0
-        agg = self.aggregator.aggregatedData(dataType = 'irradiance',
+        datatype = 'irradiance'
+        agg = self.aggregator.aggregatedData(dataType = datatype,
                                              aggregationType = 'agg_irradiance',
                                              timeColumnName = 'timestamp',
                                              subkeyColumnName = 'sensor_id',
@@ -140,7 +138,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
         self.assertEqual(rowCnt, 1, 'Row count not correct.')
         self.assertEqual(len(agg.columns), 3,
                          'Irradiance columns not equal to 3.')
-
+        self.aggregator.insertAggregatedData(agg=agg)
 
     def testWeatherAggregation(self):
         rowCnt = 0
@@ -157,6 +155,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
 
         self.logger.log('agg cols: %d' % len(agg.columns))
         self.assertEqual(len(agg.columns), 3, 'Weather columns not equal to 3.')
+        self.aggregator.insertAggregatedData(agg=agg)
 
 
 if __name__ == '__main__':
