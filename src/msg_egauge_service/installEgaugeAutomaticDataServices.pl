@@ -4,12 +4,14 @@
 #
 # @author Daniel Zhang (張道博)
 #
-# @copyright Copyright (c) 2013, University of Hawaii Smart Energy Project
+# @copyright Copyright (c) 2014, University of Hawaii Smart Energy Project
 # @license https://raw.github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD-LICENSE.txt
 #
 # Usage:
 #
 #     sudo perl installEgaugeAutomaticDataServices.pl
+#
+# from the directory containing the source files.
 
 use strict;
 use Cwd qw(abs_path getcwd);
