@@ -199,7 +199,8 @@ class MSGDataAggregator(object):
         :return:
         """
 
-        # @todo need to handle nonsubkey case for data insert
+        # @todo enable insert where data already exists such that the
+        # existing data is preserved but new data is inserted.
 
         if not agg.columns:
             raise Exception('agg columns not defined.')
@@ -216,15 +217,10 @@ class MSGDataAggregator(object):
 
         def __insertData(values = ''):
             success = True
-            self.logger.log('sql: %s' % (
-                """INSERT INTO "%s" (%s) VALUES (%s)""" % (
-                    self.tables[agg.aggregationType], ','.join(agg.columns),
-                    values)), 'debug')
-            success = self.dbUtil.executeSQL(self.cursor,
-                                             """INSERT INTO "%s" (%s) VALUES(
-                                             %s)""" % (
-                                             self.tables[agg.aggregationType],
-                                             ','.join(agg.columns), values))
+            sql = """INSERT INTO "%s" (%s) VALUES( %s)""" % (
+                self.tables[agg.aggregationType], ','.join(agg.columns), values)
+            self.logger.log('sql: %s' % sql, 'debug')
+            success = self.dbUtil.executeSQL(self.cursor, sql)
             if not success:
                 raise Exception('Failure during aggregated data insert.')
 
@@ -276,7 +272,7 @@ class MSGDataAggregator(object):
                     valCnt += 1
                 __insertData(values = values)
             else:
-                self.logger.log('row = %s' % row,'error')
+                self.logger.log('row = %s' % row, 'error')
                 raise Exception('Row type not matched.')
 
         # End for row.
