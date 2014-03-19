@@ -40,6 +40,8 @@ class MSGDataAggregator(object):
     Case (2) is handled within the same space as (1) by testing for the
     existence of subkeys.
 
+    Current aggregation consists of averaging over 15-min intervals.
+
     Aggregation is performed in-memory and saved to the DB. The time range is
     delimited by start date and end date where the values are included in the
     range.
@@ -70,7 +72,7 @@ class MSGDataAggregator(object):
         self.dbUtil = MSGDBUtil()
         self.notifier = MSGNotifier()
         self.mathUtil = MSGMathUtil()
-        self.irradianceSensorCount = 4
+        # self.irradianceSensorCount = 4
         self.nextMinuteCrossing = {}
         self.nextMinuteCrossingWithoutSubkeys = None
         section = 'Aggregation'
@@ -360,6 +362,27 @@ class MSGDataAggregator(object):
         :returns: MSGAggregatedData
         """
 
+        return self.__aggregatedData(dataType = dataType,
+                                     aggregationType = aggregationType,
+                                     timeColumnName = timeColumnName,
+                                     subkeyColumnName = subkeyColumnName,
+                                     startDate = startDate, endDate = endDate)
+
+
+    def __aggregatedData(self, dataType = '', aggregationType = '',
+                         timeColumnName = '', subkeyColumnName = '',
+                         startDate = '', endDate = ''):
+        """
+
+        :param dataType: string
+        :param aggregationType: string
+        :param timeColumnName: string
+        :param subkeyColumnName: string
+        :param startDate: string
+        :param endDate: string
+        :returns: MSGAggregatedData
+        """
+
         aggData = []
         ci = lambda col_name: self.columns[dataType].split(',').index(col_name)
 
@@ -534,6 +557,3 @@ class MSGDataAggregator(object):
         return MSGAggregatedData(aggregationType = aggregationType,
                                  columns = self.columns[dataType].split(','),
                                  data = aggData)
-
-
-
