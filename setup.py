@@ -19,7 +19,7 @@ where the path arguments within the square brackets are optional.
 """
 
 __author__ = 'Daniel Zhang (張道博)'
-__copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
+__copyright__ = 'Copyright (c) 2014, University of Hawaii Smart Energy Project'
 __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
@@ -52,7 +52,8 @@ setup(name = 'Maui-Smart-Grid', version = '1.0.0',
 
       package_dir = {'': 'src'},
 
-      py_modules = ['filelock',
+      py_modules = [
+                    'filelock',
                     'meco_data_autoloader',
                     'meco_db_delete',
                     'meco_db_insert',
@@ -63,7 +64,10 @@ setup(name = 'Maui-Smart-Grid', version = '1.0.0',
                     'meco_plotting',
                     'meco_pv_readings_in_nonpv_mlh_notifier',
                     'meco_xml_parser',
+                    'msg_aggregated_data',
                     'msg_configer',
+                    'msg_data_aggregator',
+                    'msg_data_verifier.py',
                     'msg_db_connector',
                     'msg_db_exporter',
                     'msg_db_util',
