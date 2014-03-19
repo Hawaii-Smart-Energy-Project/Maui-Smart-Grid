@@ -224,7 +224,7 @@ class MSGDBExporter(object):
                             compressedFullPath))
 
                     if not filesToUpload:
-                        raise (Exception, 'Exception during file splitting.')
+                        raise Exception('Exception during file splitting.')
                     self.logger.log('to upload: %s' % filesToUpload, 'debug')
                 else:
                     filesToUpload = [compressedFullPath]
