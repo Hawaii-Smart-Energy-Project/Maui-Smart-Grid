@@ -11,11 +11,6 @@ import unittest
 from msg_logger import MSGLogger
 from msg_data_aggregator import MSGDataAggregator
 from msg_aggregated_data import MSGAggregatedData
-import time
-from dateutil import rrule
-from datetime import datetime
-import calendar
-
 
 class MSGDataAggregatorTester(unittest.TestCase):
     """
@@ -162,11 +157,10 @@ class MSGDataAggregatorTester(unittest.TestCase):
         self.aggregator.insertAggregatedData(agg = agg)
 
 
-    def testSplitDates(self):
-        startDate = '2014-01-03'
-        endDate = '2014-05-07'
 
-        print self.aggregator.splitDates(startDate,endDate)
+    def testMonthStartsAndEnds(self):
+        print self.aggregator.monthStartsAndEnds(timeColumnName = 'timestamp', dataType = 'circuit')
+
 
 if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
@@ -175,7 +169,7 @@ if __name__ == '__main__':
 
         selected_tests = ['testWeatherAggregation', 'testEgaugeAggregation',
                           'testIrradianceAggregation', 'testCircuitAggregation']
-        selected_tests = ['testSplitDates']
+        selected_tests = ['testMonthStartsAndEnds']
 
         mySuite = unittest.TestSuite()
 

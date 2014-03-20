@@ -15,10 +15,8 @@ from msg_configer import MSGConfiger
 from msg_math_util import MSGMathUtil
 from msg_aggregated_data import MSGAggregatedData
 from datetime import datetime
-from dateutil import rrule
-import calendar
 import copy
-import itertools
+from msg_time_util import MSGTimeUtil
 
 MINUTE_POSITION = 4  # In a time tuple.
 
@@ -75,7 +73,7 @@ class MSGDataAggregator(object):
         self.dbUtil = MSGDBUtil()
         self.notifier = MSGNotifier()
         self.mathUtil = MSGMathUtil()
-        # self.irradianceSensorCount = 4
+        self.timeUtil = MSGTimeUtil()
         self.nextMinuteCrossing = {}
         self.nextMinuteCrossingWithoutSubkeys = None
         section = 'Aggregation'
@@ -378,39 +376,20 @@ class MSGDataAggregator(object):
         else:
             raise Exception('Unmatched data type %s.' % dataType)
 
-            # Retrieve agg data in sections for the given date range.
 
-            # Write agg data.
-
-        
-
-    def splitDates(self, startDate = '', endDate = ''):
+    def monthStartsAndEnds(self, timeColumnName = '', dataType = ''):
         """
-        Break down two dates into a list containing the start and end dates
-        for each month within the range.
+        Return first date and last date for the given data type for each
+        month in the data's entire time range.
 
-        :param startDate: string
-        :param endDate: string
+        :param dataType: string
         :return: List of tuples.
         """
 
-        # self.logger.log('start,end: %s,%s' % (startDate, endDate))
+        (start, end) = self.rows("""SELECT MIN(%s), MAX(%s) FROM \"%s\"""" % (
+            timeColumnName, timeColumnName, self.tables[dataType]))[0]
 
-        myDatetime = lambda x: datetime.strptime(x, '%Y-%m-%d')
-        firstDay = lambda x: datetime.strptime(x.strftime('%Y-%m-01'),
-                                               '%Y-%m-%d')
-        startDates = map(firstDay, list(
-            rrule.rrule(rrule.MONTHLY, dtstart = myDatetime(startDate),
-                        until = myDatetime(endDate))))
-        startDates[0] = myDatetime(startDate)
-        lastDay = lambda x: datetime.strptime('%d-%d-%d' % (
-            x.year, x.month, calendar.monthrange(x.year, x.month)[1]),
-                                              '%Y-%m-%d')
-        endDates = map(lastDay, startDates)
-        endDates[-1] = myDatetime(endDate)
-        assert (
-            len(startDates) == len(endDates), 'Mismatch of start and end dates')
-        return zip(startDates, endDates)
+        return self.timeUtil.splitDates(start, end)
 
 
     def aggregatedData(self, dataType = '', aggregationType = '',
