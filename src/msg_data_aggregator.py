@@ -15,7 +15,10 @@ from msg_configer import MSGConfiger
 from msg_math_util import MSGMathUtil
 from msg_aggregated_data import MSGAggregatedData
 from datetime import datetime
+from dateutil import rrule
+import calendar
 import copy
+import itertools
 
 MINUTE_POSITION = 4  # In a time tuple.
 
@@ -345,6 +348,71 @@ class MSGDataAggregator(object):
             return myAvgs
 
 
+    def aggregateAllData(self, dataType = ''):
+        """
+        Convenience method for aggregating all data for a given data type.
+        :param dataType:
+        :return:
+        """
+
+        aggType = ''
+        timeColName = ''
+        subkeyColName = ''
+
+        if dataType == 'circuit':
+            aggType = 'aggCircuit'
+            subkeyColName = 'circuit'
+            timeColName = 'timestamp'
+        elif dataType == 'irradiance':
+            aggType = 'aggIrradiance'
+            subkeyColName = 'sensor_id'
+            timeColName = 'timestamp'
+        elif dataType == 'egauge':
+            aggType = 'aggEgauge'
+            subkeyColName = 'egauge_id'
+            timeColName = 'datetime'
+        elif dataType == 'weather':
+            aggType = 'aggWeather'
+            subkeyColName = None
+            timeColName = 'timestamp'
+        else:
+            raise Exception('Unmatched data type %s.' % dataType)
+
+            # Retrieve agg data in sections for the given date range.
+
+            # Write agg data.
+
+        
+
+    def splitDates(self, startDate = '', endDate = ''):
+        """
+        Break down two dates into a list containing the start and end dates
+        for each month within the range.
+
+        :param startDate: string
+        :param endDate: string
+        :return: List of tuples.
+        """
+
+        # self.logger.log('start,end: %s,%s' % (startDate, endDate))
+
+        myDatetime = lambda x: datetime.strptime(x, '%Y-%m-%d')
+        firstDay = lambda x: datetime.strptime(x.strftime('%Y-%m-01'),
+                                               '%Y-%m-%d')
+        startDates = map(firstDay, list(
+            rrule.rrule(rrule.MONTHLY, dtstart = myDatetime(startDate),
+                        until = myDatetime(endDate))))
+        startDates[0] = myDatetime(startDate)
+        lastDay = lambda x: datetime.strptime('%d-%d-%d' % (
+            x.year, x.month, calendar.monthrange(x.year, x.month)[1]),
+                                              '%Y-%m-%d')
+        endDates = map(lastDay, startDates)
+        endDates[-1] = myDatetime(endDate)
+        assert (
+            len(startDates) == len(endDates), 'Mismatch of start and end dates')
+        return zip(startDates, endDates)
+
+
     def aggregatedData(self, dataType = '', aggregationType = '',
                        timeColumnName = '', subkeyColumnName = '',
                        startDate = '', endDate = ''):
@@ -352,27 +420,6 @@ class MSGDataAggregator(object):
         ***********************************************************************
         Provide aggregated data.
         ***********************************************************************
-
-        :param dataType: string
-        :param aggregationType: string
-        :param timeColumnName: string
-        :param subkeyColumnName: string
-        :param startDate: string
-        :param endDate: string
-        :returns: MSGAggregatedData
-        """
-
-        return self.__aggregatedData(dataType = dataType,
-                                     aggregationType = aggregationType,
-                                     timeColumnName = timeColumnName,
-                                     subkeyColumnName = subkeyColumnName,
-                                     startDate = startDate, endDate = endDate)
-
-
-    def __aggregatedData(self, dataType = '', aggregationType = '',
-                         timeColumnName = '', subkeyColumnName = '',
-                         startDate = '', endDate = ''):
-        """
 
         :param dataType: string
         :param aggregationType: string
