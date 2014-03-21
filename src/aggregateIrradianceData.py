@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
+@DEPRECATED in favor of MSGDataAggregator.
+
 Generates aggregated (average) irradiance data for 15-min intervals starting at
 minute zero.
 

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# @DEPRECATED in favor of MSGDataAggregator.
+#
 # Generate aggregated SCADA weather data (temperature/humidity).
 #
 # Usage:

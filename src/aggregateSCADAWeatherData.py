@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
+@DEPRECATED in favor of MSGDataAggregator.
+
 Generates aggregated (average) SCADA weather data for 15-min intervals starting
 at minute zero.
 
