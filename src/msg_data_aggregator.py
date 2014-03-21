@@ -214,9 +214,9 @@ class MSGDataAggregator(object):
         self.logger.log('agg data type: %s' % type(agg.data))
 
         # @HIGHLIGHTED For debugging.
-        self.dbUtil.executeSQL(self.cursor,
-                               """DELETE FROM \"%s\"""" % self.tables[
-                                   agg.aggregationType])
+        # self.dbUtil.executeSQL(self.cursor,
+        #                        """DELETE FROM \"%s\"""" % self.tables[
+        #                            agg.aggregationType])
 
         def __insertData(values = ''):
             success = True
@@ -358,31 +358,31 @@ class MSGDataAggregator(object):
         subkeyColName = ''
 
         if dataType == 'circuit':
-            aggType = 'aggCircuit'
+            aggType = 'agg_circuit'
             subkeyColName = 'circuit'
             timeColName = 'timestamp'
         elif dataType == 'irradiance':
-            aggType = 'aggIrradiance'
+            aggType = 'agg_irradiance'
             subkeyColName = 'sensor_id'
             timeColName = 'timestamp'
         elif dataType == 'egauge':
-            aggType = 'aggEgauge'
+            aggType = 'agg_egauge'
             subkeyColName = 'egauge_id'
             timeColName = 'datetime'
         elif dataType == 'weather':
-            aggType = 'aggWeather'
+            aggType = 'agg_weather'
             subkeyColName = None
             timeColName = 'timestamp'
         else:
             raise Exception('Unmatched data type %s.' % dataType)
 
-        TESTING = True
+        TESTING = False
         if TESTING:
             # for start, end in self.monthStartsAndEnds(timeColumnName =
             # timeColName,
             #                                           dataType = dataType):
             start = '2014-01-02 12:00'
-            end = '2014-01-02 16:59'
+            end = '2014-05-30 16:59'
             self.logger.log('start,end: %s, %s' % (start, end))
             aggData = self.aggregatedData(dataType = dataType,
                                           aggregationType = aggType,
@@ -404,7 +404,9 @@ class MSGDataAggregator(object):
                                                   '%Y-%m-%d'),
                                               endDate = end.strftime(
                                                   '%Y-%m-%d'))
-                self.logger.log('aggData: %s' % aggData)
+                self.insertAggregatedData(agg = aggData)
+                for row in aggData.data:
+                    self.logger.log('aggData row: %s' % row)
 
 
     def monthStartsAndEnds(self, timeColumnName = '', dataType = ''):
@@ -479,9 +481,10 @@ class MSGDataAggregator(object):
                             sums[k].append(0)
                             cnts[k].append(0)
                 else:
-                    self.logger.log('resetting subkey %s' % subkey, 'critical')
-                    self.logger.log('sums: %s, cnts: %s' % (sums, cnts),
-                                    'critical')
+                    # self.logger.log('resetting subkey %s' % subkey,
+                    # 'critical')
+                    # self.logger.log('sums: %s, cnts: %s' % (sums, cnts),
+                    #                 'critical')
                     sums[subkey] = []
                     for i in range(len(self.columns[dataType].split(','))):
                         sums[subkey].append(0)
@@ -509,8 +512,19 @@ class MSGDataAggregator(object):
                                         endDate = endDate):
 
                     # @CRITICAL: Exit after every subkey has been visited.
+                    # This scans the raw data until each subkey is encountered
+                    # ONCE and then exits.
                     if subkeysToCheck != []:
-                        subkeysToCheck.remove(row[ci(subkeyColumnName)])
+                        # self.logger.log('subkeys to check: %s' % subkeysToCheck,
+                        #                 'debug')
+                        # self.logger.log(
+                        #     'value to remove: %s' % row[ci(subkeyColumnName)],
+                        #     'debug')
+                        # self.logger.log(
+                        #     'removing subkey %s' % row[ci(subkeyColumnName)],
+                        #     'critical')
+                        if row[ci(subkeyColumnName)] in subkeysToCheck:
+                            subkeysToCheck.remove(row[ci(subkeyColumnName)])
                         minute = row[ci(timeColumnName)].timetuple()[
                             MINUTE_POSITION]
 
