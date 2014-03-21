@@ -382,7 +382,7 @@ class MSGDataAggregator(object):
             # timeColName,
             #                                           dataType = dataType):
             start = '2014-01-02 12:00'
-            end = '2014-01-02 15:59'
+            end = '2014-01-02 16:59'
             self.logger.log('start,end: %s, %s' % (start, end))
             aggData = self.aggregatedData(dataType = dataType,
                                           aggregationType = aggType,
@@ -618,6 +618,8 @@ class MSGDataAggregator(object):
                     aggData += [
                         self.intervalAverages(sum, cnt, row[ci(timeColumnName)],
                                               ci(timeColumnName))]
+                    (sum, cnt) = __initSumAndCount(subkey = None, sums = sum,
+                                                   cnts = cnt)
 
             rowCnt += 1
 
