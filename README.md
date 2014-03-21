@@ -6,6 +6,10 @@
 
 The University of Hawaii at Manoa was tasked with maintaining a data science repository for use by analysts of the [Maui Smart Grid](http://www.mauismartgrid.com) energy sustainability project through the [Hawaii Natural Energy Institute](http://www.hnei.hawaii.edu). This software provides the data acquisition, processing and operational resources necessary to accomplish this task. Source data is acquired in multiple formats including XML, tab-separated values, and comma-separated values. Data storage is dependent on a PostgreSQL database server on the back end. Issues for this project are tracked at the [Hawaii Smart Energy Project YouTRACK instance](http://smart-energy-project.myjetbrains.com/youtrack/rest/agile/).
 
+The majority of the software in this repository is primarily intended to run as a group of automatic processes using a scheduler like `cron.` Therefore, not much effort has been made to create an interactive user interface. The scripts that are interactive are intended to be run from the command-line.
+
+Actual data from the Maui Smart Grid project is not publicly available at this time though the full structure of the database is available.
+
 ### Software Features ###
 
 * Open-source (BSD license) code in Python 2.7x and Perl 5.x.
