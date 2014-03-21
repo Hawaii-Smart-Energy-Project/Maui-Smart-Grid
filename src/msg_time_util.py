@@ -9,6 +9,8 @@ __license__ = 'https://raw.github' \
 
 from datetime import datetime as dt
 from msg_logger import MSGLogger
+from dateutil import rrule
+import calendar
 
 
 class MSGTimeUtil(object):
@@ -61,8 +63,59 @@ class MSGTimeUtil(object):
         Returns the current date and time in a concise format.
         """
 
-        return dt.strftime(dt.now(), '%Y-%m-%d_%H%m%S')
+        return dt.now().strftime('%Y-%m-%d_%H%M%S')
 
+
+    def splitStringDates(self, startDate = '', endDate = ''):
+        """
+        Break down two dates into a list containing the start and end dates
+        for each month within the range.
+
+        :param startDate: string
+        :param endDate: string
+        :return: List of tuples.
+        """
+
+        # self.logger.log('start,end: %s,%s' % (startDate, endDate))
+
+        myDatetime = lambda x: dt.strptime(x, '%Y-%m-%d')
+        firstDay = lambda x: dt.strptime(x.strftime('%Y-%m-01'), '%Y-%m-%d')
+        startDates = map(firstDay, list(
+            rrule.rrule(rrule.MONTHLY, dtstart = myDatetime(startDate),
+                        until = myDatetime(endDate))))
+        startDates[0] = myDatetime(startDate)
+        lastDay = lambda x: dt.strptime('%d-%d-%d' % (
+            x.year, x.month, calendar.monthrange(x.year, x.month)[1]),
+                                        '%Y-%m-%d')
+        endDates = map(lastDay, startDates)
+        endDates[-1] = myDatetime(endDate)
+        assert len(startDates) == len(
+            endDates), 'Mismatch of start and end dates.'
+        return zip(startDates, endDates)
+
+
+    def splitDates(self, start = None, end = None):
+        """
+        Break down two dates into a list containing the start and end dates
+        for each month within the range.
+
+        :param start: datetime
+        :param end: datetime
+        :return: List of tuples.
+        """
+
+        firstDay = lambda x: dt.strptime(x.strftime('%Y-%m-01'), '%Y-%m-%d')
+        startDates = map(firstDay, list(
+            rrule.rrule(rrule.MONTHLY, dtstart = start, until = end)))
+        startDates[0] = start
+        lastDay = lambda x: dt.strptime('%d-%d-%d' % (
+            x.year, x.month, calendar.monthrange(x.year, x.month)[1]),
+                                        '%Y-%m-%d')
+        endDates = map(lastDay, startDates)
+        endDates[-1] = end
+        assert len(startDates) == len(
+            endDates), 'Mismatch of start and end dates.'
+        return zip(startDates, endDates)
 
 # For debugging:
 # timeUtil = MSGTimeUtil()

@@ -97,7 +97,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
 
         self.assertEqual(len(agg.columns), 37,
                          'Egauge columns not equal to 37.')
-        self.aggregator.insertAggregatedData(agg=agg)
+        self.aggregator.insertAggregatedData(agg = agg)
 
 
     def testCircuitAggregation(self):
@@ -117,7 +117,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
         self.logger.log('agg cols: %d' % len(agg.columns))
         self.assertEqual(rowCnt, 2, 'Row count not correct.')
         self.assertEqual(len(agg.columns), 8, 'Circuit columns not equal to 8.')
-        self.aggregator.insertAggregatedData(agg=agg)
+        self.aggregator.insertAggregatedData(agg = agg)
 
 
     def testIrradianceAggregation(self):
@@ -138,7 +138,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
         self.assertEqual(rowCnt, 1, 'Row count not correct.')
         self.assertEqual(len(agg.columns), 3,
                          'Irradiance columns not equal to 3.')
-        self.aggregator.insertAggregatedData(agg=agg)
+        self.aggregator.insertAggregatedData(agg = agg)
 
     def testWeatherAggregation(self):
         rowCnt = 0
@@ -155,7 +155,22 @@ class MSGDataAggregatorTester(unittest.TestCase):
 
         self.logger.log('agg cols: %d' % len(agg.columns))
         self.assertEqual(len(agg.columns), 3, 'Weather columns not equal to 3.')
-        self.aggregator.insertAggregatedData(agg=agg)
+        self.aggregator.insertAggregatedData(agg = agg)
+
+
+    def testMonthStartsAndEnds(self):
+        for myType in ['weather', 'egauge', 'circuit', 'irradiance']:
+            if myType == 'egauge':
+                print self.aggregator.monthStartsAndEnds(
+                    timeColumnName = 'datetime', dataType = myType)
+            else:
+                print self.aggregator.monthStartsAndEnds(
+                    timeColumnName = 'timestamp', dataType = myType)
+
+
+    def testAggregateAllData(self):
+        for myType in ['weather', 'egauge', 'circuit', 'irradiance']:
+            self.aggregator.aggregateAllData(dataType = myType)
 
 
 if __name__ == '__main__':
@@ -165,6 +180,7 @@ if __name__ == '__main__':
 
         selected_tests = ['testWeatherAggregation', 'testEgaugeAggregation',
                           'testIrradianceAggregation', 'testCircuitAggregation']
+        selected_tests = ['testAggregateAllData']
 
         mySuite = unittest.TestSuite()
 

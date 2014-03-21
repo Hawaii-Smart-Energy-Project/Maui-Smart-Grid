@@ -16,6 +16,7 @@ from msg_math_util import MSGMathUtil
 from msg_aggregated_data import MSGAggregatedData
 from datetime import datetime
 import copy
+from msg_time_util import MSGTimeUtil
 
 MINUTE_POSITION = 4  # In a time tuple.
 
@@ -40,6 +41,8 @@ class MSGDataAggregator(object):
     Case (2) is handled within the same space as (1) by testing for the
     existence of subkeys.
 
+    Current aggregation consists of averaging over 15-min intervals.
+
     Aggregation is performed in-memory and saved to the DB. The time range is
     delimited by start date and end date where the values are included in the
     range.
@@ -63,14 +66,14 @@ class MSGDataAggregator(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__, 'DEBUG')
+        self.logger = MSGLogger(__name__, 'INFO')
         self.configer = MSGConfiger()
         self.conn = MSGDBConnector().connectDB()
         self.cursor = self.conn.cursor()
         self.dbUtil = MSGDBUtil()
         self.notifier = MSGNotifier()
         self.mathUtil = MSGMathUtil()
-        self.irradianceSensorCount = 4
+        self.timeUtil = MSGTimeUtil()
         self.nextMinuteCrossing = {}
         self.nextMinuteCrossingWithoutSubkeys = None
         section = 'Aggregation'
@@ -211,9 +214,9 @@ class MSGDataAggregator(object):
         self.logger.log('agg data type: %s' % type(agg.data))
 
         # @HIGHLIGHTED For debugging.
-        self.dbUtil.executeSQL(self.cursor,
-                               """DELETE FROM \"%s\"""" % self.tables[
-                                   agg.aggregationType])
+        # self.dbUtil.executeSQL(self.cursor,
+        #                        """DELETE FROM \"%s\"""" % self.tables[
+        #                            agg.aggregationType])
 
         def __insertData(values = ''):
             success = True
@@ -227,8 +230,8 @@ class MSGDataAggregator(object):
 
         for row in agg.data:
             if type(row) == type({}):
-                self.logger.log('row=%s' % row, 'debug')
-                self.logger.log('row type: %s' % type(row))
+                # self.logger.log('row=%s' % row, 'debug')
+                # self.logger.log('row type: %s' % type(row))
 
                 for key in row.keys():
                     values = ''
@@ -343,6 +346,66 @@ class MSGDataAggregator(object):
             return myAvgs
 
 
+    def aggregateAllData(self, dataType = ''):
+        """
+        Convenience method for aggregating all data for a given data type.
+        :param dataType:
+        :return:
+        """
+
+        aggType = ''
+        timeColName = ''
+        subkeyColName = ''
+
+        if dataType == 'circuit':
+            aggType = 'agg_circuit'
+            subkeyColName = 'circuit'
+            timeColName = 'timestamp'
+        elif dataType == 'irradiance':
+            aggType = 'agg_irradiance'
+            subkeyColName = 'sensor_id'
+            timeColName = 'timestamp'
+        elif dataType == 'egauge':
+            aggType = 'agg_egauge'
+            subkeyColName = 'egauge_id'
+            timeColName = 'datetime'
+        elif dataType == 'weather':
+            aggType = 'agg_weather'
+            subkeyColName = None
+            timeColName = 'timestamp'
+        else:
+            raise Exception('Unmatched data type %s.' % dataType)
+
+        for start, end in self.monthStartsAndEnds(timeColumnName = timeColName,
+                                                  dataType = dataType):
+            self.logger.log('start,end: %s, %s' % (start, end))
+            aggData = self.aggregatedData(dataType = dataType,
+                                          aggregationType = aggType,
+                                          timeColumnName = timeColName,
+                                          subkeyColumnName = subkeyColName,
+                                          startDate = start.strftime(
+                                              '%Y-%m-%d'),
+                                          endDate = end.strftime('%Y-%m-%d'))
+            self.insertAggregatedData(agg = aggData)
+            for row in aggData.data:
+                self.logger.log('aggData row: %s' % row)
+
+
+    def monthStartsAndEnds(self, timeColumnName = '', dataType = ''):
+        """
+        Return first date and last date for the given data type for each
+        month in the data's entire time range.
+
+        :param dataType: string
+        :return: List of tuples.
+        """
+
+        (start, end) = self.rows("""SELECT MIN(%s), MAX(%s) FROM \"%s\"""" % (
+            timeColumnName, timeColumnName, self.tables[dataType]))[0]
+
+        return self.timeUtil.splitDates(start, end)
+
+
     def aggregatedData(self, dataType = '', aggregationType = '',
                        timeColumnName = '', subkeyColumnName = '',
                        startDate = '', endDate = ''):
@@ -374,12 +437,15 @@ class MSGDataAggregator(object):
 
         self.logger.log('subkeys: %s' % mySubkeys, 'debug')
 
-        def __initSumAndCount(subkey = None):
+        def __initSumAndCount(subkey = None, sums = None, cnts = None):
             """
+            Initialize the sum and cnt data structures.
+            :param subkey: string
             """
 
-            sums = {}
-            cnts = {}
+            if not sums and not cnts:
+                sums = {}
+                cnts = {}
 
             if not mySubkeys:
                 sums = []
@@ -397,11 +463,16 @@ class MSGDataAggregator(object):
                             sums[k].append(0)
                             cnts[k].append(0)
                 else:
-                    self.logger.log('resetting subkey %s' % subkey, 'debug')
+                    # self.logger.log('resetting subkey %s' % subkey,
+                    # 'critical')
+                    # self.logger.log('sums: %s, cnts: %s' % (sums, cnts),
+                    #                 'critical')
                     sums[subkey] = []
-                    sums[subkey].append(0)
+                    for i in range(len(self.columns[dataType].split(','))):
+                        sums[subkey].append(0)
                     cnts[subkey] = []
-                    cnts[subkey].append(0)
+                    for i in range(len(self.columns[dataType].split(','))):
+                        cnts[subkey].append(0)
 
             return (sums, cnts)
 
@@ -423,8 +494,20 @@ class MSGDataAggregator(object):
                                         endDate = endDate):
 
                     # @CRITICAL: Exit after every subkey has been visited.
+                    # This scans the raw data until each subkey is encountered
+                    # ONCE and then exits.
                     if subkeysToCheck != []:
-                        subkeysToCheck.remove(row[ci(subkeyColumnName)])
+                        # self.logger.log('subkeys to check: %s' %
+                        # subkeysToCheck,
+                        #                 'debug')
+                        # self.logger.log(
+                        #     'value to remove: %s' % row[ci(subkeyColumnName)],
+                        #     'debug')
+                        # self.logger.log(
+                        #     'removing subkey %s' % row[ci(subkeyColumnName)],
+                        #     'critical')
+                        if row[ci(subkeyColumnName)] in subkeysToCheck:
+                            subkeysToCheck.remove(row[ci(subkeyColumnName)])
                         minute = row[ci(timeColumnName)].timetuple()[
                             MINUTE_POSITION]
 
@@ -483,11 +566,14 @@ class MSGDataAggregator(object):
                                 orderBy = [timeColumnName, subkeyColumnName],
                                 timestampCol = timeColumnName,
                                 startDate = startDate, endDate = endDate):
-            self.logger.log('row: %d ----> %s' % (rowCnt, str(row)), 'debug')
+            # self.logger.log('row: %d ----> %s' % (rowCnt, str(row)), 'debug')
 
             if mySubkeys:
                 for col in self.columns[dataType].split(','):
-                    if self.mathUtil.isNumber(row[ci(col)]):
+                    if self.mathUtil.isNumber(row[ci(col)]) and ci(col) != ci(
+                            subkeyColumnName):
+                        # self.logger.log(
+                        #     'subkey col name: %s' % subkeyColumnName, 'debug')
                         sum[row[ci(subkeyColumnName)]][ci(col)] += row[ci(col)]
                         cnt[row[ci(subkeyColumnName)]][ci(col)] += 1
 
@@ -495,7 +581,7 @@ class MSGDataAggregator(object):
 
                 if self.intervalCrossed(minute = minute,
                                         subkey = row[ci(subkeyColumnName)]):
-                    self.logger.log('==> row: %s' % str(row), 'debug')
+                    # self.logger.log('==> row: %s' % str(row), 'debug')
                     minuteCrossed = minute
 
                     # Perform aggregation on all of the previous data including
@@ -512,7 +598,9 @@ class MSGDataAggregator(object):
 
                     # Init current sum and cnt for subkey that has a completed
                     # interval.
-                    __initSumAndCount(subkey = row[ci(subkeyColumnName)])
+                    (sum, cnt) = __initSumAndCount(
+                        subkey = row[ci(subkeyColumnName)], sums = sum,
+                        cnts = cnt)
             else:
                 for col in self.columns[dataType].split(','):
                     if self.mathUtil.isNumber(row[ci(col)]):
@@ -522,11 +610,13 @@ class MSGDataAggregator(object):
                 minute = row[ci(timeColumnName)].timetuple()[MINUTE_POSITION]
 
                 if self.intervalCrossed(minute = minute):
-                    self.logger.log('==> row: %s' % str(row), 'debug')
+                    # self.logger.log('==> row: %s' % str(row), 'debug')
 
                     aggData += [
                         self.intervalAverages(sum, cnt, row[ci(timeColumnName)],
                                               ci(timeColumnName))]
+                    (sum, cnt) = __initSumAndCount(subkey = None, sums = sum,
+                                                   cnts = cnt)
 
             rowCnt += 1
 
@@ -534,6 +624,3 @@ class MSGDataAggregator(object):
         return MSGAggregatedData(aggregationType = aggregationType,
                                  columns = self.columns[dataType].split(','),
                                  data = aggData)
-
-
-

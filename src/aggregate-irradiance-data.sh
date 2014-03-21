@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# @DEPRECATED in favor of MSGDataAggregator.
+#
 # Generate aggregated irradiance data in half-year portions.
 #
 # Usage:
