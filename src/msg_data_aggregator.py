@@ -376,37 +376,19 @@ class MSGDataAggregator(object):
         else:
             raise Exception('Unmatched data type %s.' % dataType)
 
-        TESTING = False
-        if TESTING:
-            # for start, end in self.monthStartsAndEnds(timeColumnName =
-            # timeColName,
-            #                                           dataType = dataType):
-            start = '2014-01-02 12:00'
-            end = '2014-05-30 16:59'
+        for start, end in self.monthStartsAndEnds(timeColumnName = timeColName,
+                                                  dataType = dataType):
             self.logger.log('start,end: %s, %s' % (start, end))
             aggData = self.aggregatedData(dataType = dataType,
                                           aggregationType = aggType,
                                           timeColumnName = timeColName,
                                           subkeyColumnName = subkeyColName,
-                                          startDate = start, endDate = end)
+                                          startDate = start.strftime(
+                                              '%Y-%m-%d'),
+                                          endDate = end.strftime('%Y-%m-%d'))
+            self.insertAggregatedData(agg = aggData)
             for row in aggData.data:
                 self.logger.log('aggData row: %s' % row)
-
-        else:
-            for start, end in self.monthStartsAndEnds(
-                    timeColumnName = timeColName, dataType = dataType):
-                self.logger.log('start,end: %s, %s' % (start, end))
-                aggData = self.aggregatedData(dataType = dataType,
-                                              aggregationType = aggType,
-                                              timeColumnName = timeColName,
-                                              subkeyColumnName = subkeyColName,
-                                              startDate = start.strftime(
-                                                  '%Y-%m-%d'),
-                                              endDate = end.strftime(
-                                                  '%Y-%m-%d'))
-                self.insertAggregatedData(agg = aggData)
-                for row in aggData.data:
-                    self.logger.log('aggData row: %s' % row)
 
 
     def monthStartsAndEnds(self, timeColumnName = '', dataType = ''):
@@ -515,7 +497,8 @@ class MSGDataAggregator(object):
                     # This scans the raw data until each subkey is encountered
                     # ONCE and then exits.
                     if subkeysToCheck != []:
-                        # self.logger.log('subkeys to check: %s' % subkeysToCheck,
+                        # self.logger.log('subkeys to check: %s' %
+                        # subkeysToCheck,
                         #                 'debug')
                         # self.logger.log(
                         #     'value to remove: %s' % row[ci(subkeyColumnName)],
