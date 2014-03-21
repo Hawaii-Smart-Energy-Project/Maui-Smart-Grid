@@ -90,9 +90,8 @@ class MSGTimeUtil(object):
                                         '%Y-%m-%d')
         endDates = map(lastDay, startDates)
         endDates[-1] = myDatetime(endDate)
-        assert (
-            len(startDates) == len(endDates),
-            'Mismatch of start and end dates.')
+        assert len(startDates) == len(
+            endDates), 'Mismatch of start and end dates.'
         return zip(startDates, endDates)
 
 
@@ -115,11 +114,9 @@ class MSGTimeUtil(object):
                                         '%Y-%m-%d')
         endDates = map(lastDay, startDates)
         endDates[-1] = end
-        assert (
-            len(startDates) == len(endDates),
-            'Mismatch of start and end dates.')
+        assert len(startDates) == len(
+            endDates), 'Mismatch of start and end dates.'
         return zip(startDates, endDates)
-
 
 # For debugging:
 # timeUtil = MSGTimeUtil()
