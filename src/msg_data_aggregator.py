@@ -66,7 +66,7 @@ class MSGDataAggregator(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__, 'DEBUG')
+        self.logger = MSGLogger(__name__, 'INFO')
         self.configer = MSGConfiger()
         self.conn = MSGDBConnector().connectDB()
         self.cursor = self.conn.cursor()
@@ -589,8 +589,8 @@ class MSGDataAggregator(object):
                 for col in self.columns[dataType].split(','):
                     if self.mathUtil.isNumber(row[ci(col)]) and ci(col) != ci(
                             subkeyColumnName):
-                        self.logger.log(
-                            'subkey col name: %s' % subkeyColumnName, 'debug')
+                        # self.logger.log(
+                        #     'subkey col name: %s' % subkeyColumnName, 'debug')
                         sum[row[ci(subkeyColumnName)]][ci(col)] += row[ci(col)]
                         cnt[row[ci(subkeyColumnName)]][ci(col)] += 1
 
