@@ -12,6 +12,7 @@ from msg_logger import MSGLogger
 from msg_data_aggregator import MSGDataAggregator
 from msg_aggregated_data import MSGAggregatedData
 
+
 class MSGDataAggregatorTester(unittest.TestCase):
     """
     Unit tests for MSG Data Aggregator.
@@ -157,9 +158,19 @@ class MSGDataAggregatorTester(unittest.TestCase):
         self.aggregator.insertAggregatedData(agg = agg)
 
 
-
     def testMonthStartsAndEnds(self):
-        print self.aggregator.monthStartsAndEnds(timeColumnName = 'timestamp', dataType = 'circuit')
+        for myType in ['weather', 'egauge', 'circuit', 'irradiance']:
+            if myType == 'egauge':
+                print self.aggregator.monthStartsAndEnds(
+                    timeColumnName = 'datetime', dataType = myType)
+            else:
+                print self.aggregator.monthStartsAndEnds(
+                    timeColumnName = 'timestamp', dataType = myType)
+
+
+    def testAggregateAllData(self):
+        for myType in ['weather', 'egauge', 'circuit', 'irradiance']:
+            self.aggregator.aggregateAllData(dataType = myType)
 
 
 if __name__ == '__main__':
@@ -169,7 +180,7 @@ if __name__ == '__main__':
 
         selected_tests = ['testWeatherAggregation', 'testEgaugeAggregation',
                           'testIrradianceAggregation', 'testCircuitAggregation']
-        selected_tests = ['testMonthStartsAndEnds']
+        selected_tests = ['testAggregateAllData']
 
         mySuite = unittest.TestSuite()
 
