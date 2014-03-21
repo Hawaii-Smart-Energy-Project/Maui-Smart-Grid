@@ -92,14 +92,18 @@ The software distribution archive is managed by `distutils` and is in tar gz for
 
 The software has the following dependencies and they can be satisfied through various methods. During development, `pip` was used to install third-party modules. Other options exist for installing the necessary dependencies.
 
-#### Python Modules Not in the Standard Library ####
+#### External Python Modules Not in the Standard Library ####
 
+* colorlog
 * dateutil
 * google-api-python-client
+* httplib2
 * matplotlib
+* oauth2
 * psycopg2
 * pycurl
 * pylab
+* requests
 * xlrd
 
 ### Python-Based Scripts and Modules ###
@@ -379,6 +383,10 @@ These scripts are site-dependent.
 
 `grantAllPermissionsToDatabase.sh ${DATABASE}`
 : Set appropriate group permissions to databases.
+
+## Software Development and Testing ##
+
+A database with the equivalent structure of the production database is maintained for use by unit tests.
 
 ## Notifications ##
 
