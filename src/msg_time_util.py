@@ -63,8 +63,7 @@ class MSGTimeUtil(object):
         Returns the current date and time in a concise format.
         """
 
-        # @TO BE REVIEWED: This may not be correct usage.
-        return dt.strftime(dt.now(), '%Y-%m-%d_%H%m%S')
+        return dt.now().strftime('%Y-%m-%d_%H%M%S')
 
 
     def splitStringDates(self, startDate = '', endDate = ''):
