@@ -222,10 +222,10 @@ class MSGDataAggregatorTester(unittest.TestCase):
         aggType = [('agg_weather', 'timestamp'), ('agg_egauge', 'datetime'),
                    ('agg_circuit', 'timestamp'),
                    ('agg_irradiance', 'timestamp')]
-        assert len(
+        self.assertEqual(len(
             map(lambda x: self.aggregator.existingIntervals(x[0], x[1])[0],
-                aggType)) == len(
-            aggType), 'Mismatched existing aggregation intervals.'
+                aggType)) == len(aggType),
+                         'Mismatched existing aggregation intervals.')
 
 
 if __name__ == '__main__':

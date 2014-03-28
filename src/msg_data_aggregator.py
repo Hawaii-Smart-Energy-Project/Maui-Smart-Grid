@@ -101,7 +101,7 @@ class MSGDataAggregator(object):
 
         :param dataType: string
         :param timeColumnName: string
-        :return: DB rows.
+        :return: List of intervals.
         """
 
         sql = """SELECT {} from \"{}\" ORDER BY {}""".format(timeColumnName,
