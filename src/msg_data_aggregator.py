@@ -80,6 +80,8 @@ class MSGDataAggregator(object):
         tableList = ['irradiance', 'agg_irradiance', 'weather', 'agg_weather',
                      'circuit', 'agg_circuit', 'egauge', 'agg_egauge']
         self.columns = {}
+
+        # tables[datatype] gives the table name for datatype.
         self.tables = {
             t: self.configer.configOptionValue(section, '%s_table' % t) for t in
             tableList}
@@ -93,10 +95,26 @@ class MSGDataAggregator(object):
                 self.logger.log('Ignoring missing table: Error is %s.' % error,
                                 'error')
 
+    def existingIntervals(self, dataType = '', timeColumnName = ''):
+        """
+        Retrieve the existing aggregation intervals for the given data type.
+
+        :param dataType: string
+        :param timeColumnName: string
+        :return: DB rows.
+        """
+
+        sql = """SELECT {} from \"{}\" ORDER BY {}""".format(timeColumnName,
+                                                             self.tables[
+                                                                 dataType],
+                                                             timeColumnName)
+        return [x[0] for x in self.rows(sql)]
+
 
     def intervalCrossed(self, minute = None, subkey = None):
         """
         Determine interval crossing. Intervals are at 0, 15, 45, 60 min.
+        The interval size is determined by MECO source data.
 
         :param minute: The integer value of the minute.
         :param subkey: The name for the subkey used for aggregation.
@@ -143,6 +161,7 @@ class MSGDataAggregator(object):
 
     def rows(self, sql):
         """
+        Rows from a SQL fetch.
 
         :param sql: Command to be executed.
         :returns: DB result set.
@@ -156,6 +175,7 @@ class MSGDataAggregator(object):
     def rawData(self, dataType = '', orderBy = None, timestampCol = '',
                 startDate = '', endDate = ''):
         """
+        Raw data to be aggregated.
 
         :param dataType: string
         :param orderBy: list
@@ -179,6 +199,7 @@ class MSGDataAggregator(object):
     def subkeys(self, dataType = '', timestampCol = '', subkeyCol = '',
                 startDate = '', endDate = ''):
         """
+        The distinct subkeys for a given data type within a time range.
 
         :param dataType: string
         :param timestampCol: string
@@ -197,9 +218,8 @@ class MSGDataAggregator(object):
 
     def insertAggregatedData(self, agg = None):
         """
-        :type agg: MSGAggregatedData
-        :param agg
-        :return:
+        :param agg: MSGAggregatedData
+        :return: None
         """
 
         # @todo enable insert where data already exists such that the
@@ -212,11 +232,6 @@ class MSGDataAggregator(object):
 
         self.logger.log('agg data: %s' % agg.data)
         self.logger.log('agg data type: %s' % type(agg.data))
-
-        # @HIGHLIGHTED For debugging.
-        # self.dbUtil.executeSQL(self.cursor,
-        #                        """DELETE FROM \"%s\"""" % self.tables[
-        #                            agg.aggregationType])
 
         def __insertData(values = ''):
             success = True
@@ -350,7 +365,7 @@ class MSGDataAggregator(object):
         """
         Convenience method for aggregating all data for a given data type.
         :param dataType:
-        :return:
+        :return: None
         """
 
         aggType = ''
@@ -441,6 +456,8 @@ class MSGDataAggregator(object):
             """
             Initialize the sum and cnt data structures.
             :param subkey: string
+            :param sums: list | dict | None
+            :param cnts: list | dict | None
             """
 
             if not sums and not cnts:
