@@ -227,6 +227,22 @@ class MSGDataAggregatorTester(unittest.TestCase):
                 aggType)) == len(aggType),
                          'Mismatched existing aggregation intervals.')
 
+    def testUnaggregatedIntervals(self):
+        MINUTE_POSITION = 4
+        INTERVAL_DURATION = 15
+        for row in self.aggregator.unaggregatedIntervals('egauge', 'agg_egauge',
+                                                         'datetime',
+                                                         'egauge_id'):
+            self.assertEqual(
+                row[0].timetuple()[MINUTE_POSITION] % INTERVAL_DURATION, 0,
+                'Not a 15-min interval endpoint.')
+        for row in self.aggregator.unaggregatedIntervals('weather',
+                                                         'agg_weather',
+                                                         'timestamp'):
+            self.assertEqual(
+                row.timetuple()[MINUTE_POSITION] % INTERVAL_DURATION, 0,
+                'Not a 15-min interval endpoint.')
+
 
 if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
@@ -234,9 +250,10 @@ if __name__ == '__main__':
     if RUN_SELECTED_TESTS:
 
         selected_tests = ['testWeatherAggregation', 'testEgaugeAggregation',
-                          'testIrradianceAggregation', 'testCircuitAggregation']
+                          'testIrradianceAggregation',
+                          'testCircuitAggregation'], ['testExistingIntervals']
         # selected_tests = ['testAggregateAllData']
-        selected_tests = ['testExistingIntervals']
+        selected_tests = ['testUnaggregatedIntervals']
 
         mySuite = unittest.TestSuite()
 

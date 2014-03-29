@@ -19,6 +19,7 @@ import copy
 from msg_time_util import MSGTimeUtil
 
 MINUTE_POSITION = 4  # In a time tuple.
+INTERVAL_DURATION = 15
 
 
 class MSGDataAggregator(object):
@@ -104,11 +105,51 @@ class MSGDataAggregator(object):
         :return: List of intervals.
         """
 
-        sql = """SELECT {} from \"{}\" ORDER BY {}""".format(timeColumnName,
-                                                             self.tables[
-                                                                 dataType],
-                                                             timeColumnName)
-        return [x[0] for x in self.rows(sql)]
+        return [x[0] for x in self.rows(
+            """SELECT {} from \"{}\" ORDER BY {}""".format(timeColumnName,
+                                                           self.tables[
+                                                               dataType],
+                                                           timeColumnName))]
+
+    def unaggregatedIntervals(self, dataType = '', aggDataType = '',
+                              timeColumnName = '', idColumnName = ''):
+        """
+        The endpoints and their IDs, if available, for unaggregated intervals.
+
+        :param dataType: string
+        :param aggDataType: string
+        :param timeColumnName: string
+        :param idColName: string
+        :return: list of [time column, id column]
+        """
+
+        if idColumnName != '':
+            sql = 'SELECT "{0}".{2}, "{0}".{3} FROM "{0}" LEFT JOIN "{1}" ON ' \
+                  '"{0}".{2} = "{1}".{2} AND "{0}".{3} = "{1}".{3} WHERE "{' \
+                  '1}".{2} IS NULL ORDER BY {2} ASC, {3} ASC'
+            self.logger.log('sql:{}'.format(
+                sql.format(self.tables[dataType], self.tables[aggDataType],
+                           timeColumnName, idColumnName)), 'debug')
+            return filter(lambda x: x[0].timetuple()[
+                                        MINUTE_POSITION] % INTERVAL_DURATION
+                                    == 0,
+                          [(x[0], x[1]) for x in self.rows(
+                              sql.format(self.tables[dataType],
+                                         self.tables[aggDataType],
+                                         timeColumnName, idColumnName))])
+        else:
+            sql = 'SELECT "{0}".{2} FROM "{0}" LEFT JOIN "{1}" ON "{0}".{2} = ' \
+                  '"{1}".{2} WHERE "{1}".{2} IS NULL ORDER BY {2} ASC'
+            self.logger.log('sql:{}'.format(
+                sql.format(self.tables[dataType], self.tables[aggDataType],
+                           timeColumnName)), 'debug')
+            return filter(lambda x: x.timetuple()[
+                                        MINUTE_POSITION] % INTERVAL_DURATION
+                                    == 0,
+                          [x[0] for x in self.rows(
+                              sql.format(self.tables[dataType],
+                                         self.tables[aggDataType],
+                                         timeColumnName))])
 
 
     def intervalCrossed(self, minute = None, subkey = None):
