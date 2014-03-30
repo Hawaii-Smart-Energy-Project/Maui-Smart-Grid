@@ -17,6 +17,7 @@ from msg_aggregated_data import MSGAggregatedData
 from datetime import datetime
 import copy
 from msg_time_util import MSGTimeUtil
+from itertools import groupby
 
 MINUTE_POSITION = 4  # In a time tuple.
 INTERVAL_DURATION = 15
@@ -67,7 +68,7 @@ class MSGDataAggregator(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__, 'INFO')
+        self.logger = MSGLogger(__name__, 'DEBUG')
         self.configer = MSGConfiger()
         self.conn = MSGDBConnector().connectDB()
         self.cursor = self.conn.cursor()
@@ -111,46 +112,84 @@ class MSGDataAggregator(object):
                                                                dataType],
                                                            timeColumnName))]
 
-    def unaggregatedIntervals(self, dataType = '', aggDataType = '',
+    def lastAggregationEndpoint(self, aggDataType = '', timeColumnName = ''):
+        """
+        Last aggregation endpoint for a given datatype.
+
+        :param dataType:
+        :param timeColumnName:
+        :return:
+        """
+
+        return self.existingIntervals(dataType = aggDataType,
+                                      timeColumnName = timeColumnName)[-1]
+
+
+    def unaggregatedEndpoints(self, dataType = '', aggDataType = '',
                               timeColumnName = '', idColumnName = ''):
         """
-        The endpoints and their IDs, if available, for unaggregated intervals.
+        The endpoints and their IDs, if available, for unaggregated intervals
+        since the last aggregation endpoint for a given data type.
 
         :param dataType: string
         :param aggDataType: string
         :param timeColumnName: string
         :param idColName: string
-        :return: list of [time column, id column]
+        :return: list of datetimes.
         """
 
         if idColumnName != '':
+            # Key:
+            # 0: raw
+            # 1: agg
+            # 2: time col
+            # 3: id col
+            # 4: last aggregated time
             sql = 'SELECT "{0}".{2}, "{0}".{3} FROM "{0}" LEFT JOIN "{1}" ON ' \
                   '"{0}".{2} = "{1}".{2} AND "{0}".{3} = "{1}".{3} WHERE "{' \
-                  '1}".{2} IS NULL ORDER BY {2} ASC, {3} ASC'
-            self.logger.log('sql:{}'.format(
-                sql.format(self.tables[dataType], self.tables[aggDataType],
-                           timeColumnName, idColumnName)), 'debug')
-            return filter(lambda x: x[0].timetuple()[
-                                        MINUTE_POSITION] % INTERVAL_DURATION
-                                    == 0,
-                          [(x[0], x[1]) for x in self.rows(
-                              sql.format(self.tables[dataType],
-                                         self.tables[aggDataType],
-                                         timeColumnName, idColumnName))])
-        else:
-            sql = 'SELECT "{0}".{2} FROM "{0}" LEFT JOIN "{1}" ON "{0}".{2} = ' \
-                  '"{1}".{2} WHERE "{1}".{2} IS NULL ORDER BY {2} ASC'
-            self.logger.log('sql:{}'.format(
-                sql.format(self.tables[dataType], self.tables[aggDataType],
-                           timeColumnName)), 'debug')
-            return filter(lambda x: x.timetuple()[
-                                        MINUTE_POSITION] % INTERVAL_DURATION
-                                    == 0,
-                          [x[0] for x in self.rows(
-                              sql.format(self.tables[dataType],
-                                         self.tables[aggDataType],
-                                         timeColumnName))])
+                  '1}".{2} IS NULL AND "{0}".{2} > \'{4}\' ORDER BY {2} ASC, ' \
+                  '{3} ASC'
 
+            # The id column value is available in the tuple returned by
+            # groupby but is not being used here.
+            return map(lambda x: datetime(x[0], x[1], x[2], x[3], x[4], 0),
+                       [k for k, v in groupby(
+                           map(lambda y: y[0].timetuple()[0:5], filter(
+                               lambda x: x[0].timetuple()[
+                                             MINUTE_POSITION] %
+                                         INTERVAL_DURATION == 0,
+                               [(x[0], x[1]) for x in self.rows(
+                                   sql.format(self.tables[dataType],
+                                              self.tables[aggDataType],
+                                              timeColumnName, idColumnName,
+                                              self.lastAggregationEndpoint(
+                                                  aggDataType,
+                                                  timeColumnName)))])))])
+        else:
+            # Key:
+            # 0: raw
+            # 1: agg
+            # 2: time col
+            # 3: last aggregated time
+            sql = 'SELECT "{0}".{2} FROM "{0}" LEFT JOIN "{1}" ON "{0}".{2}=' \
+                  '"{1}".{2} WHERE "{1}".{2} IS NULL AND "{0}".{2} > \'{3}\' ' \
+                  'ORDER BY {2} ASC'
+            return map(lambda x: datetime(x[0], x[1], x[2], x[3], x[4], 0),
+                       [k for k, v in groupby(map(lambda y: y.timetuple()[0:5],
+                                                  filter(
+                                                      lambda x: x.timetuple()[
+                                                                    MINUTE_POSITION] % INTERVAL_DURATION == 0,
+                                                      [(x[0]) for x in
+                                                       self.rows(sql.format(
+                                                           self.tables[
+                                                               dataType],
+                                                           self.tables[
+                                                               aggDataType],
+                                                           timeColumnName,
+                                                           self
+                                                           .lastAggregationEndpoint(
+                                                               aggDataType,
+                                                               timeColumnName)))])))])
 
     def intervalCrossed(self, minute = None, subkey = None):
         """

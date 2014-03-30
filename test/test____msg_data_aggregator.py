@@ -10,7 +10,8 @@ __license__ = 'https://raw.github' \
 import unittest
 from msg_logger import MSGLogger
 from msg_data_aggregator import MSGDataAggregator
-
+from itertools import groupby
+from datetime import datetime as dt
 
 class MSGDataAggregatorTester(unittest.TestCase):
     """
@@ -227,21 +228,40 @@ class MSGDataAggregatorTester(unittest.TestCase):
                 aggType)) == len(aggType),
                          'Mismatched existing aggregation intervals.')
 
-    def testUnaggregatedIntervals(self):
+    def testUnaggregatedIntervals1(self):
+        # @todo provide static test data for this test.
+        self.logger.log('testing unagged intervals')
         MINUTE_POSITION = 4
         INTERVAL_DURATION = 15
-        for row in self.aggregator.unaggregatedIntervals('egauge', 'agg_egauge',
-                                                         'datetime',
-                                                         'egauge_id'):
-            self.assertEqual(
-                row[0].timetuple()[MINUTE_POSITION] % INTERVAL_DURATION, 0,
-                'Not a 15-min interval endpoint.')
-        for row in self.aggregator.unaggregatedIntervals('weather',
+
+        weather = []
+        for row in self.aggregator.unaggregatedEndpoints('weather',
                                                          'agg_weather',
                                                          'timestamp'):
-            self.assertEqual(
-                row.timetuple()[MINUTE_POSITION] % INTERVAL_DURATION, 0,
-                'Not a 15-min interval endpoint.')
+            self.logger.log('row: {}'.format(row))
+
+
+    def testUnaggregatedIntervals2(self):
+        # @todo provide static test data for this test.
+        self.logger.log('testing unagged intervals')
+        MINUTE_POSITION = 4
+        INTERVAL_DURATION = 15
+
+        egauge = []
+        for row in self.aggregator.unaggregatedEndpoints('egauge',
+                                                         'agg_egauge',
+                                                         'datetime',
+                                                         'egauge_id'):
+            self.logger.log('row: {}'.format(row))
+
+
+
+    def testLastAggregationEndpoint(self):
+        # Covered by testUnaggregatedIntervals.
+        self.logger.log('Testing last agg endpoint')
+        print self.aggregator.lastAggregationEndpoint(aggDataType = 'weather',
+                                                      timeColumnName =
+                                                      'timestamp')
 
 
 if __name__ == '__main__':
@@ -253,7 +273,8 @@ if __name__ == '__main__':
                           'testIrradianceAggregation',
                           'testCircuitAggregation'], ['testExistingIntervals']
         # selected_tests = ['testAggregateAllData']
-        selected_tests = ['testUnaggregatedIntervals']
+        selected_tests = ['testUnaggregatedIntervals1']
+        # selected_tests = ['testLastAggregationEndpoint']
 
         mySuite = unittest.TestSuite()
 
