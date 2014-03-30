@@ -97,20 +97,36 @@ class MSGDataAggregator(object):
                 self.logger.log('Ignoring missing table: Error is %s.' % error,
                                 'error')
 
-    def existingIntervals(self, dataType = '', timeColumnName = ''):
+    def existingIntervals(self, aggDataType = '', timeColumnName = ''):
         """
         Retrieve the existing aggregation intervals for the given data type.
 
-        :param dataType: string
+        :param aggDataType: string
         :param timeColumnName: string
         :return: List of intervals.
         """
 
         return [x[0] for x in self.rows(
-            """SELECT {} from \"{}\" ORDER BY {}""".format(timeColumnName,
-                                                           self.tables[
-                                                               dataType],
-                                                           timeColumnName))]
+            """SELECT {0} from \"{1}\" ORDER BY {2}""".format(timeColumnName,
+                                                              self.tables[
+                                                                  aggDataType],
+                                                              timeColumnName))]
+
+    def unaggregatedIntervalCount(self, dataType = '', aggDataType = '',
+                                  timeColumnName = '', idColumnName = ''):
+        """
+        Return count of unaggregated intervals for a given data type.
+        :param dataType:
+        :param aggDataType:
+        :param timeColumnName:
+        :param idColumnName:
+        :return: int
+        """
+
+        return len(
+            self.unaggregatedEndpoints(dataType, aggDataType, timeColumnName,
+                                       idColumnName))
+
 
     def lastAggregationEndpoint(self, aggDataType = '', timeColumnName = ''):
         """
@@ -121,7 +137,7 @@ class MSGDataAggregator(object):
         :return:
         """
 
-        return self.existingIntervals(dataType = aggDataType,
+        return self.existingIntervals(aggDataType = aggDataType,
                                       timeColumnName = timeColumnName)[-1]
 
 

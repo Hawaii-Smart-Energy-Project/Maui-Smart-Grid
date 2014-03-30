@@ -13,6 +13,7 @@ from msg_data_aggregator import MSGDataAggregator
 from itertools import groupby
 from datetime import datetime as dt
 
+
 class MSGDataAggregatorTester(unittest.TestCase):
     """
     Unit tests for MSG Data Aggregator.
@@ -248,12 +249,10 @@ class MSGDataAggregatorTester(unittest.TestCase):
         INTERVAL_DURATION = 15
 
         egauge = []
-        for row in self.aggregator.unaggregatedEndpoints('egauge',
-                                                         'agg_egauge',
+        for row in self.aggregator.unaggregatedEndpoints('egauge', 'agg_egauge',
                                                          'datetime',
                                                          'egauge_id'):
             self.logger.log('row: {}'.format(row))
-
 
 
     def testLastAggregationEndpoint(self):
@@ -262,6 +261,21 @@ class MSGDataAggregatorTester(unittest.TestCase):
         print self.aggregator.lastAggregationEndpoint(aggDataType = 'weather',
                                                       timeColumnName =
                                                       'timestamp')
+
+    def testUnaggregatedDataExists(self):
+        # @todo provide static test data for this test.
+        myArgs = [('weather', 'agg_weather', 'timestamp', ''),
+                  ('egauge', 'agg_egauge', 'datetime', 'egauge_id'),
+                  ('circuit', 'agg_circuit', 'timestamp', 'circuit'),
+                  ('irradiance', 'agg_irradiance', 'timestamp', 'sensor_id')]
+        self.logger.log(map(
+            lambda x: self.aggregator.unaggregatedIntervalCount(dataType = x[0],
+                                                                aggDataType = x[
+                                                                    1],
+                                                                timeColumnName =
+                                                                x[2],
+                                                                idColumnName =
+                                                                x[3]), myArgs))
 
 
 if __name__ == '__main__':
@@ -274,6 +288,7 @@ if __name__ == '__main__':
                           'testCircuitAggregation'], ['testExistingIntervals']
         # selected_tests = ['testAggregateAllData']
         selected_tests = ['testUnaggregatedIntervals1']
+        selected_tests = ['testUnaggregatedDataExists']
         # selected_tests = ['testLastAggregationEndpoint']
 
         mySuite = unittest.TestSuite()
