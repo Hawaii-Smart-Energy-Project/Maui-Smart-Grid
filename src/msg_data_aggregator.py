@@ -81,6 +81,11 @@ class MSGDataAggregator(object):
         section = 'Aggregation'
         tableList = ['irradiance', 'agg_irradiance', 'weather', 'agg_weather',
                      'circuit', 'agg_circuit', 'egauge', 'agg_egauge']
+        self.dataParams = {'weather': ('agg_weather', 'timestamp', ''),
+                           'egauge': ('agg_egauge', 'datetime', 'egauge_id'),
+                           'circuit': ('agg_circuit', 'timestamp', 'circuit'),
+                           'irradiance': (
+                               'agg_irradiance', 'timestamp', 'sensor_id')}
         self.columns = {}
 
         # tables[datatype] gives the table name for datatype.
@@ -144,8 +149,9 @@ class MSGDataAggregator(object):
     def unaggregatedEndpoints(self, dataType = '', aggDataType = '',
                               timeColumnName = '', idColumnName = ''):
         """
-        The endpoints and their IDs, if available, for unaggregated intervals
-        since the last aggregation endpoint for a given data type.
+        Sorted (ascending) endpoints and their IDs, if available,
+        for unaggregated intervals since the last aggregation endpoint for a
+        given data type.
 
         :param dataType: string
         :param aggDataType: string
@@ -457,35 +463,25 @@ class MSGDataAggregator(object):
             return myAvgs
 
 
+    def dataParameters(self, dataType = ''):
+        """
+        Parameters for a given data type.
+        :param dataType: string
+        :return: (aggType, timeColName, subkeyColName)
+        """
+        try:
+            assert len(self.dataParams[dataType]) == 3
+            return self.dataParams[dataType]
+        except:
+            self.logger.log('Unmatched data type {}.'.format(dataType))
+
     def aggregateAllData(self, dataType = ''):
         """
         Convenience method for aggregating all data for a given data type.
         :param dataType:
         :return: None
         """
-
-        aggType = ''
-        timeColName = ''
-        subkeyColName = ''
-
-        if dataType == 'circuit':
-            aggType = 'agg_circuit'
-            subkeyColName = 'circuit'
-            timeColName = 'timestamp'
-        elif dataType == 'irradiance':
-            aggType = 'agg_irradiance'
-            subkeyColName = 'sensor_id'
-            timeColName = 'timestamp'
-        elif dataType == 'egauge':
-            aggType = 'agg_egauge'
-            subkeyColName = 'egauge_id'
-            timeColName = 'datetime'
-        elif dataType == 'weather':
-            aggType = 'agg_weather'
-            subkeyColName = None
-            timeColName = 'timestamp'
-        else:
-            raise Exception('Unmatched data type %s.' % dataType)
+        (aggType, timeColName, subkeyColName) = self.dataParameters(dataType)
 
         for start, end in self.monthStartsAndEnds(timeColumnName = timeColName,
                                                   dataType = dataType):
@@ -500,6 +496,23 @@ class MSGDataAggregator(object):
             self.insertAggregatedData(agg = aggData)
             for row in aggData.data:
                 self.logger.log('aggData row: %s' % row)
+
+    def aggregateNewData(self, dataType = ''):
+        """
+        Convenience method for aggregating new data.
+
+        :param dataType:
+        :return:
+        """
+        (aggType, timeColName, subkeyColName) = self.dataParameters(dataType)
+        unAgg = self.unaggregatedEndpoints(dataType = dataType,
+                                           aggDataType = aggType,
+                                           timeColumnName = timeColName,
+                                           idColumnName = subkeyColName)
+
+        return (unAgg[-1], self.lastAggregationEndpoint(aggDataType = aggType,
+                                                        timeColumnName =
+                                                        timeColName))
 
 
     def monthStartsAndEnds(self, timeColumnName = '', dataType = ''):

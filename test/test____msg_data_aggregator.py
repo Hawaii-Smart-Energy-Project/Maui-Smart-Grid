@@ -277,6 +277,14 @@ class MSGDataAggregatorTester(unittest.TestCase):
                                                                 idColumnName =
                                                                 x[3]), myArgs))
 
+    def testAggregateNewData(self):
+        # @todo provide static test data for this test.
+        myType = ['weather', 'egauge', 'circuit', 'irradiance']
+        result = map(self.aggregator.aggregateNewData, myType)
+        self.logger.log('result {}'.format(result), 'info')
+        self.assertEqual(len(myType), len(result),
+                         'Result not obtained for each type.')
+
 
 if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
@@ -289,7 +297,7 @@ if __name__ == '__main__':
         # selected_tests = ['testAggregateAllData']
         selected_tests = ['testUnaggregatedIntervals1']
         selected_tests = ['testUnaggregatedDataExists']
-        # selected_tests = ['testLastAggregationEndpoint']
+        selected_tests = ['testAggregateNewData']
 
         mySuite = unittest.TestSuite()
 
