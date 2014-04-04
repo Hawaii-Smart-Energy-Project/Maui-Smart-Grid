@@ -104,15 +104,36 @@ class MSGTimeUtil(object):
         :return: List of tuples.
         """
 
+        self.logger.log('start {}, end {}'.format(start, end), 'debug')
+
+        # First day of the month.
+
+        # @TO BE REVIEWED
+        # Observed at least one case where firstDay was not correct for a
+        # time range. The first day was listed as 2014-03-01 and the last day
+        # came out as 2014-04-04 for that month. 2014-04-01 was NOT INCLUDED.
+        #
+        # The range was:
+        # start: (datetime.datetime(2013, 8, 21, 15, 0)
+        # end: datetime.datetime(2014, 4, 4, 0, 4)
+        #
+        # The overall effect on processing is negligible because the end date
+        # still gets set correctly but it should be determined why there is a
+        # discrepancy.
+
         firstDay = lambda x: dt.strptime(x.strftime('%Y-%m-01'), '%Y-%m-%d')
         startDates = map(firstDay, list(
             rrule.rrule(rrule.MONTHLY, dtstart = start, until = end)))
         startDates[0] = start
+
         lastDay = lambda x: dt.strptime('%d-%d-%d' % (
             x.year, x.month, calendar.monthrange(x.year, x.month)[1]),
                                         '%Y-%m-%d')
         endDates = map(lastDay, startDates)
+        self.logger.log('start dates {}'.format(startDates), 'debug')
+        self.logger.log('end dates {}'.format(endDates), 'debug')
         endDates[-1] = end
+
         assert len(startDates) == len(
             endDates), 'Mismatch of start and end dates.'
         return zip(startDates, endDates)
