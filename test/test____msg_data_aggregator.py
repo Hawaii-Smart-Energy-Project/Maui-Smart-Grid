@@ -277,7 +277,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
                                                                 idColumnName =
                                                                 x[3]), myArgs))
 
-    def testAggregateNewData(self):
+    def testAggregatedVsNewData(self):
         # @todo provide static test data for this test.
 
         result = self.aggregator.aggregatedVsNewData()
@@ -286,6 +286,19 @@ class MSGDataAggregatorTester(unittest.TestCase):
         self.assertEqual(len(self.aggregator.dataParams.keys()),
                          len(result.keys()),
                          'Result not obtained for each type.')
+
+    def testAggregateNewData(self):
+        self.aggregator.aggregateNewData(dataType = 'egauge')
+
+        # self.logger.log('result {}'.format(result), 'info')
+        # self.assertEqual(len(self.aggregator.dataParams.keys()),
+        #                  len(result.keys()),
+        #                  'Result not obtained for each type.')
+
+
+    def testLastUnaggregatedAndAggregatedEndpoints(self):
+        print self.aggregator.lastUnaggregatedAndAggregatedEndpoints(
+            dataType = 'egauge')
 
 
 if __name__ == '__main__':
@@ -300,6 +313,9 @@ if __name__ == '__main__':
         selected_tests = ['testUnaggregatedIntervals1']
         selected_tests = ['testUnaggregatedDataExists']
         selected_tests = ['testAggregateNewData']
+        selected_tests = ['testLastUnaggregatedAndAggregatedEndpoints',
+                          'testAggregateNewData']
+        selected_tests=['testMonthStartsAndEnds']
 
         mySuite = unittest.TestSuite()
 

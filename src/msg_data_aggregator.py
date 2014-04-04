@@ -61,6 +61,12 @@ class MSGDataAggregator(object):
         from msg_data_aggregator import MSGDataAggregator
         aggregator = MSGDataAggregator()
 
+    Methods:
+
+        aggregator.aggregateAllData(dataType = dataType)
+
+        aggregator.aggregateNewData(dataType = dataType)
+
     """
 
     def __init__(self):
@@ -508,9 +514,31 @@ class MSGDataAggregator(object):
         # The new aggregation starting point is equal to the last aggregation
         #  endpoint up to the last unaggregated endpoint.
 
-        pass
+        (aggType, timeColName, subkeyColName) = self.dataParameters(dataType)
+
+        self.logger.log(self.lastUnaggregatedAndAggregatedEndpoints(dataType),
+                        'debug')
+        (end, start) = \
+            self.lastUnaggregatedAndAggregatedEndpoints(dataType).items()[0][1]
+
+        self.logger.log('start,end: %s, %s' % (start, end))
+        aggData = self.aggregatedData(dataType = dataType,
+                                      aggregationType = aggType,
+                                      timeColumnName = timeColName,
+                                      subkeyColumnName = subkeyColName,
+                                      startDate = start.strftime('%Y-%m-%d'),
+                                      endDate = end.strftime('%Y-%m-%d'))
+        # self.insertAggregatedData(agg = aggData)
+        for row in aggData.data:
+            self.logger.log('aggData row: %s' % row)
 
     def lastUnaggregatedAndAggregatedEndpoints(self, dataType = ''):
+        """
+        Return the {datatype: (last unaggregated endpoint, last aggregated
+        endpoint)}.
+        :param dataType:
+        :return: dict with tuple.
+        """
         (aggType, timeColName, subkeyColName) = self.dataParameters(dataType)
         unAgg = self.unaggregatedEndpoints(dataType = dataType,
                                            aggDataType = aggType,
@@ -534,17 +562,42 @@ class MSGDataAggregator(object):
 
     def monthStartsAndEnds(self, timeColumnName = '', dataType = ''):
         """
-        Return first date and last date for the given data type for each
+        Return first date and last date for the given raw data type for each
         month in the data's entire time range.
 
         :param dataType: string
         :return: List of tuples.
         """
 
+        self.logger.log('datatype {}'.format(dataType), 'debug')
         (start, end) = self.rows("""SELECT MIN(%s), MAX(%s) FROM \"%s\"""" % (
             timeColumnName, timeColumnName, self.tables[dataType]))[0]
+        self.logger.log('start {}'.format(start))
+        self.logger.log('end {}'.format(end))
 
-        return self.timeUtil.splitDates(start, end)
+        # End time needs transforming in split dates to extend the end of the
+        #  day to 23:59:59.
+
+        splitDates = self.timeUtil.splitDates(start, end)
+        # print splitDates
+
+        startEndDatesTransform = []
+        i = 0
+        while i < len(splitDates):
+            # print i
+            # print splitDates[i]
+
+            startEndDatesTransform.append((splitDates[i][0], datetime(
+                splitDates[i][1].timetuple()[0],
+                splitDates[i][1].timetuple()[1],
+                splitDates[i][1].timetuple()[2], 23, 59, 59)))
+            i += 1
+
+        for j in startEndDatesTransform:
+            print j
+
+        return startEndDatesTransform
+        # return self.timeUtil.splitDates(start, end)
 
 
     def aggregatedData(self, dataType = '', aggregationType = '',
