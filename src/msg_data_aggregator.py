@@ -337,7 +337,7 @@ class MSGDataAggregator(object):
 
         def __insertData(values = ''):
             success = True
-            sql = """INSERT INTO "%s" (%s) VALUES( %s)""" % (
+            sql = 'INSERT INTO "%s" ({}) VALUES( {})'.format(
                 self.tables[agg.aggregationType], ','.join(agg.columns), values)
             self.logger.log('sql: %s' % sql, 'debug')
             success = self.dbUtil.executeSQL(self.cursor, sql)
@@ -502,17 +502,34 @@ class MSGDataAggregator(object):
         Convenience method for aggregating new data.
 
         :param dataType:
-        :return:
+        :return: list of tuples
         """
+
+        # The new aggregation starting point is equal to the last aggregation
+        #  endpoint up to the last unaggregated endpoint.
+
+        pass
+
+    def lastUnaggregatedAndAggregatedEndpoints(self, dataType = ''):
         (aggType, timeColName, subkeyColName) = self.dataParameters(dataType)
         unAgg = self.unaggregatedEndpoints(dataType = dataType,
                                            aggDataType = aggType,
                                            timeColumnName = timeColName,
                                            idColumnName = subkeyColName)
-
-        return (unAgg[-1], self.lastAggregationEndpoint(aggDataType = aggType,
+        return {dataType: (unAgg[-1],
+                           self.lastAggregationEndpoint(aggDataType = aggType,
                                                         timeColumnName =
-                                                        timeColName))
+                                                        timeColName))}
+
+    def aggregatedVsNewData(self):
+        """
+        Convenience method.
+        :return: dict of tuples containing {datatype:(last raw datetime,
+        last agg datetime)}
+        """
+        return {x.keys()[0]: (x.values()[0]) for x in
+                map(self.lastUnaggregatedAndAggregatedEndpoints,
+                    [k for k in self.dataParams])}
 
 
     def monthStartsAndEnds(self, timeColumnName = '', dataType = ''):

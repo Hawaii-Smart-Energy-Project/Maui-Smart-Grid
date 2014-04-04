@@ -279,10 +279,12 @@ class MSGDataAggregatorTester(unittest.TestCase):
 
     def testAggregateNewData(self):
         # @todo provide static test data for this test.
-        myType = ['weather', 'egauge', 'circuit', 'irradiance']
-        result = map(self.aggregator.aggregateNewData, myType)
+
+        result = self.aggregator.aggregatedVsNewData()
+
         self.logger.log('result {}'.format(result), 'info')
-        self.assertEqual(len(myType), len(result),
+        self.assertEqual(len(self.aggregator.dataParams.keys()),
+                         len(result.keys()),
                          'Result not obtained for each type.')
 
 
