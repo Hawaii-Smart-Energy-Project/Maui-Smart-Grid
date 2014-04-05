@@ -17,8 +17,10 @@ from msg_aggregated_data import MSGAggregatedData
 from datetime import datetime
 import copy
 from msg_time_util import MSGTimeUtil
+from itertools import groupby
 
 MINUTE_POSITION = 4  # In a time tuple.
+INTERVAL_DURATION = 15
 
 
 class MSGDataAggregator(object):
@@ -59,6 +61,12 @@ class MSGDataAggregator(object):
         from msg_data_aggregator import MSGDataAggregator
         aggregator = MSGDataAggregator()
 
+    Methods:
+
+        aggregator.aggregateAllData(dataType = dataType)
+
+        aggregator.aggregateNewData(dataType = dataType)
+
     """
 
     def __init__(self):
@@ -66,7 +74,7 @@ class MSGDataAggregator(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__, 'INFO')
+        self.logger = MSGLogger(__name__, 'info')
         self.configer = MSGConfiger()
         self.conn = MSGDBConnector().connectDB()
         self.cursor = self.conn.cursor()
@@ -79,7 +87,14 @@ class MSGDataAggregator(object):
         section = 'Aggregation'
         tableList = ['irradiance', 'agg_irradiance', 'weather', 'agg_weather',
                      'circuit', 'agg_circuit', 'egauge', 'agg_egauge']
+        self.dataParams = {'weather': ('agg_weather', 'timestamp', ''),
+                           'egauge': ('agg_egauge', 'datetime', 'egauge_id'),
+                           'circuit': ('agg_circuit', 'timestamp', 'circuit'),
+                           'irradiance': (
+                               'agg_irradiance', 'timestamp', 'sensor_id')}
         self.columns = {}
+
+        # tables[datatype] gives the table name for datatype.
         self.tables = {
             t: self.configer.configOptionValue(section, '%s_table' % t) for t in
             tableList}
@@ -93,10 +108,121 @@ class MSGDataAggregator(object):
                 self.logger.log('Ignoring missing table: Error is %s.' % error,
                                 'error')
 
+    def existingIntervals(self, aggDataType = '', timeColumnName = ''):
+        """
+        Retrieve the existing aggregation intervals for the given data type.
+
+        :param aggDataType: string
+        :param timeColumnName: string
+        :return: List of intervals.
+        """
+
+        return [x[0] for x in self.rows(
+            """SELECT {0} from \"{1}\" ORDER BY {2}""".format(timeColumnName,
+                                                              self.tables[
+                                                                  aggDataType],
+                                                              timeColumnName))]
+
+    def unaggregatedIntervalCount(self, dataType = '', aggDataType = '',
+                                  timeColumnName = '', idColumnName = ''):
+        """
+        Return count of unaggregated intervals for a given data type.
+        :param dataType:
+        :param aggDataType:
+        :param timeColumnName:
+        :param idColumnName:
+        :return: int
+        """
+
+        return len(
+            self.unaggregatedEndpoints(dataType, aggDataType, timeColumnName,
+                                       idColumnName))
+
+
+    def lastAggregationEndpoint(self, aggDataType = '', timeColumnName = ''):
+        """
+        Last aggregation endpoint for a given datatype.
+
+        :param dataType:
+        :param timeColumnName:
+        :return:
+        """
+
+        return self.existingIntervals(aggDataType = aggDataType,
+                                      timeColumnName = timeColumnName)[-1]
+
+
+    def unaggregatedEndpoints(self, dataType = '', aggDataType = '',
+                              timeColumnName = '', idColumnName = ''):
+        """
+        Sorted (ascending) endpoints and their IDs, if available,
+        for unaggregated intervals since the last aggregation endpoint for a
+        given data type.
+
+        :param dataType: string
+        :param aggDataType: string
+        :param timeColumnName: string
+        :param idColName: string
+        :return: list of datetimes.
+        """
+
+        if idColumnName != '':
+            # Key:
+            # 0: raw
+            # 1: agg
+            # 2: time col
+            # 3: id col
+            # 4: last aggregated time
+            sql = 'SELECT "{0}".{2}, "{0}".{3} FROM "{0}" LEFT JOIN "{1}" ON ' \
+                  '"{0}".{2} = "{1}".{2} AND "{0}".{3} = "{1}".{3} WHERE "{' \
+                  '1}".{2} IS NULL AND "{0}".{2} > \'{4}\' ORDER BY {2} ASC, ' \
+                  '{3} ASC'
+
+            # The id column value is available in the tuple returned by
+            # groupby but is not being used here.
+            return map(lambda x: datetime(x[0], x[1], x[2], x[3], x[4], 0),
+                       [k for k, v in groupby(
+                           map(lambda y: y[0].timetuple()[0:5], filter(
+                               lambda x: x[0].timetuple()[
+                                             MINUTE_POSITION] %
+                                         INTERVAL_DURATION == 0,
+                               [(x[0], x[1]) for x in self.rows(
+                                   sql.format(self.tables[dataType],
+                                              self.tables[aggDataType],
+                                              timeColumnName, idColumnName,
+                                              self.lastAggregationEndpoint(
+                                                  aggDataType,
+                                                  timeColumnName)))])))])
+        else:
+            # Key:
+            # 0: raw
+            # 1: agg
+            # 2: time col
+            # 3: last aggregated time
+            sql = 'SELECT "{0}".{2} FROM "{0}" LEFT JOIN "{1}" ON "{0}".{2}=' \
+                  '"{1}".{2} WHERE "{1}".{2} IS NULL AND "{0}".{2} > \'{3}\' ' \
+                  'ORDER BY {2} ASC'
+            return map(lambda x: datetime(x[0], x[1], x[2], x[3], x[4], 0),
+                       [k for k, v in groupby(map(lambda y: y.timetuple()[0:5],
+                                                  filter(
+                                                      lambda x: x.timetuple()[
+                                                                    MINUTE_POSITION] % INTERVAL_DURATION == 0,
+                                                      [(x[0]) for x in
+                                                       self.rows(sql.format(
+                                                           self.tables[
+                                                               dataType],
+                                                           self.tables[
+                                                               aggDataType],
+                                                           timeColumnName,
+                                                           self
+                                                           .lastAggregationEndpoint(
+                                                               aggDataType,
+                                                               timeColumnName)))])))])
 
     def intervalCrossed(self, minute = None, subkey = None):
         """
         Determine interval crossing. Intervals are at 0, 15, 45, 60 min.
+        The interval size is determined by MECO source data.
 
         :param minute: The integer value of the minute.
         :param subkey: The name for the subkey used for aggregation.
@@ -143,6 +269,7 @@ class MSGDataAggregator(object):
 
     def rows(self, sql):
         """
+        Rows from a SQL fetch.
 
         :param sql: Command to be executed.
         :returns: DB result set.
@@ -156,6 +283,7 @@ class MSGDataAggregator(object):
     def rawData(self, dataType = '', orderBy = None, timestampCol = '',
                 startDate = '', endDate = ''):
         """
+        Raw data to be aggregated.
 
         :param dataType: string
         :param orderBy: list
@@ -179,6 +307,7 @@ class MSGDataAggregator(object):
     def subkeys(self, dataType = '', timestampCol = '', subkeyCol = '',
                 startDate = '', endDate = ''):
         """
+        The distinct subkeys for a given data type within a time range.
 
         :param dataType: string
         :param timestampCol: string
@@ -197,9 +326,8 @@ class MSGDataAggregator(object):
 
     def insertAggregatedData(self, agg = None):
         """
-        :type agg: MSGAggregatedData
-        :param agg
-        :return:
+        :param agg: MSGAggregatedData
+        :return: None
         """
 
         # @todo enable insert where data already exists such that the
@@ -213,14 +341,9 @@ class MSGDataAggregator(object):
         self.logger.log('agg data: %s' % agg.data)
         self.logger.log('agg data type: %s' % type(agg.data))
 
-        # @HIGHLIGHTED For debugging.
-        # self.dbUtil.executeSQL(self.cursor,
-        #                        """DELETE FROM \"%s\"""" % self.tables[
-        #                            agg.aggregationType])
-
         def __insertData(values = ''):
             success = True
-            sql = """INSERT INTO "%s" (%s) VALUES( %s)""" % (
+            sql = 'INSERT INTO "{0}" ({1}) VALUES( {2})'.format(
                 self.tables[agg.aggregationType], ','.join(agg.columns), values)
             self.logger.log('sql: %s' % sql, 'debug')
             success = self.dbUtil.executeSQL(self.cursor, sql)
@@ -346,39 +469,29 @@ class MSGDataAggregator(object):
             return myAvgs
 
 
+    def dataParameters(self, dataType = ''):
+        """
+        Parameters for a given data type.
+        :param dataType: string
+        :return: (aggType, timeColName, subkeyColName)
+        """
+        try:
+            assert len(self.dataParams[dataType]) == 3
+            return self.dataParams[dataType]
+        except:
+            self.logger.log('Unmatched data type {}.'.format(dataType))
+
     def aggregateAllData(self, dataType = ''):
         """
         Convenience method for aggregating all data for a given data type.
         :param dataType:
-        :return:
+        :return: None
         """
-
-        aggType = ''
-        timeColName = ''
-        subkeyColName = ''
-
-        if dataType == 'circuit':
-            aggType = 'agg_circuit'
-            subkeyColName = 'circuit'
-            timeColName = 'timestamp'
-        elif dataType == 'irradiance':
-            aggType = 'agg_irradiance'
-            subkeyColName = 'sensor_id'
-            timeColName = 'timestamp'
-        elif dataType == 'egauge':
-            aggType = 'agg_egauge'
-            subkeyColName = 'egauge_id'
-            timeColName = 'datetime'
-        elif dataType == 'weather':
-            aggType = 'agg_weather'
-            subkeyColName = None
-            timeColName = 'timestamp'
-        else:
-            raise Exception('Unmatched data type %s.' % dataType)
+        (aggType, timeColName, subkeyColName) = self.dataParameters(dataType)
 
         for start, end in self.monthStartsAndEnds(timeColumnName = timeColName,
                                                   dataType = dataType):
-            self.logger.log('start,end: %s, %s' % (start, end))
+            self.logger.log('start, end: {}, {}'.format(start, end))
             aggData = self.aggregatedData(dataType = dataType,
                                           aggregationType = aggType,
                                           timeColumnName = timeColName,
@@ -388,22 +501,106 @@ class MSGDataAggregator(object):
                                           endDate = end.strftime('%Y-%m-%d'))
             self.insertAggregatedData(agg = aggData)
             for row in aggData.data:
-                self.logger.log('aggData row: %s' % row)
+                self.logger.log('aggData row: {}'.format(row))
+
+    def aggregateNewData(self, dataType = ''):
+        """
+        Convenience method for aggregating new data.
+
+        :param dataType:
+        :return: list of tuples
+        """
+
+        # The new aggregation starting point is equal to the last aggregation
+        #  endpoint up to the last unaggregated endpoint.
+
+        (aggType, timeColName, subkeyColName) = self.dataParameters(dataType)
+
+        (end, start) = \
+            self.lastUnaggregatedAndAggregatedEndpoints(dataType).items()[0][1]
+
+        self.logger.log(
+            'datatype: {}, start, end: {}, {}'.format(dataType, start, end),
+            'critical')
+        aggData = self.aggregatedData(dataType = dataType,
+                                      aggregationType = aggType,
+                                      timeColumnName = timeColName,
+                                      subkeyColumnName = subkeyColName,
+                                      startDate = start.strftime(
+                                          '%Y-%m-%d %H:%M:%S'),
+                                      endDate = end.strftime(
+                                          '%Y-%m-%d %H:%M:%S'))
+        self.insertAggregatedData(agg = aggData)
+        for row in aggData.data:
+            self.logger.log('aggData row: {}'.format(row))
+
+
+    def lastUnaggregatedAndAggregatedEndpoints(self, dataType = ''):
+        """
+        Return the {datatype: (last unaggregated endpoint, last aggregated
+        endpoint)}.
+        :param dataType:
+        :return: dict with tuple.
+        """
+        (aggType, timeColName, subkeyColName) = self.dataParameters(dataType)
+        unAgg = self.unaggregatedEndpoints(dataType = dataType,
+                                           aggDataType = aggType,
+                                           timeColumnName = timeColName,
+                                           idColumnName = subkeyColName)
+        return {dataType: (unAgg[-1],
+                           self.lastAggregationEndpoint(aggDataType = aggType,
+                                                        timeColumnName =
+                                                        timeColName))}
+
+    def aggregatedVsNewData(self):
+        """
+        Convenience method.
+        :return: dict of tuples containing {datatype:(last raw datetime,
+        last agg datetime)}
+        """
+        return {x.keys()[0]: (x.values()[0]) for x in
+                map(self.lastUnaggregatedAndAggregatedEndpoints,
+                    [k for k in self.dataParams])}
 
 
     def monthStartsAndEnds(self, timeColumnName = '', dataType = ''):
         """
-        Return first date and last date for the given data type for each
+        Return first date and last date for the given raw data type for each
         month in the data's entire time range.
 
         :param dataType: string
         :return: List of tuples.
         """
 
+        self.logger.log('datatype {}'.format(dataType), 'debug')
         (start, end) = self.rows("""SELECT MIN(%s), MAX(%s) FROM \"%s\"""" % (
             timeColumnName, timeColumnName, self.tables[dataType]))[0]
+        self.logger.log('start {}'.format(start))
+        self.logger.log('end {}'.format(end))
 
-        return self.timeUtil.splitDates(start, end)
+        # End time needs transforming in split dates to extend the end of the
+        #  day to 23:59:59.
+
+        splitDates = self.timeUtil.splitDates(start, end)
+        # print splitDates
+
+        startEndDatesTransform = []
+        i = 0
+        while i < len(splitDates):
+            # print i
+            # print splitDates[i]
+
+            startEndDatesTransform.append((splitDates[i][0], datetime(
+                splitDates[i][1].timetuple()[0],
+                splitDates[i][1].timetuple()[1],
+                splitDates[i][1].timetuple()[2], 23, 59, 59)))
+            i += 1
+
+        for j in startEndDatesTransform:
+            print j
+
+        return startEndDatesTransform
+        # return self.timeUtil.splitDates(start, end)
 
 
     def aggregatedData(self, dataType = '', aggregationType = '',
@@ -441,6 +638,8 @@ class MSGDataAggregator(object):
             """
             Initialize the sum and cnt data structures.
             :param subkey: string
+            :param sums: list | dict | None
+            :param cnts: list | dict | None
             """
 
             if not sums and not cnts:

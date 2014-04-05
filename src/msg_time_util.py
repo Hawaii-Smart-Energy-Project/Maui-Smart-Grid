@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__ = 'Daniel Zhang (張道博)'
-__copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
+__copyright__ = 'Copyright (c) 2014, University of Hawaii Smart Energy Project'
 __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
@@ -104,15 +104,22 @@ class MSGTimeUtil(object):
         :return: List of tuples.
         """
 
+        self.logger.log('start {}, end {}'.format(start, end), 'debug')
+
+        # First day of the month.
         firstDay = lambda x: dt.strptime(x.strftime('%Y-%m-01'), '%Y-%m-%d')
         startDates = map(firstDay, list(
-            rrule.rrule(rrule.MONTHLY, dtstart = start, until = end)))
+            rrule.rrule(rrule.MONTHLY, dtstart = firstDay(start), until = end)))
+
+        # @todo add assert for verifying sorted start dates.
         startDates[0] = start
+
         lastDay = lambda x: dt.strptime('%d-%d-%d' % (
             x.year, x.month, calendar.monthrange(x.year, x.month)[1]),
                                         '%Y-%m-%d')
         endDates = map(lastDay, startDates)
         endDates[-1] = end
+
         assert len(startDates) == len(
             endDates), 'Mismatch of start and end dates.'
         return zip(startDates, endDates)

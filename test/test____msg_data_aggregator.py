@@ -10,7 +10,8 @@ __license__ = 'https://raw.github' \
 import unittest
 from msg_logger import MSGLogger
 from msg_data_aggregator import MSGDataAggregator
-from msg_aggregated_data import MSGAggregatedData
+from itertools import groupby
+from datetime import datetime as dt
 
 
 class MSGDataAggregatorTester(unittest.TestCase):
@@ -29,7 +30,10 @@ class MSGDataAggregatorTester(unittest.TestCase):
 
     def testIrradianceFetch(self):
         """
+        Test raw data fetching over the testing time interval.
+        :return:
         """
+
         timeCol = 'timestamp'
         rows = []
         for row in self.aggregator.rawData(dataType = 'irradiance',
@@ -42,7 +46,10 @@ class MSGDataAggregatorTester(unittest.TestCase):
 
     def testWeatherFetch(self):
         """
+        Test raw data fetching over the testing time interval.
+        :return:
         """
+
         timeCol = 'timestamp'
         rows = []
         for row in self.aggregator.rawData(dataType = 'weather',
@@ -55,7 +62,10 @@ class MSGDataAggregatorTester(unittest.TestCase):
 
     def testCircuitFetch(self):
         """
+        Test raw data fetching over the testing time interval.
+        :return:
         """
+
         timeCol = 'timestamp'
         rows = []
         for row in self.aggregator.rawData(dataType = 'circuit',
@@ -67,6 +77,11 @@ class MSGDataAggregatorTester(unittest.TestCase):
         self.assertIsNotNone(rows, 'Rows are present.')
 
     def testEgaugeFetch(self):
+        """
+        Test raw data fetching over the testing time interval.
+        :return:
+        """
+
         timeCol = 'datetime'
         rows = []
         for row in self.aggregator.rawData(dataType = 'egauge',
@@ -79,6 +94,11 @@ class MSGDataAggregatorTester(unittest.TestCase):
 
 
     def testEgaugeAggregation(self):
+        """
+        Perform aggregation over the testing time interval.
+        :return:
+        """
+
         self.logger.log('Testing Egauge aggregation.')
         rowCnt = 0
         agg = self.aggregator.aggregatedData(dataType = 'egauge',
@@ -101,6 +121,11 @@ class MSGDataAggregatorTester(unittest.TestCase):
 
 
     def testCircuitAggregation(self):
+        """
+        Test aggregation over the testing time interval.
+        :return:
+        """
+
         self.logger.log('Testing circuit aggregation.')
         rowCnt = 0
         agg = self.aggregator.aggregatedData(dataType = 'circuit',
@@ -121,6 +146,11 @@ class MSGDataAggregatorTester(unittest.TestCase):
 
 
     def testIrradianceAggregation(self):
+        """
+        Test aggregation over the testing time interval.
+        :return:
+        """
+
         self.logger.log('Testing irradiance aggregation.')
         rowCnt = 0
         datatype = 'irradiance'
@@ -140,7 +170,13 @@ class MSGDataAggregatorTester(unittest.TestCase):
                          'Irradiance columns not equal to 3.')
         self.aggregator.insertAggregatedData(agg = agg)
 
+
     def testWeatherAggregation(self):
+        """
+        Test aggregation over the testing time interval.
+        :return:
+        """
+
         rowCnt = 0
         agg = self.aggregator.aggregatedData(dataType = 'weather',
                                              aggregationType = 'agg_weather',
@@ -159,6 +195,12 @@ class MSGDataAggregatorTester(unittest.TestCase):
 
 
     def testMonthStartsAndEnds(self):
+        """
+        Test retrieving the list of start and end dates for each month in a
+        given aggregation time period.
+        :return:
+        """
+
         for myType in ['weather', 'egauge', 'circuit', 'irradiance']:
             if myType == 'egauge':
                 print self.aggregator.monthStartsAndEnds(
@@ -169,8 +211,94 @@ class MSGDataAggregatorTester(unittest.TestCase):
 
 
     def testAggregateAllData(self):
+
+        # @todo Revise this test so that live data is not affected.
+
+        return
+
         for myType in ['weather', 'egauge', 'circuit', 'irradiance']:
             self.aggregator.aggregateAllData(dataType = myType)
+
+    def testExistingIntervals(self):
+        self.logger.log('Testing existing intervals.')
+        aggType = [('agg_weather', 'timestamp'), ('agg_egauge', 'datetime'),
+                   ('agg_circuit', 'timestamp'),
+                   ('agg_irradiance', 'timestamp')]
+        self.assertEqual(len(
+            map(lambda x: self.aggregator.existingIntervals(x[0], x[1])[0],
+                aggType)) == len(aggType),
+                         'Mismatched existing aggregation intervals.')
+
+    def testUnaggregatedIntervals1(self):
+        # @todo provide static test data for this test.
+        self.logger.log('testing unagged intervals')
+        MINUTE_POSITION = 4
+        INTERVAL_DURATION = 15
+
+        weather = []
+        for row in self.aggregator.unaggregatedEndpoints('weather',
+                                                         'agg_weather',
+                                                         'timestamp'):
+            self.logger.log('row: {}'.format(row))
+
+
+    def testUnaggregatedIntervals2(self):
+        # @todo provide static test data for this test.
+        self.logger.log('testing unagged intervals')
+        MINUTE_POSITION = 4
+        INTERVAL_DURATION = 15
+
+        egauge = []
+        for row in self.aggregator.unaggregatedEndpoints('egauge', 'agg_egauge',
+                                                         'datetime',
+                                                         'egauge_id'):
+            self.logger.log('row: {}'.format(row))
+
+
+    def testLastAggregationEndpoint(self):
+        # Covered by testUnaggregatedIntervals.
+        self.logger.log('Testing last agg endpoint')
+        print self.aggregator.lastAggregationEndpoint(aggDataType = 'weather',
+                                                      timeColumnName =
+                                                      'timestamp')
+
+    def testUnaggregatedDataExists(self):
+        # @todo provide static test data for this test.
+        myArgs = [('weather', 'agg_weather', 'timestamp', ''),
+                  ('egauge', 'agg_egauge', 'datetime', 'egauge_id'),
+                  ('circuit', 'agg_circuit', 'timestamp', 'circuit'),
+                  ('irradiance', 'agg_irradiance', 'timestamp', 'sensor_id')]
+        self.logger.log(map(
+            lambda x: self.aggregator.unaggregatedIntervalCount(dataType = x[0],
+                                                                aggDataType = x[
+                                                                    1],
+                                                                timeColumnName =
+                                                                x[2],
+                                                                idColumnName =
+                                                                x[3]), myArgs))
+
+    def testAggregatedVsNewData(self):
+        # @todo provide static test data for this test.
+
+        result = self.aggregator.aggregatedVsNewData()
+
+        self.logger.log('result {}'.format(result), 'info')
+        self.assertEqual(len(self.aggregator.dataParams.keys()),
+                         len(result.keys()),
+                         'Result not obtained for each type.')
+
+    def testAggregateNewData(self):
+        self.aggregator.aggregateNewData(dataType = 'egauge')
+
+        # self.logger.log('result {}'.format(result), 'info')
+        # self.assertEqual(len(self.aggregator.dataParams.keys()),
+        #                  len(result.keys()),
+        #                  'Result not obtained for each type.')
+
+
+    def testLastUnaggregatedAndAggregatedEndpoints(self):
+        print self.aggregator.lastUnaggregatedAndAggregatedEndpoints(
+            dataType = 'egauge')
 
 
 if __name__ == '__main__':
@@ -179,8 +307,15 @@ if __name__ == '__main__':
     if RUN_SELECTED_TESTS:
 
         selected_tests = ['testWeatherAggregation', 'testEgaugeAggregation',
-                          'testIrradianceAggregation', 'testCircuitAggregation']
-        selected_tests = ['testAggregateAllData']
+                          'testIrradianceAggregation',
+                          'testCircuitAggregation'], ['testExistingIntervals']
+        # selected_tests = ['testAggregateAllData']
+        selected_tests = ['testUnaggregatedIntervals1']
+        selected_tests = ['testUnaggregatedDataExists']
+        selected_tests = ['testAggregateNewData']
+        selected_tests = ['testLastUnaggregatedAndAggregatedEndpoints',
+                          'testAggregateNewData']
+        selected_tests=['testMonthStartsAndEnds']
 
         mySuite = unittest.TestSuite()
 
