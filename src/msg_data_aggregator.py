@@ -343,7 +343,7 @@ class MSGDataAggregator(object):
 
         def __insertData(values = ''):
             success = True
-            sql = 'INSERT INTO "%s" ({}) VALUES( {})'.format(
+            sql = 'INSERT INTO "{0}" ({1}) VALUES( {2})'.format(
                 self.tables[agg.aggregationType], ','.join(agg.columns), values)
             self.logger.log('sql: %s' % sql, 'debug')
             success = self.dbUtil.executeSQL(self.cursor, sql)
@@ -491,7 +491,7 @@ class MSGDataAggregator(object):
 
         for start, end in self.monthStartsAndEnds(timeColumnName = timeColName,
                                                   dataType = dataType):
-            self.logger.log('start,end: %s, %s' % (start, end))
+            self.logger.log('start, end: {}, {}'.format(start, end))
             aggData = self.aggregatedData(dataType = dataType,
                                           aggregationType = aggType,
                                           timeColumnName = timeColName,
@@ -501,7 +501,7 @@ class MSGDataAggregator(object):
                                           endDate = end.strftime('%Y-%m-%d'))
             self.insertAggregatedData(agg = aggData)
             for row in aggData.data:
-                self.logger.log('aggData row: %s' % row)
+                self.logger.log('aggData row: {}'.format(row))
 
     def aggregateNewData(self, dataType = ''):
         """
@@ -516,12 +516,12 @@ class MSGDataAggregator(object):
 
         (aggType, timeColName, subkeyColName) = self.dataParameters(dataType)
 
-        self.logger.log(self.lastUnaggregatedAndAggregatedEndpoints(dataType),
-                        'debug')
         (end, start) = \
             self.lastUnaggregatedAndAggregatedEndpoints(dataType).items()[0][1]
 
-        self.logger.log('start,end: %s, %s' % (start, end), 'critical')
+        self.logger.log(
+            'datatype: {}, start, end: {}, {}'.format(dataType, start, end),
+            'critical')
         aggData = self.aggregatedData(dataType = dataType,
                                       aggregationType = aggType,
                                       timeColumnName = timeColName,
@@ -530,9 +530,9 @@ class MSGDataAggregator(object):
                                           '%Y-%m-%d %H:%M:%S'),
                                       endDate = end.strftime(
                                           '%Y-%m-%d %H:%M:%S'))
-        # self.insertAggregatedData(agg = aggData)
+        self.insertAggregatedData(agg = aggData)
         for row in aggData.data:
-            self.logger.log('aggData row: %s' % row)
+            self.logger.log('aggData row: {}'.format(row))
 
 
     def lastUnaggregatedAndAggregatedEndpoints(self, dataType = ''):
