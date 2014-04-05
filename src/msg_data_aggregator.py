@@ -74,7 +74,7 @@ class MSGDataAggregator(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__, 'DEBUG')
+        self.logger = MSGLogger(__name__, 'info')
         self.configer = MSGConfiger()
         self.conn = MSGDBConnector().connectDB()
         self.cursor = self.conn.cursor()
@@ -521,16 +521,19 @@ class MSGDataAggregator(object):
         (end, start) = \
             self.lastUnaggregatedAndAggregatedEndpoints(dataType).items()[0][1]
 
-        self.logger.log('start,end: %s, %s' % (start, end))
+        self.logger.log('start,end: %s, %s' % (start, end), 'critical')
         aggData = self.aggregatedData(dataType = dataType,
                                       aggregationType = aggType,
                                       timeColumnName = timeColName,
                                       subkeyColumnName = subkeyColName,
-                                      startDate = start.strftime('%Y-%m-%d'),
-                                      endDate = end.strftime('%Y-%m-%d'))
+                                      startDate = start.strftime(
+                                          '%Y-%m-%d %H:%M:%S'),
+                                      endDate = end.strftime(
+                                          '%Y-%m-%d %H:%M:%S'))
         # self.insertAggregatedData(agg = aggData)
         for row in aggData.data:
             self.logger.log('aggData row: %s' % row)
+
 
     def lastUnaggregatedAndAggregatedEndpoints(self, dataType = ''):
         """
