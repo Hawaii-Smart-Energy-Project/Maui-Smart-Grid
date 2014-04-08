@@ -30,13 +30,13 @@ class MSGDBConnector(object):
 
         :param testing: Boolean indicating if Testing Mode is on. When
         testing mode is on, a connection to the testing database will be made
-        instead of the normal database.
+        instead of the production database. This is useful for unit testing.
         :param logLevel
         """
 
         self.logger = MSGLogger(__name__, logLevel)
 
-        if (testing):
+        if testing:
             self.logger.log("Testing Mode is ON.")
 
         self.configer = MSGConfiger()
@@ -52,7 +52,7 @@ class MSGDBConnector(object):
             self.dbName = self.configer.configOptionValue("Database", 'db_name')
 
         self.logger.log(
-            "Instantiating DB connector with database %s." % self.dbName)
+            "Instantiating DB connector with database {}.".format(self.dbName))
 
         self.dbUsername = self.configer.configOptionValue("Database",
                                                           'db_username')
@@ -65,7 +65,7 @@ class MSGDBConnector(object):
             self.dictCur = self.conn.cursor(
                 cursor_factory = psycopg2.extras.DictCursor)
         except AttributeError as error:
-            self.logger.log('Error while getting DictCursor: %s' % error)
+            self.logger.log('Error while getting DictCursor: {}'.format(error))
 
 
     def connectDB(self):
@@ -80,14 +80,15 @@ class MSGDBConnector(object):
 
         try:
             conn = psycopg2.connect(
-                "dbname='%s' user='%s' host='%s' port='%s' password='%s'" % (
-                    self.dbName, self.dbUsername, self.dbHost, self.dbPort,
-                    self.dbPassword))
+                "dbname='{0}' user='{1}' host='{2}' port='{3}' password='{"
+                "4}'".format(self.dbName, self.dbUsername, self.dbHost,
+                             self.dbPort, self.dbPassword))
         except:
             self.logger.log("Failed to connect to the database.", 'error')
             return None
 
-        self.logger.log("Opened DB connection to database %s." % self.dbName)
+        self.logger.log(
+            "Opened DB connection to database {}.".format(self.dbName))
         return conn
 
     def closeDB(self, conn):
@@ -95,7 +96,7 @@ class MSGDBConnector(object):
         Close a database connection.
         """
 
-        self.logger.log("Closing database %s." % self.dbName)
+        self.logger.log("Closing database {}.".format(self.dbName))
         conn.close()
 
     def __del__(self):
@@ -108,6 +109,6 @@ class MSGDBConnector(object):
         import sys
 
         self.logger.log(
-            "Closing the DB connection to database %s." % self.dbName)
+            "Closing the DB connection to database {}.".format(self.dbName))
         self.conn.close()
 

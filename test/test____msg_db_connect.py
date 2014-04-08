@@ -10,8 +10,10 @@ __license__ = 'https://raw.github' \
 import unittest
 from msg_db_connector import MSGDBConnector
 import msg_db_connector
+from msg_configer import MSGConfiger
 
-class TestMECODBConnect(unittest.TestCase):
+
+class TestMSGDBConnect(unittest.TestCase):
     """
     These tests require a database connection to be available.
     """
@@ -19,20 +21,27 @@ class TestMECODBConnect(unittest.TestCase):
     def setUp(self):
         self.connector = MSGDBConnector(True)
         self.conn = self.connector.connectDB()
+        self.configer = MSGConfiger()
 
     def test_init(self):
         self.assertTrue(
             isinstance(self.connector, msg_db_connector.MSGDBConnector),
-            "self.connection is an instance of MECODBConnector")
+            "self.connection is an instance of MECODBConnector.")
 
     def test_db_connection(self):
         """
         DB can be connected to.
         """
-        self.assertIsNotNone(self.conn)
+        self.assertIsNotNone(self.conn, 'DB connection not available.')
+
+        # Get the name of the database.
+        self.assertEqual(
+            self.configer.configOptionValue('Database', 'testing_db_name'),
+            self.connector.dbName, 'Testing DB name is not correct.')
 
     def tearDown(self):
         self.connector.closeDB(self.conn)
+
 
 if __name__ == '__main__':
     unittest.main()
