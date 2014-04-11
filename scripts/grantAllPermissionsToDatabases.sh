@@ -6,13 +6,18 @@
 #
 # @author Daniel Zhang (張道博)
 
+##
+# Used for maintenance.
+#
 function performRevoke {
-    # Used for maintenance.
     sudo -u postgres psql -U postgres -c "REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA $1 FROM sepgroupreadonly;" $2
     sudo -u postgres psql -U postgres -c "REVOKE ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA $1 FROM sepgroupreadonly;" $2
     sudo -u postgres psql -U postgres -c "REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA $1 FROM sepgroupreadonly;" $2
 }
 
+##
+# Grant permissions for databases used by sepgroup and sepgroupreadonly.
+#
 function performGrant {
     sudo -u postgres psql -U postgres -c "GRANT ALL ON ALL TABLES IN SCHEMA $1 TO sepgroup;" $2
     sudo -u postgres psql -U postgres -c "GRANT ALL ON ALL FUNCTIONS IN SCHEMA $1 TO sepgroup;" $2
@@ -23,6 +28,19 @@ function performGrant {
     sudo -u postgres psql -U postgres -c "GRANT SELECT ON ALL SEQUENCES IN SCHEMA $1 TO sepgroupreadonly;" $2
 }
 
+##
+# Grant permissions for databases used by sepgroup_nonmsg.
+#
+function performGrantNonMSG {
+    performRevoke $1 $2
+    sudo -u postgres psql -U postgres -c "GRANT ALL ON ALL TABLES IN SCHEMA $1 TO sepgroup;" $2
+    sudo -u postgres psql -U postgres -c "GRANT ALL ON ALL FUNCTIONS IN SCHEMA $1 TO sepgroup;" $2
+    sudo -u postgres psql -U postgres -c "GRANT ALL ON ALL SEQUENCES IN SCHEMA $1 TO sepgroup;" $2
+    sudo -u postgres psql -U postgres -c "GRANT ALL ON ALL TABLES IN SCHEMA $1 TO sepgroup_nonmsg;" $2
+    sudo -u postgres psql -U postgres -c "GRANT ALL ON ALL FUNCTIONS IN SCHEMA $1 TO sepgroup_nonmsg;" $2
+    sudo -u postgres psql -U postgres -c "GRANT ALL ON ALL SEQUENCES IN SCHEMA $1 TO sepgroup_nonmsg;" $2
+}
+
 function grant {
     echo "Granting all permissions on database $1...";
     echo "Role $role."
@@ -30,6 +48,13 @@ function grant {
     performGrant public $1
 }
 
+function grantNonMSG {
+    performGrantNonMSG public $1
+}
+
+##
+# Provide permissions granting for databases with schemes.
+#
 function grantWithSchemes {
     echo "Granting all permissions on database $1...";
     SCHEMES=(public ep dz cd dw az)
@@ -45,5 +70,6 @@ for db in ${DATABASES[@]}; do
     grant $db
 done
 
-grantWithSchemes meco_v3
+grantNonMSG weather
 
+grantWithSchemes meco_v3
