@@ -428,18 +428,18 @@ def writeSeparateFiles(reader, columns):
 	writerTransformer = csv.writer(outputTransformerFile)
 	i, j = 0, 0
 	stinkers = []
-	tapDataPresent, weatherDataPresent, batteryDataPresent = True, True, True
+	tapDataPresent, weatherDataPresent, batteryDataPresent = False, False, False
 
 	# Not all the CSV files had tap or weather data, so we check for it and set
 	# things up if found.
 	if columns.has_key('tapCol'):
-		tapDataPresent = False
+		tapDataPresent = True
 
 	if columns.has_key('humidityCol'):
-		weatherDataPresent = False
+		weatherDataPresent = True
 
 	if columns.has_key('batteryVolt'):
-		batteryDataPresent = False
+		batteryDataPresent = True
 
 	if tapDataPresent:
 		outputTapDataFile = open('tapOutput.csv', 'wb')
@@ -575,8 +575,9 @@ def insertDataCaller(columns):
 	cols = ['sensor_id', 'irradiance_w_per_m2', 'timestamp']
 	insertData(['irradianceOutput.csv'], 'IrradianceData', cols)
 
-	cols = ['timestamp', 'tap_setting', 'substation', 'transformer']
-	insertData(['tapOutput.csv'], 'TapData', cols)
+	if columns.has_key('tapCol'):
+		cols = ['timestamp', 'tap_setting', 'substation', 'transformer']
+		insertData(['tapOutput.csv'], 'TapData', cols)
 
 	if columns.has_key('humidityCol'):
 		cols = ['timestamp', 'met_air_temp_degf', 'met_rel_humid_pct']
@@ -677,21 +678,25 @@ for filename in fileNames:
 		reader = csv.reader(trimmedFile)
 		voltageStandardDeviationAlgorithm(reader, 'circuit_1518_mvar.csv', 
 			'voltage', columns['mvar1518Col'], columns['timestampCol'])
+
 		if columns.has_key('batteryKvar'):
 			trimmedFile.seek(0)
 			reader = csv.reader(trimmedFile)
 			voltageStandardDeviationAlgorithm(reader, 'battery_kvar.csv', 
 				'voltage', columns['batteryKvar'], columns['timestampCol'])
+
 		if columns.has_key('batteryKw'):
 			trimmedFile.seek(0)
 			reader = csv.reader(trimmedFile)
 			voltageStandardDeviationAlgorithm(reader, 'battery_kw.csv', 
 				'voltage', columns['batteryKw'], columns['timestampCol'])
+
 		if columns.has_key('batterySoc'):
 			trimmedFile.seek(0)
 			reader = csv.reader(trimmedFile)
 			voltageStandardDeviationAlgorithm(reader, 'battery_soc.csv', 
 				'voltage', columns['batterySoc'], columns['timestampCol'])
+
 		if columns.has_key('batteryVolt'):
 			trimmedFile.seek(0)
 			reader = csv.reader(trimmedFile)
