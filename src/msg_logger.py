@@ -58,12 +58,13 @@ class MSGLogger(object):
     'silent', 'debug')
     """
 
-    def __init__(self, caller, level = 'info'):
+    def __init__(self, caller, level = 'info', useColor = True):
         """
         Constructor.
 
         :params caller: Calling class.
         :params level: Logging level of the Logger.
+        :params boolean: if True, color output is used via colorlog.
 
         @todo Provide enumeration type.
         """
@@ -77,17 +78,20 @@ class MSGLogger(object):
         self.streamHandlerStdErr.setLevel(logging.DEBUG)
         self.streamHandlerString.setLevel(logging.DEBUG)
 
-        originalFormatterStdErr = logging.Formatter(
-            u'%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         formatterString = logging.Formatter(
             u'%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-        formatterStdErr = ColoredFormatter(
-            u'%(log_color)s%(asctime)s - %(name)s - %(bold)s%(levelname)s: '
-            u'%(reset)s%(message)s',
-            reset = True,
-            log_colors = {'DEBUG': 'green', 'INFO': 'blue', 'WARNING': 'yellow',
-                          'ERROR': 'red', 'CRITICAL': 'red', })
+        if not useColor:
+            formatterStdErr = logging.Formatter(
+                u'%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        else:
+            # Use colored output:
+            formatterStdErr = ColoredFormatter(
+                u'%(log_color)s%(asctime)s - %(name)s - %(bold)s%(levelname)s: '
+                u'%(reset)s%(message)s', reset = True,
+                log_colors = {'DEBUG': 'green', 'INFO': 'blue',
+                              'WARNING': 'yellow', 'ERROR': 'red',
+                              'CRITICAL': 'red', })
 
         self.streamHandlerStdErr.setFormatter(formatterStdErr)
         self.streamHandlerString.setFormatter(formatterString)
