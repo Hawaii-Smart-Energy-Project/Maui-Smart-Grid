@@ -69,9 +69,12 @@ class MSGDataAggregator(object):
 
     """
 
-    def __init__(self):
+    def __init__(self, testing = False):
         """
         Constructor.
+
+        :param testing: if True, the testing DB will be connected instead of
+        the production DB.
         """
 
         self.logger = MSGLogger(__name__, 'info')
@@ -543,14 +546,13 @@ class MSGDataAggregator(object):
         :return: dict with tuple.
         """
         (aggType, timeColName, subkeyColName) = self.dataParameters(dataType)
-        unAgg = self.unaggregatedEndpoints(dataType = dataType,
-                                           aggDataType = aggType,
-                                           timeColumnName = timeColName,
-                                           idColumnName = subkeyColName)
-        return {dataType: (unAgg[-1],
-                           self.lastAggregationEndpoint(aggDataType = aggType,
-                                                        timeColumnName =
-                                                        timeColName))}
+        return {dataType: (
+            self.unaggregatedEndpoints(dataType = dataType,
+                                       aggDataType = aggType,
+                                       timeColumnName = timeColName,
+                                       idColumnName = subkeyColName)[-1],
+            self.lastAggregationEndpoint(aggDataType = aggType,
+                                         timeColumnName = timeColName))}
 
     def aggregatedVsNewData(self):
         """
