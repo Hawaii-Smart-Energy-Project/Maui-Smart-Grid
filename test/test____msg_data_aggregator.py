@@ -10,6 +10,7 @@ __license__ = 'https://raw.github' \
 import unittest
 from msg_logger import MSGLogger
 from msg_data_aggregator import MSGDataAggregator
+from datetime import datetime
 
 
 class MSGDataAggregatorTester(unittest.TestCase):
@@ -302,17 +303,24 @@ class MSGDataAggregatorTester(unittest.TestCase):
         :return:
         """
 
-        return
+        # return
         map(self.aggregator.aggregateNewData, self.rawTypes)
 
 
     def testLastUnaggregatedAndAggregatedEndpoints(self):
         """
-
         :return:
         """
+        # @todo Needs static test data.
         print self.aggregator.lastUnaggregatedAndAggregatedEndpoints(
             dataType = 'egauge')
+
+    def test_endpoint_increment(self):
+        myDT = datetime(2014, 02, 01, 23, 45)
+        self.logger.log('dt = {}'.format(myDT))
+        result = self.aggregator.incrementEndpoint(endpoint = myDT)
+        self.logger.log('result {}'.format(result))
+        self.assertEqual(result, datetime(2014, 02, 02, 00, 00, 00))
 
 
 if __name__ == '__main__':
@@ -331,6 +339,7 @@ if __name__ == '__main__':
                           'testAggregateNewData']
         selected_tests = ['testMonthStartsAndEnds']
         selected_tests = ['testAggregateNewData']
+        # selected_tests = ['test_endpoint_increment']
         # selected_tests = ['testLastUnaggregatedAndAggregatedEndpoints']
 
         mySuite = unittest.TestSuite()
