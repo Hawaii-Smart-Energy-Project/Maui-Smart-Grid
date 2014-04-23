@@ -32,7 +32,7 @@ class MSGDataAggregator(object):
     Four data types are supported:
 
     1. Irradiance
-    2. Temperature/Humidity
+    2. Temperature/Humidity (weather)
     3. Circuit
     4. eGauge
 
@@ -44,7 +44,7 @@ class MSGDataAggregator(object):
     Case (2) is handled within the same space as (1) by testing for the
     existence of subkeys.
 
-    Current aggregation consists of averaging over 15-min intervals.
+    Current aggregation consists of averaging over **15-min intervals**.
 
     Aggregation is performed in-memory and saved to the DB. The time range is
     delimited by start date and end date where the values are included in the
@@ -64,9 +64,9 @@ class MSGDataAggregator(object):
 
     API:
 
-        aggregator.aggregateAllData(dataType = dataType)
+        aggregateAllData(dataType = dataType)
 
-        aggregator.aggregateNewData(dataType = dataType)
+        aggregateNewData(dataType = dataType)
 
     """
 
@@ -313,6 +313,8 @@ class MSGDataAggregator(object):
         """
         The distinct subkeys for a given data type within a time range.
 
+        Subkeys are fields such as egauge_id in eGauge data or sensor_id in irradiance data.
+
         :param dataType: string
         :param timestampCol: string
         :param subkeyCol: string
@@ -507,6 +509,7 @@ class MSGDataAggregator(object):
             for row in aggData.data:
                 self.logger.log('aggData row: {}'.format(row))
 
+
     def aggregateNewData(self, dataType = ''):
         """
         Convenience method for aggregating new data.
@@ -526,6 +529,11 @@ class MSGDataAggregator(object):
         self.logger.log(
             'datatype: {}, start, end: {}, {}'.format(dataType, start, end),
             'critical')
+
+        if self.incrementEndpoint(start) >= end:
+            self.logger.log('Nothing to aggregate.')
+            return
+
         aggData = self.aggregatedData(dataType = dataType,
                                       aggregationType = aggType,
                                       timeColumnName = timeColName,
@@ -547,6 +555,7 @@ class MSGDataAggregator(object):
         """
         plusOneInterval = relativedelta(minutes = 15)
         return endpoint + plusOneInterval
+
 
     def lastUnaggregatedAndAggregatedEndpoints(self, dataType = ''):
         """
