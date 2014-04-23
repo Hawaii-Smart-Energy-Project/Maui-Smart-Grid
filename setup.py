@@ -84,6 +84,7 @@ setup(name = 'Maui-Smart-Grid', version = '1.0.0',
 
       scripts = [
                  'src/autoloadNewMECOData.py',
+                 'src/automated-scripts/aggregateNewData.py',
                  'src/exportDBsToCloud.py',
                  'src/insertCompressedNOAAWeatherData.py',
                  'src/insertMECOEnergyData.py',
