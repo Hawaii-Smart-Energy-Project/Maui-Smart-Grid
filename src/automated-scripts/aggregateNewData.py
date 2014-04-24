@@ -32,7 +32,11 @@ class MSGDataAggregatorTester(unittest.TestCase):
         :return:
         """
 
-        map(self.aggregator.aggregateNewData, self.rawTypes)
+        msg = 'Aggregating new data.'
+
+        result = map(self.aggregator.aggregateNewData, self.rawTypes)
+
+        self.logger.log('result {}'.format(result))
 
 if __name__ == '__main__':
     RUN_SELECTED_TESTS = True

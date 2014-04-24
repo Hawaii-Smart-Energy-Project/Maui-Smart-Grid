@@ -542,7 +542,7 @@ class MSGDataAggregator(object):
         Convenience method for aggregating new data.
 
         :param dataType:
-        :return: list of tuples
+        :return: dict of {dataType: count of aggregation endpoints}
         """
 
         # The new aggregation starting point is equal to the last aggregation
@@ -561,13 +561,16 @@ class MSGDataAggregator(object):
 
         if type(end) == type(None):
             # No available unaggregated endpoints results in an empty list
-            # for type egauge.
+            # for type egauge. The reason this does not work for other types is
+            # because the other types of fractional minute readings and the
+            # fractional minute readings are not being handled completely but
+            # this method is still capable of working without problem.
             self.logger.log('Nothing to aggregate.')
-            return
+            return {dataType: 0}
 
         if self.incrementEndpoint(start) >= end:
             self.logger.log('Nothing to aggregate.')
-            return
+            return {dataType: 0}
 
         aggData = self.aggregatedData(dataType = dataType,
                                       aggregationType = aggType,
@@ -583,7 +586,7 @@ class MSGDataAggregator(object):
 
         self.logger.log(
             '{} rows aggregated for {}.'.format(len(aggData.data), dataType))
-
+        return {dataType: len(aggData.data)}
 
     def incrementEndpoint(self, endpoint = None):
         """
