@@ -10,11 +10,11 @@ __license__ = 'https://raw.github' \
 import unittest
 from msg_logger import MSGLogger
 from msg_data_aggregator import MSGDataAggregator
+from msg_notifier import MSGNotifier
 
 class MSGDataAggregatorTester(unittest.TestCase):
     """
-    Unit tests for MSG Data Aggregator.
-
+    Perform aggregation of new data.
     """
 
     def setUp(self):
@@ -23,8 +23,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
         """
         self.logger = MSGLogger(__name__, 'DEBUG')
         self.aggregator = MSGDataAggregator()
-        self.testStart = '2014-01-02 11:59'
-        self.testEnd = '2014-01-02 12:14'
+        self.notifier = MSGNotifier()
         self.rawTypes = ['weather', 'egauge', 'circuit', 'irradiance']
 
     def testAggregateNewData(self):
