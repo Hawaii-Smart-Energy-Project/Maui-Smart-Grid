@@ -20,7 +20,8 @@ NOTIFICATION_HISTORY_TYPE = 'MSG_DATA_AGGREGATOR'
 
 class NewDataAggregator(object):
     """
-    Perform aggregation of new data.
+    Perform aggregation of new data for a set of predefined data types (self
+    .rawTypes).
     """
 
     def __init__(self):
@@ -46,7 +47,7 @@ class NewDataAggregator(object):
         :returns: datetime of last report date.
         """
 
-        cursor = self.cursor()
+        cursor = self.cursor
         sql = """SELECT MAX("notificationTime") FROM "{}" WHERE
         "notificationType" = '{}'""".format(NOTIFICATION_HISTORY_TABLE,
                                             notificationType)
@@ -60,65 +61,76 @@ class NewDataAggregator(object):
             else:
                 return rows[0][0]
         else:
-            # @todo Raise an exception.
-            return None
+            raise Exception('Exception during getting last report date.')
 
 
-    def sendNewDataNotification(self, result, testing = False):
+    def sendNewDataNotification(self, result = None, testing = False):
         """
         Sending notification reporting on new data being available since the
         last time new data was reported.
 
+        :param result: list of dicts containing aggregation results as
+        provided by MSGDataAggregator::aggregateNewData.
         :param testing: Use testing mode when True.
         """
+
+        self.logger.log('result {}'.format(result), 'debug')
 
         lastReportDate = self.lastReportDate(NOTIFICATION_HISTORY_TYPE)
 
         if not lastReportDate:
             lastReportDate = "never"
 
-        msgBody = '\nNew data has been aggregated in {}.'.format(
-            self.connector.dbName)
-        msgBody += '\n\n'
-        for i in range(len(result)):
-            msgBody += 'The new data count for type {} is {} readings.'.format(
-                result[i].keys, result[i][result[i].keys][0])
-        msgBody += '\n\n'
-        msgBody += 'The last report date was %s.' % lastReportDate
-        msgBody += '\n\n'
+        if not result:
+            msgBody = '\nNew data has NOT been aggregated in {}. No result ' \
+                      'was obtained. This is an error that should be ' \
+                      'investigated.'.format(self.connector.dbName)
+        else:
+            msgBody = '\nNew data has been aggregated in {}.'.format(
+                self.connector.dbName)
+            msgBody += '\n\n'
+            for i in range(len(result)):
+                msgBody += '• The new data count for type {} is {} readings\n' \
+                           '.'.format(
+                    result[i].keys()[0], result[i].values()[0])
+            msgBody += '\n\n'
+            msgBody += 'The last report date was %s.' % lastReportDate
+            msgBody += '\n\n'
         self.notifier.sendNotificationEmail(msgBody, testing = testing)
         self.saveNotificationTime()
 
 
     def saveNotificationTime(self):
         """
-        Save the notification event to the notification history.
+        Save a notification event to the notification history.
         """
 
-        cursor = self.cursor()
+        cursor = self.cursor
         sql = """INSERT INTO "{}" ("notificationType", "notificationTime")
         VALUES ('{}', NOW())""".format(NOTIFICATION_HISTORY_TABLE,
                                        NOTIFICATION_HISTORY_TYPE)
         success = self.dbUtil.executeSQL(cursor, sql)
         self.conn.commit()
         if not success:
-            # @todo Raise an exception.
-            self.logger.log(
-                'An error occurred while saving the notification time.')
+            raise Exception('Exception while saving the notification time.')
 
 
     def aggregateNewData(self):
         """
-        :return:
+        :return: list of dicts obtained from
+        MSGDataAggregator::aggregateNewData.
         """
-
-        msg = 'Aggregating new data.'
 
         result = map(self.aggregator.aggregateNewData, self.rawTypes)
 
         self.logger.log('result {}'.format(result))
+        return result
 
 
 if __name__ == '__main__':
     aggregator = NewDataAggregator()
-    aggregator.aggregateNewData()
+    logger = MSGLogger(__name__)
+    logger.log('Last report date {}'.format(
+        aggregator.lastReportDate(NOTIFICATION_HISTORY_TYPE)))
+    result = aggregator.aggregateNewData()
+    aggregator.sendNewDataNotification(result = result, testing = False)
