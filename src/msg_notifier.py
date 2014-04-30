@@ -25,6 +25,14 @@ class MSGNotifier(object):
     Provides notification service functionality for MSG data processing.
 
     Email settings are stored in the local configuration.
+
+    API:
+
+    sendNotificationEmail(msgBody, testing = False):
+        Send msgBody as a notification to the mailing list defined in the config file.
+
+    sendMailWithAttachments(msgBody, files = None, testing = False)
+        Send msgBody with files attached as a notification to the mailing list defined in the config file.
     """
 
     def __init__(self):
@@ -74,7 +82,7 @@ class MSGNotifier(object):
             server.starttls()
         except smtplib.SMTPException as detail:
             errorOccurred = True
-            self.logger.log("Exception during SMTP STARTTLS: %s" % detail,
+            self.logger.log("Exception during SMTP STARTTLS: {}".format(detail),
                             'ERROR')
 
         try:
@@ -86,10 +94,9 @@ class MSGNotifier(object):
         senddate = datetime.now().strftime('%Y-%m-%d')
         subject = "HISEP Notification"
 
-        msgHeader = "Date: %s\r\nFrom: %s\r\nTo: %s\r\nSubject: " \
-                    "%s\r\nX-Mailer: " \
-                    "My-Mail\r\n\r\n" % (
-                        senddate, fromaddr, toaddr, subject)
+        msgHeader = "Date: {}\r\nFrom: {}\r\nTo: {}\r\nSubject: {" \
+                    "}\r\nX-Mailer: My-Mail\r\n\r\n".format(
+            senddate, fromaddr, toaddr, subject)
 
         msgBody = self.notificationHeader + msgBody
 
@@ -101,7 +108,7 @@ class MSGNotifier(object):
             server.quit()
         except smtplib.SMTPException as detail:
             errorOccurred = True
-            self.logger.log("Exception during SMTP sendmail: %s" % detail,
+            self.logger.log("Exception during SMTP sendmail: {}".format(detail),
                             'ERROR')
 
         return errorOccurred != True

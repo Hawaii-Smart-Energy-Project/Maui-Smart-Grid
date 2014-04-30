@@ -71,7 +71,7 @@ v3 (Production)
 v4 (Development)
 : Will address duplicates in the Event branch and the Register branch. To include updated weather data.
 
-![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/diagrams/2013-07-29_ReadingAndMeterCounts.png)
+![MECO Derived Schema](https://raw.github.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/diagrams/2014-04-10_ReadingAndMeterCounts.png)
 Plot of readings per meter counts and meter counts per day loaded to meco_v3.
 
 ## Installation and Updating ##
@@ -79,14 +79,15 @@ Plot of readings per meter counts and meter counts per day loaded to meco_v3.
 A custom automatic installation script, `install-msg.py`, has been developed to provide a single command capable of:
 
 * Creation of a distribution archive from the source code base.
-* Installation, or updating of an existing installation, from the installer within the distribution archive.
+* Installation, or **updating of an existing installation,** from the installer within the distribution archive.
 * Installation of non-Python code such as the MSG eGauge Service.
 
-It is intended to facilitate the maintenace of the software installation, **and** updating, while at the same time allowing development of the source code base. It is used like so
+It is intended to facilitate the maintenance of the software installation, **and** updating, while at the same time allowing development of the source code base. It is used like so
 
+	cd ~
 	python install-msg.py --sourcePath ${SOURCE_CODE_BASE_PATH} --installPathUser ${DESTINATION_BASE_PATH}
 
-If the tilde symbol (~) is used as the destination base path, then the software will be installed into a directory titled after the package name and version in the user's home directory. 
+If the tilde symbol (~) is used as the destination base path, then the software will be installed into a directory titled after the package name and version in the user's home directory such as `~/Maui-Smart-Grid-1.0.0`.
 
 The software distribution archive is managed by `distutils` and is in tar gz format. It can be extracted using
 
@@ -144,7 +145,7 @@ The distribution archive is created using
 
 ### Maintaining the Distribution ###
 
-The files `setup.py` and `MANIFEST.in` require continual updates so that the installer Will be able to install the latest distribution. Specifically, `setup.py` contains all of the files are installed in the `bin` and `lib` paths, while the `MANIFEST.in` contains additional files that are relevant to the distribution.
+The files `setup.py` and `MANIFEST.in` require continual updates so that the installer Will be able to install the latest distribution. Specifically, `setup.py` contains all of the files that are installed in the `bin` and `lib` paths, while the `MANIFEST.in` contains additional files that are relevant to the distribution.
 
 ## Uninstallation ##
 

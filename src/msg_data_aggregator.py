@@ -18,6 +18,7 @@ from datetime import datetime
 import copy
 from msg_time_util import MSGTimeUtil
 from itertools import groupby
+from dateutil.relativedelta import relativedelta
 
 MINUTE_POSITION = 4  # In a time tuple.
 INTERVAL_DURATION = 15
@@ -31,7 +32,7 @@ class MSGDataAggregator(object):
     Four data types are supported:
 
     1. Irradiance
-    2. Temperature/Humidity
+    2. Temperature/Humidity (weather)
     3. Circuit
     4. eGauge
 
@@ -43,7 +44,7 @@ class MSGDataAggregator(object):
     Case (2) is handled within the same space as (1) by testing for the
     existence of subkeys.
 
-    Current aggregation consists of averaging over 15-min intervals.
+    Current aggregation consists of averaging over **15-min intervals**.
 
     Aggregation is performed in-memory and saved to the DB. The time range is
     delimited by start date and end date where the values are included in the
@@ -61,17 +62,20 @@ class MSGDataAggregator(object):
         from msg_data_aggregator import MSGDataAggregator
         aggregator = MSGDataAggregator()
 
-    Methods:
+    API:
 
-        aggregator.aggregateAllData(dataType = dataType)
+        aggregateAllData(dataType = dataType)
 
-        aggregator.aggregateNewData(dataType = dataType)
+        aggregateNewData(dataType = dataType)
 
     """
 
-    def __init__(self):
+    def __init__(self, testing = False):
         """
         Constructor.
+
+        :param testing: if True, the testing DB will be connected instead of
+        the production DB.
         """
 
         self.logger = MSGLogger(__name__, 'info')
@@ -159,6 +163,12 @@ class MSGDataAggregator(object):
         for unaggregated intervals since the last aggregation endpoint for a
         given data type.
 
+        This has a problem where an endpoint at 23:45:04 will be returned as
+        23:45:00. This makes the return value incorrect for raw data types
+        having readings at sub-minute intervals such as data for circuit,
+        irradiance and weather. This condition does not affect correct
+        aggregation. Only the definition of the return value is wrong.
+
         :param dataType: string
         :param aggDataType: string
         :param timeColumnName: string
@@ -178,8 +188,23 @@ class MSGDataAggregator(object):
                   '1}".{2} IS NULL AND "{0}".{2} > \'{4}\' ORDER BY {2} ASC, ' \
                   '{3} ASC'
 
+            self.logger.log('last agg endpoint: {}'.format(
+                self.lastAggregationEndpoint(aggDataType, timeColumnName)))
+
             # The id column value is available in the tuple returned by
             # groupby but is not being used here.
+
+            # @todo Exclude last endpoint if it is equal to the last
+            # aggregation endpoint.
+            #
+            # The minute position filtering may be including the last
+            # endpoint incorrectly because there are readings occurring
+            # within the same minute as the final endpoint, e.g. 23:45:04,
+            # 23:45:08, etc.
+            #
+            # This is not a problem with eGuage data due reading intervals
+            # being every minute and zero seconds.
+
             return map(lambda x: datetime(x[0], x[1], x[2], x[3], x[4], 0),
                        [k for k, v in groupby(
                            map(lambda y: y[0].timetuple()[0:5], filter(
@@ -202,6 +227,10 @@ class MSGDataAggregator(object):
             sql = 'SELECT "{0}".{2} FROM "{0}" LEFT JOIN "{1}" ON "{0}".{2}=' \
                   '"{1}".{2} WHERE "{1}".{2} IS NULL AND "{0}".{2} > \'{3}\' ' \
                   'ORDER BY {2} ASC'
+
+            self.logger.log('last agg endpoint: {}'.format(
+                self.lastAggregationEndpoint(aggDataType, timeColumnName)))
+
             return map(lambda x: datetime(x[0], x[1], x[2], x[3], x[4], 0),
                        [k for k, v in groupby(map(lambda y: y.timetuple()[0:5],
                                                   filter(
@@ -308,6 +337,9 @@ class MSGDataAggregator(object):
                 startDate = '', endDate = ''):
         """
         The distinct subkeys for a given data type within a time range.
+
+        Subkeys are fields such as egauge_id in eGauge data or sensor_id in
+        irradiance data.
 
         :param dataType: string
         :param timestampCol: string
@@ -481,6 +513,7 @@ class MSGDataAggregator(object):
         except:
             self.logger.log('Unmatched data type {}.'.format(dataType))
 
+
     def aggregateAllData(self, dataType = ''):
         """
         Convenience method for aggregating all data for a given data type.
@@ -503,16 +536,17 @@ class MSGDataAggregator(object):
             for row in aggData.data:
                 self.logger.log('aggData row: {}'.format(row))
 
+
     def aggregateNewData(self, dataType = ''):
         """
         Convenience method for aggregating new data.
 
         :param dataType:
-        :return: list of tuples
+        :return: dict of {dataType: count of aggregation endpoints}
         """
 
         # The new aggregation starting point is equal to the last aggregation
-        #  endpoint up to the last unaggregated endpoint.
+        # endpoint up to the last unaggregated endpoint.
 
         (aggType, timeColName, subkeyColName) = self.dataParameters(dataType)
 
@@ -520,37 +554,75 @@ class MSGDataAggregator(object):
             self.lastUnaggregatedAndAggregatedEndpoints(dataType).items()[0][1]
 
         self.logger.log(
-            'datatype: {}, start, end: {}, {}'.format(dataType, start, end),
+            'datatype: {}; start, end: {}, {}; end type: {}'.format(dataType,
+                                                                    start, end,
+                                                                    type(end)),
             'critical')
+
+        if type(end) == type(None):
+            # No available unaggregated endpoints results in an empty list
+            # for type egauge. The reason this does not work for other types is
+            # because the other types of fractional minute readings and the
+            # fractional minute readings are not being handled completely but
+            # this method is still capable of working without problem.
+            self.logger.log('Nothing to aggregate.')
+            return {dataType: 0}
+
+        if self.incrementEndpoint(start) >= end:
+            self.logger.log('Nothing to aggregate.')
+            return {dataType: 0}
+
         aggData = self.aggregatedData(dataType = dataType,
                                       aggregationType = aggType,
                                       timeColumnName = timeColName,
                                       subkeyColumnName = subkeyColName,
-                                      startDate = start.strftime(
-                                          '%Y-%m-%d %H:%M:%S'),
+                                      startDate = self.incrementEndpoint(
+                                          start).strftime('%Y-%m-%d %H:%M:%S'),
                                       endDate = end.strftime(
                                           '%Y-%m-%d %H:%M:%S'))
         self.insertAggregatedData(agg = aggData)
         for row in aggData.data:
             self.logger.log('aggData row: {}'.format(row))
 
+        self.logger.log(
+            '{} rows aggregated for {}.'.format(len(aggData.data), dataType))
+        return {dataType: len(aggData.data)}
+
+    def incrementEndpoint(self, endpoint = None):
+        """
+        Increment an endpoint by one interval.
+        :param endpoint:
+        :return: datetime
+        """
+        plusOneInterval = relativedelta(minutes = 15)
+        return endpoint + plusOneInterval
+
 
     def lastUnaggregatedAndAggregatedEndpoints(self, dataType = ''):
         """
-        Return the {datatype: (last unaggregated endpoint, last aggregated
-        endpoint)}.
+        Return the endpoints for the given data type in the form
+
+        {datatype: (last unaggregated endpoint, last aggregated endpoint)}.
         :param dataType:
         :return: dict with tuple.
         """
+        self.logger.log('datatype {}'.format(dataType))
         (aggType, timeColName, subkeyColName) = self.dataParameters(dataType)
-        unAgg = self.unaggregatedEndpoints(dataType = dataType,
-                                           aggDataType = aggType,
-                                           timeColumnName = timeColName,
-                                           idColumnName = subkeyColName)
-        return {dataType: (unAgg[-1],
-                           self.lastAggregationEndpoint(aggDataType = aggType,
-                                                        timeColumnName =
-                                                        timeColName))}
+        self.logger.log('subkey colname {}'.format(subkeyColName))
+
+        unAggregatedEndpoints = self.unaggregatedEndpoints(dataType = dataType,
+                                                           aggDataType =
+                                                           aggType,
+                                                           timeColumnName =
+                                                           timeColName,
+                                                           idColumnName =
+                                                           subkeyColName)
+
+        self.logger.log('unagg endpoints: {}'.format(unAggregatedEndpoints))
+        return {dataType: (
+            unAggregatedEndpoints[-1] if unAggregatedEndpoints != [] else None,
+            self.lastAggregationEndpoint(aggDataType = aggType,
+                                         timeColumnName = timeColName))}
 
     def aggregatedVsNewData(self):
         """
@@ -565,9 +637,10 @@ class MSGDataAggregator(object):
 
     def monthStartsAndEnds(self, timeColumnName = '', dataType = ''):
         """
-        Return first date and last date for the given raw data type for each
+        Return first date and last date for the given **raw** data type for each
         month in the data's entire time range.
 
+        :param timeColumnName: string
         :param dataType: string
         :return: List of tuples.
         """
@@ -579,17 +652,13 @@ class MSGDataAggregator(object):
         self.logger.log('end {}'.format(end))
 
         # End time needs transforming in split dates to extend the end of the
-        #  day to 23:59:59.
+        # day to 23:59:59.
 
         splitDates = self.timeUtil.splitDates(start, end)
-        # print splitDates
 
         startEndDatesTransform = []
         i = 0
         while i < len(splitDates):
-            # print i
-            # print splitDates[i]
-
             startEndDatesTransform.append((splitDates[i][0], datetime(
                 splitDates[i][1].timetuple()[0],
                 splitDates[i][1].timetuple()[1],
@@ -600,7 +669,6 @@ class MSGDataAggregator(object):
             print j
 
         return startEndDatesTransform
-        # return self.timeUtil.splitDates(start, end)
 
 
     def aggregatedData(self, dataType = '', aggregationType = '',
@@ -662,10 +730,6 @@ class MSGDataAggregator(object):
                             sums[k].append(0)
                             cnts[k].append(0)
                 else:
-                    # self.logger.log('resetting subkey %s' % subkey,
-                    # 'critical')
-                    # self.logger.log('sums: %s, cnts: %s' % (sums, cnts),
-                    #                 'critical')
                     sums[subkey] = []
                     for i in range(len(self.columns[dataType].split(','))):
                         sums[subkey].append(0)
@@ -677,8 +741,12 @@ class MSGDataAggregator(object):
 
         (sum, cnt) = __initSumAndCount()
 
+
         def __initIntervalCrossings():
             """
+            Perform initialization of the interval crossings used to
+            determine when interval crossings occur.
+            :returns None
             """
 
             subkeysToCheck = copy.copy(mySubkeys)
@@ -696,15 +764,6 @@ class MSGDataAggregator(object):
                     # This scans the raw data until each subkey is encountered
                     # ONCE and then exits.
                     if subkeysToCheck != []:
-                        # self.logger.log('subkeys to check: %s' %
-                        # subkeysToCheck,
-                        #                 'debug')
-                        # self.logger.log(
-                        #     'value to remove: %s' % row[ci(subkeyColumnName)],
-                        #     'debug')
-                        # self.logger.log(
-                        #     'removing subkey %s' % row[ci(subkeyColumnName)],
-                        #     'critical')
                         if row[ci(subkeyColumnName)] in subkeysToCheck:
                             subkeysToCheck.remove(row[ci(subkeyColumnName)])
                         minute = row[ci(timeColumnName)].timetuple()[
@@ -733,6 +792,7 @@ class MSGDataAggregator(object):
                         break
 
             else:
+                # Non-subkey case e.g. weather data.
                 rowCnt = 0
                 # @todo Optimize by querying only the first row.
                 for row in self.rawData(dataType = dataType,
@@ -765,14 +825,11 @@ class MSGDataAggregator(object):
                                 orderBy = [timeColumnName, subkeyColumnName],
                                 timestampCol = timeColumnName,
                                 startDate = startDate, endDate = endDate):
-            # self.logger.log('row: %d ----> %s' % (rowCnt, str(row)), 'debug')
 
             if mySubkeys:
                 for col in self.columns[dataType].split(','):
                     if self.mathUtil.isNumber(row[ci(col)]) and ci(col) != ci(
                             subkeyColumnName):
-                        # self.logger.log(
-                        #     'subkey col name: %s' % subkeyColumnName, 'debug')
                         sum[row[ci(subkeyColumnName)]][ci(col)] += row[ci(col)]
                         cnt[row[ci(subkeyColumnName)]][ci(col)] += 1
 
@@ -780,7 +837,6 @@ class MSGDataAggregator(object):
 
                 if self.intervalCrossed(minute = minute,
                                         subkey = row[ci(subkeyColumnName)]):
-                    # self.logger.log('==> row: %s' % str(row), 'debug')
                     minuteCrossed = minute
 
                     # Perform aggregation on all of the previous data including
@@ -809,8 +865,6 @@ class MSGDataAggregator(object):
                 minute = row[ci(timeColumnName)].timetuple()[MINUTE_POSITION]
 
                 if self.intervalCrossed(minute = minute):
-                    # self.logger.log('==> row: %s' % str(row), 'debug')
-
                     aggData += [
                         self.intervalAverages(sum, cnt, row[ci(timeColumnName)],
                                               ci(timeColumnName))]

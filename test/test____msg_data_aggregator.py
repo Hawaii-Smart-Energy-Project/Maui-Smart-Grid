@@ -10,13 +10,13 @@ __license__ = 'https://raw.github' \
 import unittest
 from msg_logger import MSGLogger
 from msg_data_aggregator import MSGDataAggregator
-from itertools import groupby
-from datetime import datetime as dt
+from datetime import datetime
 
 
 class MSGDataAggregatorTester(unittest.TestCase):
     """
     Unit tests for MSG Data Aggregator.
+
     """
 
     def setUp(self):
@@ -27,6 +27,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
         self.aggregator = MSGDataAggregator()
         self.testStart = '2014-01-02 11:59'
         self.testEnd = '2014-01-02 12:14'
+        self.rawTypes = ['weather', 'egauge', 'circuit', 'irradiance']
 
     def testIrradianceFetch(self):
         """
@@ -263,7 +264,12 @@ class MSGDataAggregatorTester(unittest.TestCase):
                                                       'timestamp')
 
     def testUnaggregatedDataExists(self):
+        """
+
+        :return:
+        """
         # @todo provide static test data for this test.
+
         myArgs = [('weather', 'agg_weather', 'timestamp', ''),
                   ('egauge', 'agg_egauge', 'datetime', 'egauge_id'),
                   ('circuit', 'agg_circuit', 'timestamp', 'circuit'),
@@ -278,6 +284,10 @@ class MSGDataAggregatorTester(unittest.TestCase):
                                                                 x[3]), myArgs))
 
     def testAggregatedVsNewData(self):
+        """
+
+        :return:
+        """
         # @todo provide static test data for this test.
 
         result = self.aggregator.aggregatedVsNewData()
@@ -288,17 +298,29 @@ class MSGDataAggregatorTester(unittest.TestCase):
                          'Result not obtained for each type.')
 
     def testAggregateNewData(self):
-        self.aggregator.aggregateNewData(dataType = 'egauge')
+        """
+        @IMPORTANT Should not be run on live data if testing.
+        :return:
+        """
 
-        # self.logger.log('result {}'.format(result), 'info')
-        # self.assertEqual(len(self.aggregator.dataParams.keys()),
-        #                  len(result.keys()),
-        #                  'Result not obtained for each type.')
+        # return
+        map(self.aggregator.aggregateNewData, self.rawTypes)
 
 
     def testLastUnaggregatedAndAggregatedEndpoints(self):
+        """
+        :return:
+        """
+        # @todo Needs static test data.
         print self.aggregator.lastUnaggregatedAndAggregatedEndpoints(
             dataType = 'egauge')
+
+    def test_endpoint_increment(self):
+        myDT = datetime(2014, 02, 01, 23, 45)
+        self.logger.log('dt = {}'.format(myDT))
+        result = self.aggregator.incrementEndpoint(endpoint = myDT)
+        self.logger.log('result {}'.format(result))
+        self.assertEqual(result, datetime(2014, 02, 02, 00, 00, 00))
 
 
 if __name__ == '__main__':
@@ -315,7 +337,10 @@ if __name__ == '__main__':
         selected_tests = ['testAggregateNewData']
         selected_tests = ['testLastUnaggregatedAndAggregatedEndpoints',
                           'testAggregateNewData']
-        selected_tests=['testMonthStartsAndEnds']
+        selected_tests = ['testMonthStartsAndEnds']
+        selected_tests = ['testAggregateNewData']
+        # selected_tests = ['test_endpoint_increment']
+        # selected_tests = ['testLastUnaggregatedAndAggregatedEndpoints']
 
         mySuite = unittest.TestSuite()
 
