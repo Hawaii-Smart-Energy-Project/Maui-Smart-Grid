@@ -90,9 +90,9 @@ class NewDataAggregator(object):
                 self.connector.dbName)
             msgBody += '\n\n'
             for i in range(len(result)):
-                msgBody += '• The new data count for type {} is {} readings\n' \
-                           '.'.format(
-                    result[i].keys()[0], result[i].values()[0])
+                msgBody += 'The new data count for type {} is {} readings' \
+                           '.\n'.format(result[i].keys()[0],
+                                      result[i].values()[0])
             msgBody += '\n\n'
             msgBody += 'The last report date was %s.' % lastReportDate
             msgBody += '\n\n'
