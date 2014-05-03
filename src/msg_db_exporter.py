@@ -53,7 +53,8 @@ class MSGDBExporter(object):
 
         if not self.credentialPath:
             raise Exception("Credential path is required.")
-        storage = Storage('%s/google_api_credentials' % self.credentialPath)
+        storage = Storage(
+            '{}/google_api_credentials'.format(self.credentialPath))
 
         self.googleAPICredentials = storage.get()
 
@@ -165,7 +166,7 @@ class MSGDBExporter(object):
             md5sum1 = self.fileUtil.md5Checksum(fullPath)
 
             try:
-                self.logger.log("mtime: %s, md5sum1: %s" % (
+                self.logger.log("mtime: {}, md5sum1: {}".format(
                     time.ctime(os.path.getmtime(fullPath)), md5sum1), 'INFO')
             except OSError as detail:
                 self.logger.log(
@@ -180,11 +181,11 @@ class MSGDBExporter(object):
 
             # Verify the compressed file by uncompressing it and verifying its
             # checksum against the original checksum.
-            self.logger.log('reading: %s' % compressedFullPath, 'DEBUG')
-            self.logger.log('writing: %s' % os.path.join(
+            self.logger.log('reading: {}'.format(compressedFullPath), 'DEBUG')
+            self.logger.log('writing: {}'.format(os.path.join(
                 self.configer.configOptionValue('Testing',
                                                 'export_test_data_path'),
-                os.path.splitext(os.path.basename(fullPath))[0]), 'DEBUG')
+                os.path.splitext(os.path.basename(fullPath))[0])), 'DEBUG')
 
             # Gzip uncompress and verify by checksum is disabled until a more
             # efficient, non-memory-based, uncompress is implemented.
@@ -205,7 +206,7 @@ class MSGDBExporter(object):
             if VERIFY_BY_CHECKSUM:
                 md5sum2 = self.fileUtil.md5Checksum(fullPath)
 
-                self.logger.log("mtime: %s, md5sum2: %s" % (
+                self.logger.log("mtime: {}, md5sum2: {}".format(
                     time.ctime(os.path.getmtime(fullPath)), md5sum2), 'INFO')
 
                 if md5sum1 == md5sum2:
@@ -217,7 +218,7 @@ class MSGDBExporter(object):
 
             if toCloud:
                 if numChunks != 0:
-                    self.logger.log('Splitting %s' % compressedFullPath,
+                    self.logger.log('Splitting {}'.format(compressedFullPath),
                                     'DEBUG')
 
                     filesToUpload = self.fileUtil.splitLargeFile(
@@ -227,17 +228,19 @@ class MSGDBExporter(object):
 
                     if not filesToUpload:
                         raise Exception('Exception during file splitting.')
-                    self.logger.log('to upload: %s' % filesToUpload, 'debug')
+                    self.logger.log('to upload: {}'.format(filesToUpload),
+                                    'debug')
                 else:
                     filesToUpload = [compressedFullPath]
 
                 # Upload the files to the cloud.
 
-                self.logger.log('files to upload: %s' % filesToUpload, 'debug')
+                self.logger.log('files to upload: {}'.format(filesToUpload),
+                                'debug')
                 for f in filesToUpload:
-                    self.logger.log('Uploading %s.' % f, 'info')
+                    self.logger.log('Uploading {}.'.format(f), 'info')
                     fileID = self.uploadDBToCloudStorage(f, testing = testing)
-                    self.logger.log('file id after upload: %s' % fileID)
+                    self.logger.log('file id after upload: {}'.format(fileID))
                     self.addReaders(fileID,
                                     self.configer.configOptionValue('Export',
                                                                     'read_permission').split(
@@ -246,11 +249,11 @@ class MSGDBExporter(object):
             # Remove the uncompressed file.
             try:
                 if not testing:
-                    self.logger.log('Removing %s' % fullPath)
-                    os.remove('%s' % fullPath)
+                    self.logger.log('Removing {}'.format(fullPath))
+                    os.remove('{}'.format(fullPath))
             except OSError as e:
                 self.logger.log(
-                    'Exception while removing %s: %s.' % (fullPath, e))
+                    'Exception while removing {}: {}.'.format(fullPath, e))
                 noErrors = False
 
         # End for db in databases.
@@ -271,10 +274,10 @@ class MSGDBExporter(object):
         """
 
         fsize = os.path.getsize(fullPath)
-        self.logger.log('fullpath: %s, fsize: %s' % (fullPath, fsize))
+        self.logger.log('fullpath: {}, fsize: {}'.format(fullPath, fsize))
         if (fsize >= int(self.configer.configOptionValue('Export',
                                                          'max_bytes_before_split'))):
-            self.logger.log('will split with config defined num chunks')
+            self.logger.log('Will split with config defined number of chunks.')
             return int(
                 self.configer.configOptionValue('Export', 'num_split_sections'))
         self.logger.log('will NOT split file')
@@ -294,8 +297,9 @@ class MSGDBExporter(object):
         success = True
         dbName = os.path.basename(fullPath)
 
-        self.logger.log('full path %s' % os.path.dirname(fullPath), 'DEBUG')
-        self.logger.log("Uploading %s." % dbName)
+        self.logger.log(
+            'full path {}'.format(os.path.dirname(fullPath), 'DEBUG'))
+        self.logger.log("Uploading {}.".format(dbName))
 
         result = {}
         try:
@@ -348,8 +352,9 @@ class MSGDBExporter(object):
         code = raw_input('Enter verification code: ').strip()
         self.googleAPICredentials = flow.step2_exchange(code)
 
-        print "refresh_token = %s" % self.googleAPICredentials.refresh_token
-        print "expiry = %s" % self.googleAPICredentials.token_expiry
+        print "refresh_token = {}".format(
+            self.googleAPICredentials.refresh_token)
+        print "expiry = {}".format(self.googleAPICredentials.token_expiry)
 
 
     def freeSpace(self):
@@ -374,13 +379,15 @@ class MSGDBExporter(object):
         """
 
         # @todo Report filename.
-        self.logger.log('Deleting file with file ID: %s' % fileID, 'debug')
+        self.logger.log('Deleting file with file ID: {}'.format(fileID),
+                        'debug')
 
         try:
             self.driveService.files().delete(fileId = fileID).execute()
 
         except errors.HttpError, error:
-            self.logger.log('Exception while deleting: %s' % error, 'error')
+            self.logger.log('Exception while deleting: {}'.format(error),
+                            'error')
 
 
     def deleteOutdatedFiles(self, minAge = datetime.timedelta(days = 0),
@@ -475,9 +482,9 @@ class MSGDBExporter(object):
 
         content = "||*Name*||*Created*||*Size*||\n"
         for i in self.__listOfDownloadableFiles():
-            content += "||[`%s`](%s)" % (i['title'], i['webContentLink'])
-            content += "||`%s`" % i['createdDate']
-            content += "||`%d B`||" % int(i['fileSize'])
+            content += "||[`{}`]({})".format(i['title'], i['webContentLink'])
+            content += "||`{}`".format(i['createdDate'])
+            content += "||`{} B`||".format(int(i['fileSize']))
             content += '\n'
         return content
 
@@ -495,7 +502,7 @@ class MSGDBExporter(object):
         :returns: True if the MD5 sums match, otherwise, False.
         """
 
-        self.logger.log('local file path: %s' % localFilePath)
+        self.logger.log('local file path: {}'.format(localFilePath))
         # Get the md5sum for the local file.
         f = open(localFilePath, mode = 'rb')
         fContent = hashlib.md5()
@@ -504,12 +511,13 @@ class MSGDBExporter(object):
         localMD5Sum = fContent.hexdigest()
         f.close()
 
-        self.logger.log('local md5: %s' % localMD5Sum, 'DEBUG')
+        self.logger.log('local md5: {}'.format(localMD5Sum), 'DEBUG')
 
         # Get the MD5 sum for the remote file.
         for item in self.cloudFiles['items']:
             if (item['id'] == remoteFileID):
-                self.logger.log('remote md5: %s' % item['md5Checksum'], 'DEBUG')
+                self.logger.log('remote md5: {}'.format(item['md5Checksum']),
+                                'DEBUG')
                 if localMD5Sum == item['md5Checksum']:
                     return True
                 else:
@@ -562,8 +570,8 @@ class MSGDBExporter(object):
 
         success = True
 
-        self.logger.log('file id: %s' % fileID)
-        self.logger.log('address list: %s' % emailAddressList)
+        self.logger.log('file id: {}'.format(fileID))
+        self.logger.log('address list: {}'.format(emailAddressList))
 
         for addr in emailAddressList:
             permission = {'value': addr, 'type': 'user', 'role': 'reader'}
