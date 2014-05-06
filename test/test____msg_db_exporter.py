@@ -80,7 +80,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
 
     def testListOfDownloadableFiles(self):
-        for row in self.exporter.__listOfDownloadableFiles():
+        for row in self.exporter.listOfDownloadableFiles():
             print row
             self.assertIsNotNone(row['id'])
             self.assertIsNotNone(row['title'])
@@ -106,11 +106,11 @@ class MSGDBExporterTester(unittest.TestCase):
         Retrieve the matching file IDs for the given file name.
         """
 
-        # @todo Upload file for testing.
+        self.logger.log('Testing getting file IDs for a filename.')
         self.logger.log("Uploading test data.")
 
-        filePath = "%s/%s" % (
-            self.exportTestDataPath, self.compressedTestFilename)
+        filePath = "{}/{}".format(self.exportTestDataPath,
+                                  self.compressedTestFilename)
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
 
@@ -118,26 +118,37 @@ class MSGDBExporterTester(unittest.TestCase):
 
         self.logger.log('Testing getting the file ID for a filename.')
 
-        fileIDs = self.exporter._MSGDBExporter__fileIDForFileName(
-            self.compressedTestFilename)
-        self.logger.log("file ids = %s" % fileIDs, 'info')
+        fileIDs = self.exporter.fileIDForFileName(self.compressedTestFilename)
+        self.logger.log("file ids = {}".format(fileIDs), 'info')
 
         self.assertIsNotNone(fileIDs)
+
+    def test_get_file_id_for_nonexistent_file(self):
+        """
+        Test getting a file ID for a nonexistent file.
+        """
+
+        fileIDs = self.exporter.fileIDForFileName('nonexistent_file')
+        self.logger.log("file ids = {}".format(fileIDs), 'info')
+        self.assertIsNone(fileIDs)
 
 
     def testUploadTestData(self):
         """
         Upload a test data file for unit testing of DB export.
+
+        The unit test data file is a predefined set of test data stored in
+        the test data path of the software distribution.
         """
 
         self.logger.log("Uploading test data.")
 
-        filePath = "%s/%s" % (
-            self.exportTestDataPath, self.compressedTestFilename)
-        self.logger.log('Uploaded %s.' % filePath, 'info')
+        filePath = "{}/{}".format(self.exportTestDataPath,
+                                  self.compressedTestFilename)
+        self.logger.log('Uploaded {}.'.format(filePath), 'info')
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
-        self.logger.log('upload result: %s' % uploadResult)
+        self.logger.log('upload result: {}'.format(uploadResult))
 
         self.assertTrue(uploadResult)
 
@@ -195,7 +206,7 @@ class MSGDBExporterTester(unittest.TestCase):
         new_permission = {'value': email, 'type': 'user', 'role': 'reader'}
         try:
             self.logger.log('Adding reader permission', 'INFO')
-            fileIDToAddTo = self.exporter._MSGDBExporter__fileIDForFileName(
+            fileIDToAddTo = self.exporter.fileIDForFileName(
                 self.compressedTestFilename)
 
             # The permission dict is being output to stdout here.
@@ -345,8 +356,7 @@ class MSGDBExporterTester(unittest.TestCase):
         # Keep deleting from the cloud until there is no more to delete.
         while deleteSuccessful:
             try:
-                fileIDToDelete = self.exporter\
-                    ._MSGDBExporter__fileIDForFileName(
+                fileIDToDelete = self.exporter.fileIDForFileName(
                     self.compressedTestFilename)
                 self.logger.log("file ID to delete: %s" % fileIDToDelete,
                                 'DEBUG')
@@ -361,14 +371,8 @@ if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
-        # selected_tests = ['testAddingReaderPermissions',
-        #                   'testDeleteOutdatedFiles', 'testGetMD5SumFromCloud']
-        # selected_tests = ['testDownloadURLList','testListOfDownloadableFiles']
-        # selected_tests = ['testDeleteOutdatedFiles']
-        selected_tests = ['testDeleteOutdatedFiles',
-                          'testUploadExportFilesList']
-        # selected_tests = ['testUploadExportFilesList']
-        # selected_tests = ['testUploadTestData']
+        selected_tests = ['testUploadTestData', 'testGetFileIDsForFilename',
+                          'test_get_file_id_for_nonexistent_file']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:

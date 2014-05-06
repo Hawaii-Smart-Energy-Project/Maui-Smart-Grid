@@ -324,7 +324,7 @@ class MSGDBExporter(object):
                 'error')
             success = False
 
-        if not self.__verifyMD5Sum(fullPath, self.__fileIDForFileName(dbName)):
+        if not self.__verifyMD5Sum(fullPath, self.fileIDForFileName(dbName)):
             self.logger.log('Failed MD5 checksum verification.', 'INFO')
             success = False
 
@@ -453,7 +453,7 @@ class MSGDBExporter(object):
         output.close()
 
 
-    def __listOfDownloadableFiles(self):
+    def listOfDownloadableFiles(self):
         """
         Create a list of downloadable files.
         :returns: List of files.
@@ -481,7 +481,7 @@ class MSGDBExporter(object):
         """
 
         content = "||*Name*||*Created*||*Size*||\n"
-        for i in self.__listOfDownloadableFiles():
+        for i in self.listOfDownloadableFiles():
             content += "||[`{}`]({})".format(i['title'], i['webContentLink'])
             content += "||`{}`".format(i['createdDate'])
             content += "||`{} B`||".format(int(i['fileSize']))
@@ -525,7 +525,7 @@ class MSGDBExporter(object):
         return False
 
 
-    def __fileIDForFileName(self, filename):
+    def fileIDForFileName(self, filename):
         """
         Get the file ID for the given filename.
 
