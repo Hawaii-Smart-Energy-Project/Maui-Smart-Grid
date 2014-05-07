@@ -219,7 +219,7 @@ class MSGDBExporterTester(unittest.TestCase):
                 'error')
 
 
-    def testCreateCompressedArchived(self):
+    def test_create_compressed_archived(self):
         """
         * Copy test data to a temp directory.
         * Create a checksum for test data.
@@ -233,13 +233,11 @@ class MSGDBExporterTester(unittest.TestCase):
 
         self.logger.log('Testing verification of a compressed archive.')
 
-        self.logger.log('cwd %s' % os.getcwd())
-        fullPath = '%s' % (
-            os.path.join(os.getcwd(), self.testDir,
-                         self.uncompressedTestFilename))
-        shutil.copyfile(
-            '%s/%s' % (self.exportTestDataPath, self.uncompressedTestFilename),
-            fullPath)
+        self.logger.log('cwd {}'.format(os.getcwd()))
+        fullPath = '{}'.format(os.path.join(os.getcwd(), self.testDir,
+                                            self.uncompressedTestFilename))
+        shutil.copyfile('{}/{}'.format(self.exportTestDataPath,
+                                       self.uncompressedTestFilename), fullPath)
 
         md5sum1 = self.fileUtil.md5Checksum(fullPath)
 
@@ -249,10 +247,11 @@ class MSGDBExporterTester(unittest.TestCase):
             os.remove(os.path.join(os.getcwd(), self.testDir,
                                    self.uncompressedTestFilename))
         except OSError as detail:
-            self.logger.log('Exception while removing: %s' % detail, 'ERROR')
+            self.logger.log('Exception while removing: {}'.format(detail),
+                            'ERROR')
 
         # Extract archived data and generate checksum.
-        src = gzip.open('%s%s' % (fullPath, '.gz'), "rb")
+        src = gzip.open('{}{}'.format(fullPath, '.gz'), "rb")
         uncompressed = open(fullPath, "wb")
         decoded = src.read()
         uncompressed.write(decoded)
@@ -261,10 +260,10 @@ class MSGDBExporterTester(unittest.TestCase):
         md5sum2 = self.fileUtil.md5Checksum(fullPath)
 
         self.assertEqual(md5sum1, md5sum2,
-                         'Checksums are equal for original and new '
+                         'Checksums are not equal for original and new '
                          'decompressed archive.')
 
-    def testExportDB(self):
+    def test_export_db(self):
         """
         Perform a quick test of the DB export method using Testing Mode.
         """
@@ -273,38 +272,37 @@ class MSGDBExporterTester(unittest.TestCase):
         dbs = ['test_meco']
         success = self.exporter.exportDB(databases = dbs, toCloud = True,
                                          localExport = True, numChunks = 4)
-        self.logger.log('Success: %s' % success)
-        self.assertTrue(success, "Export was successful.")
+        self.logger.log('Success: {}'.format(success))
+        self.assertTrue(success, "Export was not successful.")
 
 
-    def testSplitArchive(self):
+    def test_split_archive(self):
         """
         Test splitting an archive into chunks.
         """
 
-        fullPath = '%s/%s' % (
-            self.exportTestDataPath, self.compressedTestFilename)
-        self.logger.log('fullpath: %s' % fullPath)
-        shutil.copyfile(fullPath, '%s/%s' % (
-            self.testDir, self.compressedTestFilename))
-        fullPath = '%s/%s' % (
-            self.testDir, self.compressedTestFilename)
+        self.logger.log('Testing archive splitting.')
+        fullPath = '{}/{}'.format(self.exportTestDataPath,
+                                  self.compressedTestFilename)
+        self.logger.log('fullpath: {}'.format(fullPath))
+        shutil.copyfile(fullPath, '{}/{}'.format(self.testDir,
+                                                 self.compressedTestFilename))
+        fullPath = '{}/{}'.format(self.testDir, self.compressedTestFilename)
 
         self.fileChunks = self.fileUtil.splitLargeFile(fullPath = fullPath,
                                                        numChunks = 3)
-
         self.assertGreater(len(self.fileChunks), 0,
                            'Chunk number is greater than zero.')
 
-    def testGetFileSize(self):
+    def test_get_file_size(self):
         """
         Test retrieving local file sizes.
         """
 
-        fullPath = '%s/%s' % (
-            self.exportTestDataPath, self.compressedTestFilename)
+        fullPath = '{}/{}'.format(self.exportTestDataPath,
+                                  self.compressedTestFilename)
         fSize = self.fileUtil.fileSize(fullPath)
-        self.logger.log('size: %s' % fSize)
+        self.logger.log('size: {}'.format(fSize))
         self.assertEqual(fSize, 12279, 'File size is correct.')
 
     def testUploadExportFilesList(self):
@@ -372,7 +370,9 @@ if __name__ == '__main__':
 
     if RUN_SELECTED_TESTS:
         selected_tests = ['testUploadTestData', 'testGetFileIDsForFilename',
-                          'test_get_file_id_for_nonexistent_file']
+                          'test_get_file_id_for_nonexistent_file',
+                          'test_get_file_size', 'test_split_archive',
+                          'test_create_compressed_archived','test_export_db']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
