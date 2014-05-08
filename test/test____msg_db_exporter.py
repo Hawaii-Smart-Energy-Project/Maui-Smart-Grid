@@ -263,9 +263,12 @@ class MSGDBExporterTester(unittest.TestCase):
                          'Checksums are not equal for original and new '
                          'decompressed archive.')
 
+
     def test_export_db(self):
         """
         Perform a quick test of the DB export method using Testing Mode.
+
+        @todo This needs a static test database!
         """
 
         self.logger.log('Testing exportDB')
@@ -294,6 +297,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.assertGreater(len(self.fileChunks), 0,
                            'Chunk number is greater than zero.')
 
+
     def test_get_file_size(self):
         """
         Test retrieving local file sizes.
@@ -304,6 +308,7 @@ class MSGDBExporterTester(unittest.TestCase):
         fSize = self.fileUtil.fileSize(fullPath)
         self.logger.log('size: {}'.format(fSize))
         self.assertEqual(fSize, 12279, 'File size is correct.')
+
 
     def testUploadExportFilesList(self):
         """
@@ -373,6 +378,7 @@ if __name__ == '__main__':
                           'test_get_file_id_for_nonexistent_file',
                           'test_get_file_size', 'test_split_archive',
                           'test_create_compressed_archived','test_export_db']
+        selected_tests = ['test_export_db']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:

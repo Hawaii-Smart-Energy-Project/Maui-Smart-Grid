@@ -113,6 +113,15 @@ class MSGDBExporter(object):
         self.logger.log('md5sum: {}'.format(md5sum))
 
 
+    def db_username(self):
+        return self.configer.configOptionValue('Database', 'db_username')
+
+    def db_password(self):
+        return self.configer.configOptionValue('Database', 'db_password')
+
+    def db_port(self):
+        return self.configer.configOptionValue('Database', 'db_port')
+
     def exportDB(self, databases = None, toCloud = False, localExport = True,
                  testing = False, chunkSize = 0, numChunks = 0):
         """
@@ -141,12 +150,14 @@ class MSGDBExporter(object):
 
             dumpName = "{}_{}".format(conciseNow, db)
 
-            command = """pg_dump -h {} {} > {}/{}.sql""".format(host, db,
-                                                                self.configer
-                                                                .configOptionValue(
-                                                                    'Export',
-                                                                    'db_export_path'),
-                                                                dumpName)
+            # Password is passed from ~/.pgpass.
+            # Note that ':' and '\' characters should be escaped with '\'.
+            # Ref: http://www.postgresql.org/docs/9.1/static/libpq-pgpass.html
+
+            command = 'pg_dump -h {0} -p {1} -U {2} {3} > {4}/{5}.sql'.format(
+                host, self.db_port(), self.db_username(), db,
+                self.configer.configOptionValue('Export', 'db_export_path'),
+                dumpName)
 
             fullPath = '{}/{}.sql'.format(
                 self.configer.configOptionValue('Export', 'db_export_path'),
@@ -157,6 +168,7 @@ class MSGDBExporter(object):
             try:
                 if localExport:
                     # Generate the SQL script export.
+                    self.logger.log('cmd: {}'.format(command))
                     subprocess.check_call(command, shell = True)
             except subprocess.CalledProcessError, e:
                 self.logger.log("Exception while dumping: {}".format(e))
