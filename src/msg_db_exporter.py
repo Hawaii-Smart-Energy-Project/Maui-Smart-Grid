@@ -35,10 +35,15 @@ class MSGDBExporter(object):
 
     Supports export to local storage and to cloud storage.
 
+    Usage:
+
+    from msg_db_exporter import MSGDBExporter
+    exporter = MSGDBExporter()
+
     API:
 
-    exportDB(databases = list, toCloud = boolean, testing = boolean,
-    numChunks = int): Export a list of DBs to the cloud.
+    exportDB(databases = List, toCloud = Boolean, testing = Boolean,
+    numChunks = Integer, deleteOutdated = Boolean): Export a list of DBs to the cloud.
     """
 
     @property
@@ -123,21 +128,26 @@ class MSGDBExporter(object):
         return self.configer.configOptionValue('Database', 'db_port')
 
     def exportDB(self, databases = None, toCloud = False, localExport = True,
-                 testing = False, chunkSize = 0, numChunks = 0):
+                 testing = False, chunkSize = 0, numChunks = 0,
+                 deleteOutdated = False):
         """
         Export a set of DBs to local storage.
 
         This method makes use of
 
-        pg_dump -s -h ${HOST} ${DB_NAME} > ${DUMP_TIMESTAMP}_{DB_NAME}.sql
+        pg_dump -s -h ${HOST} -U ${USERNAME} ${DB_NAME} > ${DUMP_TIMESTAMP}_{DB_NAME}.sql
 
         :param databases: List of database names that will be exported.
-        :param toCloud: If set to True, then the export will also be copied to
-        cloud storage.
-        :param localExport: When set to True, the DB is exported locally.
-        :param testing: Flag for testing mode. (@DEPRECATED)
-        :param chunkSize: size in bytes of chunk size used for splitting.
-        :returns: True if no errors have occurred, False otherwise.
+        :param toCloud: Boolean if set to True, then the export will also be
+        copied to cloud storage.
+        :param localExport: Boolean when set to True, the DB is exported
+        locally.
+        :param testing: Boolean flag for testing mode. (@DEPRECATED)
+        :param chunkSize: Integer size in bytes of chunk size used for
+        splitting.
+        :param deleteOutdated: Boolean indicating outdated files in the cloud
+        should be removed.
+        :returns: Boolean True if no errors have occurred, False otherwise.
         """
 
         noErrors = True
@@ -270,9 +280,9 @@ class MSGDBExporter(object):
 
         # End for db in databases.
 
-        # @todo implement separate delete outdated runner
-        self.deleteOutdatedFiles(minAge = datetime.timedelta(days = int(
-            self.configer.configOptionValue('Export', 'days_to_keep'))))
+        if deleteOutdated:
+            self.deleteOutdatedFiles(minAge = datetime.timedelta(days = int(
+                self.configer.configOptionValue('Export', 'days_to_keep'))))
 
         return noErrors
 
