@@ -51,7 +51,7 @@ import tarfile
 
 
 def processCommandLineArguments():
-    global argParser, commandLineArgs
+    global argParser, COMMAND_LINE_ARGS
     argParser = argparse.ArgumentParser(description = '')
     argParser.add_argument('--sourcePath',
                            help = 'Path where the source code is located.',
@@ -73,7 +73,7 @@ def runCommand(cmd = None):
 
 
 def softwareInstallName():
-    cmd = "python %s/setup.py --name" % commandLineArgs.sourcePath
+    cmd = "python %s/setup.py --name" % COMMAND_LINE_ARGS.sourcePath
     try:
         softwareName = subprocess.check_output(cmd, shell = True)
     except subprocess.CalledProcessError as error:
@@ -88,7 +88,7 @@ def softwareVersion():
     dependencies are defined in __init.py__.
     """
 
-    cmd = "python %s/setup.py --version" % commandLineArgs.sourcePath
+    cmd = "python %s/setup.py --version" % COMMAND_LINE_ARGS.sourcePath
     try:
         softwareVersion = subprocess.check_output(cmd, shell = True)
     except subprocess.CalledProcessError as error:
@@ -97,10 +97,10 @@ def softwareVersion():
     return softwareVersion.strip()
 
 
-commandLineArgs = None
+COMMAND_LINE_ARGS = None
 processCommandLineArguments()
 
-os.chdir(commandLineArgs.sourcePath)
+os.chdir(COMMAND_LINE_ARGS.sourcePath)
 
 archiveCmd = """python setup.py sdist"""
 runCommand(archiveCmd)
@@ -112,25 +112,25 @@ print "Current working directory is %s." % os.getcwd()
 print "\nPerforming scripted install of %s-%s." % (PROJECT_NAME, VERSION)
 
 # Extract the distribution archive into the dist directory.
-os.chdir('%s/dist' % commandLineArgs.sourcePath)
+os.chdir('%s/dist' % COMMAND_LINE_ARGS.sourcePath)
 print
 print "Current working directory is %s." % os.getcwd()
 t = tarfile.open(name = '%s/dist/%s-%s.tar.gz' % (
-    commandLineArgs.sourcePath, PROJECT_NAME, VERSION))
+    COMMAND_LINE_ARGS.sourcePath, PROJECT_NAME, VERSION))
 
 t.extractall()
 
 # Change the working directory to the extracted archive path.
 print "Performing install."
-os.chdir('%s/dist/%s-%s' % (commandLineArgs.sourcePath, PROJECT_NAME, VERSION ))
+os.chdir('%s/dist/%s-%s' % (COMMAND_LINE_ARGS.sourcePath, PROJECT_NAME, VERSION ))
 print "Current working directory is %s." % os.getcwd()
 
 # Install the software.
 installCmd = """python setup.py install --home=%s/%s-%s""" % (
-    commandLineArgs.installPathUser, PROJECT_NAME, VERSION)
+    COMMAND_LINE_ARGS.installPathUser, PROJECT_NAME, VERSION)
 runCommand(installCmd)
 
 print "\nInstallation of the MSG software to %s is complete." % \
-      commandLineArgs.installPathUser
+      COMMAND_LINE_ARGS.installPathUser
 print "\nPlease add the path, %s/lib/python, to your PYTHONPATH if it is not " \
-      "already there." % commandLineArgs.installPathUser
+      "already there." % COMMAND_LINE_ARGS.installPathUser

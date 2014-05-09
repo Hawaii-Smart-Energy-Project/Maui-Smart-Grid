@@ -37,7 +37,7 @@ configer = MSGConfiger()
 logger = MSGLogger(__name__, 'info')
 binPath = MSGConfiger.configOptionValue(configer, "Executable Paths",
                                         "bin_path")
-commandLineArgs = None
+COMMAND_LINE_ARGS = None
 msgBody = ''
 notifier = MSGNotifier()
 dataParser = MSGNOAAWeatherDataParser()
@@ -47,7 +47,7 @@ timeUtil = MSGTimeUtil()
 
 
 def processCommandLineArguments():
-    global argParser, commandLineArgs
+    global argParser, COMMAND_LINE_ARGS
     argParser = argparse.ArgumentParser(
         description = 'Perform recursive insertion of compressed weather data'
                       ' contained in the current directory to the MECO '
@@ -93,19 +93,19 @@ def fileExists(fullPath):
 
 processCommandLineArguments()
 
-if commandLineArgs.testing:
+if COMMAND_LINE_ARGS.testing:
     logger.log("Testing mode is ON.\n", 'info')
     connector = MSGDBConnector(True)
 else:
-    connector = MSGDBConnector(testing = commandLineArgs.testing)
-if commandLineArgs.email:
+    connector = MSGDBConnector(testing = COMMAND_LINE_ARGS.testing)
+if COMMAND_LINE_ARGS.email:
     logger.log("Email will be sent.\n", 'info')
 
 conn = connector.conn
 
 databaseName = ''
 
-if commandLineArgs.testing:
+if COMMAND_LINE_ARGS.testing:
     databaseName = configer.configOptionValue("Database", "testing_db_name")
 else:
     databaseName = configer.configOptionValue("Database", "db_name")
@@ -128,7 +128,7 @@ weatherDays = []
 setOfAllDays = set()
 for root, dirnames, filenames in os.walk('.'):
 
-    if commandLineArgs.alldata:
+    if COMMAND_LINE_ARGS.alldata:
 
         # Load ALL data.
         for filename in fnmatch.filter(filenames, '*hourly.txt.gz'):
@@ -183,6 +183,6 @@ else:
 
 parseLog = ''
 
-if commandLineArgs.email:
+if COMMAND_LINE_ARGS.email:
     notifier.sendMailWithAttachments(msgBody, files = None,
-                                     testing = commandLineArgs.testing)
+                                     testing = COMMAND_LINE_ARGS.testing)
