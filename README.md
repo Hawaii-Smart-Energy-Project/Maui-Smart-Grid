@@ -6,7 +6,7 @@
 
 The University of Hawaii at Manoa was tasked with maintaining a data science repository for use by analysts of the [Maui Smart Grid](http://www.mauismartgrid.com) energy sustainability project through the [Hawaii Natural Energy Institute](http://www.hnei.hawaii.edu). This software provides the data acquisition, processing and operational resources necessary to accomplish this task. Source data is acquired in multiple formats including XML, tab-separated values, and comma-separated values. Data storage is dependent on a PostgreSQL database server on the back end. Issues for this project are tracked at the [Hawaii Smart Energy Project YouTRACK instance](http://smart-energy-project.myjetbrains.com/youtrack/rest/agile/).
 
-The majority of the software in this repository is primarily intended to run as a group of automatic processes using a scheduler like `cron.` Therefore, not much effort has been made to create an interactive user interface. The scripts that are interactive are intended to be run from the command-line.
+The majority of the software in this repository is primarily intended to run as a group of automatic processes using a scheduler like `cron.` Therefore, not much effort has been made to create an interactive user interface. The scripts that are interactive are intended to be run from the command-line. The software is under active development and that is the reason for presence of many debugging statements.
 
 Actual data from the Maui Smart Grid project is not publicly available at this time though the full structure of the database is available.
 
@@ -85,7 +85,7 @@ A custom automatic installation script, `install-msg.py`, has been developed to 
 It is intended to facilitate the maintenance of the software installation, **and** updating, while at the same time allowing development of the source code base. It is used like so
 
 	cd ~
-	python install-msg.py --sourcePath ${SOURCE_CODE_BASE_PATH} --installPathUser ${DESTINATION_BASE_PATH}
+	**python install-msg.py --sourcePath ${SOURCE_CODE_BASE_PATH} --installPathUser ${DESTINATION_BASE_PATH}**
 
 If the tilde symbol (~) is used as the destination base path, then the software will be installed into a directory titled after the package name and version in the user's home directory such as `~/Maui-Smart-Grid-1.0.0`.
 
