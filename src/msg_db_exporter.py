@@ -43,7 +43,8 @@ class MSGDBExporter(object):
     API:
 
     exportDB(databases = List, toCloud = Boolean, testing = Boolean,
-    numChunks = Integer, deleteOutdated = Boolean): Export a list of DBs to the cloud.
+    numChunks = Integer, deleteOutdated = Boolean): Export a list of DBs to
+    the cloud.
     """
 
     @property
@@ -135,7 +136,10 @@ class MSGDBExporter(object):
 
         This method makes use of
 
-        pg_dump -s -h ${HOST} -U ${USERNAME} ${DB_NAME} > ${DUMP_TIMESTAMP}_{DB_NAME}.sql
+        pg_dump -s -h ${HOST}
+                   -U ${USERNAME}
+                   ${DB_NAME} >
+                   ${DUMP_TIMESTAMP}_{DB_NAME}.sql
 
         :param databases: List of database names that will be exported.
         :param toCloud: Boolean if set to True, then the export will also be
@@ -339,7 +343,7 @@ class MSGDBExporter(object):
                                                       media_body =
                                                       media_body).execute()
 
-        except (errors.ResumableUploadError, BadStatusLine) as detail:
+        except Exception as detail:
             # Upload failures can result in a BadStatusLine.
             self.logger.log(
                 "Exception while uploading {}: {}.".format(dbName, detail),
