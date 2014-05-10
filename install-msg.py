@@ -17,7 +17,7 @@ operations.
 Usage:
 
     python install-msg.py --sourcePath ${ROOT_PATH_TO_SOURCE}
-    --installPathUser ${BASE_PATH_OF_USER_BASED_INSTALL}
+                          --installPathUser ${BASE_PATH_OF_USER_BASED_INSTALL}
 
 The distribution archive is placed in ${ROOT_PATH_TO_SOURCE}/dist.
 
@@ -39,7 +39,7 @@ should be satisfied using a suitable method such as installation through pip.
 """
 
 __author__ = 'Daniel Zhang (張道博)'
-__copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
+__copyright__ = 'Copyright (c) 2014, University of Hawaii Smart Energy Project'
 __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
@@ -49,6 +49,7 @@ import argparse
 import os
 import tarfile
 
+COMMAND_LINE_ARGS = None
 
 def processCommandLineArguments():
     global argParser, COMMAND_LINE_ARGS
@@ -60,25 +61,35 @@ def processCommandLineArguments():
                            help = 'Path to be used for a user based install.',
                            required = True)
 
-    commandLineArgs = argParser.parse_args()
+    COMMAND_LINE_ARGS = argParser.parse_args()
 
 
 def runCommand(cmd = None):
+    """
+    Run a system command.
+    :param cmd: String of command to run.
+    :return: None.
+    """
     if cmd is not None:
         try:
             subprocess.check_call(cmd, shell = True)
         except subprocess.CalledProcessError as error:
             print "Exception occurred while calling the process to run a " \
-                  "command: %s" % error
+                  "command: {}".format(error)
 
 
 def softwareInstallName():
-    cmd = "python %s/setup.py --name" % COMMAND_LINE_ARGS.sourcePath
+    """
+    Provide the software install name.
+    :returns: String for name of software.
+    """
+    softwareName = ''
+    cmd = "python {}/setup.py --name".format(COMMAND_LINE_ARGS.sourcePath)
     try:
         softwareName = subprocess.check_output(cmd, shell = True)
     except subprocess.CalledProcessError as error:
         print "An exception occurred while calling the process to get the " \
-              "software install name: %s" % error
+              "software install name: {}".format(error)
     return softwareName.strip()
 
 
@@ -87,50 +98,51 @@ def softwareVersion():
     There may be issues with retrieving the version number this way when
     dependencies are defined in __init.py__.
     """
-
-    cmd = "python %s/setup.py --version" % COMMAND_LINE_ARGS.sourcePath
+    softwareVersion = ''
+    cmd = "python {}/setup.py --version".format(COMMAND_LINE_ARGS.sourcePath)
     try:
         softwareVersion = subprocess.check_output(cmd, shell = True)
     except subprocess.CalledProcessError as error:
         print "An exception occurred while calling the process to get the " \
-              "software version: %s" % error
+              "software version: {}".format(error)
     return softwareVersion.strip()
 
 
-COMMAND_LINE_ARGS = None
 processCommandLineArguments()
 
 os.chdir(COMMAND_LINE_ARGS.sourcePath)
 
-archiveCmd = """python setup.py sdist"""
+archiveCmd = "python setup.py sdist"
 runCommand(archiveCmd)
 
 PROJECT_NAME = softwareInstallName()
 VERSION = softwareVersion()
 
-print "Current working directory is %s." % os.getcwd()
-print "\nPerforming scripted install of %s-%s." % (PROJECT_NAME, VERSION)
+print "Current working directory is {}.".format(os.getcwd())
+print "\nPerforming scripted install of {}-{}.".format(PROJECT_NAME, VERSION)
 
 # Extract the distribution archive into the dist directory.
-os.chdir('%s/dist' % COMMAND_LINE_ARGS.sourcePath)
+os.chdir('{}/dist'.format(COMMAND_LINE_ARGS.sourcePath))
 print
-print "Current working directory is %s." % os.getcwd()
-t = tarfile.open(name = '%s/dist/%s-%s.tar.gz' % (
-    COMMAND_LINE_ARGS.sourcePath, PROJECT_NAME, VERSION))
+print "Current working directory is {}.".format(os.getcwd())
+t = tarfile.open(
+    name = '{}/dist/{}-{}.tar.gz'.format(COMMAND_LINE_ARGS.sourcePath,
+                                         PROJECT_NAME, VERSION))
 
 t.extractall()
 
 # Change the working directory to the extracted archive path.
 print "Performing install."
-os.chdir('%s/dist/%s-%s' % (COMMAND_LINE_ARGS.sourcePath, PROJECT_NAME, VERSION ))
-print "Current working directory is %s." % os.getcwd()
+os.chdir(
+    '{}/dist/{}-{}'.format(COMMAND_LINE_ARGS.sourcePath, PROJECT_NAME, VERSION))
+print "Current working directory is {}.".format(os.getcwd())
 
 # Install the software.
-installCmd = """python setup.py install --home=%s/%s-%s""" % (
+installCmd = """python setup.py install --home={}/{}-{}""".format(
     COMMAND_LINE_ARGS.installPathUser, PROJECT_NAME, VERSION)
 runCommand(installCmd)
 
-print "\nInstallation of the MSG software to %s is complete." % \
-      COMMAND_LINE_ARGS.installPathUser
-print "\nPlease add the path, %s/lib/python, to your PYTHONPATH if it is not " \
-      "already there." % COMMAND_LINE_ARGS.installPathUser
+print "\nInstallation of the MSG software to {} is complete.".format(
+    COMMAND_LINE_ARGS.installPathUser)
+print "\nPlease add the path, {}/lib/python, to your PYTHONPATH if it is not already there.".format(
+    COMMAND_LINE_ARGS.installPathUser)
