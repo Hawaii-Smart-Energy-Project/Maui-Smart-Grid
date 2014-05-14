@@ -42,8 +42,8 @@ class MSGDBExporter(object):
 
     API:
 
-    exportDB(databases = List, toCloud = Boolean, testing = Boolean,
-    numChunks = Integer, deleteOutdated = Boolean): Export a list of DBs to
+    exportDB(databases:List, toCloud:Boolean, testing:Boolean,
+    numChunks:Integer, deleteOutdated:Boolean): Export a list of DBs to
     the cloud.
     """
 
@@ -79,7 +79,7 @@ class MSGDBExporter(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__, 'DEBUG')
+        self.logger = MSGLogger(__name__, 'DEBUG', useColor = False)
         self.timeUtil = MSGTimeUtil()
         self.configer = MSGConfiger()
         self.fileUtil = MSGFileUtil()
@@ -120,7 +120,8 @@ class MSGDBExporter(object):
 
 
     def db_username(self):
-        return self.configer.configOptionValue('Database', 'db_username')
+        return "postgres"
+        # return self.configer.configOptionValue('Database', 'db_username')
 
     def db_password(self):
         return self.configer.configOptionValue('Database', 'db_password')
@@ -164,14 +165,18 @@ class MSGDBExporter(object):
 
             dumpName = "{}_{}".format(conciseNow, db)
 
+            # For reference only:
             # Password is passed from ~/.pgpass.
             # Note that ':' and '\' characters should be escaped with '\'.
             # Ref: http://www.postgresql.org/docs/9.1/static/libpq-pgpass.html
 
-            command = 'pg_dump -h {0} -p {1} -U {2} {3} > {4}/{5}.sql'.format(
-                host, self.db_port(), self.db_username(), db,
-                self.configer.configOptionValue('Export', 'db_export_path'),
-                dumpName)
+            # Dump databases as the superuser. This method does not require a
+            # stored password when running under a root crontab.
+            command = 'sudo -u postgres pg_dump -p {0} -U {1} {2} > {3}/{4}' \
+                      '.sql'.format(self.db_port(), self.db_username(), db,
+                                    self.configer.configOptionValue('Export',
+                                                                    'db_export_path'),
+                                    dumpName)
 
             fullPath = '{}/{}.sql'.format(
                 self.configer.configOptionValue('Export', 'db_export_path'),
@@ -295,7 +300,7 @@ class MSGDBExporter(object):
         """
         Return the number of chunks to be used by the file splitter based on
         the file size of the file at fullPath.
-        :param fullPath: string
+        :param fullPath: String
         :returns: int Number of chunks to create.
         """
 
@@ -315,8 +320,8 @@ class MSGDBExporter(object):
         Export a DB to cloud storage.
 
         :param fullPath of DB file to be exported.
-        :param testing: boolean when set to True, Testing Mode is used.
-        :returns: string File ID on verified on upload; None if verification
+        :param testing: Boolean when set to True, Testing Mode is used.
+        :returns: String File ID on verified on upload; None if verification
         fails.
         """
 
@@ -461,7 +466,7 @@ class MSGDBExporter(object):
     def sendDownloadableFiles(self):
         """
         Send available files via POST.
-        :returns:
+        :returns: None
         """
         output = StringIO()
         output.write(self.markdownListOfDownloadableFiles())
@@ -512,6 +517,10 @@ class MSGDBExporter(object):
             content += "||`{}`".format(i['createdDate'])
             content += "||`{} B`||".format(int(i['fileSize']))
             content += '\n'
+        # return unicode(content, "UTF-8")
+
+        self.logger.log('content: {}'.format(content))
+
         return content
 
 
