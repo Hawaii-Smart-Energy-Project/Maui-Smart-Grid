@@ -42,9 +42,13 @@ class MSGDBExporter(object):
 
     API:
 
-    exportDB(databases:List, toCloud:Boolean, testing:Boolean,
-    numChunks:Integer, deleteOutdated:Boolean): Export a list of DBs to
-    the cloud.
+    exportDB(databases:List, 
+             toCloud:Boolean, 
+             testing:Boolean,
+             numChunks:Integer, 
+             deleteOutdated:Boolean): 
+
+    Export a list of DBs to the cloud.
     """
 
     @property
@@ -301,7 +305,7 @@ class MSGDBExporter(object):
         Return the number of chunks to be used by the file splitter based on
         the file size of the file at fullPath.
         :param fullPath: String
-        :returns: int Number of chunks to create.
+        :returns: Int Number of chunks to create.
         """
 
         fsize = os.path.getsize(fullPath)
@@ -319,7 +323,7 @@ class MSGDBExporter(object):
         """
         Export a DB to cloud storage.
 
-        :param fullPath of DB file to be exported.
+        :param fullPath: String of DB file to be exported.
         :param testing: Boolean when set to True, Testing Mode is used.
         :returns: String File ID on verified on upload; None if verification
         fails.
@@ -393,7 +397,7 @@ class MSGDBExporter(object):
         Get free space from the drive service.
 
         :param driveService: Object for the drive service.
-        :returns: Free space on the drive service as an integer.
+        :returns: Int of free space (bytes) on the drive service.
         """
 
         aboutData = self.driveService.about().get().execute()
@@ -406,10 +410,10 @@ class MSGDBExporter(object):
         """
         Delete the file with ID fileID.
 
-        :param fileID: Googe API file ID.
+        :param fileID: String of a Google API file ID.
         """
 
-        # @todo Report filename.
+        # @todo Report the filename.
         self.logger.log('Deleting file with file ID: {}'.format(fileID),
                         'debug')
 
@@ -426,9 +430,9 @@ class MSGDBExporter(object):
         """
         Remove outdated files from cloud storage.
 
-        :param minAge: Minimum age before a file is considered outdated.
-        :param maxAge: Maximum age to consider for a file.
-        :returns: Count of deleted items.
+        :param minAge: datetime.timedelta in days of the minimum age before a file is considered outdated.
+        :param maxAge: datetime.timedelta in days of the maximum age to consider for a file.
+        :returns: Int count of deleted items.
         """
 
         self.logger.log('Deleting outdated.', 'DEBUG')
@@ -465,7 +469,7 @@ class MSGDBExporter(object):
 
     def sendDownloadableFiles(self):
         """
-        Send available files via POST.
+        Send available files via HTTP POST.
         :returns: None
         """
         output = StringIO()
@@ -508,7 +512,7 @@ class MSGDBExporter(object):
         Generate content containing a list of downloadable files in Markdown
         format.
 
-        :returns: Content in Markdown format.
+        :returns: String content in Markdown format.
         """
 
         content = "||*Name*||*Created*||*Size*||\n"
@@ -517,7 +521,6 @@ class MSGDBExporter(object):
             content += "||`{}`".format(i['createdDate'])
             content += "||`{} B`||".format(int(i['fileSize']))
             content += '\n'
-        # return unicode(content, "UTF-8")
 
         self.logger.log('content: {}'.format(content))
 
@@ -532,12 +535,14 @@ class MSGDBExporter(object):
         This verifies that the uploaded file matches the local compressed
         export file.
 
-        :param localFilePath: Full path of the local file.
-        :param remoteFileID: Cloud ID for the remote file.
-        :returns: True if the MD5 sums match, otherwise, False.
+        :param localFilePath: String of the full path of the local file.
+        :param remoteFileID: String of the cloud ID for the remote file.
+        :returns: Boolean True if the MD5 sums match, otherwise, False.
         """
 
+        self.logger.log('remote file ID: {}'.format(remoteFileID))
         self.logger.log('local file path: {}'.format(localFilePath))
+
         # Get the md5sum for the local file.
         f = open(localFilePath, mode = 'rb')
         fContent = hashlib.md5()
@@ -570,8 +575,8 @@ class MSGDBExporter(object):
         This not the best way to handle things, but it works for the typical
         use case and prevents errors from taking down the system.
 
-        :param Filename for which to retrieve the ID.
-        :returns: A cloud file ID.
+        :param String of the filename for which to retrieve the ID.
+        :returns: String of a cloud file ID.
         """
 
         ids = []
@@ -598,9 +603,9 @@ class MSGDBExporter(object):
 
         Email notification is suppressed by default.
 
-        :param fileID: Cloud file ID to be processed.
-        :param emailAddressList: A list of email addresses.
-        :returns: True if successful, otherwise False.
+        :param fileID: String of the cloud file ID to be processed.
+        :param emailAddressList: List of email addresses.
+        :returns: Boolean True if successful, otherwise False.
         """
 
         success = True
