@@ -40,15 +40,13 @@ class MSGDBExporter(object):
     from msg_db_exporter import MSGDBExporter
     exporter = MSGDBExporter()
 
-    API:
+    Public API:
 
     exportDB(databases:List, 
              toCloud:Boolean, 
              testing:Boolean,
              numChunks:Integer, 
-             deleteOutdated:Boolean): 
-
-    Export a list of DBs to the cloud.
+             deleteOutdated:Boolean): Export a list of DBs to the cloud.
     """
 
     @property
@@ -274,12 +272,40 @@ class MSGDBExporter(object):
                                 'debug')
                 for f in filesToUpload:
                     self.logger.log('Uploading {}.'.format(f), 'info')
-                    fileID = self.uploadDBToCloudStorage(f, testing = testing)
+                    fileID = self.uploadFileToCloudStorage(fullPath = f,
+                                                           testing = testing)
+                    if not fileID:
+                        self.logger.log('Retrying upload of {}.'.format(f),
+                                        'warning')
+                        time.sleep(10)
+                        fileID = self.uploadFileToCloudStorage(fullPath = f,
+                                                               testing =
+                                                               testing)
+
                     self.logger.log('file id after upload: {}'.format(fileID))
-                    self.addReaders(fileID,
-                                    self.configer.configOptionValue('Export',
-                                                                    'read_permission').split(
-                                        ','))
+
+                    if fileID != None:
+                        if not self.addReaders(fileID,
+                                               self.configer.configOptionValue(
+                                                       'Export',
+                                                       'read_permission').split(
+                                                       ',')):
+                            time.sleep(10)
+                            self.logger.log(
+                                'Retrying adding readers for {}.'.format(f),
+                                'warning')
+
+                            if not self.addReaders(fileID,
+                                                   self.configer
+                                                           .configOptionValue(
+                                                           'Export',
+                                                           'read_permission')
+                                                           .split(
+                                                           ',')):
+                                self.logger.log(
+                                    'Failed to add readers for {}.'.format(f),
+                                    'error')
+
 
             # Remove the uncompressed file.
             try:
@@ -319,22 +345,22 @@ class MSGDBExporter(object):
         return 1
 
 
-    def uploadDBToCloudStorage(self, fullPath = '', testing = False):
+    def uploadFileToCloudStorage(self, fullPath = '', testing = False):
         """
-        Export a DB to cloud storage.
+        Export a file to cloud storage.
 
-        :param fullPath: String of DB file to be exported.
+        :param fullPath: String of file to be exported.
         :param testing: Boolean when set to True, Testing Mode is used.
         :returns: String File ID on verified on upload; None if verification
         fails.
         """
 
         success = True
-        dbName = os.path.basename(fullPath)
+        myFile = os.path.basename(fullPath)
 
         self.logger.log(
             'full path {}'.format(os.path.dirname(fullPath), 'DEBUG'))
-        self.logger.log("Uploading {}.".format(dbName))
+        self.logger.log("Uploading {}.".format(myFile))
 
         result = {}
         try:
@@ -342,7 +368,7 @@ class MSGDBExporter(object):
                                          mimetype =
                                          'application/gzip-compressed',
                                          resumable = True)
-            body = {'title': dbName,
+            body = {'title': myFile,
                     'description': 'Hawaii Smart Energy Project gzip '
                                    'compressed DB export.',
                     'mimeType': 'application/gzip-compressed'}
@@ -355,11 +381,11 @@ class MSGDBExporter(object):
         except Exception as detail:
             # Upload failures can result in a BadStatusLine.
             self.logger.log(
-                "Exception while uploading {}: {}.".format(dbName, detail),
+                "Exception while uploading {}: {}.".format(myFile, detail),
                 'error')
             success = False
 
-        if not self.__verifyMD5Sum(fullPath, self.fileIDForFileName(dbName)):
+        if not self.__verifyMD5Sum(fullPath, self.fileIDForFileName(myFile)):
             self.logger.log('Failed MD5 checksum verification.', 'INFO')
             success = False
 
@@ -430,8 +456,10 @@ class MSGDBExporter(object):
         """
         Remove outdated files from cloud storage.
 
-        :param minAge: datetime.timedelta in days of the minimum age before a file is considered outdated.
-        :param maxAge: datetime.timedelta in days of the maximum age to consider for a file.
+        :param minAge: datetime.timedelta in days of the minimum age before a
+        file is considered outdated.
+        :param maxAge: datetime.timedelta in days of the maximum age to
+        consider for a file.
         :returns: Int count of deleted items.
         """
 
