@@ -25,7 +25,7 @@ from msg_file_util import MSGFileUtil
 import time
 from httplib import BadStatusLine
 import requests
-from io import StringIO
+from StringIO import StringIO
 from requests.adapters import SSLError
 
 
@@ -191,8 +191,8 @@ class MSGDBExporter(object):
                     # Generate the SQL script export.
                     self.logger.log('cmd: {}'.format(command))
                     subprocess.check_call(command, shell = True)
-            except subprocess.CalledProcessError, e:
-                self.logger.log("Exception while dumping: {}".format(e))
+            except subprocess.CalledProcessError as error:
+                self.logger.log("Exception while dumping: {}".format(error))
                 noErrors = False
 
             # Obtain the checksum for the export prior to compression.
@@ -312,9 +312,9 @@ class MSGDBExporter(object):
                 if not testing:
                     self.logger.log('Removing {}'.format(fullPath))
                     os.remove('{}'.format(fullPath))
-            except OSError as e:
+            except OSError as error:
                 self.logger.log(
-                    'Exception while removing {}: {}.'.format(fullPath, e))
+                    'Exception while removing {}: {}.'.format(fullPath, error))
                 noErrors = False
 
         # End for db in databases.
@@ -446,7 +446,7 @@ class MSGDBExporter(object):
         try:
             self.driveService.files().delete(fileId = fileID).execute()
 
-        except errors.HttpError, error:
+        except errors.HttpError as error:
             self.logger.log('Exception while deleting: {}'.format(error),
                             'error')
 
@@ -500,8 +500,19 @@ class MSGDBExporter(object):
         Send available files via HTTP POST.
         :returns: None
         """
+
+        myPath = '{}/{}'.format(
+            self.configer.configOptionValue('Export', 'db_export_path'),
+            'list-of-downloadable-files.txt')
+
+        fp = open(myPath, 'wb')
+
         output = StringIO()
         output.write(self.markdownListOfDownloadableFiles())
+
+        fp.write(self.markdownListOfDownloadableFiles())
+        fp.close()
+
         headers = {'User-Agent': 'Maui Smart Grid 1.0.0 DB Exporter',
                    'Content-Type': 'text/html'}
         try:
@@ -581,16 +592,32 @@ class MSGDBExporter(object):
 
         self.logger.log('local md5: {}'.format(localMD5Sum), 'DEBUG')
 
-        # Get the MD5 sum for the remote file.
-        for item in self.cloudFiles['items']:
-            if (item['id'] == remoteFileID):
-                self.logger.log('remote md5: {}'.format(item['md5Checksum']),
-                                'DEBUG')
-                if localMD5Sum == item['md5Checksum']:
-                    return True
-                else:
-                    return False
-        return False
+        def verifyFile():
+            # Get the MD5 sum for the remote file.
+            for item in self.cloudFiles['items']:
+                if (item['id'] == remoteFileID):
+                    self.logger.log(
+                        'remote md5: {}'.format(item['md5Checksum']), 'DEBUG')
+                    if localMD5Sum == item['md5Checksum']:
+                        return True
+                    else:
+                        return False
+
+        try:
+            if verifyFile():
+                return True
+            else:
+                return False
+
+        except errors.HttpError as detail:
+            self.logger.log('HTTP error during MD5 verification.', 'error')
+
+            time.sleep(10)
+
+            if verifyFile():
+                return True
+            else:
+                return False
 
 
     def fileIDForFileName(self, filename):
@@ -651,7 +678,7 @@ class MSGDBExporter(object):
                         body = permission).execute()
                     self.logger.log(
                         'Reader permission added for {}.'.format(addr))
-                except errors.HttpError, error:
+                except errors.HttpError as error:
                     self.logger.log('An error occurred: {}'.format(error))
                     success = False
 
