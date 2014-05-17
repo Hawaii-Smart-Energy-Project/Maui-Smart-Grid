@@ -25,11 +25,11 @@ from msg_configer import MSGConfiger
 from msg_logger import MSGLogger
 import argparse
 
-commandLineArgs = None
+COMMAND_LINE_ARGS = None
 logger = MSGLogger(__name__, 'debug')
 
 def processCommandLineArguments():
-    global argParser, commandLineArgs, filename
+    global argParser, COMMAND_LINE_ARGS, filename
     argParser = argparse.ArgumentParser(
         description = 'Perform insertion of Meter Location History contained '
                       'in the file given by --filename to the MECO database '
@@ -51,11 +51,11 @@ if __name__ == '__main__':
 
     processCommandLineArguments()
 
-    filename = commandLineArgs.filename
+    filename = COMMAND_LINE_ARGS.filename
 
     success = True
     anyFailure = False
-    connector = MSGDBConnector(testing = commandLineArgs.testing)
+    connector = MSGDBConnector(testing = COMMAND_LINE_ARGS.testing)
     conn = connector.connectDB()
     cur = conn.cursor()
     dbUtil = MSGDBUtil()
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     msgBody = ''
     configer = MSGConfiger()
 
-    if commandLineArgs.testing:
+    if COMMAND_LINE_ARGS.testing:
         dbName = configer.configOptionValue("Database", "testing_db_name")
     else:
         dbName = configer.configOptionValue("Database", "db_name")
@@ -122,5 +122,5 @@ if __name__ == '__main__':
         sys.stderr.write(msg)
         msgBody += msg
 
-    if commandLineArgs.email:
-        notifier.sendNotificationEmail(msgBody, testing = commandLineArgs.testing)
+    if COMMAND_LINE_ARGS.email:
+        notifier.sendNotificationEmail(msgBody, testing = COMMAND_LINE_ARGS.testing)

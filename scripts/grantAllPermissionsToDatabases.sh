@@ -42,10 +42,10 @@ function performGrantNonMSG {
 }
 
 function grant {
+    SCHEME="public"
     echo "Granting all permissions on database $1...";
-    echo "Role $role."
-    echo "Granting to scheme $scheme."
-    performGrant public $1
+    echo "Granting to scheme $SCHEME."
+    performGrant $SCHEME $1
 }
 
 function grantNonMSG {

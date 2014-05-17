@@ -80,7 +80,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
 
     def testListOfDownloadableFiles(self):
-        for row in self.exporter.__listOfDownloadableFiles():
+        for row in self.exporter.listOfDownloadableFiles():
             print row
             self.assertIsNotNone(row['id'])
             self.assertIsNotNone(row['title'])
@@ -106,11 +106,11 @@ class MSGDBExporterTester(unittest.TestCase):
         Retrieve the matching file IDs for the given file name.
         """
 
-        # @todo Upload file for testing.
+        self.logger.log('Testing getting file IDs for a filename.')
         self.logger.log("Uploading test data.")
 
-        filePath = "%s/%s" % (
-            self.exportTestDataPath, self.compressedTestFilename)
+        filePath = "{}/{}".format(self.exportTestDataPath,
+                                  self.compressedTestFilename)
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
 
@@ -118,26 +118,37 @@ class MSGDBExporterTester(unittest.TestCase):
 
         self.logger.log('Testing getting the file ID for a filename.')
 
-        fileIDs = self.exporter._MSGDBExporter__fileIDForFileName(
-            self.compressedTestFilename)
-        self.logger.log("file ids = %s" % fileIDs, 'info')
+        fileIDs = self.exporter.fileIDForFileName(self.compressedTestFilename)
+        self.logger.log("file ids = {}".format(fileIDs), 'info')
 
         self.assertIsNotNone(fileIDs)
+
+    def test_get_file_id_for_nonexistent_file(self):
+        """
+        Test getting a file ID for a nonexistent file.
+        """
+
+        fileIDs = self.exporter.fileIDForFileName('nonexistent_file')
+        self.logger.log("file ids = {}".format(fileIDs), 'info')
+        self.assertIsNone(fileIDs)
 
 
     def testUploadTestData(self):
         """
         Upload a test data file for unit testing of DB export.
+
+        The unit test data file is a predefined set of test data stored in
+        the test data path of the software distribution.
         """
 
         self.logger.log("Uploading test data.")
 
-        filePath = "%s/%s" % (
-            self.exportTestDataPath, self.compressedTestFilename)
-        self.logger.log('Uploaded %s.' % filePath, 'info')
+        filePath = "{}/{}".format(self.exportTestDataPath,
+                                  self.compressedTestFilename)
+        self.logger.log('Uploaded {}.'.format(filePath), 'info')
 
         uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
-        self.logger.log('upload result: %s' % uploadResult)
+        self.logger.log('upload result: {}'.format(uploadResult))
 
         self.assertTrue(uploadResult)
 
@@ -195,7 +206,7 @@ class MSGDBExporterTester(unittest.TestCase):
         new_permission = {'value': email, 'type': 'user', 'role': 'reader'}
         try:
             self.logger.log('Adding reader permission', 'INFO')
-            fileIDToAddTo = self.exporter._MSGDBExporter__fileIDForFileName(
+            fileIDToAddTo = self.exporter.fileIDForFileName(
                 self.compressedTestFilename)
 
             # The permission dict is being output to stdout here.
@@ -208,7 +219,7 @@ class MSGDBExporterTester(unittest.TestCase):
                 'error')
 
 
-    def testCreateCompressedArchived(self):
+    def test_create_compressed_archived(self):
         """
         * Copy test data to a temp directory.
         * Create a checksum for test data.
@@ -222,13 +233,11 @@ class MSGDBExporterTester(unittest.TestCase):
 
         self.logger.log('Testing verification of a compressed archive.')
 
-        self.logger.log('cwd %s' % os.getcwd())
-        fullPath = '%s' % (
-            os.path.join(os.getcwd(), self.testDir,
-                         self.uncompressedTestFilename))
-        shutil.copyfile(
-            '%s/%s' % (self.exportTestDataPath, self.uncompressedTestFilename),
-            fullPath)
+        self.logger.log('cwd {}'.format(os.getcwd()))
+        fullPath = '{}'.format(os.path.join(os.getcwd(), self.testDir,
+                                            self.uncompressedTestFilename))
+        shutil.copyfile('{}/{}'.format(self.exportTestDataPath,
+                                       self.uncompressedTestFilename), fullPath)
 
         md5sum1 = self.fileUtil.md5Checksum(fullPath)
 
@@ -238,10 +247,11 @@ class MSGDBExporterTester(unittest.TestCase):
             os.remove(os.path.join(os.getcwd(), self.testDir,
                                    self.uncompressedTestFilename))
         except OSError as detail:
-            self.logger.log('Exception while removing: %s' % detail, 'ERROR')
+            self.logger.log('Exception while removing: {}'.format(detail),
+                            'ERROR')
 
         # Extract archived data and generate checksum.
-        src = gzip.open('%s%s' % (fullPath, '.gz'), "rb")
+        src = gzip.open('{}{}'.format(fullPath, '.gz'), "rb")
         uncompressed = open(fullPath, "wb")
         decoded = src.read()
         uncompressed.write(decoded)
@@ -250,51 +260,55 @@ class MSGDBExporterTester(unittest.TestCase):
         md5sum2 = self.fileUtil.md5Checksum(fullPath)
 
         self.assertEqual(md5sum1, md5sum2,
-                         'Checksums are equal for original and new '
+                         'Checksums are not equal for original and new '
                          'decompressed archive.')
 
-    def testExportDB(self):
+
+    def test_export_db(self):
         """
         Perform a quick test of the DB export method using Testing Mode.
+
+        @todo This needs a static test database!
         """
 
         self.logger.log('Testing exportDB')
         dbs = ['test_meco']
         success = self.exporter.exportDB(databases = dbs, toCloud = True,
                                          localExport = True, numChunks = 4)
-        self.logger.log('Success: %s' % success)
-        self.assertTrue(success, "Export was successful.")
+        self.logger.log('Success: {}'.format(success))
+        self.assertTrue(success, "Export was not successful.")
 
 
-    def testSplitArchive(self):
+    def test_split_archive(self):
         """
         Test splitting an archive into chunks.
         """
 
-        fullPath = '%s/%s' % (
-            self.exportTestDataPath, self.compressedTestFilename)
-        self.logger.log('fullpath: %s' % fullPath)
-        shutil.copyfile(fullPath, '%s/%s' % (
-            self.testDir, self.compressedTestFilename))
-        fullPath = '%s/%s' % (
-            self.testDir, self.compressedTestFilename)
+        self.logger.log('Testing archive splitting.')
+        fullPath = '{}/{}'.format(self.exportTestDataPath,
+                                  self.compressedTestFilename)
+        self.logger.log('fullpath: {}'.format(fullPath))
+        shutil.copyfile(fullPath, '{}/{}'.format(self.testDir,
+                                                 self.compressedTestFilename))
+        fullPath = '{}/{}'.format(self.testDir, self.compressedTestFilename)
 
         self.fileChunks = self.fileUtil.splitLargeFile(fullPath = fullPath,
                                                        numChunks = 3)
-
         self.assertGreater(len(self.fileChunks), 0,
                            'Chunk number is greater than zero.')
 
-    def testGetFileSize(self):
+
+    def test_get_file_size(self):
         """
         Test retrieving local file sizes.
         """
 
-        fullPath = '%s/%s' % (
-            self.exportTestDataPath, self.compressedTestFilename)
+        fullPath = '{}/{}'.format(self.exportTestDataPath,
+                                  self.compressedTestFilename)
         fSize = self.fileUtil.fileSize(fullPath)
-        self.logger.log('size: %s' % fSize)
+        self.logger.log('size: {}'.format(fSize))
         self.assertEqual(fSize, 12279, 'File size is correct.')
+
 
     def testUploadExportFilesList(self):
         """
@@ -345,8 +359,7 @@ class MSGDBExporterTester(unittest.TestCase):
         # Keep deleting from the cloud until there is no more to delete.
         while deleteSuccessful:
             try:
-                fileIDToDelete = self.exporter\
-                    ._MSGDBExporter__fileIDForFileName(
+                fileIDToDelete = self.exporter.fileIDForFileName(
                     self.compressedTestFilename)
                 self.logger.log("file ID to delete: %s" % fileIDToDelete,
                                 'DEBUG')
@@ -361,14 +374,11 @@ if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
-        # selected_tests = ['testAddingReaderPermissions',
-        #                   'testDeleteOutdatedFiles', 'testGetMD5SumFromCloud']
-        # selected_tests = ['testDownloadURLList','testListOfDownloadableFiles']
-        # selected_tests = ['testDeleteOutdatedFiles']
-        selected_tests = ['testDeleteOutdatedFiles',
-                          'testUploadExportFilesList']
-        # selected_tests = ['testUploadExportFilesList']
-        # selected_tests = ['testUploadTestData']
+        selected_tests = ['testUploadTestData', 'testGetFileIDsForFilename',
+                          'test_get_file_id_for_nonexistent_file',
+                          'test_get_file_size', 'test_split_archive',
+                          'test_create_compressed_archived','test_export_db']
+        selected_tests = ['test_export_db']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:

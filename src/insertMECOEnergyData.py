@@ -42,7 +42,7 @@ configer = MSGConfiger()
 logger = MSGLogger(__name__, 'info')
 binPath = MSGConfiger.configOptionValue(configer, "Executable Paths",
                                         "bin_path")
-commandLineArgs = None
+COMMAND_LINE_ARGS = None
 global msgBody
 notifier = MSGNotifier()
 
@@ -50,10 +50,10 @@ notifier = MSGNotifier()
 def processCommandLineArguments():
     """
     Generate command-line arguments. Load them into global variable
-    commandLineArgs.
+    COMMAND_LINE_ARGS.
     """
 
-    global parser, commandLineArgs
+    global parser, COMMAND_LINE_ARGS
     parser = argparse.ArgumentParser(
         description = 'Perform recursive insertion of data contained in the '
                       'current directory to the MECO database specified in the '
@@ -124,7 +124,7 @@ def insertDataWrapper(fullPath):
     myLog += fullPath
     myLog += "\n"
     startTime = time.time()
-    myLog += inserter.insertData(fullPath, testing = commandLineArgs.testing,
+    myLog += inserter.insertData(fullPath, testing = COMMAND_LINE_ARGS.testing,
                                  jobID = match.group(1))
     myLog += "\n"
 
@@ -163,16 +163,16 @@ if __name__ == '__main__':
 
     inserter = Inserter()
 
-    if commandLineArgs.testing:
+    if COMMAND_LINE_ARGS.testing:
         logger.log("Testing mode is ON.\n", 'info')
-    if commandLineArgs.email:
+    if COMMAND_LINE_ARGS.email:
         logger.log("Email will be sent.\n", 'info')
 
     msg = '' # Used for the notification message.
     msgBody = '' # Used for the notification message.
     databaseName = ''
 
-    if commandLineArgs.testing:
+    if COMMAND_LINE_ARGS.testing:
         databaseName = configer.configOptionValue("Database", "testing_db_name")
     else:
         databaseName = configer.configOptionValue("Database", "db_name")
@@ -200,8 +200,8 @@ if __name__ == '__main__':
               "proceed."
         print msg
         msgBody += msg + "\n"
-        if (commandLineArgs.email):
-            notifier.sendNotificationEmail(msgBody, commandLineArgs.testing)
+        if (COMMAND_LINE_ARGS.email):
+            notifier.sendNotificationEmail(msgBody, COMMAND_LINE_ARGS.testing)
         sys.exit(-1)
 
     insertScript = "%s/insertSingleMECOEnergyDataFile.py" % binPath
@@ -260,7 +260,7 @@ if __name__ == '__main__':
     logger.log(msg)
     msgBody += msg + "\n"
 
-    plotter = MECOPlotting(commandLineArgs.testing)
+    plotter = MECOPlotting(COMMAND_LINE_ARGS.testing)
 
     try:
         plotter.plotReadingAndMeterCounts(databaseName)
@@ -271,8 +271,8 @@ if __name__ == '__main__':
 
     msgBody += msg
 
-    if commandLineArgs.email:
+    if COMMAND_LINE_ARGS.email:
         notifier.sendMailWithAttachments(msgBody, makePlotAttachments(),
-                                         commandLineArgs.testing)
+                                         COMMAND_LINE_ARGS.testing)
 
     logger.log("msgBody = %s" % msgBody)

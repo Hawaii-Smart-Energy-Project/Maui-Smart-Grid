@@ -15,7 +15,7 @@ Usage:
 """
 
 __author__ = 'Daniel Zhang (張道博)'
-__copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
+__copyright__ = 'Copyright (c) 2014, University of Hawaii Smart Energy Project'
 __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
@@ -27,23 +27,23 @@ import argparse
 import time
 
 
-commandLineArgs = None
+COMMAND_LINE_ARGS = None
 
 
 def processCommandLineArguments():
     """
     Generate command-line arguments. Load them into global variable
-    commandLineArgs.
+    COMMAND_LINE_ARGS.
     """
 
-    global parser, commandLineArgs
+    global parser, COMMAND_LINE_ARGS
     parser = argparse.ArgumentParser(description = '')
     parser.add_argument('--dbname', help = 'Database file to be uploaded.')
     parser.add_argument('--fullpath',
                         help = 'Full path to database file to be uploaded.')
     parser.add_argument('--testing', action = 'store_true', default = False)
 
-    commandLineArgs = parser.parse_args()
+    COMMAND_LINE_ARGS = parser.parse_args()
 
 
 if __name__ == '__main__':
@@ -59,10 +59,11 @@ if __name__ == '__main__':
     startTime = time.time()
     exporter.exportDB(databases = exporter.configer.configOptionValue('Export',
                                                                       'dbs_to_export').split(
-        ','), toCloud = True, testing = commandLineArgs.testing,
+        ','), toCloud = True, testing = COMMAND_LINE_ARGS.testing,
                       numChunks = int(
                           exporter.configer.configOptionValue('Export',
-                                                              'num_split_sections')))
+                                                              'num_split_sections')),
+                      deleteOutdated = True)
 
     wallTime = time.time() - startTime
     wallTimeMin = int(wallTime / 60.0)

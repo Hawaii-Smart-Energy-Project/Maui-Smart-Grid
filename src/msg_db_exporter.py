@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__ = 'Daniel Zhang (張道博)'
-__copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
+__copyright__ = 'Copyright (c) 2014, University of Hawaii Smart Energy Project'
 __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
@@ -25,7 +25,7 @@ from msg_file_util import MSGFileUtil
 import time
 from httplib import BadStatusLine
 import requests
-from io import StringIO
+from StringIO import StringIO
 from requests.adapters import SSLError
 
 
@@ -34,6 +34,19 @@ class MSGDBExporter(object):
     Export MSG DBs as SQL scripts.
 
     Supports export to local storage and to cloud storage.
+
+    Usage:
+
+    from msg_db_exporter import MSGDBExporter
+    exporter = MSGDBExporter()
+
+    Public API:
+
+    exportDB(databases:List, 
+             toCloud:Boolean, 
+             testing:Boolean,
+             numChunks:Integer, 
+             deleteOutdated:Boolean): Export a list of DBs to the cloud.
     """
 
     @property
@@ -48,7 +61,8 @@ class MSGDBExporter(object):
 
         if not self.credentialPath:
             raise Exception("Credential path is required.")
-        storage = Storage('%s/google_api_credentials' % self.credentialPath)
+        storage = Storage(
+            '{}/google_api_credentials'.format(self.credentialPath))
 
         self.googleAPICredentials = storage.get()
 
@@ -67,7 +81,7 @@ class MSGDBExporter(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__, 'DEBUG')
+        self.logger = MSGLogger(__name__, 'DEBUG', useColor = False)
         self.timeUtil = MSGTimeUtil()
         self.configer = MSGConfiger()
         self.fileUtil = MSGFileUtil()
@@ -84,7 +98,7 @@ class MSGDBExporter(object):
                                                           'db_export_path')
         self.credentialPath = self.exportPath
         self.credentialStorage = Storage(
-            '%s/google_api_credentials' % self.credentialPath)
+            '{}/google_api_credentials'.format(self.credentialPath))
 
         self._driveService = None
         self._cloudFiles = None
@@ -104,25 +118,43 @@ class MSGDBExporter(object):
 
         # Get the checksum of the original file.
         md5sum = self.fileUtil.md5Checksum(self.exportPath)
-        self.logger.log('md5sum: %s' % md5sum)
+        self.logger.log('md5sum: {}'.format(md5sum))
 
+
+    def db_username(self):
+        return "postgres"
+        # return self.configer.configOptionValue('Database', 'db_username')
+
+    def db_password(self):
+        return self.configer.configOptionValue('Database', 'db_password')
+
+    def db_port(self):
+        return self.configer.configOptionValue('Database', 'db_port')
 
     def exportDB(self, databases = None, toCloud = False, localExport = True,
-                 testing = False, chunkSize = 0, numChunks = 0):
+                 testing = False, chunkSize = 0, numChunks = 0,
+                 deleteOutdated = False):
         """
         Export a set of DBs to local storage.
 
         This method makes use of
 
-        pg_dump -s -h ${HOST} ${DB_NAME} > ${DUMP_TIMESTAMP}_{DB_NAME}.sql
+        pg_dump -s -h ${HOST}
+                   -U ${USERNAME}
+                   ${DB_NAME} >
+                   ${DUMP_TIMESTAMP}_{DB_NAME}.sql
 
         :param databases: List of database names that will be exported.
-        :param toCloud: If set to True, then the export will also be copied to
-        cloud storage.
-        :param localExport: When set to True, the DB is exported locally.
-        :param testing: Flag for testing mode. (@DEPRECATED)
-        :param chunkSize: size in bytes of chunk size used for splitting.
-        :returns: True if no errors have occurred, False otherwise.
+        :param toCloud: Boolean if set to True, then the export will also be
+        copied to cloud storage.
+        :param localExport: Boolean when set to True, the DB is exported
+        locally.
+        :param testing: Boolean flag for testing mode. (@DEPRECATED)
+        :param chunkSize: Integer size in bytes of chunk size used for
+        splitting.
+        :param deleteOutdated: Boolean indicating outdated files in the cloud
+        should be removed.
+        :returns: Boolean True if no errors have occurred, False otherwise.
         """
 
         noErrors = True
@@ -130,56 +162,63 @@ class MSGDBExporter(object):
         host = self.configer.configOptionValue('Database', 'db_host')
 
         for db in databases:
-            self.logger.log('Exporting %s using pg_dump.' % db, 'info')
+            self.logger.log('Exporting {} using pg_dump.'.format(db), 'info')
             conciseNow = self.timeUtil.conciseNow()
 
-            dumpName = "%s_%s" % (conciseNow, db)
+            dumpName = "{}_{}".format(conciseNow, db)
 
-            command = """pg_dump -h %s %s > %s/%s.sql""" % (host, db,
-                                                            self.configer
-                                                            .configOptionValue(
-                                                                'Export',
-                                                                'db_export_path'),
-                                                            dumpName)
+            # For reference only:
+            # Password is passed from ~/.pgpass.
+            # Note that ':' and '\' characters should be escaped with '\'.
+            # Ref: http://www.postgresql.org/docs/9.1/static/libpq-pgpass.html
 
-            fullPath = '%s/%s.sql' % (
+            # Dump databases as the superuser. This method does not require a
+            # stored password when running under a root crontab.
+            command = 'sudo -u postgres pg_dump -p {0} -U {1} {2} > {3}/{4}' \
+                      '.sql'.format(self.db_port(), self.db_username(), db,
+                                    self.configer.configOptionValue('Export',
+                                                                    'db_export_path'),
+                                    dumpName)
+
+            fullPath = '{}/{}.sql'.format(
                 self.configer.configOptionValue('Export', 'db_export_path'),
                 dumpName)
 
-            self.logger.log('fullPath: %s' % fullPath, 'DEBUG')
+            self.logger.log('fullPath: {}'.format(fullPath), 'DEBUG')
 
             try:
                 if localExport:
                     # Generate the SQL script export.
+                    self.logger.log('cmd: {}'.format(command))
                     subprocess.check_call(command, shell = True)
-            except subprocess.CalledProcessError, e:
-                self.logger.log("Exception while dumping: %s" % e)
+            except subprocess.CalledProcessError as error:
+                self.logger.log("Exception while dumping: {}".format(error))
                 noErrors = False
 
             # Obtain the checksum for the export prior to compression.
             md5sum1 = self.fileUtil.md5Checksum(fullPath)
 
             try:
-                self.logger.log("mtime: %s, md5sum1: %s" % (
+                self.logger.log("mtime: {}, md5sum1: {}".format(
                     time.ctime(os.path.getmtime(fullPath)), md5sum1), 'INFO')
             except OSError as detail:
-                self.logger.log('Exception while accessing %s.' % fullPath,
-                                'ERROR')
+                self.logger.log(
+                    'Exception while accessing {}.'.format(fullPath), 'ERROR')
 
             # Perform compression of the file.
-            self.logger.log("Compressing %s using gzip." % db, 'info')
-            self.logger.log('fullpath: %s' % fullPath, 'DEBUG')
+            self.logger.log("Compressing {} using gzip.".format(db), 'info')
+            self.logger.log('fullpath: {}'.format(fullPath), 'DEBUG')
 
             self.fileUtil.gzipCompressFile(fullPath)
-            compressedFullPath = '%s%s' % (fullPath, '.gz')
+            compressedFullPath = '{}{}'.format(fullPath, '.gz')
 
             # Verify the compressed file by uncompressing it and verifying its
             # checksum against the original checksum.
-            self.logger.log('reading: %s' % compressedFullPath, 'DEBUG')
-            self.logger.log('writing: %s' % os.path.join(
+            self.logger.log('reading: {}'.format(compressedFullPath), 'DEBUG')
+            self.logger.log('writing: {}'.format(os.path.join(
                 self.configer.configOptionValue('Testing',
                                                 'export_test_data_path'),
-                os.path.splitext(os.path.basename(fullPath))[0]), 'DEBUG')
+                os.path.splitext(os.path.basename(fullPath))[0])), 'DEBUG')
 
             # Gzip uncompress and verify by checksum is disabled until a more
             # efficient, non-memory-based, uncompress is implemented.
@@ -200,7 +239,7 @@ class MSGDBExporter(object):
             if VERIFY_BY_CHECKSUM:
                 md5sum2 = self.fileUtil.md5Checksum(fullPath)
 
-                self.logger.log("mtime: %s, md5sum2: %s" % (
+                self.logger.log("mtime: {}, md5sum2: {}".format(
                     time.ctime(os.path.getmtime(fullPath)), md5sum2), 'INFO')
 
                 if md5sum1 == md5sum2:
@@ -212,12 +251,9 @@ class MSGDBExporter(object):
 
             if toCloud:
                 if numChunks != 0:
-                    self.logger.log('Splitting %s' % compressedFullPath,
+                    self.logger.log('Splitting {}'.format(compressedFullPath),
                                     'DEBUG')
-                    # filesToUpload = self.fileUtil.splitLargeFile(
-                    #     fullPath = compressedFullPath, chunkSize = chunkSize,
-                    #     numChunks = self.numberOfChunksToUse(
-                    #         compressedFullPath))
+
                     filesToUpload = self.fileUtil.splitLargeFile(
                         fullPath = compressedFullPath, chunkSize = chunkSize,
                         numChunks = self.numberOfChunksToUse(
@@ -225,37 +261,67 @@ class MSGDBExporter(object):
 
                     if not filesToUpload:
                         raise Exception('Exception during file splitting.')
-                    self.logger.log('to upload: %s' % filesToUpload, 'debug')
+                    self.logger.log('to upload: {}'.format(filesToUpload),
+                                    'debug')
                 else:
                     filesToUpload = [compressedFullPath]
 
                 # Upload the files to the cloud.
 
-                self.logger.log('files to upload: %s' % filesToUpload, 'debug')
+                self.logger.log('files to upload: {}'.format(filesToUpload),
+                                'debug')
                 for f in filesToUpload:
-                    self.logger.log('Uploading %s.' % f, 'info')
-                    fileID = self.uploadDBToCloudStorage(f, testing = testing)
-                    self.logger.log('file id after upload: %s' % fileID)
-                    self.addReaders(fileID,
-                                    self.configer.configOptionValue('Export',
-                                                                    'read_permission').split(
-                                        ','))
+                    self.logger.log('Uploading {}.'.format(f), 'info')
+                    fileID = self.uploadFileToCloudStorage(fullPath = f,
+                                                           testing = testing)
+                    if not fileID:
+                        self.logger.log('Retrying upload of {}.'.format(f),
+                                        'warning')
+                        time.sleep(10)
+                        fileID = self.uploadFileToCloudStorage(fullPath = f,
+                                                               testing =
+                                                               testing)
+
+                    self.logger.log('file id after upload: {}'.format(fileID))
+
+                    if fileID != None:
+                        if not self.addReaders(fileID,
+                                               self.configer.configOptionValue(
+                                                       'Export',
+                                                       'read_permission').split(
+                                                       ',')):
+                            time.sleep(10)
+                            self.logger.log(
+                                'Retrying adding readers for {}.'.format(f),
+                                'warning')
+
+                            if not self.addReaders(fileID,
+                                                   self.configer
+                                                           .configOptionValue(
+                                                           'Export',
+                                                           'read_permission')
+                                                           .split(
+                                                           ',')):
+                                self.logger.log(
+                                    'Failed to add readers for {}.'.format(f),
+                                    'error')
+
 
             # Remove the uncompressed file.
             try:
                 if not testing:
-                    self.logger.log('Removing %s' % fullPath)
-                    os.remove('%s' % fullPath)
-            except OSError as e:
+                    self.logger.log('Removing {}'.format(fullPath))
+                    os.remove('{}'.format(fullPath))
+            except OSError as error:
                 self.logger.log(
-                    'Exception while removing %s: %s.' % (fullPath, e))
+                    'Exception while removing {}: {}.'.format(fullPath, error))
                 noErrors = False
 
         # End for db in databases.
 
-        # @todo implement separate delete outdated runner
-        self.deleteOutdatedFiles(minAge = datetime.timedelta(days = int(
-            self.configer.configOptionValue('Export', 'days_to_keep'))))
+        if deleteOutdated:
+            self.deleteOutdatedFiles(minAge = datetime.timedelta(days = int(
+                self.configer.configOptionValue('Export', 'days_to_keep'))))
 
         return noErrors
 
@@ -264,35 +330,37 @@ class MSGDBExporter(object):
         """
         Return the number of chunks to be used by the file splitter based on
         the file size of the file at fullPath.
-        :param fullPath
-        :returns: int Number of chunks to create.
+        :param fullPath: String
+        :returns: Int Number of chunks to create.
         """
 
         fsize = os.path.getsize(fullPath)
-        self.logger.log('fullpath: %s, fsize: %s' % (fullPath, fsize))
+        self.logger.log('fullpath: {}, fsize: {}'.format(fullPath, fsize))
         if (fsize >= int(self.configer.configOptionValue('Export',
                                                          'max_bytes_before_split'))):
-            self.logger.log('will split with config defined num chunks')
+            self.logger.log('Will split with config defined number of chunks.')
             return int(
                 self.configer.configOptionValue('Export', 'num_split_sections'))
         self.logger.log('will NOT split file')
         return 1
 
 
-    def uploadDBToCloudStorage(self, fullPath = '', testing = False):
+    def uploadFileToCloudStorage(self, fullPath = '', testing = False):
         """
-        Export a DB to cloud storage.
+        Export a file to cloud storage.
 
-        :param fullPath of DB file to be exported.
-        :param testing: When to to True, Testing Mode is used.
-        :returns: File ID on verified on upload; None if verification fails.
+        :param fullPath: String of file to be exported.
+        :param testing: Boolean when set to True, Testing Mode is used.
+        :returns: String File ID on verified on upload; None if verification
+        fails.
         """
 
         success = True
-        dbName = os.path.basename(fullPath)
+        myFile = os.path.basename(fullPath)
 
-        self.logger.log('full path %s' % os.path.dirname(fullPath), 'DEBUG')
-        self.logger.log("Uploading %s." % dbName)
+        self.logger.log(
+            'full path {}'.format(os.path.dirname(fullPath), 'DEBUG'))
+        self.logger.log("Uploading {}.".format(myFile))
 
         result = {}
         try:
@@ -300,7 +368,7 @@ class MSGDBExporter(object):
                                          mimetype =
                                          'application/gzip-compressed',
                                          resumable = True)
-            body = {'title': dbName,
+            body = {'title': myFile,
                     'description': 'Hawaii Smart Energy Project gzip '
                                    'compressed DB export.',
                     'mimeType': 'application/gzip-compressed'}
@@ -310,13 +378,14 @@ class MSGDBExporter(object):
                                                       media_body =
                                                       media_body).execute()
 
-        except (errors.ResumableUploadError, BadStatusLine) as detail:
+        except Exception as detail:
             # Upload failures can result in a BadStatusLine.
             self.logger.log(
-                "Exception while uploading %s: %s." % (dbName, detail), 'error')
+                "Exception while uploading {}: {}.".format(myFile, detail),
+                'error')
             success = False
 
-        if not self.__verifyMD5Sum(fullPath, self.__fileIDForFileName(dbName)):
+        if not self.__verifyMD5Sum(fullPath, self.fileIDForFileName(myFile)):
             self.logger.log('Failed MD5 checksum verification.', 'INFO')
             success = False
 
@@ -344,8 +413,9 @@ class MSGDBExporter(object):
         code = raw_input('Enter verification code: ').strip()
         self.googleAPICredentials = flow.step2_exchange(code)
 
-        print "refresh_token = %s" % self.googleAPICredentials.refresh_token
-        print "expiry = %s" % self.googleAPICredentials.token_expiry
+        print "refresh_token = {}".format(
+            self.googleAPICredentials.refresh_token)
+        print "expiry = {}".format(self.googleAPICredentials.token_expiry)
 
 
     def freeSpace(self):
@@ -353,7 +423,7 @@ class MSGDBExporter(object):
         Get free space from the drive service.
 
         :param driveService: Object for the drive service.
-        :returns: Free space on the drive service as an integer.
+        :returns: Int of free space (bytes) on the drive service.
         """
 
         aboutData = self.driveService.about().get().execute()
@@ -366,17 +436,19 @@ class MSGDBExporter(object):
         """
         Delete the file with ID fileID.
 
-        :param fileID: Googe API file ID.
+        :param fileID: String of a Google API file ID.
         """
 
-        # @todo Report filename.
-        self.logger.log('Deleting file with file ID: %s' % fileID, 'debug')
+        # @todo Report the filename.
+        self.logger.log('Deleting file with file ID: {}'.format(fileID),
+                        'debug')
 
         try:
             self.driveService.files().delete(fileId = fileID).execute()
 
-        except errors.HttpError, error:
-            self.logger.log('Exception while deleting: %s' % error, 'error')
+        except errors.HttpError as error:
+            self.logger.log('Exception while deleting: {}'.format(error),
+                            'error')
 
 
     def deleteOutdatedFiles(self, minAge = datetime.timedelta(days = 0),
@@ -384,15 +456,11 @@ class MSGDBExporter(object):
         """
         Remove outdated files from cloud storage.
 
-        @TO BE REVIEWED
-        This requires a recursive implementation to always completely
-        remove all files older than minAge.
-
-        This may be an issue with the Google Drive SDK.
-
-        :param minAge: Minimum age before a file is considered outdated.
-        :param maxAge: Maximum age to consider for a file.
-        :returns: Count of deleted items.
+        :param minAge: datetime.timedelta in days of the minimum age before a
+        file is considered outdated.
+        :param maxAge: datetime.timedelta in days of the maximum age to
+        consider for a file.
+        :returns: Int count of deleted items.
         """
 
         self.logger.log('Deleting outdated.', 'DEBUG')
@@ -404,12 +472,13 @@ class MSGDBExporter(object):
         for item in self.cloudFiles['items']:
             t1 = datetime.datetime.strptime(item['createdDate'],
                                             "%Y-%m-%dT%H:%M:%S.%fZ")
-            self.logger.log('t1: %s' % t1.strftime('%Y-%m-%d %H:%M:%S'),
+            self.logger.log('t1: {}'.format(t1.strftime('%Y-%m-%d %H:%M:%S')),
                             'debug')
             t2 = datetime.datetime.now()
             tdelta = t2 - t1
-            self.logger.log('tdelta: %s, min age: %s, max age: %s' % (
-                tdelta, minAge, maxAge), 'debug')
+            self.logger.log(
+                'tdelta: {}, min age: {}, max age: {}'.format(tdelta, minAge,
+                                                              maxAge), 'debug')
             if tdelta > minAge and tdelta < maxAge:
                 deleteCnt += 1
                 self.deleteFile(fileID = item['id'])
@@ -428,26 +497,37 @@ class MSGDBExporter(object):
 
     def sendDownloadableFiles(self):
         """
-        Send available files via POST.
-        :returns:
+        Send available files via HTTP POST.
+        :returns: None
         """
+
+        myPath = '{}/{}'.format(
+            self.configer.configOptionValue('Export', 'db_export_path'),
+            'list-of-downloadable-files.txt')
+
+        fp = open(myPath, 'wb')
+
         output = StringIO()
         output.write(self.markdownListOfDownloadableFiles())
+
+        fp.write(self.markdownListOfDownloadableFiles())
+        fp.close()
+
         headers = {'User-Agent': 'Maui Smart Grid 1.0.0 DB Exporter',
                    'Content-Type': 'text/html'}
         try:
             r = requests.post(self.configer.configOptionValue('Export',
                                                               'export_list_post_url'),
                               output.getvalue(), headers = headers)
-            print 'text: %s' % r.text
+            print 'text: {}'.format(r.text)
         except requests.adapters.SSLError as error:
             # @todo Implement alternative verification.
-            self.logger.log('SSL error: %s' % error)
+            self.logger.log('SSL error: {}'.format(error), 'error')
 
         output.close()
 
 
-    def __listOfDownloadableFiles(self):
+    def listOfDownloadableFiles(self):
         """
         Create a list of downloadable files.
         :returns: List of files.
@@ -468,18 +548,21 @@ class MSGDBExporter(object):
 
     def markdownListOfDownloadableFiles(self):
         """
-        Generate content containing list of downloadable files in Markdown
+        Generate content containing a list of downloadable files in Markdown
         format.
 
-        :returns: Content in Markdown format.
+        :returns: String content in Markdown format.
         """
 
         content = "||*Name*||*Created*||*Size*||\n"
-        for i in self.__listOfDownloadableFiles():
-            content += "||[`%s`](%s)" % (i['title'], i['webContentLink'])
-            content += "||`%s`" % i['createdDate']
-            content += "||`%d B`||" % int(i['fileSize'])
+        for i in self.listOfDownloadableFiles():
+            content += "||[`{}`]({})".format(i['title'], i['webContentLink'])
+            content += "||`{}`".format(i['createdDate'])
+            content += "||`{} B`||".format(int(i['fileSize']))
             content += '\n'
+
+        self.logger.log('content: {}'.format(content))
+
         return content
 
 
@@ -491,12 +574,14 @@ class MSGDBExporter(object):
         This verifies that the uploaded file matches the local compressed
         export file.
 
-        :param localFilePath: Full path of the local file.
-        :param remoteFileID: Cloud ID for the remote file.
-        :returns: True if the MD5 sums match, otherwise, False.
+        :param localFilePath: String of the full path of the local file.
+        :param remoteFileID: String of the cloud ID for the remote file.
+        :returns: Boolean True if the MD5 sums match, otherwise, False.
         """
 
-        self.logger.log('local file path: %s' % localFilePath)
+        self.logger.log('remote file ID: {}'.format(remoteFileID))
+        self.logger.log('local file path: {}'.format(localFilePath))
+
         # Get the md5sum for the local file.
         f = open(localFilePath, mode = 'rb')
         fContent = hashlib.md5()
@@ -505,20 +590,37 @@ class MSGDBExporter(object):
         localMD5Sum = fContent.hexdigest()
         f.close()
 
-        self.logger.log('local md5: %s' % localMD5Sum, 'DEBUG')
+        self.logger.log('local md5: {}'.format(localMD5Sum), 'DEBUG')
 
-        # Get the MD5 sum for the remote file.
-        for item in self.cloudFiles['items']:
-            if (item['id'] == remoteFileID):
-                self.logger.log('remote md5: %s' % item['md5Checksum'], 'DEBUG')
-                if localMD5Sum == item['md5Checksum']:
-                    return True
-                else:
-                    return False
-        return False
+        def verifyFile():
+            # Get the MD5 sum for the remote file.
+            for item in self.cloudFiles['items']:
+                if (item['id'] == remoteFileID):
+                    self.logger.log(
+                        'remote md5: {}'.format(item['md5Checksum']), 'DEBUG')
+                    if localMD5Sum == item['md5Checksum']:
+                        return True
+                    else:
+                        return False
+
+        try:
+            if verifyFile():
+                return True
+            else:
+                return False
+
+        except errors.HttpError as detail:
+            self.logger.log('HTTP error during MD5 verification.', 'error')
+
+            time.sleep(10)
+
+            if verifyFile():
+                return True
+            else:
+                return False
 
 
-    def __fileIDForFileName(self, filename):
+    def fileIDForFileName(self, filename):
         """
         Get the file ID for the given filename.
 
@@ -528,8 +630,8 @@ class MSGDBExporter(object):
         This not the best way to handle things, but it works for the typical
         use case and prevents errors from taking down the system.
 
-        :param Filename for which to retrieve the ID.
-        :returns: A cloud file ID.
+        :param String of the filename for which to retrieve the ID.
+        :returns: String of a cloud file ID.
         """
 
         ids = []
@@ -537,11 +639,7 @@ class MSGDBExporter(object):
         for item in self.cloudFiles['items']:
 
             if (item['title'] == filename):
-                # self.logger.log('item: %s' % item, 'INFO')
-                # self.logger.log('matching title: %s' % item['title'], 'DEBUG')
-                # self.logger.log(
-                #     'file state trashed: %s' % item['labels']['trashed'],
-                #     'DEBUG')
+
                 if not item['labels']['trashed']:
                     ids.append(item['id'])
 
@@ -560,15 +658,15 @@ class MSGDBExporter(object):
 
         Email notification is suppressed by default.
 
-        :param fileID: Cloud file ID to be processed.
-        :param emailAddressList: A list of email addresses.
-        :returns: True if successful, otherwise False.
+        :param fileID: String of the cloud file ID to be processed.
+        :param emailAddressList: List of email addresses.
+        :returns: Boolean True if successful, otherwise False.
         """
 
         success = True
 
-        self.logger.log('file id: %s' % fileID)
-        self.logger.log('address list: %s' % emailAddressList)
+        self.logger.log('file id: {}'.format(fileID))
+        self.logger.log('address list: {}'.format(emailAddressList))
 
         for addr in emailAddressList:
             permission = {'value': addr, 'type': 'user', 'role': 'reader'}
@@ -578,9 +676,10 @@ class MSGDBExporter(object):
                     resp = self.driveService.permissions().insert(
                         fileId = fileID, sendNotificationEmails = False,
                         body = permission).execute()
-                    self.logger.log('Reader permission added for %s.' % addr)
-                except errors.HttpError, error:
-                    print 'An error occurred: %s' % error
+                    self.logger.log(
+                        'Reader permission added for {}.'.format(addr))
+                except errors.HttpError as error:
+                    self.logger.log('An error occurred: {}'.format(error))
                     success = False
 
         return success
