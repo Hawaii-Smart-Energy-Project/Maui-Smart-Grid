@@ -96,7 +96,8 @@ class MSGDBExporter(object):
         self.googleAPICredentials = ''
         self.exportPath = self.configer.configOptionValue('Export',
                                                           'db_export_path')
-        self.credentialPath = self.exportPath
+        self.credentialPath = self.configer.configOptionValue('Export',
+                                                              'google_api_credentials_path')
         self.credentialStorage = Storage(
             '{}/google_api_credentials'.format(self.credentialPath))
 
