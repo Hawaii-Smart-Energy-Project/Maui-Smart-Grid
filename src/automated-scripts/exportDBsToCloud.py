@@ -78,3 +78,9 @@ if __name__ == '__main__':
 
     # Send the available file list by POST.
     exporter.sendDownloadableFiles()
+
+    # Testing recording log output.
+    myPath = '{}/{}'.format(exporter.exportTempWorkPath, 'export-report.txt')
+    fp = open(myPath, 'wb')
+    fp.write(exporter.logger.recording)
+    fp.close()
