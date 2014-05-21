@@ -23,7 +23,6 @@ import hashlib
 from functools import partial
 from msg_file_util import MSGFileUtil
 import time
-from httplib import BadStatusLine
 import requests
 from StringIO import StringIO
 from requests.adapters import SSLError
@@ -94,8 +93,9 @@ class MSGDBExporter(object):
         self.oauthScope = 'https://www.googleapis.com/auth/drive'
         self.oauthConsent = 'urn:ietf:wg:oauth:2.0:oob'
         self.googleAPICredentials = ''
-        self.exportPath = self.configer.configOptionValue('Export',
-                                                          'db_export_path')
+        self.exportTempWorkPath = self.configer.configOptionValue('Export',
+                                                                  'db_export_work_path')
+
         self.credentialPath = self.configer.configOptionValue('Export',
                                                               'google_api_credentials_path')
         self.credentialStorage = Storage(
@@ -118,7 +118,7 @@ class MSGDBExporter(object):
         """
 
         # Get the checksum of the original file.
-        md5sum = self.fileUtil.md5Checksum(self.exportPath)
+        md5sum = self.fileUtil.md5Checksum(self.exportTempWorkPath)
         self.logger.log('md5sum: {}'.format(md5sum))
 
 
@@ -177,13 +177,9 @@ class MSGDBExporter(object):
             # stored password when running under a root crontab.
             command = 'sudo -u postgres pg_dump -p {0} -U {1} {2} > {3}/{4}' \
                       '.sql'.format(self.db_port(), self.db_username(), db,
-                                    self.configer.configOptionValue('Export',
-                                                                    'db_export_path'),
-                                    dumpName)
+                                    self.exportTempWorkPath, dumpName)
 
-            fullPath = '{}/{}.sql'.format(
-                self.configer.configOptionValue('Export', 'db_export_path'),
-                dumpName)
+            fullPath = '{}/{}.sql'.format(self.exportTempWorkPath, dumpName)
 
             self.logger.log('fullPath: {}'.format(fullPath), 'DEBUG')
 
@@ -275,6 +271,8 @@ class MSGDBExporter(object):
                     self.logger.log('Uploading {}.'.format(f), 'info')
                     fileID = self.uploadFileToCloudStorage(fullPath = f,
                                                            testing = testing)
+
+                    # @todo Provide support for retry count.
                     if not fileID:
                         self.logger.log('Retrying upload of {}.'.format(f),
                                         'warning')
@@ -296,6 +294,7 @@ class MSGDBExporter(object):
                                 'Retrying adding readers for {}.'.format(f),
                                 'warning')
 
+                            # @todo Provide support for retry count.
                             if not self.addReaders(fileID,
                                                    self.configer
                                                            .configOptionValue(
@@ -502,9 +501,8 @@ class MSGDBExporter(object):
         :returns: None
         """
 
-        myPath = '{}/{}'.format(
-            self.configer.configOptionValue('Export', 'db_export_path'),
-            'list-of-downloadable-files.txt')
+        myPath = '{}/{}'.format(self.exportTempWorkPath,
+                                'list-of-downloadable-files.txt')
 
         fp = open(myPath, 'wb')
 
