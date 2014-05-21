@@ -36,7 +36,7 @@ def processCommandLineArguments():
     COMMAND_LINE_ARGS.
     """
 
-    global parser, COMMAND_LINE_ARGS
+    global COMMAND_LINE_ARGS
     parser = argparse.ArgumentParser(description = '')
     parser.add_argument('--dbname', help = 'Database file to be uploaded.')
     parser.add_argument('--fullpath',
@@ -76,4 +76,5 @@ if __name__ == '__main__':
         'Wall time: {:d} min {:.2f} s.'.format(wallTimeMin, wallTimeSec),
         'info')
 
+    # Send the available file list by POST.
     exporter.sendDownloadableFiles()
