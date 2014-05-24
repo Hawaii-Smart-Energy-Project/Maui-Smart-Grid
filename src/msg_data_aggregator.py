@@ -527,8 +527,8 @@ class MSGDataAggregator(object):
         """
         Convenience method for aggregating all data for a given data type.
         Data is inserted to individual aggregated data tables.
-        :param dataType:
-        :return: None
+        :param dataType: String in the list of raw data types.
+        :return: Nothing.
         """
         (aggType, timeColName, subkeyColName) = self.dataParameters(dataType)
 
@@ -540,8 +540,8 @@ class MSGDataAggregator(object):
                                           timeColumnName = timeColName,
                                           subkeyColumnName = subkeyColName,
                                           startDate = start.strftime(
-                                              '%Y-%m-%d'),
-                                          endDate = end.strftime('%Y-%m-%d'))
+                                              '%Y-%m-%d %H:%M:%S'),
+                                          endDate = end.strftime('%Y-%m-%d %H:%M:%S'))
             self.insertAggregatedData(agg = aggData)
             for row in aggData.data:
                 self.logger.log('aggData row: {}'.format(row))
@@ -689,12 +689,14 @@ class MSGDataAggregator(object):
         Provide aggregated data.
         ***********************************************************************
 
-        :param dataType: string
-        :param aggregationType: string
-        :param timeColumnName: string
-        :param subkeyColumnName: string
-        :param startDate: string
-        :param endDate: string
+        Start and end dates are used to calculate interval crossings.
+
+        :param dataType: String
+        :param aggregationType: String
+        :param timeColumnName: String
+        :param subkeyColumnName: String
+        :param startDate: String
+        :param endDate: String
         :returns: MSGAggregatedData
         """
 
