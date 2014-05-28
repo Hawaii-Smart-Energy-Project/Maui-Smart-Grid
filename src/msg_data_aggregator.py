@@ -541,7 +541,8 @@ class MSGDataAggregator(object):
                                           subkeyColumnName = subkeyColName,
                                           startDate = start.strftime(
                                               '%Y-%m-%d %H:%M:%S'),
-                                          endDate = end.strftime('%Y-%m-%d %H:%M:%S'))
+                                          endDate = end.strftime(
+                                              '%Y-%m-%d %H:%M:%S'))
             self.insertAggregatedData(agg = aggData)
             for row in aggData.data:
                 self.logger.log('aggData row: {}'.format(row))
@@ -600,9 +601,11 @@ class MSGDataAggregator(object):
 
     def incrementEndpoint(self, endpoint = None):
         """
-        Increment an endpoint by one interval.
-        :param endpoint:
-        :return: datetime
+        Increment an endpoint by one interval where endpoints are the final
+        timestamp in an aggregation interval.
+        :param endpoint: the endpoint to be incremented.
+        :return: datetime object that is the given endpoint + a predefined
+        amount of minutes.
         """
         plusOneInterval = relativedelta(minutes = 15)
         return endpoint + plusOneInterval
@@ -669,10 +672,12 @@ class MSGDataAggregator(object):
         startEndDatesTransform = []
         i = 0
         while i < len(splitDates):
-            startEndDatesTransform.append((splitDates[i][0], datetime(
-                splitDates[i][1].timetuple()[0],
-                splitDates[i][1].timetuple()[1],
-                splitDates[i][1].timetuple()[2], 23, 59, 59)))
+            startEndDatesTransform.append((splitDates[i][0],
+                                           self.incrementEndpoint(datetime(
+                                               splitDates[i][1].timetuple()[0],
+                                               splitDates[i][1].timetuple()[1],
+                                               splitDates[i][1].timetuple()[2],
+                                               23, 59, 59))))
             i += 1
 
         for j in startEndDatesTransform:
