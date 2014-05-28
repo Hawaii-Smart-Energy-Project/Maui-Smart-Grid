@@ -6,13 +6,20 @@ Perform aggregation of all available data.
 
 Usage:
 
-    python aggregateAllData.py
+1. Fill in self.rawTypes in __init__.
+
+2. python aggregateAllData.py
 
 This causes aggregated data to be inserted into the respective aggregated
 data tables that are defined in the site-wide configuration file.
 
 This was created to handle a special case where raw data became available
-after the time of aggregation. The following flags invoked here, exitOnError
+after the time of aggregation.
+
+This script enables aggregation and loading of aggregated data while not
+terminating when duplicate key errors are encountered.
+
+The following flags invoked here, exitOnError
 and commitOnEveryInsert, allow the ability to work around duplicate key
 errors and the lack of commits due to errors occurring within a transaction.
 
