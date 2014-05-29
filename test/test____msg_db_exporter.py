@@ -45,6 +45,22 @@ class MSGDBExporterTester(unittest.TestCase):
                 'Exception during creation of temp directory: %s' % detail,
                 'ERROR')
 
+    def test_sending_fcphase_part_0(self):
+        """
+        /home/daniel/msg-db-dumps/2014-05-14_141223_fcphase3.sql.gz.0
+        """
+
+        filesToUpload = [
+            '/home/daniel/msg-db-dumps/2014-05-14_141223_fcphase3.sql.gz.0',
+            '/home/daniel/msg-db-dumps/2014-05-14_141223_fcphase3.sql.gz.1',
+            '/home/daniel/msg-db-dumps/2014-05-14_141223_fcphase3.sql.gz.2',
+            '/home/daniel/msg-db-dumps/2014-05-14_141223_fcphase3.sql.gz.3']
+
+        for f in filesToUpload:
+            self.exporter.uploadFileToCloudStorage(fullPath = f,
+                                                   testing = False)
+
+
     def testListRemoteFiles(self):
         """
         Test listing of remote files.
@@ -79,15 +95,30 @@ class MSGDBExporterTester(unittest.TestCase):
             self.assertIsNot(id, '')
 
 
-    def testListOfDownloadableFiles(self):
+    def test_list_of_downloadable_files(self):
+        """
+        Test the list of downloadable files used by the available files page.
+        """
+        self.assertIsNotNone(self.exporter.listOfDownloadableFiles(),
+                             'List of downloadable files is not available.')
         for row in self.exporter.listOfDownloadableFiles():
             print row
             self.assertIsNotNone(row['id'])
             self.assertIsNotNone(row['title'])
             self.assertIsNotNone(row['webContentLink'])
 
+    def test_markdown_list_of_downloadable_files(self):
+        print self.exporter.markdownListOfDownloadableFiles()
 
-    def testGetMD5SumFromCloud(self):
+        myPath = '{}/{}'.format(
+            self.configer.configOptionValue('Export', 'db_export_path'),
+            'list-of-downloadable-files.txt')
+        fp = open(myPath, 'wb')
+        fp.write(self.exporter.markdownListOfDownloadableFiles())
+        fp.close()
+
+
+    def test_get_md5_sum_from_cloud(self):
         """
         Test retrieving the MD5 sum from the cloud.
         """
@@ -95,9 +126,8 @@ class MSGDBExporterTester(unittest.TestCase):
         self.logger.log('Testing getting the MD5 sum.', 'info')
         md5sum = ''
         for item in self.exporter.cloudFiles['items']:
-            # print item['title']
             md5sum = item['md5Checksum']
-            # print md5sum
+            print '{}:{}'.format(item['title'], md5sum)
             self.assertEquals(len(md5sum), 32)
 
 
@@ -112,7 +142,7 @@ class MSGDBExporterTester(unittest.TestCase):
         filePath = "{}/{}".format(self.exportTestDataPath,
                                   self.compressedTestFilename)
 
-        uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
+        uploadResult = self.exporter.uploadFileToCloudStorage(filePath)
 
         self.assertTrue(uploadResult)
 
@@ -133,7 +163,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.assertIsNone(fileIDs)
 
 
-    def testUploadTestData(self):
+    def test_upload_test_data(self):
         """
         Upload a test data file for unit testing of DB export.
 
@@ -147,7 +177,7 @@ class MSGDBExporterTester(unittest.TestCase):
                                   self.compressedTestFilename)
         self.logger.log('Uploaded {}.'.format(filePath), 'info')
 
-        uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
+        uploadResult = self.exporter.uploadFileToCloudStorage(filePath)
         self.logger.log('upload result: {}'.format(uploadResult))
 
         self.assertTrue(uploadResult)
@@ -173,7 +203,7 @@ class MSGDBExporterTester(unittest.TestCase):
         filePath = "%s/%s" % (
             self.exportTestDataPath, self.compressedTestFilename)
 
-        uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
+        uploadResult = self.exporter.uploadFileToCloudStorage(filePath)
 
         cnt = self.exporter.deleteOutdatedFiles(
             minAge = datetime.timedelta(days = 5),
@@ -192,7 +222,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.logger.log("Uploading test data.")
         filePath = "%s/%s" % (
             self.exportTestDataPath, self.compressedTestFilename)
-        uploadResult = self.exporter.uploadDBToCloudStorage(filePath)
+        uploadResult = self.exporter.uploadFileToCloudStorage(filePath)
         email = self.configer.configOptionValue('Testing', 'tester_email')
         service = self.exporter.driveService
         try:
@@ -302,7 +332,6 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         Test retrieving local file sizes.
         """
-
         fullPath = '{}/{}'.format(self.exportTestDataPath,
                                   self.compressedTestFilename)
         fSize = self.fileUtil.fileSize(fullPath)
@@ -315,6 +344,9 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         self.exporter.sendDownloadableFiles()
 
+
+    def test_checksum_after_upload(self):
+        pass
 
     def tearDown(self):
         """
@@ -369,16 +401,47 @@ class MSGDBExporterTester(unittest.TestCase):
                 self.logger.log('Delete not successful: %s' % e, 'SILENT')
                 break
 
+    def test_move_to_final(self):
+        """
+        Test moving a file to the final destination path.
+        :return:
+        """
+        self.logger.log('Testing moving to final path {}.'.format(
+            self.configer.configOptionValue('Export', 'db_export_final_path')))
+
+        origCompressedFile = '{}/{}'.format(
+            self.configer.configOptionValue('Export', 'export_test_data_path'),
+            self.compressedTestFilename)
+        newCompressedFile = '{}/{}'.format(
+            self.configer.configOptionValue('Export', 'export_test_data_path'),
+            'temp_test_file')
+
+        shutil.copyfile(origCompressedFile, newCompressedFile)
+
+        self.exporter.moveToFinalPath(compressedFullPath = newCompressedFile)
+
+        self.assertTrue(os.path.isfile('{}/{}'.format(
+            self.configer.configOptionValue('Export', 'db_export_final_path'),
+            'temp_test_file')))
+
+        os.remove('{}/{}'.format(
+            self.configer.configOptionValue('Export', 'db_export_final_path'),
+            'temp_test_file'))
+
 
 if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
-        selected_tests = ['testUploadTestData', 'testGetFileIDsForFilename',
+        selected_tests = ['test_upload_test_data', 'testGetFileIDsForFilename',
                           'test_get_file_id_for_nonexistent_file',
                           'test_get_file_size', 'test_split_archive',
-                          'test_create_compressed_archived','test_export_db']
-        selected_tests = ['test_export_db']
+                          'test_create_compressed_archived', 'test_export_db']
+        selected_tests = ['test_sending_fcphase_part_0']
+        selected_tests = ['test_list_of_downloadable_files',
+                          'test_markdown_list_of_downloadable_files']
+        selected_tests = ['test_get_md5_sum_from_cloud']
+        selected_tests = ['test_move_to_final']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
