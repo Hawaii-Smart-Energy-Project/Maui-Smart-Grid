@@ -26,6 +26,7 @@ import time
 import requests
 from StringIO import StringIO
 from requests.adapters import SSLError
+import shutil
 
 
 class MSGDBExporter(object):
@@ -278,7 +279,7 @@ class MSGDBExporter(object):
                                 self.logger.log(
                                     'Failed to add readers for {}.'.format(f),
                                     'error')
-
+                                # End if toCloud.
 
             # Remove the uncompressed file.
             try:
@@ -290,6 +291,9 @@ class MSGDBExporter(object):
                     'Exception while removing {}: {}.'.format(fullPath, error))
                 noErrors = False
 
+            if gzipResult:
+                self.moveToFinalPath(compressedFullPath = compressedFullPath)
+
         # End for db in databases.
 
         if deleteOutdated:
@@ -297,6 +301,22 @@ class MSGDBExporter(object):
                 self.configer.configOptionValue('Export', 'days_to_keep'))))
 
         return noErrors
+
+    def moveToFinalPath(self, compressedFullPath = ''):
+        """
+        Move a compressed final to the final export path.
+        :param compressedFullPath: String for the compressed file.
+        :return:
+        """
+        try:
+            shutil.move(compressedFullPath,
+                        self.configer.configOptionValue('Export',
+                                                        'db_export_final_path'))
+        except Exception as detail:
+            self.logger.log(
+                'Exception while moving {} to final export path: {}'.format(
+                    compressedFullPath, detail), 'error')
+
 
     def md5Verification(self, compressedFullPath = '', fullPath = '',
                         md5sum1 = ''):
