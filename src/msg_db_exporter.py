@@ -206,47 +206,19 @@ class MSGDBExporter(object):
             self.logger.log("Compressing {} using gzip.".format(db), 'info')
             self.logger.log('fullpath: {}'.format(fullPath), 'DEBUG')
 
-            self.fileUtil.gzipCompressFile(fullPath)
+            gzipResult = self.fileUtil.gzipCompressFile(fullPath)
             compressedFullPath = '{}{}'.format(fullPath, '.gz')
-
-            # Verify the compressed file by uncompressing it and verifying its
-            # checksum against the original checksum.
-            self.logger.log('reading: {}'.format(compressedFullPath), 'DEBUG')
-            self.logger.log('writing: {}'.format(os.path.join(
-                self.configer.configOptionValue('Testing',
-                                                'export_test_data_path'),
-                os.path.splitext(os.path.basename(fullPath))[0])), 'DEBUG')
-
-            # Gzip uncompress and verify by checksum is disabled until a more
-            # efficient, non-memory-based, uncompress is implemented.
-
-            GZIP_UNCOMPRESS_FILE = False
-            if GZIP_UNCOMPRESS_FILE:
-                self.fileUtil.gzipUncompressFile(compressedFullPath,
-                                                 os.path.join(
-                                                     self.configer
-                                                     .configOptionValue(
-                                                         'Testing',
-                                                         'export_test_data_path'),
-                                                     fullPath))
 
             time.sleep(1)
 
-            VERIFY_BY_CHECKSUM = False
-            if VERIFY_BY_CHECKSUM:
-                md5sum2 = self.fileUtil.md5Checksum(fullPath)
-
-                self.logger.log("mtime: {}, md5sum2: {}".format(
-                    time.ctime(os.path.getmtime(fullPath)), md5sum2), 'INFO')
-
-                if md5sum1 == md5sum2:
-                    self.logger.log(
-                        'Compressed file has been validated by checksum.',
-                        'INFO')
-                else:
-                    noErrors = False
+            # Gzip uncompress and verify by checksum is disabled until a more
+            # efficient, non-memory-based, uncompress is implemented.
+            # self.md5Verification(compressedFullPath=compressedFullPath,
+            # fullPath=fullPath,md5sum1=md5sum1)
 
             if toCloud:
+                # Split compressed files into a set of chunks to improve the
+                # reliability of uploads.
                 if numChunks != 0:
                     self.logger.log('Splitting {}'.format(compressedFullPath),
                                     'DEBUG')
@@ -258,6 +230,7 @@ class MSGDBExporter(object):
 
                     if not filesToUpload:
                         raise Exception('Exception during file splitting.')
+
                     self.logger.log('to upload: {}'.format(filesToUpload),
                                     'debug')
                 else:
@@ -325,6 +298,46 @@ class MSGDBExporter(object):
 
         return noErrors
 
+    def md5Verification(self, compressedFullPath = '', fullPath = '',
+                        md5sum1 = ''):
+        """
+        Perform md5 verification of a compressed file at compressedFullPath
+        where the original file is at fullPath and has md5sum1.
+
+        :param compressedFullPath: String
+        :param fullPath: String
+        :param md5sum1: String of md5sum of source file.
+        :return:
+        """
+
+        GZIP_UNCOMPRESS_FILE = False
+        if GZIP_UNCOMPRESS_FILE:
+            # Verify the compressed file by uncompressing it and
+            # verifying its
+            # checksum against the original checksum.
+            self.logger.log('reading: {}'.format(compressedFullPath), 'DEBUG')
+            self.logger.log('writing: {}'.format(os.path.join(
+                self.configer.configOptionValue('Testing',
+                                                'export_test_data_path'),
+                os.path.splitext(os.path.basename(fullPath))[0])), 'DEBUG')
+
+            self.fileUtil.gzipUncompressFile(compressedFullPath, os.path.join(
+                self.configer.configOptionValue('Testing',
+                                                'export_test_data_path'),
+                fullPath))
+
+        VERIFY_BY_CHECKSUM = False
+        if VERIFY_BY_CHECKSUM:
+            md5sum2 = self.fileUtil.md5Checksum(fullPath)
+
+            self.logger.log("mtime: {}, md5sum2: {}".format(
+                time.ctime(os.path.getmtime(fullPath)), md5sum2), 'INFO')
+
+            if md5sum1 == md5sum2:
+                self.logger.log(
+                    'Compressed file has been validated by checksum.', 'INFO')
+            else:
+                noErrors = False
 
     def numberOfChunksToUse(self, fullPath):
         """
