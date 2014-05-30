@@ -91,11 +91,11 @@ class MSGFileUtil(object):
 
         @todo Generalize this method.
 
-        :param fullPath: Full path of the file to be compressed. The full
-        path is mislabeled here and refers to the full path minus the
-        extension of the data to be compressed.
+        :param fullPath: Full path of the file to be compressed.
+        :returns: Boolean: True if successful, False otherwise.
         """
 
+        success = False
         self.logger.log('Gzip compressing %s.' % fullPath)
         try:
             f_in = open('%s' % (fullPath), 'rb')
@@ -103,8 +103,10 @@ class MSGFileUtil(object):
             f_out.writelines(f_in)
             f_out.close()
             f_in.close()
+            success = True
         except IOError as detail:
-            self.logger.log('Exception while gzipping: %s' % detail, 'ERROR')
+            self.logger.log('IOError exception while gzipping: %s' % detail, 'ERROR')
+        return success
 
 
     def splitFile(self, fullPath = '', chunkSize = 0):
