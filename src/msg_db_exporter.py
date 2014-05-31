@@ -383,8 +383,8 @@ class MSGDBExporter(object):
         if (fsize >= int(self.configer.configOptionValue('Export',
                                                          'max_bytes_before_split'))):
             self.logger.log('Will split with config defined number of chunks.')
-            return int(
-                self.configer.configOptionValue('Export', 'num_split_sections'))
+            return int(fsize / int(self.configer.configOptionValue('Export',
+                                                                   'max_bytes_before_split')))
         self.logger.log('will NOT split file')
         return 1
 
