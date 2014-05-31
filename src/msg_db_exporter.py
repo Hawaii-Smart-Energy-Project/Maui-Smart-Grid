@@ -279,7 +279,18 @@ class MSGDBExporter(object):
                                 self.logger.log(
                                     'Failed to add readers for {}.'.format(f),
                                     'error')
-                                # End if toCloud.
+
+                    try:
+                        if not testing:
+                            self.logger.log('Removing {}'.format(f))
+                            os.remove('{}'.format(f))
+                    except OSError as error:
+                        self.logger.log(
+                            'Exception while removing {}: {}.'.format(fullPath,
+                                                                      error))
+                        noErrors = False
+
+            # End if toCloud.
 
             # Remove the uncompressed file.
             try:
