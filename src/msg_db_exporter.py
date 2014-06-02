@@ -210,7 +210,7 @@ class MSGDBExporter(object):
 
             filesToUpload = self.fileUtil.splitLargeFile(
                 fullPath = compressedFullPath, chunkSize = chunkSize,
-                numChunks = self.numberOfChunksToUse(compressedFullPath))
+                numChunks = numChunks)
 
             if not filesToUpload:
                 raise Exception('Exception during file splitting.')
@@ -278,7 +278,7 @@ class MSGDBExporter(object):
             dumpName = self.dumpName(db = db)
             fullPath = '{}/{}.sql'.format(self.exportTempWorkPath, dumpName)
             if localExport:
-                noErrors = noErrors and self.dumpResult(db, dumpName, fullPath)
+                noErrors = self.dumpResult(db, dumpName, fullPath)
 
             # Perform compression of the file.
             self.logger.log("Compressing {} using gzip.".format(db), 'info')
@@ -286,7 +286,7 @@ class MSGDBExporter(object):
 
             gzipResult = self.fileUtil.gzipCompressFile(fullPath)
             compressedFullPath = '{}{}'.format(fullPath, '.gz')
-
+            numChunks = self.numberOfChunksToUse(compressedFullPath)
             time.sleep(1)
 
             # Gzip uncompress and verify by checksum is disabled until a more
@@ -443,10 +443,12 @@ class MSGDBExporter(object):
         self.logger.log('fullpath: {}, fsize: {}'.format(fullPath, fsize))
         if (fsize >= int(self.configer.configOptionValue('Export',
                                                          'max_bytes_before_split'))):
-            self.logger.log('Will split with config defined number of chunks.')
-            return int(fsize / int(self.configer.configOptionValue('Export',
-                                                                   'max_bytes_before_split')))
-        self.logger.log('will NOT split file')
+            # Note that this does not make use of the remainder in the division.
+            chunks = int(fsize / int(self.configer.configOptionValue('Export',
+                                                                     'max_bytes_before_split')))
+            self.logger.log('Will split with {} chunks.'.format(chunks))
+            return chunks
+        self.logger.log('Will NOT split file.', 'debug')
         return 1
 
 
