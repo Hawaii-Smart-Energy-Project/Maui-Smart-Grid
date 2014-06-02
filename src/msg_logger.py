@@ -7,10 +7,14 @@ Provides logging services for the MSG Data Operations Project.
 Setting self.shouldRecord=True provides a way of collecting all logging output
 for the instantiated logger into self.recording.
 
+Usage:
+
 The logger is configurable at the class level and is typically instantiated
 within the init for a class.
 
     self.logger = MSGLogger(__name__, '${LOGGING_LEVEL}')
+
+where passing the logging level is optional.
 
 The name parameter is used to pass the calling class. The optional logging level
 level corresponds to the levels used in the logging module. It is useful for
@@ -28,6 +32,9 @@ Important Note:
 The logging level is individually configured for each class where it is
 instantiated. Getting the desired output requires setting the level correctly
 in each class.
+
+Public API:
+
 """
 
 __author__ = 'Daniel Zhang (張道博)'
@@ -53,18 +60,15 @@ class MSGLogger(object):
     It supports recording of log output by setting self.shouldRecord = True.
     The recorded output is then available in self.recording.
 
-    :param caller: The object that is calling this class.
-    :param level: Logger level string in ('info', 'error', 'warning',
-    'silent', 'debug')
     """
 
     def __init__(self, caller, level = 'info', useColor = True):
         """
         Constructor.
 
-        :params caller: Calling class.
-        :params level: Logging level of the Logger.
-        :params boolean: if True, color output is used via colorlog.
+        :param caller: Object that is calling this class.
+        :param level: String for logger level in ('info', 'error', 'warning', 'silent', 'debug', 'critical')
+        :param useColor: Boolean if True, color output is used via colorlog.
 
         @todo Provide enumeration type.
         """
@@ -141,15 +145,15 @@ class MSGLogger(object):
         Nothing is added to the message. Therefore, if linefeeds are desired
         they should be included explicitly.
 
-        :param message: A string message to be logged.
-        :returns: The message.
+        :param message: String message to be logged.
+        :returns: String for the message.
         """
 
         sys.stderr.write(message)
         return message
 
 
-    def log(self, message, level = None, color = None):
+    def log(self, message='', level = None, color = None):
         """
         Write a log message.
 
@@ -160,8 +164,8 @@ class MSGLogger(object):
         * error
         * silent
 
-        :param message: A message to be logged.
-        :param level: (optional) Logging level.
+        :param message: String for a message to be logged.
+        :param level: String for an optional logging level.
         :param color: not supported yet.
         """
 
