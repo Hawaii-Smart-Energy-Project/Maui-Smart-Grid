@@ -79,3 +79,12 @@ class MSGDataVerifier(object):
                      "Reading".channel
                      HAVING (COUNT(*) > 1)""" % (startDate, endDate))
         return len(self.cursor.fetchall())
+
+
+    def egaugeAggregationCount(self):
+        """
+        There should not be more than 96 15-min interval endpoints within a
+        single calendar day for a given sub ID.
+        :return:
+        """
+        pass
