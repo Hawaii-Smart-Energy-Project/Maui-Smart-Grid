@@ -163,10 +163,10 @@ class MSGFileUtil(object):
         """
         Split a large file into chunks.
 
-        :param fullPath:
-        :param numChunks: number of files to be split into.
+        :param fullPath: String
+        :param numChunks: Int number of files to be split into.
         :param chunkSize: @DEPRECATED
-        :return: A list of file chunks in full path form.
+        :return: List of file chunk names in full path form.
         """
 
         fChunks = []
