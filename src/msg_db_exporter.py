@@ -150,9 +150,41 @@ class MSGDBExporter(object):
         # stored password when running under a root crontab.
         if not db or not dumpName:
             raise Exception('DB and dumpname required.')
-        return 'sudo -u postgres pg_dump -p {0} -U {1} {2} > {3}/{4}' \
+
+        # Process exclusions.
+
+        exclusions = self.dumpExclusionsDictionary()
+        excludeList = []
+        if db in exclusions:
+            excludeList = exclusions[db]
+        excludeString = ''
+        if len(excludeList) > 0 and exclusions != None:
+            for e in excludeList:
+                excludeString += '-T {} '.format(e)
+
+        return 'sudo -u postgres pg_dump -p {0} -U {1} {5} {2} > {3}/{4}' \
                '.sql'.format(self.db_port(), self.db_username(), db,
-                             self.exportTempWorkPath, dumpName)
+                             self.exportTempWorkPath, dumpName, excludeString)
+
+
+    def dumpExclusionsDictionary(self):
+        """
+        :param db: String of DB name for which to retrieve exclusions.
+        :return: Dictionary with keys as DBs and values as lists of tables to
+        be excluded for a given database.
+        """
+        try:
+            if type(eval(self.configer.configOptionValue('Export',
+                                                         'db_export_exclusions'))) == type(
+                    {}):
+                return eval(self.configer.configOptionValue('Export',
+                                                            'db_export_exclusions'))
+            else:
+                return None
+        except SyntaxError as detail:
+            self.logger.log(
+                'Exception while getting exclusions: {}'.format(detail))
+
 
     def dumpName(self, db = ''):
         """
