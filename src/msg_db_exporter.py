@@ -104,7 +104,7 @@ class MSGDBExporter(object):
 
         self._driveService = None
         self._cloudFiles = None
-        # self.filesToUpload = []
+        self.postAgent = 'Maui Smart Grid 1.0.0 DB Exporter'
 
 
     def verifyExportChecksum(self, testing = False):
@@ -134,7 +134,7 @@ class MSGDBExporter(object):
         return self.configer.configOptionValue('Database', 'db_port')
 
 
-    def exportCommand(self, db = '', dumpName = ''):
+    def dumpCommand(self, db = '', dumpName = ''):
         """
         :param db: String
         :param dumpName: String
@@ -145,6 +145,9 @@ class MSGDBExporter(object):
         # Password is passed from ~/.pgpass.
         # Note that ':' and '\' characters should be escaped with '\'.
         # Ref: http://www.postgresql.org/docs/9.1/static/libpq-pgpass.html
+
+        # Dump databases as the superuser. This method does not require a
+        # stored password when running under a root crontab.
         if not db or not dumpName:
             raise Exception('DB and dumpname required.')
         return 'sudo -u postgres pg_dump -p {0} -U {1} {2} > {3}/{4}' \
@@ -186,6 +189,28 @@ class MSGDBExporter(object):
         else:
             return [compressedFullPath]
 
+    def dumpResult(self, db = '', dumpName = '', fullPath = ''):
+        """
+        :param dumpName: String of filename of dump file.
+        :param fullPath: String of full path to dump file.
+        :return: Boolean True if dump operation was successful, otherwise False.
+        """
+
+        success = False
+
+        self.logger.log('fullPath: {}'.format(fullPath), 'DEBUG')
+
+        try:
+            # Generate the SQL script export.
+            self.logger.log('cmd: {}'.format(
+                self.dumpCommand(db = db, dumpName = dumpName)))
+            subprocess.check_call(
+                self.dumpCommand(db = db, dumpName = dumpName), shell = True)
+        except subprocess.CalledProcessError as error:
+            self.logger.log("Exception while dumping: {}".format(error))
+            success = False
+
+        return success
 
     def exportDB(self, databases = None, toCloud = False, localExport = True,
                  testing = False, chunkSize = 0, numChunks = 0,
@@ -215,33 +240,13 @@ class MSGDBExporter(object):
 
         noErrors = True
 
-        host = self.configer.configOptionValue('Database', 'db_host')
-
         for db in databases:
             self.logger.log('Exporting {} using pg_dump.'.format(db), 'info')
 
-            # Dump databases as the superuser. This method does not require a
-            # stored password when running under a root crontab.
-
-            fullPath = '{}/{}.sql'.format(self.exportTempWorkPath,
-                                          self.dumpName(db = db))
-
-            self.logger.log('fullPath: {}'.format(fullPath), 'DEBUG')
-
-            try:
-                if localExport:
-                    # Generate the SQL script export.
-                    self.logger.log('cmd: {}'.format(self.exportCommand(db = db,
-                                                                        dumpName = self.dumpName(
-                                                                            db = db))))
-                    subprocess.check_call(self.exportCommand(db = db,
-                                                             dumpName = self
-                                                             .dumpName(
-                                                                 db = db)),
-                                          shell = True)
-            except subprocess.CalledProcessError as error:
-                self.logger.log("Exception while dumping: {}".format(error))
-                noErrors = False
+            dumpName = self.dumpName(db = db)
+            fullPath = '{}/{}.sql'.format(self.exportTempWorkPath, dumpName)
+            if localExport:
+                noErrors = noErrors and self.dumpResult(db, dumpName, fullPath)
 
             # Perform compression of the file.
             self.logger.log("Compressing {} using gzip.".format(db), 'info')
@@ -585,8 +590,7 @@ class MSGDBExporter(object):
         fp.write(self.markdownListOfDownloadableFiles())
         fp.close()
 
-        headers = {'User-Agent': 'Maui Smart Grid 1.0.0 DB Exporter',
-                   'Content-Type': 'text/html'}
+        headers = {'User-Agent': self.postAgent, 'Content-Type': 'text/html'}
         try:
             r = requests.post(self.configer.configOptionValue('Export',
                                                               'export_list_post_url'),
