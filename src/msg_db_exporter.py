@@ -160,7 +160,7 @@ class MSGDBExporter(object):
         excludeString = ''
         if len(excludeList) > 0 and exclusions != None:
             for e in excludeList:
-                excludeString += '-T {} '.format(e)
+                excludeString += """-T '"{}"' """.format(e)
 
         return 'sudo -u postgres pg_dump -p {0} -U {1} {5} {2} > {3}/{4}' \
                '.sql'.format(self.db_port(), self.db_username(), db,
