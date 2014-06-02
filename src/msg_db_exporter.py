@@ -104,7 +104,7 @@ class MSGDBExporter(object):
 
         self._driveService = None
         self._cloudFiles = None
-        self.filesToUpload = []
+        # self.filesToUpload = []
 
 
     def verifyExportChecksum(self, testing = False):
@@ -132,6 +132,60 @@ class MSGDBExporter(object):
 
     def db_port(self):
         return self.configer.configOptionValue('Database', 'db_port')
+
+
+    def exportCommand(self, db = '', dumpName = ''):
+        """
+        :param db: String
+        :param dumpName: String
+        :return: String of command used to export DB.
+        """
+
+        # For reference only:
+        # Password is passed from ~/.pgpass.
+        # Note that ':' and '\' characters should be escaped with '\'.
+        # Ref: http://www.postgresql.org/docs/9.1/static/libpq-pgpass.html
+        if not db or not dumpName:
+            raise Exception('DB and dumpname required.')
+        return 'sudo -u postgres pg_dump -p {0} -U {1} {2} > {3}/{4}' \
+               '.sql'.format(self.db_port(), self.db_username(), db,
+                             self.exportTempWorkPath, dumpName)
+
+    def dumpName(self, db = ''):
+        """
+        :param db: String
+        :return: String of file name used for dump file of db.
+        """
+        if not db:
+            raise Exception('DB required.')
+        return "{}_{}".format(self.timeUtil.conciseNow(), db)
+
+
+    def filesToUpload(self, compressedFullPath = '', numChunks = 0,
+                      chunkSize = 0):
+        """
+        :param compressedFullPath: String
+        :param numChunks: Int
+        :param chunkSize: Int
+        :return: List of files to be uploaded according to their split
+        sections, if applicable.
+        """
+        if numChunks != 0:
+            self.logger.log('Splitting {}'.format(compressedFullPath), 'DEBUG')
+
+            filesToUpload = self.fileUtil.splitLargeFile(
+                fullPath = compressedFullPath, chunkSize = chunkSize,
+                numChunks = self.numberOfChunksToUse(compressedFullPath))
+
+            if not filesToUpload:
+                raise Exception('Exception during file splitting.')
+            else:
+                self.logger.log('to upload: {}'.format(filesToUpload), 'debug')
+                return filesToUpload
+
+        else:
+            return [compressedFullPath]
+
 
     def exportDB(self, databases = None, toCloud = False, localExport = True,
                  testing = False, chunkSize = 0, numChunks = 0,
@@ -165,43 +219,29 @@ class MSGDBExporter(object):
 
         for db in databases:
             self.logger.log('Exporting {} using pg_dump.'.format(db), 'info')
-            conciseNow = self.timeUtil.conciseNow()
-
-            dumpName = "{}_{}".format(conciseNow, db)
-
-            # For reference only:
-            # Password is passed from ~/.pgpass.
-            # Note that ':' and '\' characters should be escaped with '\'.
-            # Ref: http://www.postgresql.org/docs/9.1/static/libpq-pgpass.html
 
             # Dump databases as the superuser. This method does not require a
             # stored password when running under a root crontab.
-            command = 'sudo -u postgres pg_dump -p {0} -U {1} {2} > {3}/{4}' \
-                      '.sql'.format(self.db_port(), self.db_username(), db,
-                                    self.exportTempWorkPath, dumpName)
 
-            fullPath = '{}/{}.sql'.format(self.exportTempWorkPath, dumpName)
+            fullPath = '{}/{}.sql'.format(self.exportTempWorkPath,
+                                          self.dumpName(db = db))
 
             self.logger.log('fullPath: {}'.format(fullPath), 'DEBUG')
 
             try:
                 if localExport:
                     # Generate the SQL script export.
-                    self.logger.log('cmd: {}'.format(command))
-                    subprocess.check_call(command, shell = True)
+                    self.logger.log('cmd: {}'.format(self.exportCommand(db = db,
+                                                                        dumpName = self.dumpName(
+                                                                            db = db))))
+                    subprocess.check_call(self.exportCommand(db = db,
+                                                             dumpName = self
+                                                             .dumpName(
+                                                                 db = db)),
+                                          shell = True)
             except subprocess.CalledProcessError as error:
                 self.logger.log("Exception while dumping: {}".format(error))
                 noErrors = False
-
-            # Obtain the checksum for the export prior to compression.
-            md5sum1 = self.fileUtil.md5Checksum(fullPath)
-
-            try:
-                self.logger.log("mtime: {}, md5sum1: {}".format(
-                    time.ctime(os.path.getmtime(fullPath)), md5sum1), 'INFO')
-            except OSError as detail:
-                self.logger.log(
-                    'Exception while accessing {}.'.format(fullPath), 'ERROR')
 
             # Perform compression of the file.
             self.logger.log("Compressing {} using gzip.".format(db), 'info')
@@ -214,39 +254,23 @@ class MSGDBExporter(object):
 
             # Gzip uncompress and verify by checksum is disabled until a more
             # efficient, non-memory-based, uncompress is implemented.
+            # md5sum1 = self.fileUtil.md5Checksum(fullPath)
             # self.md5Verification(compressedFullPath=compressedFullPath,
             # fullPath=fullPath,md5sum1=md5sum1)
 
             if toCloud:
                 # Split compressed files into a set of chunks to improve the
                 # reliability of uploads.
-                if numChunks != 0:
-                    self.logger.log('Splitting {}'.format(compressedFullPath),
-                                    'DEBUG')
-
-                    filesToUpload = self.fileUtil.splitLargeFile(
-                        fullPath = compressedFullPath, chunkSize = chunkSize,
-                        numChunks = self.numberOfChunksToUse(
-                            compressedFullPath))
-
-                    if not filesToUpload:
-                        raise Exception('Exception during file splitting.')
-
-                    self.logger.log('to upload: {}'.format(filesToUpload),
-                                    'debug')
-                else:
-                    filesToUpload = [compressedFullPath]
 
                 # Upload the files to the cloud.
-
-                self.logger.log('files to upload: {}'.format(filesToUpload),
-                                'debug')
-                for f in filesToUpload:
+                for f in self.filesToUpload(
+                        compressedFullPath = compressedFullPath,
+                        numChunks = numChunks, chunkSize = chunkSize):
                     self.logger.log('Uploading {}.'.format(f), 'info')
                     fileID = self.uploadFileToCloudStorage(fullPath = f,
                                                            testing = testing)
 
-                    # @todo Provide support for retry count.
+                    # @todo Provide support for a retry count.
                     if not fileID:
                         self.logger.log('Retrying upload of {}.'.format(f),
                                         'warning')
@@ -389,15 +413,20 @@ class MSGDBExporter(object):
         return 1
 
 
-    def uploadFileToCloudStorage(self, fullPath = '', testing = False):
+    def uploadFileToCloudStorage(self, fullPath = '', retryCount = 0,
+                                 testing = False):
         """
         Export a file to cloud storage.
 
         :param fullPath: String of file to be exported.
         :param testing: Boolean when set to True, Testing Mode is used.
+        :param retryCount: Int of number of times to retry the upload if
+        there is a failure.
         :returns: String File ID on verified on upload; None if verification
         fails.
         """
+
+        # @todo Implement retry count.
 
         success = True
         myFile = os.path.basename(fullPath)
