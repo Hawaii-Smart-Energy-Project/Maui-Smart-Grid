@@ -341,8 +341,9 @@ class MSGDBExporter(object):
                                     'Failed to add readers for {}.'.format(f),
                                     'error')
 
+                    # Remove split sections if they exist.
                     try:
-                        if not testing:
+                        if not testing and numChunks > 1:
                             self.logger.log('Removing {}'.format(f))
                             os.remove('{}'.format(f))
                     except OSError as error:
@@ -353,6 +354,9 @@ class MSGDBExporter(object):
 
             # End if toCloud.
 
+            if gzipResult:
+                self.moveToFinalPath(compressedFullPath = compressedFullPath)
+
             # Remove the uncompressed file.
             try:
                 if not testing:
@@ -362,9 +366,6 @@ class MSGDBExporter(object):
                 self.logger.log(
                     'Exception while removing {}: {}.'.format(fullPath, error))
                 noErrors = False
-
-            if gzipResult:
-                self.moveToFinalPath(compressedFullPath = compressedFullPath)
 
         # End for db in databases.
 
@@ -380,6 +381,7 @@ class MSGDBExporter(object):
         :param compressedFullPath: String for the compressed file.
         :return:
         """
+        self.logger.log('Moving {} to final path.'.format(compressedFullPath),'debug')
         try:
             shutil.move(compressedFullPath,
                         self.configer.configOptionValue('Export',
