@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__ = 'Daniel Zhang (張道博)'
-__copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
+__copyright__ = 'Copyright (c) 2014, University of Hawaii Smart Energy Project'
 __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
@@ -19,6 +19,9 @@ DEBUG = 1
 class MSGDBUtil(object):
     """
     Utility methods.
+
+    This is the class responsible for actions against databases such as as
+    executing SQL statements.
     """
 
     def __init__(self):
@@ -44,10 +47,7 @@ class MSGDBUtil(object):
             print "table name = %s" % tableName
             print "column name = %s" % columnName
 
-        # @todo Remove old version.
-        #sql = "select currval(pg_get_serial_sequence('\"%s\"','%s'))" % (
-        # tableName, columnName)
-        sql = """SELECT currval(pg_get_serial_sequence('"%s"','%s'))""" % (
+        sql = """SELECT currval(pg_get_serial_sequence('"{}"','{}'))""".format(
             tableName, columnName)
 
         cur = conn.cursor()

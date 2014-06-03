@@ -23,10 +23,10 @@ import hashlib
 from functools import partial
 from msg_file_util import MSGFileUtil
 import time
-from httplib import BadStatusLine
 import requests
 from StringIO import StringIO
 from requests.adapters import SSLError
+import shutil
 
 
 class MSGDBExporter(object):
@@ -94,15 +94,17 @@ class MSGDBExporter(object):
         self.oauthScope = 'https://www.googleapis.com/auth/drive'
         self.oauthConsent = 'urn:ietf:wg:oauth:2.0:oob'
         self.googleAPICredentials = ''
-        self.exportPath = self.configer.configOptionValue('Export',
-                                                          'db_export_path')
-        self.credentialPath = self.exportPath
+        self.exportTempWorkPath = self.configer.configOptionValue('Export',
+                                                                  'db_export_work_path')
+
+        self.credentialPath = self.configer.configOptionValue('Export',
+                                                              'google_api_credentials_path')
         self.credentialStorage = Storage(
             '{}/google_api_credentials'.format(self.credentialPath))
 
         self._driveService = None
         self._cloudFiles = None
-        self.filesToUpload = []
+        self.postAgent = 'Maui Smart Grid 1.0.0 DB Exporter'
 
 
     def verifyExportChecksum(self, testing = False):
@@ -117,7 +119,7 @@ class MSGDBExporter(object):
         """
 
         # Get the checksum of the original file.
-        md5sum = self.fileUtil.md5Checksum(self.exportPath)
+        md5sum = self.fileUtil.md5Checksum(self.exportTempWorkPath)
         self.logger.log('md5sum: {}'.format(md5sum))
 
 
@@ -130,6 +132,117 @@ class MSGDBExporter(object):
 
     def db_port(self):
         return self.configer.configOptionValue('Database', 'db_port')
+
+
+    def dumpCommand(self, db = '', dumpName = ''):
+        """
+        :param db: String
+        :param dumpName: String
+        :return: String of command used to export DB.
+        """
+
+        # For reference only:
+        # Password is passed from ~/.pgpass.
+        # Note that ':' and '\' characters should be escaped with '\'.
+        # Ref: http://www.postgresql.org/docs/9.1/static/libpq-pgpass.html
+
+        # Dump databases as the superuser. This method does not require a
+        # stored password when running under a root crontab.
+        if not db or not dumpName:
+            raise Exception('DB and dumpname required.')
+
+        # Process exclusions.
+
+        exclusions = self.dumpExclusionsDictionary()
+        excludeList = []
+        if db in exclusions:
+            excludeList = exclusions[db]
+        excludeString = ''
+        if len(excludeList) > 0 and exclusions != None:
+            for e in excludeList:
+                excludeString += """-T '"{}"' """.format(e)
+
+        return 'sudo -u postgres pg_dump -p {0} -U {1} {5} {2} > {3}/{4}' \
+               '.sql'.format(self.db_port(), self.db_username(), db,
+                             self.exportTempWorkPath, dumpName, excludeString)
+
+
+    def dumpExclusionsDictionary(self):
+        """
+        :param db: String of DB name for which to retrieve exclusions.
+        :return: Dictionary with keys as DBs and values as lists of tables to
+        be excluded for a given database.
+        """
+        try:
+            if type(eval(self.configer.configOptionValue('Export',
+                                                         'db_export_exclusions'))) == type(
+                    {}):
+                return eval(self.configer.configOptionValue('Export',
+                                                            'db_export_exclusions'))
+            else:
+                return None
+        except SyntaxError as detail:
+            self.logger.log(
+                'Exception while getting exclusions: {}'.format(detail))
+
+
+    def dumpName(self, db = ''):
+        """
+        :param db: String
+        :return: String of file name used for dump file of db.
+        """
+        if not db:
+            raise Exception('DB required.')
+        return "{}_{}".format(self.timeUtil.conciseNow(), db)
+
+
+    def filesToUpload(self, compressedFullPath = '', numChunks = 0,
+                      chunkSize = 0):
+        """
+        :param compressedFullPath: String
+        :param numChunks: Int
+        :param chunkSize: Int
+        :return: List of files to be uploaded according to their split
+        sections, if applicable.
+        """
+        if numChunks != 0:
+            self.logger.log('Splitting {}'.format(compressedFullPath), 'DEBUG')
+
+            filesToUpload = self.fileUtil.splitLargeFile(
+                fullPath = compressedFullPath, chunkSize = chunkSize,
+                numChunks = numChunks)
+
+            if not filesToUpload:
+                raise Exception('Exception during file splitting.')
+            else:
+                self.logger.log('to upload: {}'.format(filesToUpload), 'debug')
+                return filesToUpload
+
+        else:
+            return [compressedFullPath]
+
+    def dumpResult(self, db = '', dumpName = '', fullPath = ''):
+        """
+        :param dumpName: String of filename of dump file.
+        :param fullPath: String of full path to dump file.
+        :return: Boolean True if dump operation was successful, otherwise False.
+        """
+
+        success = False
+
+        self.logger.log('fullPath: {}'.format(fullPath), 'DEBUG')
+
+        try:
+            # Generate the SQL script export.
+            self.logger.log('cmd: {}'.format(
+                self.dumpCommand(db = db, dumpName = dumpName)))
+            subprocess.check_call(
+                self.dumpCommand(db = db, dumpName = dumpName), shell = True)
+        except subprocess.CalledProcessError as error:
+            self.logger.log("Exception while dumping: {}".format(error))
+            success = False
+
+        return success
 
     def exportDB(self, databases = None, toCloud = False, localExport = True,
                  testing = False, chunkSize = 0, numChunks = 0,
@@ -159,121 +272,42 @@ class MSGDBExporter(object):
 
         noErrors = True
 
-        host = self.configer.configOptionValue('Database', 'db_host')
-
         for db in databases:
             self.logger.log('Exporting {} using pg_dump.'.format(db), 'info')
-            conciseNow = self.timeUtil.conciseNow()
 
-            dumpName = "{}_{}".format(conciseNow, db)
-
-            # For reference only:
-            # Password is passed from ~/.pgpass.
-            # Note that ':' and '\' characters should be escaped with '\'.
-            # Ref: http://www.postgresql.org/docs/9.1/static/libpq-pgpass.html
-
-            # Dump databases as the superuser. This method does not require a
-            # stored password when running under a root crontab.
-            command = 'sudo -u postgres pg_dump -p {0} -U {1} {2} > {3}/{4}' \
-                      '.sql'.format(self.db_port(), self.db_username(), db,
-                                    self.configer.configOptionValue('Export',
-                                                                    'db_export_path'),
-                                    dumpName)
-
-            fullPath = '{}/{}.sql'.format(
-                self.configer.configOptionValue('Export', 'db_export_path'),
-                dumpName)
-
-            self.logger.log('fullPath: {}'.format(fullPath), 'DEBUG')
-
-            try:
-                if localExport:
-                    # Generate the SQL script export.
-                    self.logger.log('cmd: {}'.format(command))
-                    subprocess.check_call(command, shell = True)
-            except subprocess.CalledProcessError as error:
-                self.logger.log("Exception while dumping: {}".format(error))
-                noErrors = False
-
-            # Obtain the checksum for the export prior to compression.
-            md5sum1 = self.fileUtil.md5Checksum(fullPath)
-
-            try:
-                self.logger.log("mtime: {}, md5sum1: {}".format(
-                    time.ctime(os.path.getmtime(fullPath)), md5sum1), 'INFO')
-            except OSError as detail:
-                self.logger.log(
-                    'Exception while accessing {}.'.format(fullPath), 'ERROR')
+            dumpName = self.dumpName(db = db)
+            fullPath = '{}/{}.sql'.format(self.exportTempWorkPath, dumpName)
+            if localExport:
+                noErrors = self.dumpResult(db, dumpName, fullPath)
 
             # Perform compression of the file.
             self.logger.log("Compressing {} using gzip.".format(db), 'info')
             self.logger.log('fullpath: {}'.format(fullPath), 'DEBUG')
 
-            self.fileUtil.gzipCompressFile(fullPath)
+            gzipResult = self.fileUtil.gzipCompressFile(fullPath)
             compressedFullPath = '{}{}'.format(fullPath, '.gz')
-
-            # Verify the compressed file by uncompressing it and verifying its
-            # checksum against the original checksum.
-            self.logger.log('reading: {}'.format(compressedFullPath), 'DEBUG')
-            self.logger.log('writing: {}'.format(os.path.join(
-                self.configer.configOptionValue('Testing',
-                                                'export_test_data_path'),
-                os.path.splitext(os.path.basename(fullPath))[0])), 'DEBUG')
+            numChunks = self.numberOfChunksToUse(compressedFullPath)
+            time.sleep(1)
 
             # Gzip uncompress and verify by checksum is disabled until a more
             # efficient, non-memory-based, uncompress is implemented.
-
-            GZIP_UNCOMPRESS_FILE = False
-            if GZIP_UNCOMPRESS_FILE:
-                self.fileUtil.gzipUncompressFile(compressedFullPath,
-                                                 os.path.join(
-                                                     self.configer
-                                                     .configOptionValue(
-                                                         'Testing',
-                                                         'export_test_data_path'),
-                                                     fullPath))
-
-            time.sleep(1)
-
-            VERIFY_BY_CHECKSUM = False
-            if VERIFY_BY_CHECKSUM:
-                md5sum2 = self.fileUtil.md5Checksum(fullPath)
-
-                self.logger.log("mtime: {}, md5sum2: {}".format(
-                    time.ctime(os.path.getmtime(fullPath)), md5sum2), 'INFO')
-
-                if md5sum1 == md5sum2:
-                    self.logger.log(
-                        'Compressed file has been validated by checksum.',
-                        'INFO')
-                else:
-                    noErrors = False
+            # md5sum1 = self.fileUtil.md5Checksum(fullPath)
+            # self.md5Verification(compressedFullPath=compressedFullPath,
+            # fullPath=fullPath,md5sum1=md5sum1)
 
             if toCloud:
-                if numChunks != 0:
-                    self.logger.log('Splitting {}'.format(compressedFullPath),
-                                    'DEBUG')
-
-                    filesToUpload = self.fileUtil.splitLargeFile(
-                        fullPath = compressedFullPath, chunkSize = chunkSize,
-                        numChunks = self.numberOfChunksToUse(
-                            compressedFullPath))
-
-                    if not filesToUpload:
-                        raise Exception('Exception during file splitting.')
-                    self.logger.log('to upload: {}'.format(filesToUpload),
-                                    'debug')
-                else:
-                    filesToUpload = [compressedFullPath]
+                # Split compressed files into a set of chunks to improve the
+                # reliability of uploads.
 
                 # Upload the files to the cloud.
-
-                self.logger.log('files to upload: {}'.format(filesToUpload),
-                                'debug')
-                for f in filesToUpload:
+                for f in self.filesToUpload(
+                        compressedFullPath = compressedFullPath,
+                        numChunks = numChunks, chunkSize = chunkSize):
                     self.logger.log('Uploading {}.'.format(f), 'info')
                     fileID = self.uploadFileToCloudStorage(fullPath = f,
                                                            testing = testing)
+
+                    # @todo Provide support for a retry count.
                     if not fileID:
                         self.logger.log('Retrying upload of {}.'.format(f),
                                         'warning')
@@ -295,6 +329,7 @@ class MSGDBExporter(object):
                                 'Retrying adding readers for {}.'.format(f),
                                 'warning')
 
+                            # @todo Provide support for retry count.
                             if not self.addReaders(fileID,
                                                    self.configer
                                                            .configOptionValue(
@@ -306,6 +341,21 @@ class MSGDBExporter(object):
                                     'Failed to add readers for {}.'.format(f),
                                     'error')
 
+                    # Remove split sections if they exist.
+                    try:
+                        if not testing and numChunks > 1:
+                            self.logger.log('Removing {}'.format(f))
+                            os.remove('{}'.format(f))
+                    except OSError as error:
+                        self.logger.log(
+                            'Exception while removing {}: {}.'.format(fullPath,
+                                                                      error))
+                        noErrors = False
+
+            # End if toCloud.
+
+            if gzipResult:
+                self.moveToFinalPath(compressedFullPath = compressedFullPath)
 
             # Remove the uncompressed file.
             try:
@@ -325,6 +375,63 @@ class MSGDBExporter(object):
 
         return noErrors
 
+    def moveToFinalPath(self, compressedFullPath = ''):
+        """
+        Move a compressed final to the final export path.
+        :param compressedFullPath: String for the compressed file.
+        :return:
+        """
+        self.logger.log('Moving {} to final path.'.format(compressedFullPath),'debug')
+        try:
+            shutil.move(compressedFullPath,
+                        self.configer.configOptionValue('Export',
+                                                        'db_export_final_path'))
+        except Exception as detail:
+            self.logger.log(
+                'Exception while moving {} to final export path: {}'.format(
+                    compressedFullPath, detail), 'error')
+
+
+    def md5Verification(self, compressedFullPath = '', fullPath = '',
+                        md5sum1 = ''):
+        """
+        Perform md5 verification of a compressed file at compressedFullPath
+        where the original file is at fullPath and has md5sum1.
+
+        :param compressedFullPath: String
+        :param fullPath: String
+        :param md5sum1: String of md5sum of source file.
+        :return:
+        """
+
+        GZIP_UNCOMPRESS_FILE = False
+        if GZIP_UNCOMPRESS_FILE:
+            # Verify the compressed file by uncompressing it and
+            # verifying its
+            # checksum against the original checksum.
+            self.logger.log('reading: {}'.format(compressedFullPath), 'DEBUG')
+            self.logger.log('writing: {}'.format(os.path.join(
+                self.configer.configOptionValue('Testing',
+                                                'export_test_data_path'),
+                os.path.splitext(os.path.basename(fullPath))[0])), 'DEBUG')
+
+            self.fileUtil.gzipUncompressFile(compressedFullPath, os.path.join(
+                self.configer.configOptionValue('Testing',
+                                                'export_test_data_path'),
+                fullPath))
+
+        VERIFY_BY_CHECKSUM = False
+        if VERIFY_BY_CHECKSUM:
+            md5sum2 = self.fileUtil.md5Checksum(fullPath)
+
+            self.logger.log("mtime: {}, md5sum2: {}".format(
+                time.ctime(os.path.getmtime(fullPath)), md5sum2), 'INFO')
+
+            if md5sum1 == md5sum2:
+                self.logger.log(
+                    'Compressed file has been validated by checksum.', 'INFO')
+            else:
+                noErrors = False
 
     def numberOfChunksToUse(self, fullPath):
         """
@@ -338,22 +445,29 @@ class MSGDBExporter(object):
         self.logger.log('fullpath: {}, fsize: {}'.format(fullPath, fsize))
         if (fsize >= int(self.configer.configOptionValue('Export',
                                                          'max_bytes_before_split'))):
-            self.logger.log('Will split with config defined number of chunks.')
-            return int(
-                self.configer.configOptionValue('Export', 'num_split_sections'))
-        self.logger.log('will NOT split file')
+            # Note that this does not make use of the remainder in the division.
+            chunks = int(fsize / int(self.configer.configOptionValue('Export',
+                                                                     'max_bytes_before_split')))
+            self.logger.log('Will split with {} chunks.'.format(chunks))
+            return chunks
+        self.logger.log('Will NOT split file.', 'debug')
         return 1
 
 
-    def uploadFileToCloudStorage(self, fullPath = '', testing = False):
+    def uploadFileToCloudStorage(self, fullPath = '', retryCount = 0,
+                                 testing = False):
         """
         Export a file to cloud storage.
 
         :param fullPath: String of file to be exported.
         :param testing: Boolean when set to True, Testing Mode is used.
+        :param retryCount: Int of number of times to retry the upload if
+        there is a failure.
         :returns: String File ID on verified on upload; None if verification
         fails.
         """
+
+        # @todo Implement retry count.
 
         success = True
         myFile = os.path.basename(fullPath)
@@ -501,9 +615,8 @@ class MSGDBExporter(object):
         :returns: None
         """
 
-        myPath = '{}/{}'.format(
-            self.configer.configOptionValue('Export', 'db_export_path'),
-            'list-of-downloadable-files.txt')
+        myPath = '{}/{}'.format(self.exportTempWorkPath,
+                                'list-of-downloadable-files.txt')
 
         fp = open(myPath, 'wb')
 
@@ -513,8 +626,7 @@ class MSGDBExporter(object):
         fp.write(self.markdownListOfDownloadableFiles())
         fp.close()
 
-        headers = {'User-Agent': 'Maui Smart Grid 1.0.0 DB Exporter',
-                   'Content-Type': 'text/html'}
+        headers = {'User-Agent': self.postAgent, 'Content-Type': 'text/html'}
         try:
             r = requests.post(self.configer.configOptionValue('Export',
                                                               'export_list_post_url'),

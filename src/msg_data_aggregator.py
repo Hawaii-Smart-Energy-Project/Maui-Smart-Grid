@@ -48,7 +48,8 @@ class MSGDataAggregator(object):
 
     Aggregation is performed in-memory and saved to the DB. The time range is
     delimited by start date and end date where the values are included in the
-    range.
+    range. The timestamps for aggregation intervals are the last timestamp in a
+    respective series.
 
     * Aggregation subkeys are values such as eGauge IDs or circuit numbers.
 
@@ -70,7 +71,8 @@ class MSGDataAggregator(object):
 
     """
 
-    def __init__(self, testing = False):
+    def __init__(self, exitOnError = True, commitOnEveryInsert = False,
+                 testing = False):
         """
         Constructor.
 
@@ -88,6 +90,8 @@ class MSGDataAggregator(object):
         self.timeUtil = MSGTimeUtil()
         self.nextMinuteCrossing = {}
         self.nextMinuteCrossingWithoutSubkeys = None
+        self.exitOnError = exitOnError
+        self.commitOnEveryInsert = commitOnEveryInsert
         section = 'Aggregation'
         tableList = ['irradiance', 'agg_irradiance', 'weather', 'agg_weather',
                      'circuit', 'agg_circuit', 'egauge', 'agg_egauge']
@@ -362,9 +366,6 @@ class MSGDataAggregator(object):
         :return: None
         """
 
-        # @todo enable insert where data already exists such that the
-        # existing data is preserved but new data is inserted.
-
         if not agg.columns:
             raise Exception('agg columns not defined.')
         if not agg.data:
@@ -374,12 +375,20 @@ class MSGDataAggregator(object):
         self.logger.log('agg data type: %s' % type(agg.data))
 
         def __insertData(values = ''):
+            """
+            Perform insert of data to the database using the given values.
+            :param values: String containing values to be inserted.
+            :return Nothing.
+            """
             success = True
             sql = 'INSERT INTO "{0}" ({1}) VALUES( {2})'.format(
                 self.tables[agg.aggregationType], ','.join(agg.columns), values)
             self.logger.log('sql: %s' % sql, 'debug')
-            success = self.dbUtil.executeSQL(self.cursor, sql)
-            if not success:
+            success = self.dbUtil.executeSQL(self.cursor, sql,
+                                             exitOnFail = self.exitOnError)
+            if self.commitOnEveryInsert:
+                self.conn.commit()
+            if not success and self.exitOnError:
                 raise Exception('Failure during aggregated data insert.')
 
 
@@ -517,8 +526,9 @@ class MSGDataAggregator(object):
     def aggregateAllData(self, dataType = ''):
         """
         Convenience method for aggregating all data for a given data type.
-        :param dataType:
-        :return: None
+        Data is inserted to individual aggregated data tables.
+        :param dataType: String in the list of raw data types.
+        :return: Nothing.
         """
         (aggType, timeColName, subkeyColName) = self.dataParameters(dataType)
 
@@ -530,8 +540,9 @@ class MSGDataAggregator(object):
                                           timeColumnName = timeColName,
                                           subkeyColumnName = subkeyColName,
                                           startDate = start.strftime(
-                                              '%Y-%m-%d'),
-                                          endDate = end.strftime('%Y-%m-%d'))
+                                              '%Y-%m-%d %H:%M:%S'),
+                                          endDate = end.strftime(
+                                              '%Y-%m-%d %H:%M:%S'))
             self.insertAggregatedData(agg = aggData)
             for row in aggData.data:
                 self.logger.log('aggData row: {}'.format(row))
@@ -590,9 +601,11 @@ class MSGDataAggregator(object):
 
     def incrementEndpoint(self, endpoint = None):
         """
-        Increment an endpoint by one interval.
-        :param endpoint:
-        :return: datetime
+        Increment an endpoint by one interval where endpoints are the final
+        timestamp in an aggregation interval.
+        :param endpoint: the endpoint to be incremented.
+        :return: datetime object that is the given endpoint + a predefined
+        amount of minutes.
         """
         plusOneInterval = relativedelta(minutes = 15)
         return endpoint + plusOneInterval
@@ -659,10 +672,12 @@ class MSGDataAggregator(object):
         startEndDatesTransform = []
         i = 0
         while i < len(splitDates):
-            startEndDatesTransform.append((splitDates[i][0], datetime(
-                splitDates[i][1].timetuple()[0],
-                splitDates[i][1].timetuple()[1],
-                splitDates[i][1].timetuple()[2], 23, 59, 59)))
+            startEndDatesTransform.append((splitDates[i][0],
+                                           self.incrementEndpoint(datetime(
+                                               splitDates[i][1].timetuple()[0],
+                                               splitDates[i][1].timetuple()[1],
+                                               splitDates[i][1].timetuple()[2],
+                                               23, 59, 59))))
             i += 1
 
         for j in startEndDatesTransform:
@@ -679,12 +694,14 @@ class MSGDataAggregator(object):
         Provide aggregated data.
         ***********************************************************************
 
-        :param dataType: string
-        :param aggregationType: string
-        :param timeColumnName: string
-        :param subkeyColumnName: string
-        :param startDate: string
-        :param endDate: string
+        Start and end dates are used to calculate interval crossings.
+
+        :param dataType: String
+        :param aggregationType: String
+        :param timeColumnName: String
+        :param subkeyColumnName: String
+        :param startDate: String
+        :param endDate: String
         :returns: MSGAggregatedData
         """
 

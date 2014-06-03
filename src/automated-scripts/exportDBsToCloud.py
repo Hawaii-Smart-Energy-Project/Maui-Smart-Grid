@@ -36,7 +36,7 @@ def processCommandLineArguments():
     COMMAND_LINE_ARGS.
     """
 
-    global parser, COMMAND_LINE_ARGS
+    global COMMAND_LINE_ARGS
     parser = argparse.ArgumentParser(description = '')
     parser.add_argument('--dbname', help = 'Database file to be uploaded.')
     parser.add_argument('--fullpath',
@@ -57,17 +57,22 @@ if __name__ == '__main__':
     exporter.logger.shouldRecord = True
 
     startTime = time.time()
-    exporter.exportDB(databases = exporter.configer.configOptionValue('Export',
-                                                                      'dbs_to_export').split(
-        ','), toCloud = True, testing = COMMAND_LINE_ARGS.testing,
-                      numChunks = int(
-                          exporter.configer.configOptionValue('Export',
-                                                              'num_split_sections')),
-                      deleteOutdated = True)
+    noErrors = exporter.exportDB(
+        databases = exporter.configer.configOptionValue('Export',
+                                                        'dbs_to_export').split(
+            ','), toCloud = True, testing = COMMAND_LINE_ARGS.testing,
+        numChunks = int(exporter.configer.configOptionValue('Export',
+                                                            'num_split_sections')),
+        deleteOutdated = True)
 
     wallTime = time.time() - startTime
     wallTimeMin = int(wallTime / 60.0)
     wallTimeSec = (wallTime - wallTimeMin * 60.0)
+
+    if noErrors:
+        exporter.logger.log('No errors occurred during export.', 'info')
+    else:
+        exporter.logger.log('ERRORS occurred during export.', 'warning')
 
     exporter.logger.log('Free space remaining: %d' % exporter.freeSpace(),
                         'info')
@@ -76,4 +81,11 @@ if __name__ == '__main__':
         'Wall time: {:d} min {:.2f} s.'.format(wallTimeMin, wallTimeSec),
         'info')
 
+    # Send the available file list by POST.
     exporter.sendDownloadableFiles()
+
+    # Testing recording log output.
+    myPath = '{}/{}'.format(exporter.exportTempWorkPath, 'export-report.txt')
+    fp = open(myPath, 'wb')
+    fp.write(exporter.logger.recording)
+    fp.close()
