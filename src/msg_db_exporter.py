@@ -381,7 +381,8 @@ class MSGDBExporter(object):
         :param compressedFullPath: String for the compressed file.
         :return:
         """
-        self.logger.log('Moving {} to final path.'.format(compressedFullPath),'debug')
+        self.logger.log('Moving {} to final path.'.format(compressedFullPath),
+                        'debug')
         try:
             shutil.move(compressedFullPath,
                         self.configer.configOptionValue('Export',
@@ -642,7 +643,7 @@ class MSGDBExporter(object):
     def listOfDownloadableFiles(self):
         """
         Create a list of downloadable files.
-        :returns: List of files.
+        :returns: List of dicts of files that are downloadable from the cloud.
         """
 
         files = []
@@ -677,6 +678,23 @@ class MSGDBExporter(object):
 
         return content
 
+    def plaintextListOfDownloadableFiles(self):
+        """
+        Generate content containing a list of downloadable files in plaintext
+        format.
+
+        :returns: String content as plaintext.
+        """
+        content = ''
+        for i in self.listOfDownloadableFiles():
+            content += "{}, {}, {}, {} B\n".format(i['title'],
+                                                   i['webContentLink'],
+                                                   i['createdDate'],
+                                                   int(i['fileSize']))
+
+        self.logger.log('content: {}'.format(content))
+
+        return content
 
     def __verifyMD5Sum(self, localFilePath, remoteFileID):
         """
