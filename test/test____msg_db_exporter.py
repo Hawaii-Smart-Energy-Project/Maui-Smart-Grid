@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 __author__ = 'Daniel Zhang (張道博)'
@@ -18,6 +18,8 @@ import os
 import shutil
 import gzip
 from msg_file_util import MSGFileUtil
+from msg_db_connector import MSGDBConnector
+from msg_db_util import MSGDBUtil
 
 
 class MSGDBExporterTester(unittest.TestCase):
@@ -194,7 +196,7 @@ class MSGDBExporterTester(unittest.TestCase):
         # @TO BE REVIEWED  Prevent deleting files uploaded today.
         # @IMPORTANT Prevent deleting NON-testing files.
         # Need to have a test file uploaded that has an explicitly set upload
-        #  date.
+        # date.
 
         self.logger.log("Test deleting outdated files.")
 
@@ -348,6 +350,17 @@ class MSGDBExporterTester(unittest.TestCase):
     def test_checksum_after_upload(self):
         pass
 
+    def test_dump_exclusions_dictionary(self):
+        print self.exporter.dumpExclusionsDictionary()['meco_v3']
+        print self.exporter.dumpCommand('meco_v3', 'test_name')
+        db = 'meco_v12'
+        if db in self.exporter.dumpExclusionsDictionary():
+            print self.exporter.dumpExclusionsDictionary()['meco_v12']
+            print self.exporter.dumpCommand('meco_v12', 'test_name')
+
+    def test_plaintext_downloadable_files(self):
+        print self.exporter.plaintextListOfDownloadableFiles()
+
     def tearDown(self):
         """
         Delete all test items.
@@ -428,6 +441,35 @@ class MSGDBExporterTester(unittest.TestCase):
             self.configer.configOptionValue('Export', 'db_export_final_path'),
             'temp_test_file'))
 
+    def test_log_successful_export(self):
+        """
+        Test logging of export results to the export history table.
+        :return:
+        """
+
+        self.assertTrue(self.exporter.logSuccessfulExport(name = 'test_export',
+                                                          url =
+                                                          'http://test_url',
+                                                          datetime = '0',
+                                                          size = 100))
+
+        conn = MSGDBConnector().connectDB()
+        cursor = conn.cursor()
+        dbUtil = MSGDBUtil()
+
+        self.assertTrue(
+            dbUtil.executeSQL(cursor, 'select * from "ExportHistory" where '
+                                      'timestamp = '
+                                      'to_timestamp(0)'))
+
+        self.assertEqual(len(cursor.fetchall()), 1,
+                         "There should only be one result row.")
+
+        self.assertTrue(
+            dbUtil.executeSQL(cursor, 'delete from "ExportHistory" where '
+                                      'timestamp = to_timestamp(0)'))
+        conn.commit()
+
 
 if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
@@ -442,6 +484,9 @@ if __name__ == '__main__':
                           'test_markdown_list_of_downloadable_files']
         selected_tests = ['test_get_md5_sum_from_cloud']
         selected_tests = ['test_move_to_final']
+        selected_tests = ['test_dump_exclusions_dictionary']
+        selected_tests = ['test_plaintext_downloadable_files']
+        selected_tests = ['test_log_successful_export']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:

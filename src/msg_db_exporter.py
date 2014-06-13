@@ -697,8 +697,7 @@ class MSGDBExporter(object):
 
         return content
 
-    def logSuccessfulExport(self, name = '', url = '', datetime = '',
-                            size = ''):
+    def logSuccessfulExport(self, name = '', url = '', datetime = '', size = 0):
         """
         When an export has been successful, log information about the export
         to the database.
@@ -709,27 +708,28 @@ class MSGDBExporter(object):
         * timestamp
         * filesize
 
-        :param name:
-        :param url:
+        :param name: String
+        :param url: String
         :param datetime:
-        :param size:
+        :param size: Int
         :return: True if no errors occurred, else False.
         """
 
         def exportHistoryColumns():
             return ['name', 'url', 'timestamp', 'size']
 
-        def exportHistoryValues():
-            return [name, url, datetime, size]
-
-        sql = 'INSERT INTO "{0}" ({1}) VALUES ({})'.format(
+        sql = 'INSERT INTO "{0}" ({1}) VALUES ({2}, {3}, to_timestamp({' \
+              '4}), {5})'.format(
             self.configer.configOptionValue('Export', 'export_history_table'),
-            ','.join(exportHistoryColumns()), ','.join(exportHistoryValues()))
+            ','.join(exportHistoryColumns()), "'" + name + "'", "'" + url + "'",
+            datetime, size)
 
         conn = MSGDBConnector().connectDB()
         cursor = conn.cursor()
         dbUtil = MSGDBUtil()
-        dbUtil.executeSQL(cursor, sql)
+        result = dbUtil.executeSQL(cursor, sql, exitOnFail = False)
+        conn.commit()
+        return result
 
 
     def __verifyMD5Sum(self, localFilePath, remoteFileID):
