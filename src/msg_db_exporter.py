@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 __author__ = 'Daniel Zhang (張道博)'
@@ -27,6 +27,8 @@ import requests
 from StringIO import StringIO
 from requests.adapters import SSLError
 import shutil
+from msg_db_connector import MSGDBConnector
+from msg_db_util import MSGDBUtil
 
 
 class MSGDBExporter(object):
@@ -183,7 +185,8 @@ class MSGDBExporter(object):
                 return None
         except SyntaxError as detail:
             self.logger.log(
-                'Exception while getting exclusions: {}'.format(detail))
+                'SyntaxError exception while getting exclusions: {}'.format(
+                    detail))
 
 
     def dumpName(self, db = ''):
@@ -331,11 +334,9 @@ class MSGDBExporter(object):
 
                             # @todo Provide support for retry count.
                             if not self.addReaders(fileID,
-                                                   self.configer
-                                                           .configOptionValue(
+                                                   self.configer.configOptionValue(
                                                            'Export',
-                                                           'read_permission')
-                                                           .split(
+                                                           'read_permission').split(
                                                            ',')):
                                 self.logger.log(
                                     'Failed to add readers for {}.'.format(f),
@@ -695,6 +696,41 @@ class MSGDBExporter(object):
         self.logger.log('content: {}'.format(content))
 
         return content
+
+    def logSuccessfulExport(self, name = '', url = '', datetime = '',
+                            size = ''):
+        """
+        When an export has been successful, log information about the export
+        to the database.
+
+        The items to log include:
+        * filename
+        * URL
+        * timestamp
+        * filesize
+
+        :param name:
+        :param url:
+        :param datetime:
+        :param size:
+        :return: True if no errors occurred, else False.
+        """
+
+        def exportHistoryColumns():
+            return ['name', 'url', 'timestamp', 'size']
+
+        def exportHistoryValues():
+            return [name, url, datetime, size]
+
+        sql = 'INSERT INTO "{0}" ({1}) VALUES ({})'.format(
+            self.configer.configOptionValue('Export', 'export_history_table'),
+            ','.join(exportHistoryColumns()), ','.join(exportHistoryValues()))
+
+        conn = MSGDBConnector().connectDB()
+        cursor = conn.cursor()
+        dbUtil = MSGDBUtil()
+        dbUtil.executeSQL(cursor, sql)
+
 
     def __verifyMD5Sum(self, localFilePath, remoteFileID):
         """

@@ -22,6 +22,15 @@ class MSGDBUtil(object):
 
     This is the class responsible for actions against databases such as as
     executing SQL statements.
+
+    Usage:
+
+    dbUtil = MSGDBUtil()
+
+    Public API:
+
+    executeSQL(cursor: DB cursor, sql: String, exitOnFail: Boolean):Boolean
+
     """
 
     def __init__(self):
@@ -76,6 +85,9 @@ class MSGDBUtil(object):
 
         The cursor is passed here to allow control of committing outside of
         this class.
+
+        exitOnFail can be toggled to handle cases such as continuing with an
+        insert even when duplicate keys are encountered.
 
         :param cursor: A database cursor.
         :param sql: A SQL statement.

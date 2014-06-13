@@ -15,12 +15,12 @@ from msg_logger import MSGLogger
 
 class MSGDBConnector(object):
     """
-    Manage a connection to an MSG database.
+    Make and manage a connection to an MSG database.
 
     Usage:
 
         conn = MSGDBConnector().connectDB()
-        cursor = self.conn.cursor()
+        cursor = conn.cursor()
 
     """
 
