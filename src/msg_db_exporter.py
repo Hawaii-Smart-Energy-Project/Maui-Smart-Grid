@@ -51,6 +51,7 @@ class MSGDBExporter(object):
              deleteOutdated:Boolean): Export a list of DBs to the cloud.
     """
 
+    # List of cloud files.
     @property
     def cloudFiles(self):
         self._cloudFiles = self.driveService.files().list().execute()
@@ -138,6 +139,14 @@ class MSGDBExporter(object):
 
     def dumpCommand(self, db = '', dumpName = ''):
         """
+        This method makes use of
+
+        pg_dump -s -p ${PORT}
+                   -U ${USERNAME}
+                   [-T ${OPTIONAL_TABLE_EXCLUSIONS}]
+                   ${DB_NAME} >
+                   ${EXPORT_TEMP_WORK_PATH}/${DUMP_TIMESTAMP}_{DB_NAME}.sql
+
         :param db: String
         :param dumpName: String
         :return: String of command used to export DB.
@@ -253,13 +262,6 @@ class MSGDBExporter(object):
         """
         Export a set of DBs to local storage.
 
-        This method makes use of
-
-        pg_dump -s -h ${HOST}
-                   -U ${USERNAME}
-                   ${DB_NAME} >
-                   ${DUMP_TIMESTAMP}_{DB_NAME}.sql
-
         :param databases: List of database names that will be exported.
         :param toCloud: Boolean if set to True, then the export will also be
         copied to cloud storage.
@@ -341,6 +343,7 @@ class MSGDBExporter(object):
                                 self.logger.log(
                                     'Failed to add readers for {}.'.format(f),
                                     'error')
+                        metadata = self.metadataOfFileID(fileID)
 
                     # Remove split sections if they exist.
                     try:
@@ -639,6 +642,17 @@ class MSGDBExporter(object):
             self.logger.log('SSL error: {}'.format(error), 'error')
 
         output.close()
+
+
+    def metadataOfFileID(self, fileID = ''):
+        """
+        :param fileID: String of a file ID in the cloud.
+        :return: Tuple of metadata (name, url, timestamp, size) for a given
+        file ID.
+        """
+        item = [i for i in self.cloudFiles['items'] if i['id'] == fileID][0]
+        return (item[u'originalFilename'], item[u'webContentLink'],
+                item[u'createdDate'], item[u'fileSize'])
 
 
     def listOfDownloadableFiles(self):
