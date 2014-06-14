@@ -444,13 +444,13 @@ class MSGDBExporterTester(unittest.TestCase):
     def test_log_successful_export(self):
         """
         Test logging of export results to the export history table.
-        :return:
+        :return: Nothing.
         """
 
         self.assertTrue(self.exporter.logSuccessfulExport(name = 'test_export',
                                                           url =
                                                           'http://test_url',
-                                                          datetime = '0',
+                                                          datetime = 0,
                                                           size = 100))
 
         conn = MSGDBConnector().connectDB()
@@ -470,6 +470,17 @@ class MSGDBExporterTester(unittest.TestCase):
                                       'timestamp = to_timestamp(0)'))
         conn.commit()
 
+    def test_metadata_of_file_id(self):
+        """
+        Test getting the metadata for a file ID.
+        :return:
+        """
+        # @todo Make use of uploaded test file.
+        self.logger.log('metadata: {}'.format(
+            self.exporter.metadataOfFileID('0ByCQ0YlYSwf3U3h4V2Rydlk2SFE')))
+        self.exporter.logSuccessfulExport(
+            *self.exporter.metadataOfFileID('0ByCQ0YlYSwf3U3h4V2Rydlk2SFE'))
+
 
 if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
@@ -487,6 +498,7 @@ if __name__ == '__main__':
         selected_tests = ['test_dump_exclusions_dictionary']
         selected_tests = ['test_plaintext_downloadable_files']
         selected_tests = ['test_log_successful_export']
+        selected_tests = ['test_log_successful_export','test_metadata_of_file_id']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:

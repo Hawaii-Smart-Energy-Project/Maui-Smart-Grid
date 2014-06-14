@@ -343,7 +343,7 @@ class MSGDBExporter(object):
                                 self.logger.log(
                                     'Failed to add readers for {}.'.format(f),
                                     'error')
-                        metadata = self.metadataOfFileID(fileID)
+                        self.logSuccessfulExport(self.metadataOfFileID(fileID))
 
                     # Remove split sections if they exist.
                     try:
@@ -711,7 +711,7 @@ class MSGDBExporter(object):
 
         return content
 
-    def logSuccessfulExport(self, name = '', url = '', datetime = '', size = 0):
+    def logSuccessfulExport(self, name = '', url = '', datetime = 0, size = 0):
         """
         When an export has been successful, log information about the export
         to the database.
@@ -732,11 +732,15 @@ class MSGDBExporter(object):
         def exportHistoryColumns():
             return ['name', 'url', 'timestamp', 'size']
 
-        sql = 'INSERT INTO "{0}" ({1}) VALUES ({2}, {3}, to_timestamp({' \
-              '4}), {5})'.format(
+        timestamp = lambda \
+            datetime: 'to_timestamp(0)' if datetime == 0 else "timestamp '{" \
+                                                              "}'".format(
+            datetime)
+
+        sql = 'INSERT INTO "{0}" ({1}) VALUES ({2}, {3}, {4}, {5})'.format(
             self.configer.configOptionValue('Export', 'export_history_table'),
             ','.join(exportHistoryColumns()), "'" + name + "'", "'" + url + "'",
-            datetime, size)
+            timestamp(datetime), size)
 
         conn = MSGDBConnector().connectDB()
         cursor = conn.cursor()
