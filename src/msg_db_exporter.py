@@ -343,7 +343,7 @@ class MSGDBExporter(object):
                                 self.logger.log(
                                     'Failed to add readers for {}.'.format(f),
                                     'error')
-                        self.logSuccessfulExport(self.metadataOfFileID(fileID))
+                        self.logSuccessfulExport(*self.metadataOfFileID(fileID))
 
                     # Remove split sections if they exist.
                     try:
@@ -733,8 +733,8 @@ class MSGDBExporter(object):
             return ['name', 'url', 'timestamp', 'size']
 
         timestamp = lambda \
-            datetime: 'to_timestamp(0)' if datetime == 0 else "timestamp '{" \
-                                                              "}'".format(
+                datetime: 'to_timestamp(0)' if datetime == 0 else "timestamp " \
+                                                                  "'{}'".format(
             datetime)
 
         sql = 'INSERT INTO "{0}" ({1}) VALUES ({2}, {3}, {4}, {5})'.format(
