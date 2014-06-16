@@ -20,6 +20,7 @@ import gzip
 from msg_file_util import MSGFileUtil
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
+import re
 
 
 class MSGDBExporterTester(unittest.TestCase):
@@ -47,7 +48,7 @@ class MSGDBExporterTester(unittest.TestCase):
             self.logger.log("Exception occurred: {}".format(detail), 'error')
             exit(-1)
 
-        self.logger.log("conn = ".format(conn))
+        self.logger.log("conn = {}".format(conn), 'debug')
         self.assertIsNotNone(conn)
 
         # Create a temporary working directory.
@@ -61,7 +62,9 @@ class MSGDBExporterTester(unittest.TestCase):
     def upload_test_data_to_cloud(self):
         """
         Provide an upload of test data that can be used in other tests.
-        :return: String of file ID of uploaded file.
+
+        Store the file ID as an ivar.
+        :return: Nothing.
         """
         self.logger.log("Uploading test data.")
 
@@ -449,10 +452,12 @@ class MSGDBExporterTester(unittest.TestCase):
         :return:
         """
         # @todo Make use of uploaded test file.
+        self.upload_test_data_to_cloud()
+
         self.logger.log('metadata: {}'.format(
-            self.exporter.metadataOfFileID('0ByCQ0YlYSwf3U3h4V2Rydlk2SFE')))
-        self.exporter.logSuccessfulExport(
-            *self.exporter.metadataOfFileID('0ByCQ0YlYSwf3U3h4V2Rydlk2SFE'))
+            self.exporter.metadataOfFileID(self.testDataFileID)))
+
+        self.assertTrue(re.match(r'[0-9A-Za-z]+', self.testDataFileID))
 
 
     def tearDown(self):
@@ -528,7 +533,8 @@ if __name__ == '__main__':
         selected_tests = ['test_log_successful_export',
                           'test_metadata_of_file_id']
 
-        selected_tests = ['test_upload_test_data', 'test_log_successful_export']
+        selected_tests = ['test_upload_test_data', 'test_log_successful_export',
+                          'test_metadata_of_file_id']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
