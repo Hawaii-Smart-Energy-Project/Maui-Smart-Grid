@@ -378,13 +378,18 @@ class MSGDBExporterTester(unittest.TestCase):
     def test_checksum_after_upload(self):
         pass
 
+
     def test_dump_exclusions_dictionary(self):
-        print self.exporter.dumpExclusionsDictionary()['meco_v3']
-        print self.exporter.dumpCommand('meco_v3', 'test_name')
-        db = 'meco_v12'
-        if db in self.exporter.dumpExclusionsDictionary():
-            print self.exporter.dumpExclusionsDictionary()['meco_v12']
-            print self.exporter.dumpCommand('meco_v12', 'test_name')
+        """
+        Verify the exclusions dictionary by its type.
+        :return:
+        """
+
+        exclusions = self.exporter.dumpExclusionsDictionary()
+
+        if exclusions:
+            self.assertEquals(type({}),type(exclusions))
+
 
     def test_plaintext_downloadable_files(self):
         print self.exporter.plaintextListOfDownloadableFiles()
@@ -518,23 +523,12 @@ if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
-        selected_tests = ['test_upload_test_data', 'testGetFileIDsForFilename',
-                          'test_get_file_id_for_nonexistent_file',
-                          'test_get_file_size', 'test_split_archive',
-                          'test_create_compressed_archived', 'test_export_db']
-        selected_tests = ['test_sending_fcphase_part_0']
-        selected_tests = ['test_list_of_downloadable_files',
-                          'test_markdown_list_of_downloadable_files']
-        selected_tests = ['test_get_md5_sum_from_cloud']
-        selected_tests = ['test_move_to_final']
-        selected_tests = ['test_dump_exclusions_dictionary']
-        selected_tests = ['test_plaintext_downloadable_files']
-        selected_tests = ['test_log_successful_export']
-        selected_tests = ['test_log_successful_export',
-                          'test_metadata_of_file_id']
 
         selected_tests = ['test_upload_test_data', 'test_log_successful_export',
                           'test_metadata_of_file_id']
+
+        # For testing:
+        selected_tests = ['test_dump_exclusions_dictionary']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
