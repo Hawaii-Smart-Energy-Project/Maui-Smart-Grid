@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__ = 'Daniel Zhang (張道博)'
-__copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
+__copyright__ = 'Copyright (c) 2014, University of Hawaii Smart Energy Project'
 __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
@@ -13,11 +13,15 @@ import stat
 import sys
 from msg_logger import MSGLogger
 
-
 class MSGConfiger(object):
     """
     Supports system-specific configuration for MECO data processing.
-    The site configuration file is located in ~/.meco-data-operations.cfg.
+    The site-level configuration file is located in ~/.meco-data-operations.cfg.
+
+    Usage:
+
+    configer = MSGConfiger()
+
     """
 
     def __init__(self):
@@ -49,17 +53,17 @@ class MSGConfiger(object):
         try:
             self._config.read(['site.cfg', os.path.expanduser(configFilePath)])
         except:
-            self.logger.log("Critical error: The data in %s cannot be "
-                            "accessed successfully." % configFilePath, 'ERROR')
-            sys.exit()
+            self.logger.log("Critical error: The data in {} cannot be "
+                            "accessed successfully.".format(configFilePath),
+                            'ERROR')
+            sys.exit(-1)
 
 
     def configOptionValue(self, section, option):
         """
         Get a configuration value from the local configuration file.
-
-        :param section
-        :param option
+        :param section: String of section in config file.
+        :param option: String of option in config file.
         :returns: The value contained in the configuration file.
         """
 
@@ -72,18 +76,18 @@ class MSGConfiger(object):
             else:
                 return configValue
         except:
-            print "Failed when getting _config option %s in section %s" % (
-                option, section)
-            sys.exit()
+            self.logger.log(
+                "Failed when getting configuration option {} in section {"
+                "}.".format(option, section), 'error')
+            sys.exit(-1)
 
 
     def isMoreThanOwnerReadableAndWritable(self, filePath):
         """
         Determines if a file has greater permissions than owner read/write.
-
-        :param filePath: Path to the file being tested.
-        :returns: True if the permissions are greater than owner read/write,
-        otherwise return False.
+        :param filePath: String for path to the file being tested.
+        :returns: Boolean True if the permissions are greater than owner
+        read/write, otherwise return False.
         """
 
         st = os.stat(filePath)
