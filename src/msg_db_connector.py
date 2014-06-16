@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 __author__ = 'Daniel Zhang (張道博)'
@@ -85,7 +85,7 @@ class MSGDBConnector(object):
                              self.dbPort, self.dbPassword))
         except:
             self.logger.log("Failed to connect to the database.", 'error')
-            return None
+            raise Exception("DB connection failed.")
 
         self.logger.log(
             "Opened DB connection to database {}.".format(self.dbName))
