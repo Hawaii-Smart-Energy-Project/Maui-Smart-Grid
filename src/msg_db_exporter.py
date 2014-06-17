@@ -312,10 +312,10 @@ class MSGDBExporter(object):
                     self.logger.log('Uploading {}.'.format(f), 'info')
                     fileID = self.uploadFileToCloudStorage(fullPath = f,
                                                            testing = testing,
-                                                           retryCount =
-                                                           self.configer.configOptionValue(
-                                                               'Export',
-                                                               'export_retry_count'))
+                                                           retryCount = int(
+                                                               self.configer.configOptionValue(
+                                                                   'Export',
+                                                                   'export_retry_count')))
 
                     self.logger.log('file id after upload: {}'.format(fileID))
 
@@ -324,11 +324,10 @@ class MSGDBExporter(object):
                                                self.configer.configOptionValue(
                                                        'Export',
                                                        'read_permission').split(
-                                                       ','),
-                                               retryCount =
-                                               self.configer.configOptionValue(
-                                                       'Export',
-                                                       'export_retry_count')):
+                                                       ','), retryCount = int(
+                                        self.configer.configOptionValue(
+                                                'Export',
+                                                'export_retry_count'))):
                             self.logger.log(
                                 'Failed to add readers for {}.'.format(f),
                                 'error')
@@ -532,11 +531,9 @@ class MSGDBExporter(object):
     def freeSpace(self):
         """
         Get free space from the drive service.
-
         :param driveService: Object for the drive service.
         :returns: Int of free space (bytes) on the drive service.
         """
-
         aboutData = self.driveService.about().get().execute()
         return int(aboutData['quotaBytesTotal']) - int(
             aboutData['quotaBytesUsed']) - int(

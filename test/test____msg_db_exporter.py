@@ -64,8 +64,6 @@ class MSGDBExporterTester(unittest.TestCase):
         Provide an upload of test data that can be used in other tests.
 
         Side effect: Store the file ID as an ivar.
-
-        :return: Nothing.
         """
         self.logger.log("Uploading test data.")
 
