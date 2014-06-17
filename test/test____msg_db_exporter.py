@@ -397,8 +397,8 @@ class MSGDBExporterTester(unittest.TestCase):
     def test_move_to_final(self):
         """
         Test moving a file to the final destination path.
-        :return:
         """
+        # @REVIEWED
         self.logger.log('Testing moving to final path {}.'.format(
             self.configer.configOptionValue('Export', 'db_export_final_path')))
 
@@ -417,6 +417,7 @@ class MSGDBExporterTester(unittest.TestCase):
             self.configer.configOptionValue('Export', 'db_export_final_path'),
             'temp_test_file')))
 
+        # Remove the test file.
         os.remove('{}/{}'.format(
             self.configer.configOptionValue('Export', 'db_export_final_path'),
             'temp_test_file'))
@@ -534,10 +535,10 @@ if __name__ == '__main__':
         selected_tests = ['test_upload_test_data', 'test_log_successful_export',
                           'test_metadata_of_file_id',
                           'test_dump_exclusions_dictionary',
-                          'test_filename_for_file_id']
+                          'test_filename_for_file_id', 'test_move_to_final']
 
         # For testing:
-        selected_tests = ['test_filename_for_file_id']
+        # selected_tests = ['test_filename_for_file_id']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
