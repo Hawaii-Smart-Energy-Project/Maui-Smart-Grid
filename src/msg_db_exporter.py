@@ -324,21 +324,14 @@ class MSGDBExporter(object):
                                                self.configer.configOptionValue(
                                                        'Export',
                                                        'read_permission').split(
-                                                       ',')):
-                            time.sleep(10)
+                                                       ','),
+                                               retryCount =
+                                               self.configer.configOptionValue(
+                                                       'Export',
+                                                       'export_retry_count')):
                             self.logger.log(
-                                'Retrying adding readers for {}.'.format(f),
-                                'warning')
-
-                            # @todo Provide support for retry count.
-                            if not self.addReaders(fileID,
-                                                   self.configer.configOptionValue(
-                                                           'Export',
-                                                           'read_permission').split(
-                                                           ',')):
-                                self.logger.log(
-                                    'Failed to add readers for {}.'.format(f),
-                                    'error')
+                                'Failed to add readers for {}.'.format(f),
+                                'error')
                         self.logSuccessfulExport(*self.metadataOfFileID(fileID))
 
                     # Remove split sections if they exist.
@@ -467,8 +460,6 @@ class MSGDBExporter(object):
         :returns: String File ID on verified on upload; None if verification
         fails.
         """
-
-        # @todo Implement retry count.
 
         success = True
         myFile = os.path.basename(fullPath)
@@ -871,4 +862,14 @@ class MSGDBExporter(object):
                     self.logger.log('An error occurred: {}'.format(error))
                     success = False
 
-        return success
+        if not success and retryCount <= 0:
+            return False
+        elif success:
+            return True
+        else:
+            time.sleep(self.retryDelay)
+            self.logger.log('Retrying adding readers for ID {}.'.format(fileID),
+                            'warning')
+            self.addReaders(fileID = fileID,
+                            emailAddressList = emailAddressList,
+                            retryCount = retryCount - 1)
