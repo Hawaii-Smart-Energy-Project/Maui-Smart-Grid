@@ -108,6 +108,7 @@ class MSGDBExporter(object):
         self._driveService = None
         self._cloudFiles = None
         self.postAgent = 'Maui Smart Grid 1.0.0 DB Exporter'
+        self.retryDelay = 10
 
 
     def verifyExportChecksum(self, testing = False):
@@ -310,16 +311,11 @@ class MSGDBExporter(object):
                         numChunks = numChunks, chunkSize = chunkSize):
                     self.logger.log('Uploading {}.'.format(f), 'info')
                     fileID = self.uploadFileToCloudStorage(fullPath = f,
-                                                           testing = testing)
-
-                    # @todo Provide support for a retry count.
-                    if not fileID:
-                        self.logger.log('Retrying upload of {}.'.format(f),
-                                        'warning')
-                        time.sleep(10)
-                        fileID = self.uploadFileToCloudStorage(fullPath = f,
-                                                               testing =
-                                                               testing)
+                                                           testing = testing,
+                                                           retryCount =
+                                                           self.configer.configOptionValue(
+                                                               'Export',
+                                                               'export_retry_count'))
 
                     self.logger.log('file id after upload: {}'.format(fileID))
 
@@ -512,8 +508,14 @@ class MSGDBExporter(object):
             self.logger.log('Verification by MD5 checksum succeeded.', 'INFO')
             self.logger.log("Finished.")
 
-        if not success:
+        if not success and retryCount <= 0:
             return None
+        else:
+            time.sleep(self.retryDelay)
+            self.logger.log('Retrying upload of {}.'.format(fullPath),
+                            'warning')
+            self.uploadFileToCloudStorage(fullPath = fullPath,
+                                          retryCount = retryCount - 1)
 
         return result['id']
 
@@ -837,7 +839,8 @@ class MSGDBExporter(object):
             raise Exception("Unmatched case for fileIDForFileName.")
 
 
-    def addReaders(self, fileID = None, emailAddressList = None):
+    def addReaders(self, fileID = None, emailAddressList = None,
+                   retryCount = 0):
         """
         Add reader permission to an export file for the given list of email
         addresses.
@@ -848,7 +851,7 @@ class MSGDBExporter(object):
         :param emailAddressList: List of email addresses.
         :returns: Boolean True if successful, otherwise False.
         """
-
+        # @todo Provide support for retry count
         success = True
 
         self.logger.log('file id: {}'.format(fileID))
