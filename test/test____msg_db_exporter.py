@@ -205,7 +205,7 @@ class MSGDBExporterTester(unittest.TestCase):
         The unit test data file is a predefined set of test data stored in
         the test data path of the software distribution.
         """
-
+        # @REVIEWED
         self.logger.log("Uploading test data.")
 
         self.upload_test_data_to_cloud()
@@ -213,7 +213,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.assertGreater(len(self.testDataFileID), 0)
 
 
-    def testDeleteOutdatedFiles(self):
+    def test_delete_out_dated_files(self):
         """
         The timestamp of an uploaded file should be set in the past to provide
         the ability to test the deleting of outdated files.
@@ -379,12 +379,13 @@ class MSGDBExporterTester(unittest.TestCase):
         pass
 
 
+
     def test_dump_exclusions_dictionary(self):
         """
         Verify the exclusions dictionary by its type.
         :return:
         """
-
+        # @REVIEWED
         exclusions = self.exporter.dumpExclusionsDictionary()
 
         if exclusions:
@@ -427,7 +428,7 @@ class MSGDBExporterTester(unittest.TestCase):
         Test logging of export results to the export history table.
         :return: Nothing.
         """
-
+        # @REVIEWED
         self.assertTrue(self.exporter.logSuccessfulExport(name = 'test_export',
                                                           url =
                                                           'http://test_url',
@@ -456,7 +457,7 @@ class MSGDBExporterTester(unittest.TestCase):
         Test getting the metadata for a file ID.
         :return:
         """
-        # @todo Make use of uploaded test file.
+        # @REVIEWED
         self.upload_test_data_to_cloud()
 
         self.logger.log('metadata: {}'.format(
@@ -525,10 +526,10 @@ if __name__ == '__main__':
     if RUN_SELECTED_TESTS:
 
         selected_tests = ['test_upload_test_data', 'test_log_successful_export',
-                          'test_metadata_of_file_id']
+                          'test_metadata_of_file_id','test_dump_exclusions_dictionary']
 
         # For testing:
-        selected_tests = ['test_dump_exclusions_dictionary']
+        selected_tests = ['test_delete_out_dated_files']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
