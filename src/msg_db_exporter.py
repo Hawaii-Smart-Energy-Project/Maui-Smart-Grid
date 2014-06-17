@@ -582,6 +582,10 @@ class MSGDBExporter(object):
         for item in self.cloudFiles['items']:
             t1 = datetime.datetime.strptime(item['createdDate'],
                                             "%Y-%m-%dT%H:%M:%S.%fZ")
+            self.logger.log('name:{}, t1:{}'.format(item['originalFilename'],
+                                                    t1.strftime(
+                                                        '%Y-%m-%d %H:%M:%S')),
+                            'SILENT')
             t2 = datetime.datetime.now()
             tdelta = t2 - t1
             self.logger.log(
