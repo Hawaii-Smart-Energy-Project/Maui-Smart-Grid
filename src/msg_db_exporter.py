@@ -498,6 +498,7 @@ class MSGDBExporter(object):
         if success:
             self.logger.log('Verification by MD5 checksum succeeded.', 'INFO')
             self.logger.log("Finished.")
+            return result['id']
 
         if not success and retryCount <= 0:
             return None
@@ -507,8 +508,6 @@ class MSGDBExporter(object):
                             'warning')
             self.uploadFileToCloudStorage(fullPath = fullPath,
                                           retryCount = retryCount - 1)
-
-        return result['id']
 
 
     def __retrieveCredentials(self):
@@ -547,7 +546,6 @@ class MSGDBExporter(object):
     def deleteFile(self, fileID = ''):
         """
         Delete the file with ID fileID.
-
         :param fileID: String of a Google API file ID.
         """
 
@@ -584,10 +582,6 @@ class MSGDBExporter(object):
         for item in self.cloudFiles['items']:
             t1 = datetime.datetime.strptime(item['createdDate'],
                                             "%Y-%m-%dT%H:%M:%S.%fZ")
-            self.logger.log('name:{}, t1:{}'.format(item['originalFilename'],
-                                                    t1.strftime(
-                                                        '%Y-%m-%d %H:%M:%S')),
-                            'debug')
             t2 = datetime.datetime.now()
             tdelta = t2 - t1
             self.logger.log(
@@ -828,6 +822,14 @@ class MSGDBExporter(object):
             return None
         else:
             raise Exception("Unmatched case for fileIDForFileName.")
+
+    def filenameForFileID(self, fileID = ''):
+        """
+        :param fileID: String of cloud-based file ID.
+        :return: String of filename for a given file ID.
+        """
+        return filter(lambda x: x['id'] == fileID, self.cloudFiles['items'])[0][
+            'originalFilename']
 
 
     def addReaders(self, fileID = None, emailAddressList = None,

@@ -63,7 +63,8 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         Provide an upload of test data that can be used in other tests.
 
-        Store the file ID as an ivar.
+        Side effect: Store the file ID as an ivar.
+
         :return: Nothing.
         """
         self.logger.log("Uploading test data.")
@@ -379,7 +380,6 @@ class MSGDBExporterTester(unittest.TestCase):
         pass
 
 
-
     def test_dump_exclusions_dictionary(self):
         """
         Verify the exclusions dictionary by its type.
@@ -389,7 +389,7 @@ class MSGDBExporterTester(unittest.TestCase):
         exclusions = self.exporter.dumpExclusionsDictionary()
 
         if exclusions:
-            self.assertEquals(type({}),type(exclusions))
+            self.assertEquals(type({}), type(exclusions))
 
 
     def test_plaintext_downloadable_files(self):
@@ -426,7 +426,6 @@ class MSGDBExporterTester(unittest.TestCase):
     def test_log_successful_export(self):
         """
         Test logging of export results to the export history table.
-        :return: Nothing.
         """
         # @REVIEWED
         self.assertTrue(self.exporter.logSuccessfulExport(name = 'test_export',
@@ -455,7 +454,6 @@ class MSGDBExporterTester(unittest.TestCase):
     def test_metadata_of_file_id(self):
         """
         Test getting the metadata for a file ID.
-        :return:
         """
         # @REVIEWED
         self.upload_test_data_to_cloud()
@@ -464,6 +462,16 @@ class MSGDBExporterTester(unittest.TestCase):
             self.exporter.metadataOfFileID(self.testDataFileID)))
 
         self.assertTrue(re.match(r'[0-9A-Za-z]+', self.testDataFileID))
+
+    def test_filename_for_file_id(self):
+        """
+        Test returning a file name given a file ID.
+        """
+        # @REVIEWED
+        self.upload_test_data_to_cloud()
+        self.assertEquals(
+            self.exporter.filenameForFileID(fileID = self.testDataFileID),
+            self.compressedTestFilename)
 
 
     def tearDown(self):
@@ -526,10 +534,12 @@ if __name__ == '__main__':
     if RUN_SELECTED_TESTS:
 
         selected_tests = ['test_upload_test_data', 'test_log_successful_export',
-                          'test_metadata_of_file_id','test_dump_exclusions_dictionary']
+                          'test_metadata_of_file_id',
+                          'test_dump_exclusions_dictionary',
+                          'test_filename_for_file_id']
 
         # For testing:
-        selected_tests = ['test_delete_out_dated_files']
+        selected_tests = ['test_filename_for_file_id']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
