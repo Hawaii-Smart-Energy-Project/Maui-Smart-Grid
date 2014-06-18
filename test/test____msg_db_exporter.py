@@ -21,6 +21,7 @@ from msg_file_util import MSGFileUtil
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 import re
+from msg_python_util import MSGPythonUtil
 
 
 class MSGDBExporterTester(unittest.TestCase):
@@ -40,6 +41,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.fileUtil = MSGFileUtil()
         self.fileChunks = []
         self.testDataFileID = ''
+        self.pyUtil = MSGPythonUtil()
 
         conn = None
         try:
@@ -65,7 +67,8 @@ class MSGDBExporterTester(unittest.TestCase):
 
         Side effect: Store the file ID as an ivar.
         """
-        self.logger.log("Uploading test data.")
+        self.logger.log("Uploading test data for caller: {}".format(
+            self.pyUtil.caller_name()))
 
         filePath = "{}/{}".format(self.exportTestDataPath,
                                   self.compressedTestFilename)
@@ -156,14 +159,14 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         Test retrieving the MD5 sum from the cloud.
         """
-
+        # @REVIEWED
         self.logger.log('Testing getting the MD5 sum.', 'info')
-        md5sum = ''
-        for item in self.exporter.cloudFiles['items']:
-            md5sum = item['md5Checksum']
-            print '{}:{}'.format(item['title'], md5sum)
-            self.assertEquals(len(md5sum), 32)
-
+        self.upload_test_data_to_cloud()
+        testFileMD5 = filter(lambda x: x['id'] == self.testDataFileID,
+                             self.exporter.cloudFiles['items'])[0][
+            'md5Checksum']
+        self.assertEquals(len(testFileMD5), 32)
+        self.assertTrue(re.match(r'[0-9A-Za-z]+', testFileMD5))
 
     def testGetFileIDsForFilename(self):
         """
@@ -205,12 +208,10 @@ class MSGDBExporterTester(unittest.TestCase):
         the test data path of the software distribution.
         """
         # @REVIEWED
-        self.logger.log("Uploading test data.")
 
         self.upload_test_data_to_cloud()
-
         self.assertGreater(len(self.testDataFileID), 0)
-
+        self.assertTrue(re.match(r'[0-9A-Za-z]+', self.testDataFileID))
 
     def test_delete_out_dated_files(self):
         """
@@ -368,8 +369,9 @@ class MSGDBExporterTester(unittest.TestCase):
         self.assertEqual(fSize, 12279, 'File size is correct.')
 
 
-    def testUploadExportFilesList(self):
+    def test_upload_export_files_list(self):
         """
+        TBW
         """
         self.exporter.sendDownloadableFiles()
 
@@ -421,6 +423,7 @@ class MSGDBExporterTester(unittest.TestCase):
         os.remove('{}/{}'.format(
             self.configer.configOptionValue('Export', 'db_export_final_path'),
             'temp_test_file'))
+
 
     def test_log_successful_export(self):
         """
@@ -535,7 +538,8 @@ if __name__ == '__main__':
         selected_tests = ['test_upload_test_data', 'test_log_successful_export',
                           'test_metadata_of_file_id',
                           'test_dump_exclusions_dictionary',
-                          'test_filename_for_file_id', 'test_move_to_final']
+                          'test_filename_for_file_id', 'test_move_to_final',
+                          'test_get_md5_sum_from_cloud']
 
         # For testing:
         # selected_tests = ['test_filename_for_file_id']
