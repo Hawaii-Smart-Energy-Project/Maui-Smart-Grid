@@ -361,6 +361,7 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         Test retrieving local file sizes.
         """
+        # @REVIEWED
         fullPath = '{}/{}'.format(self.exportTestDataPath,
                                   self.compressedTestFilename)
         fSize = self.fileUtil.fileSize(fullPath)
@@ -538,10 +539,11 @@ if __name__ == '__main__':
                           'test_metadata_of_file_id',
                           'test_dump_exclusions_dictionary',
                           'test_filename_for_file_id', 'test_move_to_final',
-                          'test_get_md5_sum_from_cloud']
+                          'test_get_md5_sum_from_cloud', 'test_split_archive',
+                          'test_get_file_size']
 
         # For testing:
-        selected_tests = ['test_split_archive']
+        selected_tests = ['test_get_file_size']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
