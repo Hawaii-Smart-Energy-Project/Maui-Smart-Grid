@@ -543,7 +543,7 @@ if __name__ == '__main__':
                           'test_get_file_size']
 
         # For testing:
-        selected_tests = ['test_get_file_size']
+        # selected_tests = ['test_get_file_size']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
