@@ -18,6 +18,10 @@ import os
 import shutil
 import gzip
 from msg_file_util import MSGFileUtil
+from msg_db_connector import MSGDBConnector
+from msg_db_util import MSGDBUtil
+import re
+from msg_python_util import MSGPythonUtil
 
 
 class MSGDBExporterTester(unittest.TestCase):
@@ -36,6 +40,18 @@ class MSGDBExporterTester(unittest.TestCase):
                                                                   'export_test_data_path')
         self.fileUtil = MSGFileUtil()
         self.fileChunks = []
+        self.testDataFileID = ''
+        self.pyUtil = MSGPythonUtil()
+
+        conn = None
+        try:
+            conn = MSGDBConnector().connectDB()
+        except Exception as detail:
+            self.logger.log("Exception occurred: {}".format(detail), 'error')
+            exit(-1)
+
+        self.logger.log("conn = {}".format(conn), 'debug')
+        self.assertIsNotNone(conn)
 
         # Create a temporary working directory.
         try:
@@ -44,6 +60,27 @@ class MSGDBExporterTester(unittest.TestCase):
             self.logger.log(
                 'Exception during creation of temp directory: %s' % detail,
                 'ERROR')
+
+    def upload_test_data_to_cloud(self):
+        """
+        Provide an upload of test data that can be used in other tests.
+
+        Side effect: Store the file ID as an ivar.
+        """
+        self.logger.log("Uploading test data for caller: {}".format(
+            self.pyUtil.caller_name()))
+
+        filePath = "{}/{}".format(self.exportTestDataPath,
+                                  self.compressedTestFilename)
+        self.logger.log('Uploaded {}.'.format(filePath), 'info')
+
+        uploadResult = self.exporter.uploadFileToCloudStorage(filePath)
+        self.logger.log('upload result: {}'.format(uploadResult))
+
+        self.testDataFileID = self.exporter.fileIDForFileName(
+            self.compressedTestFilename)
+        self.logger.log("Test file ID is {}.".format(self.testDataFileID))
+
 
     def test_sending_fcphase_part_0(self):
         """
@@ -122,14 +159,14 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         Test retrieving the MD5 sum from the cloud.
         """
-
+        # @REVIEWED
         self.logger.log('Testing getting the MD5 sum.', 'info')
-        md5sum = ''
-        for item in self.exporter.cloudFiles['items']:
-            md5sum = item['md5Checksum']
-            print '{}:{}'.format(item['title'], md5sum)
-            self.assertEquals(len(md5sum), 32)
-
+        self.upload_test_data_to_cloud()
+        testFileMD5 = filter(lambda x: x['id'] == self.testDataFileID,
+                             self.exporter.cloudFiles['items'])[0][
+            'md5Checksum']
+        self.assertEquals(len(testFileMD5), 32)
+        self.assertTrue(re.match(r'[0-9A-Za-z]+', testFileMD5))
 
     def testGetFileIDsForFilename(self):
         """
@@ -170,20 +207,13 @@ class MSGDBExporterTester(unittest.TestCase):
         The unit test data file is a predefined set of test data stored in
         the test data path of the software distribution.
         """
+        # @REVIEWED
 
-        self.logger.log("Uploading test data.")
+        self.upload_test_data_to_cloud()
+        self.assertGreater(len(self.testDataFileID), 0)
+        self.assertTrue(re.match(r'[0-9A-Za-z]+', self.testDataFileID))
 
-        filePath = "{}/{}".format(self.exportTestDataPath,
-                                  self.compressedTestFilename)
-        self.logger.log('Uploaded {}.'.format(filePath), 'info')
-
-        uploadResult = self.exporter.uploadFileToCloudStorage(filePath)
-        self.logger.log('upload result: {}'.format(uploadResult))
-
-        self.assertTrue(uploadResult)
-
-
-    def testDeleteOutdatedFiles(self):
+    def test_delete_out_dated_files(self):
         """
         The timestamp of an uploaded file should be set in the past to provide
         the ability to test the deleting of outdated files.
@@ -194,7 +224,7 @@ class MSGDBExporterTester(unittest.TestCase):
         # @TO BE REVIEWED  Prevent deleting files uploaded today.
         # @IMPORTANT Prevent deleting NON-testing files.
         # Need to have a test file uploaded that has an explicitly set upload
-        #  date.
+        # date.
 
         self.logger.log("Test deleting outdated files.")
 
@@ -313,7 +343,7 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         Test splitting an archive into chunks.
         """
-
+        # @REVIEWED
         self.logger.log('Testing archive splitting.')
         fullPath = '{}/{}'.format(self.exportTestDataPath,
                                   self.compressedTestFilename)
@@ -324,14 +354,14 @@ class MSGDBExporterTester(unittest.TestCase):
 
         self.fileChunks = self.fileUtil.splitLargeFile(fullPath = fullPath,
                                                        numChunks = 3)
-        self.assertGreater(len(self.fileChunks), 0,
-                           'Chunk number is greater than zero.')
+        self.assertEquals(len(self.fileChunks), 3)
 
 
     def test_get_file_size(self):
         """
         Test retrieving local file sizes.
         """
+        # @REVIEWED
         fullPath = '{}/{}'.format(self.exportTestDataPath,
                                   self.compressedTestFilename)
         fSize = self.fileUtil.fileSize(fullPath)
@@ -339,8 +369,9 @@ class MSGDBExporterTester(unittest.TestCase):
         self.assertEqual(fSize, 12279, 'File size is correct.')
 
 
-    def testUploadExportFilesList(self):
+    def test_upload_export_files_list(self):
         """
+        TBW
         """
         self.exporter.sendDownloadableFiles()
 
@@ -348,64 +379,28 @@ class MSGDBExporterTester(unittest.TestCase):
     def test_checksum_after_upload(self):
         pass
 
-    def tearDown(self):
+
+    def test_dump_exclusions_dictionary(self):
         """
-        Delete all test items.
+        Verify the exclusions dictionary by its type.
+        :return:
         """
+        # @REVIEWED
+        exclusions = self.exporter.dumpExclusionsDictionary()
 
-        REMOVE_TEMPORARY_FILES = True
-        if REMOVE_TEMPORARY_FILES:
-            try:
-                os.remove(os.path.join(os.getcwd(), self.testDir,
-                                       self.uncompressedTestFilename))
-                os.remove(os.path.join(os.getcwd(), self.testDir,
-                                       self.compressedTestFilename))
-            except OSError as detail:
-                self.logger.log(
-                    'Exception while removing temporary files: %s' % detail,
-                    'SILENT')
-            try:
-                os.remove(os.path.join(os.getcwd(), self.testDir,
-                                       self.compressedTestFilename))
-            except OSError as detail:
-                self.logger.log(
-                    'Exception while removing temporary files: %s' % detail,
-                    'SILENT')
-            try:
-                for f in self.fileChunks:
-                    os.remove(f)
-            except OSError as detail:
-                self.logger.log(
-                    'Exception while removing temporary files: %s' % detail,
-                    'DEBUG')
+        if exclusions:
+            self.assertEquals(type({}), type(exclusions))
 
-        try:
-            # Might need recursive delete here to handle unexpected cases.
-            os.rmdir(self.testDir)
-        except OSError as detail:
-            self.logger.log('Exception while removing directory: %s' % detail,
-                            'ERROR')
 
-        deleteSuccessful = True
+    def test_plaintext_downloadable_files(self):
+        print self.exporter.plaintextListOfDownloadableFiles()
 
-        # Keep deleting from the cloud until there is no more to delete.
-        while deleteSuccessful:
-            try:
-                fileIDToDelete = self.exporter.fileIDForFileName(
-                    self.compressedTestFilename)
-                self.logger.log("file ID to delete: %s" % fileIDToDelete,
-                                'DEBUG')
-                self.exporter.driveService.files().delete(
-                    fileId = '%s' % fileIDToDelete).execute()
-            except (TypeError, http.HttpError) as e:
-                self.logger.log('Delete not successful: %s' % e, 'SILENT')
-                break
 
     def test_move_to_final(self):
         """
         Test moving a file to the final destination path.
-        :return:
         """
+        # @REVIEWED
         self.logger.log('Testing moving to final path {}.'.format(
             self.configer.configOptionValue('Export', 'db_export_final_path')))
 
@@ -424,24 +419,131 @@ class MSGDBExporterTester(unittest.TestCase):
             self.configer.configOptionValue('Export', 'db_export_final_path'),
             'temp_test_file')))
 
+        # Remove the test file.
         os.remove('{}/{}'.format(
             self.configer.configOptionValue('Export', 'db_export_final_path'),
             'temp_test_file'))
+
+
+    def test_log_successful_export(self):
+        """
+        Test logging of export results to the export history table.
+        """
+        # @REVIEWED
+        self.assertTrue(self.exporter.logSuccessfulExport(name = 'test_export',
+                                                          url =
+                                                          'http://test_url',
+                                                          datetime = 0,
+                                                          size = 100))
+
+        conn = MSGDBConnector().connectDB()
+        cursor = conn.cursor()
+        dbUtil = MSGDBUtil()
+
+        self.assertTrue(
+            dbUtil.executeSQL(cursor, 'select * from "ExportHistory" where '
+                                      'timestamp = '
+                                      'to_timestamp(0)'))
+
+        self.assertEqual(len(cursor.fetchall()), 1,
+                         "There should only be one result row.")
+
+        self.assertTrue(
+            dbUtil.executeSQL(cursor, 'delete from "ExportHistory" where '
+                                      'timestamp = to_timestamp(0)'))
+        conn.commit()
+
+    def test_metadata_of_file_id(self):
+        """
+        Test getting the metadata for a file ID.
+        """
+        # @REVIEWED
+        self.upload_test_data_to_cloud()
+
+        self.logger.log('metadata: {}'.format(
+            self.exporter.metadataOfFileID(self.testDataFileID)))
+
+        self.assertTrue(re.match(r'[0-9A-Za-z]+', self.testDataFileID))
+
+    def test_filename_for_file_id(self):
+        """
+        Test returning a file name given a file ID.
+        """
+        # @REVIEWED
+        self.upload_test_data_to_cloud()
+        self.assertEquals(
+            self.exporter.filenameForFileID(fileID = self.testDataFileID),
+            self.compressedTestFilename)
+
+
+    def tearDown(self):
+        """
+        Delete all test items.
+        """
+
+        REMOVE_TEMPORARY_FILES = True
+        if REMOVE_TEMPORARY_FILES:
+            try:
+                os.remove(os.path.join(os.getcwd(), self.testDir,
+                                       self.uncompressedTestFilename))
+                os.remove(os.path.join(os.getcwd(), self.testDir,
+                                       self.compressedTestFilename))
+            except OSError as detail:
+                self.logger.log(
+                    'Exception while removing temporary files: {}'.format(
+                        detail), 'SILENT')
+            try:
+                os.remove(os.path.join(os.getcwd(), self.testDir,
+                                       self.compressedTestFilename))
+            except OSError as detail:
+                self.logger.log(
+                    'Exception while removing temporary files: {}'.format(
+                        detail), 'SILENT')
+            try:
+                for f in self.fileChunks:
+                    os.remove(f)
+            except OSError as detail:
+                self.logger.log(
+                    'Exception while removing temporary files: {}'.format(
+                        detail), 'DEBUG')
+
+        try:
+            os.rmdir(self.testDir)
+        except OSError as detail:
+            self.logger.log(
+                'Exception while removing directory: {}'.format(detail),
+                'ERROR')
+
+        deleteSuccessful = True
+
+        # Keep deleting from the cloud until there is no more to delete.
+        while deleteSuccessful:
+            try:
+                fileIDToDelete = self.exporter.fileIDForFileName(
+                    self.compressedTestFilename)
+                self.logger.log("file ID to delete: {}".format(fileIDToDelete),
+                                'DEBUG')
+                self.exporter.driveService.files().delete(
+                    fileId = '%s' % fileIDToDelete).execute()
+            except (TypeError, http.HttpError) as e:
+                self.logger.log('Delete not successful: {}'.format(e), 'SILENT')
+                break
 
 
 if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
-        selected_tests = ['test_upload_test_data', 'testGetFileIDsForFilename',
-                          'test_get_file_id_for_nonexistent_file',
-                          'test_get_file_size', 'test_split_archive',
-                          'test_create_compressed_archived', 'test_export_db']
-        selected_tests = ['test_sending_fcphase_part_0']
-        selected_tests = ['test_list_of_downloadable_files',
-                          'test_markdown_list_of_downloadable_files']
-        selected_tests = ['test_get_md5_sum_from_cloud']
-        selected_tests = ['test_move_to_final']
+
+        selected_tests = ['test_upload_test_data', 'test_log_successful_export',
+                          'test_metadata_of_file_id',
+                          'test_dump_exclusions_dictionary',
+                          'test_filename_for_file_id', 'test_move_to_final',
+                          'test_get_md5_sum_from_cloud', 'test_split_archive',
+                          'test_get_file_size']
+
+        # For testing:
+        # selected_tests = ['test_get_file_size']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:

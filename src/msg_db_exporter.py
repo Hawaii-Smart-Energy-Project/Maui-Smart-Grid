@@ -27,6 +27,8 @@ import requests
 from StringIO import StringIO
 from requests.adapters import SSLError
 import shutil
+from msg_db_connector import MSGDBConnector
+from msg_db_util import MSGDBUtil
 
 
 class MSGDBExporter(object):
@@ -49,6 +51,7 @@ class MSGDBExporter(object):
              deleteOutdated:Boolean): Export a list of DBs to the cloud.
     """
 
+    # List of cloud files.
     @property
     def cloudFiles(self):
         self._cloudFiles = self.driveService.files().list().execute()
@@ -105,6 +108,7 @@ class MSGDBExporter(object):
         self._driveService = None
         self._cloudFiles = None
         self.postAgent = 'Maui Smart Grid 1.0.0 DB Exporter'
+        self.retryDelay = 10
 
 
     def verifyExportChecksum(self, testing = False):
@@ -136,6 +140,14 @@ class MSGDBExporter(object):
 
     def dumpCommand(self, db = '', dumpName = ''):
         """
+        This method makes use of
+
+        pg_dump -s -p ${PORT}
+                   -U ${USERNAME}
+                   [-T ${OPTIONAL_TABLE_EXCLUSIONS}]
+                   ${DB_NAME} >
+                   ${EXPORT_TEMP_WORK_PATH}/${DUMP_TIMESTAMP}_{DB_NAME}.sql
+
         :param db: String
         :param dumpName: String
         :return: String of command used to export DB.
@@ -183,7 +195,8 @@ class MSGDBExporter(object):
                 return None
         except SyntaxError as detail:
             self.logger.log(
-                'Exception while getting exclusions: {}'.format(detail))
+                'SyntaxError exception while getting exclusions: {}'.format(
+                    detail))
 
 
     def dumpName(self, db = ''):
@@ -250,13 +263,6 @@ class MSGDBExporter(object):
         """
         Export a set of DBs to local storage.
 
-        This method makes use of
-
-        pg_dump -s -h ${HOST}
-                   -U ${USERNAME}
-                   ${DB_NAME} >
-                   ${DUMP_TIMESTAMP}_{DB_NAME}.sql
-
         :param databases: List of database names that will be exported.
         :param toCloud: Boolean if set to True, then the export will also be
         copied to cloud storage.
@@ -305,16 +311,11 @@ class MSGDBExporter(object):
                         numChunks = numChunks, chunkSize = chunkSize):
                     self.logger.log('Uploading {}.'.format(f), 'info')
                     fileID = self.uploadFileToCloudStorage(fullPath = f,
-                                                           testing = testing)
-
-                    # @todo Provide support for a retry count.
-                    if not fileID:
-                        self.logger.log('Retrying upload of {}.'.format(f),
-                                        'warning')
-                        time.sleep(10)
-                        fileID = self.uploadFileToCloudStorage(fullPath = f,
-                                                               testing =
-                                                               testing)
+                                                           testing = testing,
+                                                           retryCount = int(
+                                                               self.configer.configOptionValue(
+                                                                   'Export',
+                                                                   'export_retry_count')))
 
                     self.logger.log('file id after upload: {}'.format(fileID))
 
@@ -323,23 +324,14 @@ class MSGDBExporter(object):
                                                self.configer.configOptionValue(
                                                        'Export',
                                                        'read_permission').split(
-                                                       ',')):
-                            time.sleep(10)
+                                                       ','), retryCount = int(
+                                        self.configer.configOptionValue(
+                                                'Export',
+                                                'export_retry_count'))):
                             self.logger.log(
-                                'Retrying adding readers for {}.'.format(f),
-                                'warning')
-
-                            # @todo Provide support for retry count.
-                            if not self.addReaders(fileID,
-                                                   self.configer
-                                                           .configOptionValue(
-                                                           'Export',
-                                                           'read_permission')
-                                                           .split(
-                                                           ',')):
-                                self.logger.log(
-                                    'Failed to add readers for {}.'.format(f),
-                                    'error')
+                                'Failed to add readers for {}.'.format(f),
+                                'error')
+                        self.logSuccessfulExport(*self.metadataOfFileID(fileID))
 
                     # Remove split sections if they exist.
                     try:
@@ -381,7 +373,8 @@ class MSGDBExporter(object):
         :param compressedFullPath: String for the compressed file.
         :return:
         """
-        self.logger.log('Moving {} to final path.'.format(compressedFullPath),'debug')
+        self.logger.log('Moving {} to final path.'.format(compressedFullPath),
+                        'debug')
         try:
             shutil.move(compressedFullPath,
                         self.configer.configOptionValue('Export',
@@ -467,8 +460,6 @@ class MSGDBExporter(object):
         fails.
         """
 
-        # @todo Implement retry count.
-
         success = True
         myFile = os.path.basename(fullPath)
 
@@ -506,11 +497,16 @@ class MSGDBExporter(object):
         if success:
             self.logger.log('Verification by MD5 checksum succeeded.', 'INFO')
             self.logger.log("Finished.")
+            return result['id']
 
-        if not success:
+        if not success and retryCount <= 0:
             return None
-
-        return result['id']
+        else:
+            time.sleep(self.retryDelay)
+            self.logger.log('Retrying upload of {}.'.format(fullPath),
+                            'warning')
+            self.uploadFileToCloudStorage(fullPath = fullPath,
+                                          retryCount = retryCount - 1)
 
 
     def __retrieveCredentials(self):
@@ -535,11 +531,9 @@ class MSGDBExporter(object):
     def freeSpace(self):
         """
         Get free space from the drive service.
-
         :param driveService: Object for the drive service.
         :returns: Int of free space (bytes) on the drive service.
         """
-
         aboutData = self.driveService.about().get().execute()
         return int(aboutData['quotaBytesTotal']) - int(
             aboutData['quotaBytesUsed']) - int(
@@ -549,7 +543,6 @@ class MSGDBExporter(object):
     def deleteFile(self, fileID = ''):
         """
         Delete the file with ID fileID.
-
         :param fileID: String of a Google API file ID.
         """
 
@@ -586,8 +579,10 @@ class MSGDBExporter(object):
         for item in self.cloudFiles['items']:
             t1 = datetime.datetime.strptime(item['createdDate'],
                                             "%Y-%m-%dT%H:%M:%S.%fZ")
-            self.logger.log('t1: {}'.format(t1.strftime('%Y-%m-%d %H:%M:%S')),
-                            'debug')
+            self.logger.log('name:{}, t1:{}'.format(item['originalFilename'],
+                                                    t1.strftime(
+                                                        '%Y-%m-%d %H:%M:%S')),
+                            'SILENT')
             t2 = datetime.datetime.now()
             tdelta = t2 - t1
             self.logger.log(
@@ -639,10 +634,21 @@ class MSGDBExporter(object):
         output.close()
 
 
+    def metadataOfFileID(self, fileID = ''):
+        """
+        :param fileID: String of a file ID in the cloud.
+        :return: Tuple of metadata (name, url, timestamp, size) for a given
+        file ID.
+        """
+        item = [i for i in self.cloudFiles['items'] if i['id'] == fileID][0]
+        return (item[u'originalFilename'], item[u'webContentLink'],
+                item[u'createdDate'], item[u'fileSize'])
+
+
     def listOfDownloadableFiles(self):
         """
         Create a list of downloadable files.
-        :returns: List of files.
+        :returns: List of dicts of files that are downloadable from the cloud.
         """
 
         files = []
@@ -676,6 +682,62 @@ class MSGDBExporter(object):
         self.logger.log('content: {}'.format(content))
 
         return content
+
+    def plaintextListOfDownloadableFiles(self):
+        """
+        Generate content containing a list of downloadable files in plaintext
+        format.
+
+        :returns: String content as plaintext.
+        """
+        content = ''
+        for i in self.listOfDownloadableFiles():
+            content += "{}, {}, {}, {} B\n".format(i['title'],
+                                                   i['webContentLink'],
+                                                   i['createdDate'],
+                                                   int(i['fileSize']))
+
+        self.logger.log('content: {}'.format(content))
+
+        return content
+
+    def logSuccessfulExport(self, name = '', url = '', datetime = 0, size = 0):
+        """
+        When an export has been successful, log information about the export
+        to the database.
+
+        The items to log include:
+        * filename
+        * URL
+        * timestamp
+        * filesize
+
+        :param name: String
+        :param url: String
+        :param datetime:
+        :param size: Int
+        :return: True if no errors occurred, else False.
+        """
+
+        def exportHistoryColumns():
+            return ['name', 'url', 'timestamp', 'size']
+
+        timestamp = lambda \
+                datetime: 'to_timestamp(0)' if datetime == 0 else "timestamp " \
+                                                                  "'{}'".format(
+            datetime)
+
+        sql = 'INSERT INTO "{0}" ({1}) VALUES ({2}, {3}, {4}, {5})'.format(
+            self.configer.configOptionValue('Export', 'export_history_table'),
+            ','.join(exportHistoryColumns()), "'" + name + "'", "'" + url + "'",
+            timestamp(datetime), size)
+
+        conn = MSGDBConnector().connectDB()
+        cursor = conn.cursor()
+        dbUtil = MSGDBUtil()
+        result = dbUtil.executeSQL(cursor, sql, exitOnFail = False)
+        conn.commit()
+        return result
 
 
     def __verifyMD5Sum(self, localFilePath, remoteFileID):
@@ -762,8 +824,17 @@ class MSGDBExporter(object):
         else:
             raise Exception("Unmatched case for fileIDForFileName.")
 
+    def filenameForFileID(self, fileID = ''):
+        """
+        :param fileID: String of cloud-based file ID.
+        :return: String of filename for a given file ID.
+        """
+        return filter(lambda x: x['id'] == fileID, self.cloudFiles['items'])[0][
+            'originalFilename']
 
-    def addReaders(self, fileID = None, emailAddressList = None):
+
+    def addReaders(self, fileID = None, emailAddressList = None,
+                   retryCount = 0):
         """
         Add reader permission to an export file for the given list of email
         addresses.
@@ -774,7 +845,7 @@ class MSGDBExporter(object):
         :param emailAddressList: List of email addresses.
         :returns: Boolean True if successful, otherwise False.
         """
-
+        # @todo Provide support for retry count
         success = True
 
         self.logger.log('file id: {}'.format(fileID))
@@ -794,4 +865,14 @@ class MSGDBExporter(object):
                     self.logger.log('An error occurred: {}'.format(error))
                     success = False
 
-        return success
+        if not success and retryCount <= 0:
+            return False
+        elif success:
+            return True
+        else:
+            time.sleep(self.retryDelay)
+            self.logger.log('Retrying adding readers for ID {}.'.format(fileID),
+                            'warning')
+            self.addReaders(fileID = fileID,
+                            emailAddressList = emailAddressList,
+                            retryCount = retryCount - 1)

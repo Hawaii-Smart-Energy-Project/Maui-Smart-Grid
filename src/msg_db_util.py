@@ -22,6 +22,15 @@ class MSGDBUtil(object):
 
     This is the class responsible for actions against databases such as as
     executing SQL statements.
+
+    Usage:
+
+    dbUtil = MSGDBUtil()
+
+    Public API:
+
+    executeSQL(cursor: DB cursor, sql: String, exitOnFail: Boolean):Boolean
+
     """
 
     def __init__(self):
@@ -37,10 +46,11 @@ class MSGDBUtil(object):
         Get last sequence ID value for the given sequence and for the
         given connection.
 
-        :param conn: database connection
-        :param tableName: name of the table that the sequence matches
-        :param columnName: name of the column to which the sequence is applied
-        :returns: last sequence value or None if not found
+        :param conn: DB connection
+        :param tableName: String for name of the table that the sequence matches
+        :param columnName: String for name of the column to which the
+        sequence is applied
+        :returns: Integer of last sequence value or None if not found.
         """
 
         if DEBUG:
@@ -77,27 +87,32 @@ class MSGDBUtil(object):
         The cursor is passed here to allow control of committing outside of
         this class.
 
-        :param cursor: A database cursor.
-        :param sql: A SQL statement.
-        :returns: True for success, execution is aborted if there is an error.
+        exitOnFail can be toggled to handle cases such as continuing with an
+        insert even when duplicate keys are encountered.
+
+        The result rows of a query are accessible through the cursor that is
+        passed in. For example:
+
+        rows = cursor.fetchall()
+
+        :param cursor: DB cursor.
+        :param sql: String of a SQL statement.
+        :returns: Boolean True for success, execution is aborted if there is
+        an error.
         """
 
         success = True
         try:
             cursor.execute(sql)
 
-        except Exception, e:
+        except Exception as detail:
             success = False
-            msg = "SQL execute failed using %s." % sql
-            msg += " The error is: %s." % e[0]
+            msg = "SQL execute failed using {}.".format(sql)
+            msg += " The error is: {}.".format(detail)
 
             self.logger.log(msg, 'error')
             if exitOnFail:
                 sys.exit(-1)
-
-        if success:
-            # self.logger.log("SQL execute was successful.", 'debug')
-            pass
 
         return success
 
@@ -118,8 +133,8 @@ class MSGDBUtil(object):
         if (not (self.configer.configOptionValue("Database",
                                                  "testing_db_name") ==
                      databaseName)):
-            print "Testing DB name doesn't match %s." % self.configer\
-                .configOptionValue(
+            print "Testing DB name doesn't match %s." % \
+                  self.configer.configOptionValue(
                 "Database", "testing_db_name")
             exit(-1)
 

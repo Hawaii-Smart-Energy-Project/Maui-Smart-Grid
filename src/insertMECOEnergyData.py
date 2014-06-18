@@ -18,7 +18,7 @@ This script only supports processing of gzip-compressed XML (*.xml.gz) files.
 """
 
 __author__ = 'Daniel Zhang (張道博)'
-__copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
+__copyright__ = 'Copyright (c) 2014, University of Hawaii Smart Energy Project'
 __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
@@ -53,7 +53,7 @@ def processCommandLineArguments():
     COMMAND_LINE_ARGS.
     """
 
-    global parser, COMMAND_LINE_ARGS
+    global COMMAND_LINE_ARGS
     parser = argparse.ArgumentParser(
         description = 'Perform recursive insertion of data contained in the '
                       'current directory to the MECO database specified in the '
@@ -65,7 +65,7 @@ def processCommandLineArguments():
                         help = 'If this flag is on, '
                                'insert data to the testing database as '
                                'specified in the local configuration file.')
-    commandLineArgs = parser.parse_args()
+    COMMAND_LINE_ARGS = parser.parse_args()
 
 
 def makePlotAttachments():
@@ -168,8 +168,8 @@ if __name__ == '__main__':
     if COMMAND_LINE_ARGS.email:
         logger.log("Email will be sent.\n", 'info')
 
-    msg = '' # Used for the notification message.
-    msgBody = '' # Used for the notification message.
+    msg = ''  # Used for the notification message.
+    msgBody = ''  # Used for the notification message.
     databaseName = ''
 
     if COMMAND_LINE_ARGS.testing:
@@ -225,7 +225,8 @@ if __name__ == '__main__':
     pathsToProcess = []
     for root, dirnames, filenames in os.walk('.'):
         for filename in fnmatch.filter(filenames, '*.xml.gz'):
-            if re.search('.*log\.xml', filename) is None: # Skip *log.xml files.
+            if re.search('.*log\.xml',
+                         filename) is None:  # Skip *log.xml files.
                 xmlGzCount += 1
                 pathsToProcess.append(os.path.join(root, filename))
 
