@@ -343,7 +343,7 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         Test splitting an archive into chunks.
         """
-
+        # @REVIEWED
         self.logger.log('Testing archive splitting.')
         fullPath = '{}/{}'.format(self.exportTestDataPath,
                                   self.compressedTestFilename)
@@ -354,8 +354,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
         self.fileChunks = self.fileUtil.splitLargeFile(fullPath = fullPath,
                                                        numChunks = 3)
-        self.assertGreater(len(self.fileChunks), 0,
-                           'Chunk number is greater than zero.')
+        self.assertEquals(len(self.fileChunks), 3)
 
 
     def test_get_file_size(self):
@@ -542,7 +541,7 @@ if __name__ == '__main__':
                           'test_get_md5_sum_from_cloud']
 
         # For testing:
-        # selected_tests = ['test_filename_for_file_id']
+        selected_tests = ['test_split_archive']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
