@@ -29,6 +29,7 @@ from requests.adapters import SSLError
 import shutil
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
+import sys
 
 
 class MSGDBExporter(object):
@@ -253,7 +254,7 @@ class MSGDBExporter(object):
                 self.dumpCommand(db = db, dumpName = dumpName), shell = True)
         except subprocess.CalledProcessError as error:
             self.logger.log("Exception while dumping: {}".format(error))
-            success = False
+            sys.exit(-1)
 
         return success
 
@@ -271,6 +272,7 @@ class MSGDBExporter(object):
         :param testing: Boolean flag for testing mode. (@DEPRECATED)
         :param chunkSize: Integer size in bytes of chunk size used for
         splitting.
+        :param numChunks: (@DEPRECATED)
         :param deleteOutdated: Boolean indicating outdated files in the cloud
         should be removed.
         :returns: Boolean True if no errors have occurred, False otherwise.
