@@ -22,6 +22,7 @@ from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 import re
 from msg_python_util import MSGPythonUtil
+import itertools
 
 
 class MSGDBExporterTester(unittest.TestCase):
@@ -327,7 +328,10 @@ class MSGDBExporterTester(unittest.TestCase):
     def test_export_db(self):
         """
         Perform a quick test of the DB export method using Testing Mode.
+
+        This requires sudo authorization to complete.
         """
+        # @REVIEWED
 
         self.logger.log('Testing exportDB using the testing DB.')
 
@@ -339,8 +343,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.logger.log('Count of exports: {}'.format(len(ids)))
         self.assertEquals(len(ids), 1, "Count of exported files is wrong.")
 
-        # @todo delete testing db sent to the cloud
-        # self.exporter.deleteFile()
+        map(self.exporter.deleteFile, ids)
 
 
     def test_split_archive(self):
@@ -539,15 +542,19 @@ if __name__ == '__main__':
 
     if RUN_SELECTED_TESTS:
 
-        selected_tests = ['test_upload_test_data', 'test_log_successful_export',
-                          'test_metadata_of_file_id',
-                          'test_dump_exclusions_dictionary',
-                          'test_filename_for_file_id', 'test_move_to_final',
-                          'test_get_md5_sum_from_cloud', 'test_split_archive',
-                          'test_get_file_size']
+        sudo_tests = ['test_export_db']
+
+        nonsudo_tests = ['test_upload_test_data', 'test_log_successful_export',
+                         'test_metadata_of_file_id',
+                         'test_dump_exclusions_dictionary',
+                         'test_filename_for_file_id', 'test_move_to_final',
+                         'test_get_md5_sum_from_cloud', 'test_split_archive',
+                         'test_get_file_size']
+
+        selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        selected_tests = ['test_export_db']
+        # selected_tests = ['test_export_db']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:

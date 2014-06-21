@@ -262,8 +262,8 @@ class MSGDBExporter(object):
 
 
     def exportDBs(self, databases = None, toCloud = False, localExport = True,
-                 testing = False, chunkSize = 0, numChunks = 0,
-                 deleteOutdated = False):
+                  testing = False, chunkSize = 0, numChunks = 0,
+                  deleteOutdated = False):
         """
         Export a set of DBs to local storage.
 
@@ -278,7 +278,8 @@ class MSGDBExporter(object):
         :param numChunks: (@DEPRECATED)
         :param deleteOutdated: Boolean indicating outdated files in the cloud
         should be removed.
-        :returns: List of file IDs of uploaded files.
+        :returns: List of file IDs of uploaded files or None if there is an
+        error condition.
         """
 
         # @todo separate uploading and exporting functions
@@ -328,6 +329,8 @@ class MSGDBExporter(object):
 
                     if fileID != None:
                         uploaded.append(fileID)
+                        self.logger.log('uploaded: {}'.format(uploaded),
+                                        'DEBUG')
                         if not self.addReaders(fileID,
                                                self.configer.configOptionValue(
                                                        'Export',
@@ -373,7 +376,7 @@ class MSGDBExporter(object):
             self.deleteOutdatedFiles(minAge = datetime.timedelta(days = int(
                 self.configer.configOptionValue('Export', 'days_to_keep'))))
 
-        return uploaded
+        return uploaded if noErrors else None
 
 
     def moveToFinalPath(self, compressedFullPath = ''):
@@ -555,11 +558,17 @@ class MSGDBExporter(object):
         :param fileID: String of a Google API file ID.
         """
 
-        # @todo Report the filename.
-        self.logger.log('Deleting file with file ID: {}'.format(fileID),
-                        'debug')
+        if not len(fileID) > 0:
+            raise Exception("File ID has not been given.")
+
+        self.logger.log(
+            'Deleting file with file ID {} and name {}.'.format(fileID,
+                                                                self.filenameForFileID(
+                                                                    fileID)),
+            'debug')
 
         try:
+            # Writing the fileId arg name is required here.
             self.driveService.files().delete(fileId = fileID).execute()
 
         except errors.HttpError as error:
