@@ -327,16 +327,20 @@ class MSGDBExporterTester(unittest.TestCase):
     def test_export_db(self):
         """
         Perform a quick test of the DB export method using Testing Mode.
-
-        @todo This needs a static test database!
         """
 
-        self.logger.log('Testing exportDB')
+        self.logger.log('Testing exportDB using the testing DB.')
+
+        # @todo handle case where testing db does not exist.
+
         dbs = ['test_meco']
-        success = self.exporter.exportDB(databases = dbs, toCloud = True,
-                                         localExport = True, numChunks = 4)
-        self.logger.log('Success: {}'.format(success))
-        self.assertTrue(success, "Export was not successful.")
+        ids = self.exporter.exportDBs(databases = dbs, toCloud = True,
+                                      localExport = True)
+        self.logger.log('Count of exports: {}'.format(len(ids)))
+        self.assertEquals(len(ids), 1, "Count of exported files is wrong.")
+
+        # @todo delete testing db sent to the cloud
+        # self.exporter.deleteFile()
 
 
     def test_split_archive(self):
@@ -543,7 +547,7 @@ if __name__ == '__main__':
                           'test_get_file_size']
 
         # For testing:
-        # selected_tests = ['test_get_file_size']
+        selected_tests = ['test_export_db']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:

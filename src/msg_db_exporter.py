@@ -261,7 +261,7 @@ class MSGDBExporter(object):
         return success
 
 
-    def exportDB(self, databases = None, toCloud = False, localExport = True,
+    def exportDBs(self, databases = None, toCloud = False, localExport = True,
                  testing = False, chunkSize = 0, numChunks = 0,
                  deleteOutdated = False):
         """
@@ -278,10 +278,13 @@ class MSGDBExporter(object):
         :param numChunks: (@DEPRECATED)
         :param deleteOutdated: Boolean indicating outdated files in the cloud
         should be removed.
-        :returns: Boolean True if no errors have occurred, False otherwise.
+        :returns: List of file IDs of uploaded files.
         """
 
+        # @todo separate uploading and exporting functions
+
         noErrors = True
+        uploaded = []
 
         for db in databases:
             self.logger.log('Exporting {} using pg_dump.'.format(db), 'info')
@@ -324,6 +327,7 @@ class MSGDBExporter(object):
                     self.logger.log('file id after upload: {}'.format(fileID))
 
                     if fileID != None:
+                        uploaded.append(fileID)
                         if not self.addReaders(fileID,
                                                self.configer.configOptionValue(
                                                        'Export',
@@ -369,7 +373,7 @@ class MSGDBExporter(object):
             self.deleteOutdatedFiles(minAge = datetime.timedelta(days = int(
                 self.configer.configOptionValue('Export', 'days_to_keep'))))
 
-        return noErrors
+        return uploaded
 
 
     def moveToFinalPath(self, compressedFullPath = ''):
