@@ -85,7 +85,7 @@ A custom automatic installation script, `install-msg.py`, has been developed to 
 It is intended to facilitate the maintenance of the software installation, **and** updating, while at the same time allowing development of the source code base. It is used like so
 
 	cd ~
-	**python install-msg.py --sourcePath ${SOURCE_CODE_BASE_PATH} --installPathUser ${DESTINATION_BASE_PATH}**
+	python install-msg.py --sourcePath ${SOURCE_CODE_BASE_PATH} --installPathUser ${DESTINATION_BASE_PATH}
 
 If the tilde symbol (~) is used as the destination base path, then the software will be installed into a directory titled after the package name and version in the user's home directory such as `~/Maui-Smart-Grid-1.0.0`.
 
@@ -150,6 +150,14 @@ The files `setup.py` and `MANIFEST.in` require continual updates so that the ins
 ## Uninstallation ##
 
 It is safe to complete remove the directory to which the software was installed for the purpose of replacing the software while preserving an existing configuration. The configuration settings are not stored in the software installation path and must be removed separately if complete removal is desired.
+
+----
+
+## Testing ##
+
+## Testing Database ##
+
+A database with the equivalent structure of the production database is maintained for use by unit tests.
 
 ## Configuration ##
 
@@ -382,16 +390,16 @@ When invalid data exists, all other data is not loaded. This is a limitation of 
 
 Exports of MSG databases _and other databases_ occur according to a predefined schedule. The exports consist of gzip compressed SQL scripts that are stored both on local storage and cloud storage. Storage to the Google Drive service is supported at this time. Database exports are verified by their MD5 checksums. Individual export archives are shared with reader permissions to a predefined recipient list at the time of export. The list of databases that are exported are found in the local config option under **[Exports]** as **dbs_to_export**.
 
+## Exclusions
+
+Large static data sets can be configured for exclusion using a Python dictionary within the site configuration file.
+
 ### Utility Scripts ###
 
 These scripts are site-dependent.
 
 `grantAllPermissionsToDatabase.sh ${DATABASE}`
 : Set appropriate group permissions to databases.
-
-## Software Development and Testing ##
-
-A database with the equivalent structure of the production database is maintained for use by unit tests.
 
 ## Notifications ##
 
