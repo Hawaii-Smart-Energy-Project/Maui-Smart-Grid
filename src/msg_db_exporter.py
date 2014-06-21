@@ -235,6 +235,7 @@ class MSGDBExporter(object):
         else:
             return [compressedFullPath]
 
+
     def dumpResult(self, db = '', dumpName = '', fullPath = ''):
         """
         :param dumpName: String of filename of dump file.
@@ -242,12 +243,13 @@ class MSGDBExporter(object):
         :return: Boolean True if dump operation was successful, otherwise False.
         """
 
-        success = False
+        success = True
 
         self.logger.log('fullPath: {}'.format(fullPath), 'DEBUG')
 
         try:
             # Generate the SQL script export.
+            # @todo check return value of dump command
             self.logger.log('cmd: {}'.format(
                 self.dumpCommand(db = db, dumpName = dumpName)))
             subprocess.check_call(
@@ -258,6 +260,7 @@ class MSGDBExporter(object):
 
         return success
 
+
     def exportDB(self, databases = None, toCloud = False, localExport = True,
                  testing = False, chunkSize = 0, numChunks = 0,
                  deleteOutdated = False):
@@ -267,7 +270,7 @@ class MSGDBExporter(object):
         :param databases: List of database names that will be exported.
         :param toCloud: Boolean if set to True, then the export will also be
         copied to cloud storage.
-        :param localExport: Boolean when set to True, the DB is exported
+        :param localExport: Boolean when set to True the DB is exported
         locally.
         :param testing: Boolean flag for testing mode. (@DEPRECATED)
         :param chunkSize: Integer size in bytes of chunk size used for
@@ -295,7 +298,6 @@ class MSGDBExporter(object):
             gzipResult = self.fileUtil.gzipCompressFile(fullPath)
             compressedFullPath = '{}{}'.format(fullPath, '.gz')
             numChunks = self.numberOfChunksToUse(compressedFullPath)
-            time.sleep(1)
 
             # Gzip uncompress and verify by checksum is disabled until a more
             # efficient, non-memory-based, uncompress is implemented.
@@ -368,6 +370,7 @@ class MSGDBExporter(object):
                 self.configer.configOptionValue('Export', 'days_to_keep'))))
 
         return noErrors
+
 
     def moveToFinalPath(self, compressedFullPath = ''):
         """
