@@ -69,7 +69,7 @@ class MSGDBExporterTester(unittest.TestCase):
         Side effect: Store the file ID as an ivar.
         """
         self.logger.log("Uploading test data for caller: {}".format(
-            self.pyUtil.caller_name()))
+            self.pyUtil.callerName()))
 
         filePath = "{}/{}".format(self.exportTestDataPath,
                                   self.compressedTestFilename)
@@ -168,28 +168,6 @@ class MSGDBExporterTester(unittest.TestCase):
             'md5Checksum']
         self.assertEquals(len(testFileMD5), 32)
         self.assertTrue(re.match(r'[0-9A-Za-z]+', testFileMD5))
-
-    def testGetFileIDsForFilename(self):
-        """
-        Retrieve the matching file IDs for the given file name.
-        """
-
-        self.logger.log('Testing getting file IDs for a filename.')
-        self.logger.log("Uploading test data.")
-
-        filePath = "{}/{}".format(self.exportTestDataPath,
-                                  self.compressedTestFilename)
-
-        uploadResult = self.exporter.uploadFileToCloudStorage(filePath)
-
-        self.assertTrue(uploadResult)
-
-        self.logger.log('Testing getting the file ID for a filename.')
-
-        fileIDs = self.exporter.fileIDForFileName(self.compressedTestFilename)
-        self.logger.log("file ids = {}".format(fileIDs), 'info')
-
-        self.assertIsNotNone(fileIDs)
 
     def test_get_file_id_for_nonexistent_file(self):
         """
@@ -554,7 +532,7 @@ if __name__ == '__main__':
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        # selected_tests = ['test_export_db']
+        # selected_tests = ['test_upload_test_data']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
