@@ -90,7 +90,7 @@ class MSGDBExporter(object):
         self.timeUtil = MSGTimeUtil()
         self.configer = MSGConfiger()
         self.fileUtil = MSGFileUtil()
-        self.pythonUtil = MSGPythonUtil() # for debugging
+        self.pythonUtil = MSGPythonUtil()  # for debugging
 
         # Google Drive parameters.
         self.clientID = self.configer.configOptionValue('Export',
@@ -827,9 +827,8 @@ class MSGDBExporter(object):
         :param String of the filename for which to retrieve the ID.
         :returns: String of a cloud file ID or None if no match.
         """
-        fileIDFn = lambda y: filter(lambda x: x['originalFilename'] == y,
-                                    self.cloudFiles['items'])
-        fileIDList = fileIDFn(filename)
+        fileIDList = filter(lambda x: x['originalFilename'] == filename,
+                            self.cloudFiles['items'])
         return fileIDList[0]['id'] if len(fileIDList) > 0 else None
 
 
