@@ -260,15 +260,14 @@ class MSGDBExporterTester(unittest.TestCase):
 
     def test_create_compressed_archived(self):
         """
-        * Copy test data to a temp directory.
+        * Copy test data to a temp directory (self.testDir).
         * Create a checksum for test data.
         * Create a gzip-compressed archive.
         * Extract gzip-compressed archive.
         * Create a checksum for the uncompressed data.
         * Compare the checksums.
-
-        @todo Needs update after cloud export restoration.
         """
+        # @REVIEWED
 
         self.logger.log('Testing verification of a compressed archive.')
 
@@ -528,12 +527,13 @@ if __name__ == '__main__':
                          'test_filename_for_file_id', 'test_move_to_final',
                          'test_get_md5_sum_from_cloud', 'test_split_archive',
                          'test_get_file_size',
-                         'test_get_file_id_for_nonexistent_file']
+                         'test_get_file_id_for_nonexistent_file',
+                         'test_create_compressed_archived']
 
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        # selected_tests = ['test_get_file_id_for_nonexistent_file']
+        # selected_tests = ['test_create_compressed_archived']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
