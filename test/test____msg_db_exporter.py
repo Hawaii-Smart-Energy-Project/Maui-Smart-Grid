@@ -173,7 +173,7 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         Test getting a file ID for a nonexistent file.
         """
-
+        # @REVIEWED
         fileIDs = self.exporter.fileIDForFileName('nonexistent_file')
         self.logger.log("file ids = {}".format(fileIDs), 'info')
         self.assertIsNone(fileIDs)
@@ -220,7 +220,7 @@ class MSGDBExporterTester(unittest.TestCase):
         # self.assertGreater(cnt, 0)
 
 
-    def testAddingReaderPermissions(self):
+    def test_adding_reader_permissions(self):
         """
         Add reader permissions to a file that was uploaded.
 
@@ -527,12 +527,13 @@ if __name__ == '__main__':
                          'test_dump_exclusions_dictionary',
                          'test_filename_for_file_id', 'test_move_to_final',
                          'test_get_md5_sum_from_cloud', 'test_split_archive',
-                         'test_get_file_size']
+                         'test_get_file_size',
+                         'test_get_file_id_for_nonexistent_file']
 
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        # selected_tests = ['test_upload_test_data']
+        # selected_tests = ['test_get_file_id_for_nonexistent_file']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
