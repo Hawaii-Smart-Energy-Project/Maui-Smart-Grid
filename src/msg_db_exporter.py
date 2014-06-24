@@ -30,6 +30,7 @@ import shutil
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 import sys
+from msg_python_util import MSGPythonUtil
 
 
 class MSGDBExporter(object):
@@ -89,6 +90,7 @@ class MSGDBExporter(object):
         self.timeUtil = MSGTimeUtil()
         self.configer = MSGConfiger()
         self.fileUtil = MSGFileUtil()
+        self.pythonUtil = MSGPythonUtil() # for debugging
 
         # Google Drive parameters.
         self.clientID = self.configer.configOptionValue('Export',
@@ -816,31 +818,20 @@ class MSGDBExporter(object):
         """
         Get the file ID for the given filename.
 
-        This method supports matching multiple matching cloud filenames but only
+        This method supports matching multiple cloud filenames but only
         returns the ID for a single matching filename.
 
-        This not the best way to handle things, but it works for the typical
-        use case and prevents errors from taking down the system.
+        This can then be called recursively to obtain all the file IDs for a
+        given filename.
 
         :param String of the filename for which to retrieve the ID.
-        :returns: String of a cloud file ID.
+        :returns: String of a cloud file ID or None if no match.
         """
+        fileIDFn = lambda y: filter(lambda x: x['originalFilename'] == y,
+                                    self.cloudFiles['items'])
+        fileIDList = fileIDFn(filename)
+        return fileIDList[0]['id'] if len(fileIDList) > 0 else None
 
-        ids = []
-
-        for item in self.cloudFiles['items']:
-
-            if (item['title'] == filename):
-
-                if not item['labels']['trashed']:
-                    ids.append(item['id'])
-
-        if ids:
-            return ids[0]
-        elif not ids:
-            return None
-        else:
-            raise Exception("Unmatched case for fileIDForFileName.")
 
     def filenameForFileID(self, fileID = ''):
         """
