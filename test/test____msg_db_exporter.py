@@ -83,22 +83,6 @@ class MSGDBExporterTester(unittest.TestCase):
         self.logger.log("Test file ID is {}.".format(self.testDataFileID))
 
 
-    def test_sending_fcphase_part_0(self):
-        """
-        /home/daniel/msg-db-dumps/2014-05-14_141223_fcphase3.sql.gz.0
-        """
-
-        filesToUpload = [
-            '/home/daniel/msg-db-dumps/2014-05-14_141223_fcphase3.sql.gz.0',
-            '/home/daniel/msg-db-dumps/2014-05-14_141223_fcphase3.sql.gz.1',
-            '/home/daniel/msg-db-dumps/2014-05-14_141223_fcphase3.sql.gz.2',
-            '/home/daniel/msg-db-dumps/2014-05-14_141223_fcphase3.sql.gz.3']
-
-        for f in filesToUpload:
-            self.exporter.uploadFileToCloudStorage(fullPath = f,
-                                                   testing = False)
-
-
     def testListRemoteFiles(self):
         """
         Test listing of remote files.
