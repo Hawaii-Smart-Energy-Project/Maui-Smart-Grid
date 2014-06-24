@@ -28,7 +28,7 @@ class MSGPythonUtil(object):
         pass
 
 
-    def caller_name(self, skip = 2):
+    def callerName(self, skip = 2):
         """
         Get a name of a caller in the format module.class.method
 
