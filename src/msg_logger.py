@@ -9,12 +9,12 @@ for the instantiated logger into self.recording.
 
 Usage:
 
-The logger is configurable at the class level and is typically instantiated
-within the init for a class.
+from msg_logger import MSGLogger
+self.logger = MSGLogger(__name__)
+
+The logger level is configurable by passing a predefined logging level.
 
     self.logger = MSGLogger(__name__, '${LOGGING_LEVEL}')
-
-where passing the logging level is optional.
 
 The name parameter is used to pass the calling class. The optional logging level
 level corresponds to the levels used in the logging module. It is useful for
@@ -30,10 +30,19 @@ will not be printed.
 
 Important Note:
 The logging level is individually configured for each class where it is
-instantiated. Getting the desired output requires setting the level correctly
-in each class.
+instantiated. Getting the desired output requires setting the level within
+each instance.
 
 Public API:
+
+log(message:String, level:String)
+    Output a logging message at the specified logging level.
+
+startRecoring()
+    Starting recording of log messages to self.recording.
+
+endRecording()
+    End recording of log messages.
 
 """
 
@@ -67,7 +76,8 @@ class MSGLogger(object):
         Constructor.
 
         :param caller: Object that is calling this class.
-        :param level: String for logger level in ('info', 'error', 'warning', 'silent', 'debug', 'critical')
+        :param level: String for logger level in ('info', 'error', 'warning',
+        'silent', 'debug', 'critical')
         :param useColor: Boolean if True, color output is used via colorlog.
 
         @todo Provide enumeration type.
@@ -102,7 +112,7 @@ class MSGLogger(object):
 
         self.loggerLevel = None
 
-        #The log level that is set here provides the cut-off point for future
+        # The log level that is set here provides the cut-off point for future
         # calls to log that are responsible for the actual log messages.
 
         # The log level here has a slightly different meaning than the log
@@ -153,7 +163,7 @@ class MSGLogger(object):
         return message
 
 
-    def log(self, message='', level = None, color = None):
+    def log(self, message = '', level = None, color = None):
         """
         Write a log message.
 
@@ -192,8 +202,6 @@ class MSGLogger(object):
             loggerLevel = logging.INFO  # Default logger level.
 
         if loggerLevel != None:
-            # For debugging:
-            #print 'message: %s, logger level: %s' % (message, loggerLevel)
             self.logger.log(loggerLevel, message)
 
             if self.shouldRecord:
@@ -212,8 +220,7 @@ class MSGLogger(object):
 
             self.logCounter += 1
         else:
-            # @todo Add assert for invalid log level.
-            print "Invalid logger level."
+            raise Exception("Invalid logger level {}.".format(level))
 
 
     def startRecording(self):
