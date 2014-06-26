@@ -13,10 +13,8 @@ from msg_notifier import MSGNotifier
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 
-
 NOTIFICATION_HISTORY_TABLE = "NotificationHistory"
 NOTIFICATION_HISTORY_TYPE = 'MSG_DATA_AGGREGATOR'
-
 
 class NewDataAggregator(object):
     """
@@ -92,27 +90,13 @@ class NewDataAggregator(object):
             for i in range(len(result)):
                 msgBody += 'The new data count for type {} is {} readings' \
                            '.\n'.format(result[i].keys()[0],
-                                      result[i].values()[0])
+                                        result[i].values()[0])
             msgBody += '\n\n'
             msgBody += 'The last report date was %s.' % lastReportDate
             msgBody += '\n\n'
         self.notifier.sendNotificationEmail(msgBody, testing = testing)
-        self.saveNotificationTime()
-
-
-    def saveNotificationTime(self):
-        """
-        Save a notification event to the notification history.
-        """
-
-        cursor = self.cursor
-        sql = """INSERT INTO "{}" ("notificationType", "notificationTime")
-        VALUES ('{}', NOW())""".format(NOTIFICATION_HISTORY_TABLE,
-                                       NOTIFICATION_HISTORY_TYPE)
-        success = self.dbUtil.executeSQL(cursor, sql)
-        self.conn.commit()
-        if not success:
-            raise Exception('Exception while saving the notification time.')
+        self.notifier.recordNotificationEvent(
+            noticeType = NOTIFICATION_HISTORY_TYPE)
 
 
     def aggregateNewData(self):
