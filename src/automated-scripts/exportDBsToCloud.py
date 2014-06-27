@@ -78,9 +78,10 @@ if __name__ == '__main__':
     exporter.logger.log('Free space remaining: %d' % exporter.freeSpace(),
                         'info')
 
-    exporter.logger.log(
-        'Wall time: {:d} min {:.2f} s.'.format(wallTimeMin, wallTimeSec),
-        'info')
+    exporter.logger.log('Wall time: {:d} min {:.2f} s.'.format(wallTimeMin,
+                                                               wallTimeSec - (
+                                                               wallTimeMin * 60)),
+                        'info')
 
     # Send the available file list by POST.
     exporter.sendDownloadableFiles()
