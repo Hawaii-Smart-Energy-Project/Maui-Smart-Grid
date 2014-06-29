@@ -62,6 +62,7 @@ class MSGDBExporterTester(unittest.TestCase):
                 'Exception during creation of temp directory: %s' % detail,
                 'ERROR')
 
+
     def upload_test_data_to_cloud(self):
         """
         Provide an upload of test data that can be used in other tests.
@@ -97,6 +98,7 @@ class MSGDBExporterTester(unittest.TestCase):
             self.assertIsNot(title, '')
             self.assertIsNot(id, '')
 
+
     def testDownloadURLList(self):
         """
         Test obtaining a list of downloadble URLs.
@@ -128,6 +130,7 @@ class MSGDBExporterTester(unittest.TestCase):
             self.assertIsNotNone(row['id'])
             self.assertIsNotNone(row['title'])
             self.assertIsNotNone(row['webContentLink'])
+
 
     def test_markdown_list_of_downloadable_files(self):
         print self.exporter.markdownListOfDownloadableFiles()
@@ -176,6 +179,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.assertGreater(len(self.testDataFileID), 0)
         self.assertTrue(re.match(r'[0-9A-Za-z]+', self.testDataFileID))
 
+
     def test_delete_out_dated_files(self):
         """
         The timestamp of an uploaded file should be set in the past to provide
@@ -207,15 +211,11 @@ class MSGDBExporterTester(unittest.TestCase):
     def test_adding_reader_permissions(self):
         """
         Add reader permissions to a file that was uploaded.
-
-        @todo Needs update after cloud export restoration.
         """
-
+        # @REVIEWED
         self.logger.log("Testing adding reader permissions.")
-        self.logger.log("Uploading test data.")
-        filePath = "%s/%s" % (
-            self.exportTestDataPath, self.compressedTestFilename)
-        uploadResult = self.exporter.uploadFileToCloudStorage(filePath)
+        self.upload_test_data_to_cloud()
+
         email = self.configer.configOptionValue('Testing', 'tester_email')
         service = self.exporter.driveService
         try:
@@ -224,13 +224,12 @@ class MSGDBExporterTester(unittest.TestCase):
             print id_resp
 
         except errors.HttpError as detail:
-            print 'Exception while getting ID for email: %s' % detail
+            print 'Exception while getting ID for email: {}'.format(detail)
 
         new_permission = {'value': email, 'type': 'user', 'role': 'reader'}
         try:
             self.logger.log('Adding reader permission', 'INFO')
-            fileIDToAddTo = self.exporter.fileIDForFileName(
-                self.compressedTestFilename)
+            fileIDToAddTo = self.testDataFileID
 
             # The permission dict is being output to stdout here.
             resp = service.permissions().insert(fileId = fileIDToAddTo,
@@ -238,8 +237,26 @@ class MSGDBExporterTester(unittest.TestCase):
                                                 body = new_permission).execute()
         except errors.HttpError as detail:
             self.logger.log(
-                'Exception while adding reader permissions: %s' % detail,
+                'Exception while adding reader permissions: {}'.format(detail),
                 'error')
+
+        def permission_id(email):
+            try:
+                id_resp = service.permissions().getIdForEmail(
+                    email = email).execute()
+                return id_resp['id']
+            except errors.HttpError as error:
+                self.logger.log("HTTP error: {}".format(error))
+
+        permission = {}
+        try:
+            permission = service.permissions().get(fileId = self.testDataFileID,
+                                                   permissionId = permission_id(
+                                                       email)).execute()
+        except errors.HttpError as error:
+            self.logger.log("HTTP error: {}".format(error))
+
+        self.assertEquals(permission['role'], 'reader')
 
 
     def test_create_compressed_archived(self):
@@ -421,6 +438,7 @@ class MSGDBExporterTester(unittest.TestCase):
                                       'timestamp = to_timestamp(0)'))
         conn.commit()
 
+
     def test_metadata_of_file_id(self):
         """
         Test getting the metadata for a file ID.
@@ -512,12 +530,13 @@ if __name__ == '__main__':
                          'test_get_md5_sum_from_cloud', 'test_split_archive',
                          'test_get_file_size',
                          'test_get_file_id_for_nonexistent_file',
-                         'test_create_compressed_archived']
+                         'test_create_compressed_archived',
+                         'test_adding_reader_permissions']
 
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        # selected_tests = ['test_create_compressed_archived']
+        # selected_tests = ['test_adding_reader_permissions']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
