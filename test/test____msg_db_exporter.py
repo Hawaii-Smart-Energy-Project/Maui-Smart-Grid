@@ -84,21 +84,6 @@ class MSGDBExporterTester(unittest.TestCase):
         self.logger.log("Test file ID is {}.".format(self.testDataFileID))
 
 
-    def testListRemoteFiles(self):
-        """
-        Test listing of remote files.
-        """
-
-        self.logger.log('Testing listing of remote files.', 'INFO')
-        title = ''
-        id = ''
-        for item in self.exporter.cloudFiles['items']:
-            title = item['title']
-            id = item['id']
-            self.assertIsNot(title, '')
-            self.assertIsNot(id, '')
-
-
     def test_list_of_downloadable_files(self):
         """
         Test the list of downloadable files used by the available files page.
