@@ -99,16 +99,13 @@ class MSGDBExporterTester(unittest.TestCase):
             self.assertIsNot(id, '')
 
 
-    def testDownloadURLList(self):
+    def test_download_url_list(self):
         """
         Test obtaining a list of downloadble URLs.
         """
 
         self.logger.log('Testing listing of downloadable files.', 'INFO')
 
-        title = ''
-        id = ''
-        url = ''
         for item in self.exporter.cloudFiles['items']:
             title = item['title']
             url = item['webContentLink']
@@ -123,13 +120,11 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         Test the list of downloadable files used by the available files page.
         """
-        self.assertIsNotNone(self.exporter.listOfDownloadableFiles(),
-                             'List of downloadable files is not available.')
-        for row in self.exporter.listOfDownloadableFiles():
-            print row
-            self.assertIsNotNone(row['id'])
-            self.assertIsNotNone(row['title'])
-            self.assertIsNotNone(row['webContentLink'])
+        # @REVIEWED
+        self.upload_test_data_to_cloud()
+        self.assertEquals(len(filter(lambda x: x['id'] == self.testDataFileID,
+                                     self.exporter.listOfDownloadableFiles())),
+                          1, "Test file not present.")
 
 
     def test_markdown_list_of_downloadable_files(self):
@@ -470,6 +465,9 @@ class MSGDBExporterTester(unittest.TestCase):
         REMOVE_TEMPORARY_FILES = True
         if REMOVE_TEMPORARY_FILES:
             try:
+                self.logger.log("Removing test files {}, {}.".format(
+                    self.uncompressedTestFilename, self.compressedTestFilename),
+                                'debug')
                 os.remove(os.path.join(os.getcwd(), self.testDir,
                                        self.uncompressedTestFilename))
                 os.remove(os.path.join(os.getcwd(), self.testDir,
@@ -531,12 +529,13 @@ if __name__ == '__main__':
                          'test_get_file_size',
                          'test_get_file_id_for_nonexistent_file',
                          'test_create_compressed_archived',
-                         'test_adding_reader_permissions']
+                         'test_adding_reader_permissions',
+                         'test_download_url_list']
 
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        # selected_tests = ['test_adding_reader_permissions']
+        # selected_tests = ['']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
