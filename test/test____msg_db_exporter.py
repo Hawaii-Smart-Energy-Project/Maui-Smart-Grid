@@ -97,6 +97,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
 
     def test_markdown_list_of_downloadable_files(self):
+        self.upload_test_data_to_cloud()
         print self.exporter.markdownListOfDownloadableFiles()
 
         myPath = '{}/{}'.format(
@@ -119,6 +120,7 @@ class MSGDBExporterTester(unittest.TestCase):
             'md5Checksum']
         self.assertEquals(len(testFileMD5), 32)
         self.assertTrue(re.match(r'[0-9A-Za-z]+', testFileMD5))
+
 
     def test_get_file_id_for_nonexistent_file(self):
         """
@@ -150,7 +152,7 @@ class MSGDBExporterTester(unittest.TestCase):
         the ability to test the deleting of outdated files.
         """
 
-        # return
+        return
 
         # @TO BE REVIEWED  Prevent deleting files uploaded today.
         # @IMPORTANT Prevent deleting NON-testing files.
@@ -434,7 +436,7 @@ class MSGDBExporterTester(unittest.TestCase):
         REMOVE_TEMPORARY_FILES = True
         if REMOVE_TEMPORARY_FILES:
             try:
-                self.logger.log("Removing test files {}, {}.".format(
+                self.logger.log("Removing local test files {}, {}.".format(
                     self.uncompressedTestFilename, self.compressedTestFilename),
                                 'debug')
                 os.remove(os.path.join(os.getcwd(), self.testDir,
@@ -467,21 +469,23 @@ class MSGDBExporterTester(unittest.TestCase):
                 'Exception while removing directory: {}'.format(detail),
                 'ERROR')
 
-        deleteSuccessful = True
-
-        # Keep deleting from the cloud until there is no more to delete.
-        while deleteSuccessful:
+        # Keep deleting from the cloud until there are no more to delete.
+        def deleteFromCloud():
+            self.logger.log("deleting from cloud", 'debug')
             try:
                 fileIDToDelete = self.exporter.fileIDForFileName(
                     self.compressedTestFilename)
+                if fileIDToDelete is None:
+                    return
                 self.logger.log("file ID to delete: {}".format(fileIDToDelete),
                                 'DEBUG')
                 self.exporter.driveService.files().delete(
-                    fileId = '%s' % fileIDToDelete).execute()
+                    fileId = '{}'.format(fileIDToDelete)).execute()
+                deleteFromCloud()
             except (TypeError, http.HttpError) as e:
-                self.logger.log('Delete not successful: {}'.format(e), 'SILENT')
-                break
+                self.logger.log('Delete not successful: {}'.format(e), 'DEBUG')
 
+        deleteFromCloud()
 
 if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
@@ -504,7 +508,7 @@ if __name__ == '__main__':
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        # selected_tests = ['']
+        selected_tests = ['test_markdown_list_of_downloadable_files']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
