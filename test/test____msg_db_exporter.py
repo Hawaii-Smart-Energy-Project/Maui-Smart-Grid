@@ -99,32 +99,16 @@ class MSGDBExporterTester(unittest.TestCase):
             self.assertIsNot(id, '')
 
 
-    def test_download_url_list(self):
-        """
-        Test obtaining a list of downloadble URLs.
-        """
-
-        self.logger.log('Testing listing of downloadable files.', 'INFO')
-
-        for item in self.exporter.cloudFiles['items']:
-            title = item['title']
-            url = item['webContentLink']
-            id = item['id']
-            self.logger.log('title: %s, link: %s, id: %s' % (title, url, id))
-            self.assertIsNot(title, '')
-            self.assertIsNot(url, '')
-            self.assertIsNot(id, '')
-
-
     def test_list_of_downloadable_files(self):
         """
         Test the list of downloadable files used by the available files page.
         """
         # @REVIEWED
         self.upload_test_data_to_cloud()
-        self.assertEquals(len(filter(lambda x: x['id'] == self.testDataFileID,
-                                     self.exporter.listOfDownloadableFiles())),
-                          1, "Test file not present.")
+        self.assertEquals(len(
+            filter(lambda row: row['id'] == self.testDataFileID,
+                   self.exporter.listOfDownloadableFiles())), 1,
+                          "Test file not present.")
 
 
     def test_markdown_list_of_downloadable_files(self):
