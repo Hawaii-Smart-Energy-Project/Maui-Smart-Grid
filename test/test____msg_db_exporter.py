@@ -84,29 +84,15 @@ class MSGDBExporterTester(unittest.TestCase):
         self.logger.log("Test file ID is {}.".format(self.testDataFileID))
 
 
-    def test_list_of_downloadable_files(self):
+    def test_markdown_list_of_downloadable_files(self):
         """
-        Test the list of downloadable files used by the available files page.
+        Match the Markdown line entry for the uploaded file.
         """
         # @REVIEWED
         self.upload_test_data_to_cloud()
-        self.assertEquals(len(
-            filter(lambda row: row['id'] == self.testDataFileID,
-                   self.exporter.listOfDownloadableFiles())), 1,
-                          "Test file not present.")
-
-
-    def test_markdown_list_of_downloadable_files(self):
-        self.upload_test_data_to_cloud()
-        print self.exporter.markdownListOfDownloadableFiles()
-
-        myPath = '{}/{}'.format(
-            self.configer.configOptionValue('Export', 'db_export_path'),
-            'list-of-downloadable-files.txt')
-        fp = open(myPath, 'wb')
-        fp.write(self.exporter.markdownListOfDownloadableFiles())
-        fp.close()
-
+        self.assertEquals(len(filter(lambda x: self.testDataFileID in x,
+                                     self.exporter.markdownListOfDownloadableFiles().splitlines())),
+                          1)
 
     def test_get_md5_sum_from_cloud(self):
         """
@@ -487,6 +473,19 @@ class MSGDBExporterTester(unittest.TestCase):
 
         deleteFromCloud()
 
+
+    def test_list_of_downloadable_files(self):
+        """
+        Test the list of downloadable files used by the available files page.
+        """
+        # @REVIEWED
+        self.upload_test_data_to_cloud()
+        self.assertEquals(len(
+            filter(lambda row: row['id'] == self.testDataFileID,
+                   self.exporter.listOfDownloadableFiles())), 1,
+                          "Test file not present.")
+
+
 if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
 
@@ -503,12 +502,13 @@ if __name__ == '__main__':
                          'test_get_file_id_for_nonexistent_file',
                          'test_create_compressed_archived',
                          'test_adding_reader_permissions',
-                         'test_download_url_list']
+                         'test_download_url_list',
+                         'test_markdown_list_of_downloadable_files']
 
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        selected_tests = ['test_markdown_list_of_downloadable_files']
+        # selected_tests = ['test_markdown_list_of_downloadable_files']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
