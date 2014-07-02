@@ -23,6 +23,7 @@ from msg_db_util import MSGDBUtil
 import re
 from msg_python_util import MSGPythonUtil
 import itertools
+import time
 
 
 class MSGDBExporterTester(unittest.TestCase):
@@ -310,10 +311,13 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         TBW
         """
-        self.exporter.sendDownloadableFiles()
+        pass
 
 
     def test_checksum_after_upload(self):
+        """
+        TBW
+        """
         pass
 
 
@@ -410,6 +414,18 @@ class MSGDBExporterTester(unittest.TestCase):
             self.compressedTestFilename)
 
 
+    def test_outdated_files(self):
+        # @REVIEWED
+        self._upload_test_data_to_cloud()
+        time.sleep(1)
+        self.logger.log("outdated:")
+        print self.exporter.outdatedFiles(
+            maxAge = datetime.timedelta(minutes = 10))
+        self.assertTrue(self.exporter.outdatedFiles(
+            maxAge = datetime.timedelta(minutes = 10))[0][
+                            'id'] == self.testDataFileID)
+
+
     def tearDown(self):
         """
         Delete all test items.
@@ -498,12 +514,13 @@ if __name__ == '__main__':
                          'test_get_file_id_for_nonexistent_file',
                          'test_create_compressed_archived',
                          'test_adding_reader_permissions',
-                         'test_markdown_list_of_downloadable_files']
+                         'test_markdown_list_of_downloadable_files',
+                         'test_outdated_files']
 
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        # selected_tests = ['test_markdown_list_of_downloadable_files']
+        # selected_tests = ['test_outdated_files']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
