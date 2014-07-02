@@ -63,7 +63,7 @@ class MSGDBExporterTester(unittest.TestCase):
                 'ERROR')
 
 
-    def upload_test_data_to_cloud(self):
+    def _upload_test_data_to_cloud(self):
         """
         Provide an upload of test data that can be used in other tests.
 
@@ -89,7 +89,7 @@ class MSGDBExporterTester(unittest.TestCase):
         Match the Markdown line entry for the uploaded file.
         """
         # @REVIEWED
-        self.upload_test_data_to_cloud()
+        self._upload_test_data_to_cloud()
         self.assertEquals(len(filter(lambda x: self.testDataFileID in x,
                                      self.exporter.markdownListOfDownloadableFiles().splitlines())),
                           1)
@@ -100,7 +100,7 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         # @REVIEWED
         self.logger.log('Testing getting the MD5 sum.', 'info')
-        self.upload_test_data_to_cloud()
+        self._upload_test_data_to_cloud()
         testFileMD5 = filter(lambda x: x['id'] == self.testDataFileID,
                              self.exporter.cloudFiles['items'])[0][
             'md5Checksum']
@@ -127,7 +127,7 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         # @REVIEWED
 
-        self.upload_test_data_to_cloud()
+        self._upload_test_data_to_cloud()
         self.assertGreater(len(self.testDataFileID), 0)
         self.assertTrue(re.match(r'[0-9A-Za-z]+', self.testDataFileID))
 
@@ -166,7 +166,7 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         # @REVIEWED
         self.logger.log("Testing adding reader permissions.")
-        self.upload_test_data_to_cloud()
+        self._upload_test_data_to_cloud()
 
         email = self.configer.configOptionValue('Testing', 'tester_email')
         service = self.exporter.driveService
@@ -396,7 +396,7 @@ class MSGDBExporterTester(unittest.TestCase):
         Test getting the metadata for a file ID.
         """
         # @REVIEWED
-        self.upload_test_data_to_cloud()
+        self._upload_test_data_to_cloud()
 
         self.logger.log('metadata: {}'.format(
             self.exporter.metadataOfFileID(self.testDataFileID)))
@@ -408,7 +408,7 @@ class MSGDBExporterTester(unittest.TestCase):
         Test returning a file name given a file ID.
         """
         # @REVIEWED
-        self.upload_test_data_to_cloud()
+        self._upload_test_data_to_cloud()
         self.assertEquals(
             self.exporter.filenameForFileID(fileID = self.testDataFileID),
             self.compressedTestFilename)
@@ -479,7 +479,7 @@ class MSGDBExporterTester(unittest.TestCase):
         Test the list of downloadable files used by the available files page.
         """
         # @REVIEWED
-        self.upload_test_data_to_cloud()
+        self._upload_test_data_to_cloud()
         self.assertEquals(len(
             filter(lambda row: row['id'] == self.testDataFileID,
                    self.exporter.listOfDownloadableFiles())), 1,
