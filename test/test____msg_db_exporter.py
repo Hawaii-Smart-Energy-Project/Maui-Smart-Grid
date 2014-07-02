@@ -502,7 +502,6 @@ if __name__ == '__main__':
                          'test_get_file_id_for_nonexistent_file',
                          'test_create_compressed_archived',
                          'test_adding_reader_permissions',
-                         'test_download_url_list',
                          'test_markdown_list_of_downloadable_files']
 
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
