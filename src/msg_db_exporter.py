@@ -31,6 +31,9 @@ from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 import sys
 from msg_python_util import MSGPythonUtil
+from msg_notifier import MSGNotifier
+
+NOTIFICATION_HISTORY_TYPE = 'MSG_DB_EXPORTER'
 
 
 class MSGDBExporter(object):
@@ -91,6 +94,7 @@ class MSGDBExporter(object):
         self.configer = MSGConfiger()
         self.fileUtil = MSGFileUtil()
         self.pythonUtil = MSGPythonUtil()  # for debugging
+        self.notifier = MSGNotifier()
 
         # Google Drive parameters.
         self.clientID = self.configer.configOptionValue('Export',
@@ -590,29 +594,30 @@ class MSGDBExporter(object):
         :returns: Int count of deleted items.
         """
 
-        self.logger.log('Deleting outdated.', 'DEBUG')
-        deleteCnt = 0
+        # @todo Return count of successfully deleted files.
+        map(self.deleteFile, self.outdatedFiles(minAge, maxAge))
+        return len(self.outdatedFiles(minAge, maxAge))
 
-        if minAge == datetime.timedelta(days = 0):
-            return 0
 
-        for item in self.cloudFiles['items']:
-            t1 = datetime.datetime.strptime(item['createdDate'],
-                                            "%Y-%m-%dT%H:%M:%S.%fZ")
-            self.logger.log('name:{}, t1:{}'.format(item['originalFilename'],
-                                                    t1.strftime(
-                                                        '%Y-%m-%d %H:%M:%S')),
-                            'SILENT')
-            t2 = datetime.datetime.now()
-            tdelta = t2 - t1
-            self.logger.log(
-                'tdelta: {}, min age: {}, max age: {}'.format(tdelta, minAge,
-                                                              maxAge), 'debug')
-            if tdelta > minAge and tdelta < maxAge:
-                deleteCnt += 1
-                self.deleteFile(fileID = item['id'])
+    def outdatedFiles(self, minAge = datetime.timedelta(seconds = 0),
+                      maxAge = datetime.timedelta(weeks = 9999999)):
+        """
+        Return outdated files in the cloud.
+        :param minAge: datetime.timedelta in days of the minimum age before a
+        file is considered outdated.
+        :param maxAge: datetime.timedelta in days of the maximum age to
+        consider for a file.
+        :return: Int count of deleted items.
+        """
 
-        return deleteCnt
+        t1 = lambda x: datetime.datetime.strptime(x['createdDate'],
+                                                  "%Y-%m-%dT%H:%M:%S.%fZ")
+        t2 = datetime.datetime.now()
+
+        return filter(lambda x: (t2 - t1(x)) < minAge,
+                      self.cloudFiles['items']) + filter(
+            lambda x: (t2 - t1(x)) > minAge and (t2 - t1(x)) < maxAge,
+            self.cloudFiles['items'])
 
 
     def sendNotificationOfFiles(self):
@@ -699,8 +704,7 @@ class MSGDBExporter(object):
             content += "||`{} B`||".format(int(i['fileSize']))
             content += '\n'
 
-        self.logger.log('content: {}'.format(content))
-
+        # self.logger.log('content: {}'.format(content))
         return content
 
     def plaintextListOfDownloadableFiles(self):
@@ -758,6 +762,22 @@ class MSGDBExporter(object):
         result = dbUtil.executeSQL(cursor, sql, exitOnFail = False)
         conn.commit()
         return result
+
+
+    def sendExportSummary(self):
+        """
+        Send a summary of exports via email to a preconfigured list of
+        recipients.
+        :return:
+        """
+        pass
+
+    def recordNotice(self):
+        """
+        Record notification of export summaries.
+        :return:
+        """
+        sql = ''
 
 
     def __verifyMD5Sum(self, localFilePath, remoteFileID):
