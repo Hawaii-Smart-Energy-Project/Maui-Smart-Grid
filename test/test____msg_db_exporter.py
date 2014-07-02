@@ -329,10 +329,6 @@ class MSGDBExporterTester(unittest.TestCase):
             self.assertEquals(type({}), type(exclusions))
 
 
-    def test_plaintext_downloadable_files(self):
-        print self.exporter.plaintextListOfDownloadableFiles()
-
-
     def test_move_to_final(self):
         """
         Test moving a file to the final destination path.
