@@ -403,6 +403,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
         self.assertTrue(re.match(r'[0-9A-Za-z]+', self.testDataFileID))
 
+
     def test_filename_for_file_id(self):
         """
         Test returning a file name given a file ID.
@@ -419,12 +420,19 @@ class MSGDBExporterTester(unittest.TestCase):
         self._upload_test_data_to_cloud()
         time.sleep(1)
         self.logger.log("outdated:")
-        print self.exporter.outdatedFiles(
-            maxAge = datetime.timedelta(minutes = 10))
+
+        # For debugging:
+        for item in self.exporter.outdatedFiles(
+                daysBeforeOutdated = datetime.timedelta(days = -1)): self.logger.log(
+            "name: {}, created date: {}".format(item['originalFilename'],
+                                                item['createdDate']), 'debug')
+
+        # Get all the outdated files where outdated is equal to anything uploaded today or later.
         self.assertTrue(self.exporter.outdatedFiles(
-            maxAge = datetime.timedelta(minutes = 10))[0][
+            daysBeforeOutdated = datetime.timedelta(days = -1))[0][
                             'id'] == self.testDataFileID)
 
+        self.logger.log('-----')
 
     def tearDown(self):
         """
@@ -520,7 +528,7 @@ if __name__ == '__main__':
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        # selected_tests = ['test_outdated_files']
+        selected_tests = ['test_outdated_files']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
