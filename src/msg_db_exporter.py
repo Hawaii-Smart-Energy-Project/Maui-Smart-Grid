@@ -379,7 +379,7 @@ class MSGDBExporter(object):
         # End for db in databases.
 
         if deleteOutdated:
-            self.deleteOutdatedFiles(minAge = datetime.timedelta(days = int(
+            self.deleteOutdatedFiles(datetime.timedelta(days = int(
                 self.configer.configOptionValue('Export', 'days_to_keep'))))
 
         return uploaded if noErrors else None
@@ -582,31 +582,37 @@ class MSGDBExporter(object):
                             'error')
 
 
-    def deleteOutdatedFiles(self, minAge = datetime.timedelta(days = 0),
-                            maxAge = datetime.timedelta(weeks = 9999999)):
+    def deleteOutdatedFiles(self, maxAge = datetime.timedelta(weeks = 9999999)):
         """
         Remove outdated files from cloud storage.
 
-        :param minAge: datetime.timedelta in days of the minimum age before a
-        file is considered outdated.
-        :param maxAge: datetime.timedelta in days of the maximum age to
-        consider for a file.
+        :param minAge: datetime.timedelta of the minimum age before a file is
+        considered outdated.
+        :param maxAge: datetime.timedelta of the maximum age to consider for
+        a file.
         :returns: Int count of deleted items.
         """
 
-        # @todo Return count of successfully deleted files.
-        map(self.deleteFile, self.outdatedFiles(minAge, maxAge))
-        return len(self.outdatedFiles(minAge, maxAge))
+        # @todo Return count of actual successfully deleted files.
+        map(self.deleteFile, self.outdatedFiles(maxAge))
+        return len(self.outdatedFiles(maxAge))
 
 
-    def outdatedFiles(self, minAge = datetime.timedelta(seconds = 0),
-                      maxAge = datetime.timedelta(weeks = 9999999)):
+    def outdatedFiles(self,
+                      daysBeforeOutdated = datetime.timedelta(days = 9999999)):
         """
-        Return outdated files in the cloud.
-        :param minAge: datetime.timedelta in days of the minimum age before a
-        file is considered outdated.
-        :param maxAge: datetime.timedelta in days of the maximum age to
-        consider for a file.
+        Outdated files in the cloud where they are outdated if their age is
+        greater than or equal to daysBeforeOutdated.
+
+        Note: When t1 is the same day as t2, the timedelta comes back as -1.
+        Not sure why this isn't represented as zero. Perhaps to avoid a false
+        evaluation of a predicate on a tdelta.
+
+        :param minAge: datetime.timedelta of the minimum age before a file is
+        considered outdated. (@DEPRECATED)
+        :param daysBeforeOutdated: datetime.timedelta where the value
+        indicates that outdated files that have an age greater than this
+        parameter.
         :return: Int count of deleted items.
         """
 
@@ -614,10 +620,8 @@ class MSGDBExporter(object):
                                                   "%Y-%m-%dT%H:%M:%S.%fZ")
         t2 = datetime.datetime.now()
 
-        return filter(lambda x: (t2 - t1(x)) < minAge,
-                      self.cloudFiles['items']) + filter(
-            lambda x: (t2 - t1(x)) > minAge and (t2 - t1(x)) < maxAge,
-            self.cloudFiles['items'])
+        return filter(lambda x: t2 - t1(x) >= daysBeforeOutdated,
+                      self.cloudFiles['items'])
 
 
     def sendNotificationOfFiles(self):
