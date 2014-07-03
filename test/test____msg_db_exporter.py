@@ -133,34 +133,6 @@ class MSGDBExporterTester(unittest.TestCase):
         self.assertTrue(re.match(r'[0-9A-Za-z]+', self.testDataFileID))
 
 
-    def test_delete_out_dated_files(self):
-        """
-        The timestamp of an uploaded file should be set in the past to provide
-        the ability to test the deleting of outdated files.
-        """
-
-        return
-
-        # @TO BE REVIEWED  Prevent deleting files uploaded today.
-        # @IMPORTANT Prevent deleting NON-testing files.
-        # Need to have a test file uploaded that has an explicitly set upload
-        # date.
-
-        self.logger.log("Test deleting outdated files.")
-
-        self.logger.log("Uploading test data.")
-
-        filePath = "%s/%s" % (
-            self.exportTestDataPath, self.compressedTestFilename)
-
-        uploadResult = self.exporter.uploadFileToCloudStorage(filePath)
-
-        cnt = self.exporter.deleteOutdatedFiles(
-            minAge = datetime.timedelta(days = 5),
-            maxAge = datetime.timedelta(days = 99999))
-        # self.assertGreater(cnt, 0)
-
-
     def test_adding_reader_permissions(self):
         """
         Add reader permissions to a file that was uploaded.
