@@ -57,19 +57,20 @@ if __name__ == '__main__':
     exporter.logger.shouldRecord = True
 
     startTime = time.time()
-    noErrors = exporter.exportDB(
-        databases = exporter.configer.configOptionValue('Export',
-                                                        'dbs_to_export').split(
-            ','), toCloud = True, testing = COMMAND_LINE_ARGS.testing,
-        numChunks = int(exporter.configer.configOptionValue('Export',
-                                                            'num_split_sections')),
-        deleteOutdated = True)
+    dbs = exporter.configer.configOptionValue('Export', 'dbs_to_export').split(
+        ',')
+    fileIDs = exporter.exportDBs(databases = dbs, toCloud = True,
+                                 testing = COMMAND_LINE_ARGS.testing,
+                                 numChunks = int(
+                                     exporter.configer.configOptionValue(
+                                         'Export', 'num_split_sections')),
+                                 deleteOutdated = True)
 
     wallTime = time.time() - startTime
     wallTimeMin = int(wallTime / 60.0)
     wallTimeSec = (wallTime - wallTimeMin * 60.0)
 
-    if noErrors:
+    if len(fileIDs) == len(dbs):
         exporter.logger.log('No errors occurred during export.', 'info')
     else:
         exporter.logger.log('ERRORS occurred during export.', 'warning')
@@ -77,9 +78,10 @@ if __name__ == '__main__':
     exporter.logger.log('Free space remaining: %d' % exporter.freeSpace(),
                         'info')
 
-    exporter.logger.log(
-        'Wall time: {:d} min {:.2f} s.'.format(wallTimeMin, wallTimeSec),
-        'info')
+    exporter.logger.log('Wall time: {:d} min {:.2f} s.'.format(wallTimeMin,
+                                                               wallTimeSec - (
+                                                               wallTimeMin * 60)),
+                        'info')
 
     # Send the available file list by POST.
     exporter.sendDownloadableFiles()

@@ -18,6 +18,8 @@ from email.mime.text import MIMEText
 from email.utils import formatdate
 from email import Encoders
 from msg_logger import MSGLogger
+from msg_db_connector import MSGDBConnector
+from msg_db_util import MSGDBUtil
 
 
 class MSGNotifier(object):
@@ -26,13 +28,20 @@ class MSGNotifier(object):
 
     Email settings are stored in the local configuration.
 
-    API:
+    Usage:
+
+    from msg_notifier import MSGNotifier
+    self.notifier = MSGNotifier()
+
+    Public API:
 
     sendNotificationEmail(msgBody, testing = False):
-        Send msgBody as a notification to the mailing list defined in the config file.
+        Send msgBody as a notification to the mailing list defined in the
+        config file.
 
     sendMailWithAttachments(msgBody, files = None, testing = False)
-        Send msgBody with files attached as a notification to the mailing list defined in the config file.
+        Send msgBody with files attached as a notification to the mailing
+        list defined in the config file.
     """
 
     def __init__(self):
@@ -42,6 +51,11 @@ class MSGNotifier(object):
 
         self.config = MSGConfiger()
         self.logger = MSGLogger(__name__, 'info')
+        self.connector = MSGDBConnector()
+        self.conn = self.connector.connectDB()
+        self.cursor = self.conn.cursor()
+        self.dbUtil = MSGDBUtil()
+        self.noticeTable = 'NotificationHistory'
         self.notificationHeader = "This is a message from the Hawaii Smart " \
                                   "Energy Project MSG Project notification " \
                                   "system.\n\n"
@@ -95,8 +109,8 @@ class MSGNotifier(object):
         subject = "HISEP Notification"
 
         msgHeader = "Date: {}\r\nFrom: {}\r\nTo: {}\r\nSubject: {" \
-                    "}\r\nX-Mailer: My-Mail\r\n\r\n".format(
-            senddate, fromaddr, toaddr, subject)
+                    "}\r\nX-Mailer: My-Mail\r\n\r\n".format(senddate, fromaddr,
+                                                            toaddr, subject)
 
         msgBody = self.notificationHeader + msgBody
 
@@ -196,3 +210,21 @@ class MSGNotifier(object):
             self.logger.log('No exceptions occurred.\n', 'info')
 
         return errorOccurred
+
+
+    def recordNotificationEvent(self, noticeType = ''):
+        """
+        Save a notification event to the notification history.
+        :param table: String
+        :param noticeType: String
+        :returns: Boolean
+        """
+
+        cursor = self.cursor
+        sql = """INSERT INTO "{}" ("notificationType", "notificationTime")
+        VALUES ('{}', NOW())""".format(self.noticeTable, noticeType)
+        success = self.dbUtil.executeSQL(cursor, sql)
+        self.conn.commit()
+        if not success:
+            raise Exception('Exception while saving the notification time.')
+        return success

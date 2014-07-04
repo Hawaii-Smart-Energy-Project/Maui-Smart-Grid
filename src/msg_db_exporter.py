@@ -29,6 +29,11 @@ from requests.adapters import SSLError
 import shutil
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
+import sys
+from msg_python_util import MSGPythonUtil
+from msg_notifier import MSGNotifier
+
+NOTIFICATION_HISTORY_TYPE = 'MSG_DB_EXPORTER'
 
 
 class MSGDBExporter(object):
@@ -88,6 +93,8 @@ class MSGDBExporter(object):
         self.timeUtil = MSGTimeUtil()
         self.configer = MSGConfiger()
         self.fileUtil = MSGFileUtil()
+        self.pythonUtil = MSGPythonUtil()  # for debugging
+        self.notifier = MSGNotifier()
 
         # Google Drive parameters.
         self.clientID = self.configer.configOptionValue('Export',
@@ -234,6 +241,7 @@ class MSGDBExporter(object):
         else:
             return [compressedFullPath]
 
+
     def dumpResult(self, db = '', dumpName = '', fullPath = ''):
         """
         :param dumpName: String of filename of dump file.
@@ -241,42 +249,49 @@ class MSGDBExporter(object):
         :return: Boolean True if dump operation was successful, otherwise False.
         """
 
-        success = False
+        success = True
 
         self.logger.log('fullPath: {}'.format(fullPath), 'DEBUG')
 
         try:
             # Generate the SQL script export.
+            # @todo check return value of dump command
             self.logger.log('cmd: {}'.format(
                 self.dumpCommand(db = db, dumpName = dumpName)))
             subprocess.check_call(
                 self.dumpCommand(db = db, dumpName = dumpName), shell = True)
         except subprocess.CalledProcessError as error:
             self.logger.log("Exception while dumping: {}".format(error))
-            success = False
+            sys.exit(-1)
 
         return success
 
-    def exportDB(self, databases = None, toCloud = False, localExport = True,
-                 testing = False, chunkSize = 0, numChunks = 0,
-                 deleteOutdated = False):
+
+    def exportDBs(self, databases = None, toCloud = False, localExport = True,
+                  testing = False, chunkSize = 0, numChunks = 0,
+                  deleteOutdated = False):
         """
         Export a set of DBs to local storage.
 
         :param databases: List of database names that will be exported.
         :param toCloud: Boolean if set to True, then the export will also be
         copied to cloud storage.
-        :param localExport: Boolean when set to True, the DB is exported
+        :param localExport: Boolean when set to True the DB is exported
         locally.
         :param testing: Boolean flag for testing mode. (@DEPRECATED)
         :param chunkSize: Integer size in bytes of chunk size used for
         splitting.
+        :param numChunks: (@DEPRECATED)
         :param deleteOutdated: Boolean indicating outdated files in the cloud
         should be removed.
-        :returns: Boolean True if no errors have occurred, False otherwise.
+        :returns: List of file IDs of uploaded files or None if there is an
+        error condition.
         """
 
+        # @todo separate uploading and exporting functions
+
         noErrors = True
+        uploaded = []
 
         for db in databases:
             self.logger.log('Exporting {} using pg_dump.'.format(db), 'info')
@@ -293,7 +308,6 @@ class MSGDBExporter(object):
             gzipResult = self.fileUtil.gzipCompressFile(fullPath)
             compressedFullPath = '{}{}'.format(fullPath, '.gz')
             numChunks = self.numberOfChunksToUse(compressedFullPath)
-            time.sleep(1)
 
             # Gzip uncompress and verify by checksum is disabled until a more
             # efficient, non-memory-based, uncompress is implemented.
@@ -320,6 +334,9 @@ class MSGDBExporter(object):
                     self.logger.log('file id after upload: {}'.format(fileID))
 
                     if fileID != None:
+                        uploaded.append(fileID)
+                        self.logger.log('uploaded: {}'.format(uploaded),
+                                        'DEBUG')
                         if not self.addReaders(fileID,
                                                self.configer.configOptionValue(
                                                        'Export',
@@ -362,10 +379,11 @@ class MSGDBExporter(object):
         # End for db in databases.
 
         if deleteOutdated:
-            self.deleteOutdatedFiles(minAge = datetime.timedelta(days = int(
+            self.deleteOutdatedFiles(datetime.timedelta(days = int(
                 self.configer.configOptionValue('Export', 'days_to_keep'))))
 
-        return noErrors
+        return uploaded if noErrors else None
+
 
     def moveToFinalPath(self, compressedFullPath = ''):
         """
@@ -546,11 +564,17 @@ class MSGDBExporter(object):
         :param fileID: String of a Google API file ID.
         """
 
-        # @todo Report the filename.
-        self.logger.log('Deleting file with file ID: {}'.format(fileID),
-                        'debug')
+        if not len(fileID) > 0:
+            raise Exception("File ID has not been given.")
+
+        self.logger.log(
+            'Deleting file with file ID {} and name {}.'.format(fileID,
+                                                                self.filenameForFileID(
+                                                                    fileID)),
+            'debug')
 
         try:
+            # Writing the fileId arg name is required here.
             self.driveService.files().delete(fileId = fileID).execute()
 
         except errors.HttpError as error:
@@ -558,41 +582,46 @@ class MSGDBExporter(object):
                             'error')
 
 
-    def deleteOutdatedFiles(self, minAge = datetime.timedelta(days = 0),
-                            maxAge = datetime.timedelta(weeks = 9999999)):
+    def deleteOutdatedFiles(self, maxAge = datetime.timedelta(weeks = 9999999)):
         """
         Remove outdated files from cloud storage.
 
-        :param minAge: datetime.timedelta in days of the minimum age before a
-        file is considered outdated.
-        :param maxAge: datetime.timedelta in days of the maximum age to
-        consider for a file.
+        :param minAge: datetime.timedelta of the minimum age before a file is
+        considered outdated.
+        :param maxAge: datetime.timedelta of the maximum age to consider for
+        a file.
         :returns: Int count of deleted items.
         """
 
-        self.logger.log('Deleting outdated.', 'DEBUG')
-        deleteCnt = 0
+        # @todo Return count of actual successfully deleted files.
+        map(self.deleteFile, self.outdatedFiles(maxAge))
+        return len(self.outdatedFiles(maxAge))
 
-        if minAge == datetime.timedelta(days = 0):
-            return 0
 
-        for item in self.cloudFiles['items']:
-            t1 = datetime.datetime.strptime(item['createdDate'],
-                                            "%Y-%m-%dT%H:%M:%S.%fZ")
-            self.logger.log('name:{}, t1:{}'.format(item['originalFilename'],
-                                                    t1.strftime(
-                                                        '%Y-%m-%d %H:%M:%S')),
-                            'SILENT')
-            t2 = datetime.datetime.now()
-            tdelta = t2 - t1
-            self.logger.log(
-                'tdelta: {}, min age: {}, max age: {}'.format(tdelta, minAge,
-                                                              maxAge), 'debug')
-            if tdelta > minAge and tdelta < maxAge:
-                deleteCnt += 1
-                self.deleteFile(fileID = item['id'])
+    def outdatedFiles(self,
+                      daysBeforeOutdated = datetime.timedelta(days = 9999999)):
+        """
+        Outdated files in the cloud where they are outdated if their age is
+        greater than or equal to daysBeforeOutdated.
 
-        return deleteCnt
+        Note: When t1 is the same day as t2, the timedelta comes back as -1.
+        Not sure why this isn't represented as zero. Perhaps to avoid a false
+        evaluation of a predicate on a tdelta.
+
+        :param minAge: datetime.timedelta of the minimum age before a file is
+        considered outdated. (@DEPRECATED)
+        :param daysBeforeOutdated: datetime.timedelta where the value
+        indicates that outdated files that have an age greater than this
+        parameter.
+        :return: Int count of deleted items.
+        """
+
+        t1 = lambda x: datetime.datetime.strptime(x['createdDate'],
+                                                  "%Y-%m-%dT%H:%M:%S.%fZ")
+        t2 = datetime.datetime.now()
+
+        return filter(lambda x: t2 - t1(x) >= daysBeforeOutdated,
+                      self.cloudFiles['items'])
 
 
     def sendNotificationOfFiles(self):
@@ -679,8 +708,7 @@ class MSGDBExporter(object):
             content += "||`{} B`||".format(int(i['fileSize']))
             content += '\n'
 
-        self.logger.log('content: {}'.format(content))
-
+        # self.logger.log('content: {}'.format(content))
         return content
 
     def plaintextListOfDownloadableFiles(self):
@@ -738,6 +766,22 @@ class MSGDBExporter(object):
         result = dbUtil.executeSQL(cursor, sql, exitOnFail = False)
         conn.commit()
         return result
+
+
+    def sendExportSummary(self):
+        """
+        Send a summary of exports via email to a preconfigured list of
+        recipients.
+        :return:
+        """
+        pass
+
+    def recordNotice(self):
+        """
+        Record notification of export summaries.
+        :return:
+        """
+        sql = ''
 
 
     def __verifyMD5Sum(self, localFilePath, remoteFileID):
@@ -798,31 +842,19 @@ class MSGDBExporter(object):
         """
         Get the file ID for the given filename.
 
-        This method supports matching multiple matching cloud filenames but only
+        This method supports matching multiple cloud filenames but only
         returns the ID for a single matching filename.
 
-        This not the best way to handle things, but it works for the typical
-        use case and prevents errors from taking down the system.
+        This can then be called recursively to obtain all the file IDs for a
+        given filename.
 
         :param String of the filename for which to retrieve the ID.
-        :returns: String of a cloud file ID.
+        :returns: String of a cloud file ID or None if no match.
         """
+        fileIDList = filter(lambda x: x['originalFilename'] == filename,
+                            self.cloudFiles['items'])
+        return fileIDList[0]['id'] if len(fileIDList) > 0 else None
 
-        ids = []
-
-        for item in self.cloudFiles['items']:
-
-            if (item['title'] == filename):
-
-                if not item['labels']['trashed']:
-                    ids.append(item['id'])
-
-        if ids:
-            return ids[0]
-        elif not ids:
-            return None
-        else:
-            raise Exception("Unmatched case for fileIDForFileName.")
 
     def filenameForFileID(self, fileID = ''):
         """

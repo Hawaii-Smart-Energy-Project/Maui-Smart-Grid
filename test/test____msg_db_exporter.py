@@ -22,6 +22,8 @@ from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 import re
 from msg_python_util import MSGPythonUtil
+import itertools
+import time
 
 
 class MSGDBExporterTester(unittest.TestCase):
@@ -61,14 +63,15 @@ class MSGDBExporterTester(unittest.TestCase):
                 'Exception during creation of temp directory: %s' % detail,
                 'ERROR')
 
-    def upload_test_data_to_cloud(self):
+
+    def _upload_test_data_to_cloud(self):
         """
         Provide an upload of test data that can be used in other tests.
 
         Side effect: Store the file ID as an ivar.
         """
         self.logger.log("Uploading test data for caller: {}".format(
-            self.pyUtil.caller_name()))
+            self.pyUtil.callerName()))
 
         filePath = "{}/{}".format(self.exportTestDataPath,
                                   self.compressedTestFilename)
@@ -82,78 +85,15 @@ class MSGDBExporterTester(unittest.TestCase):
         self.logger.log("Test file ID is {}.".format(self.testDataFileID))
 
 
-    def test_sending_fcphase_part_0(self):
-        """
-        /home/daniel/msg-db-dumps/2014-05-14_141223_fcphase3.sql.gz.0
-        """
-
-        filesToUpload = [
-            '/home/daniel/msg-db-dumps/2014-05-14_141223_fcphase3.sql.gz.0',
-            '/home/daniel/msg-db-dumps/2014-05-14_141223_fcphase3.sql.gz.1',
-            '/home/daniel/msg-db-dumps/2014-05-14_141223_fcphase3.sql.gz.2',
-            '/home/daniel/msg-db-dumps/2014-05-14_141223_fcphase3.sql.gz.3']
-
-        for f in filesToUpload:
-            self.exporter.uploadFileToCloudStorage(fullPath = f,
-                                                   testing = False)
-
-
-    def testListRemoteFiles(self):
-        """
-        Test listing of remote files.
-        """
-
-        self.logger.log('Testing listing of remote files.', 'INFO')
-        title = ''
-        id = ''
-        for item in self.exporter.cloudFiles['items']:
-            title = item['title']
-            id = item['id']
-            self.assertIsNot(title, '')
-            self.assertIsNot(id, '')
-
-    def testDownloadURLList(self):
-        """
-        Test obtaining a list of downloadble URLs.
-        """
-
-        self.logger.log('Testing listing of downloadable files.', 'INFO')
-
-        title = ''
-        id = ''
-        url = ''
-        for item in self.exporter.cloudFiles['items']:
-            title = item['title']
-            url = item['webContentLink']
-            id = item['id']
-            self.logger.log('title: %s, link: %s, id: %s' % (title, url, id))
-            self.assertIsNot(title, '')
-            self.assertIsNot(url, '')
-            self.assertIsNot(id, '')
-
-
-    def test_list_of_downloadable_files(self):
-        """
-        Test the list of downloadable files used by the available files page.
-        """
-        self.assertIsNotNone(self.exporter.listOfDownloadableFiles(),
-                             'List of downloadable files is not available.')
-        for row in self.exporter.listOfDownloadableFiles():
-            print row
-            self.assertIsNotNone(row['id'])
-            self.assertIsNotNone(row['title'])
-            self.assertIsNotNone(row['webContentLink'])
-
     def test_markdown_list_of_downloadable_files(self):
-        print self.exporter.markdownListOfDownloadableFiles()
-
-        myPath = '{}/{}'.format(
-            self.configer.configOptionValue('Export', 'db_export_path'),
-            'list-of-downloadable-files.txt')
-        fp = open(myPath, 'wb')
-        fp.write(self.exporter.markdownListOfDownloadableFiles())
-        fp.close()
-
+        """
+        Match the Markdown line entry for the uploaded file.
+        """
+        # @REVIEWED
+        self._upload_test_data_to_cloud()
+        self.assertEquals(len(filter(lambda x: self.testDataFileID in x,
+                                     self.exporter.markdownListOfDownloadableFiles().splitlines())),
+                          1)
 
     def test_get_md5_sum_from_cloud(self):
         """
@@ -161,40 +101,19 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         # @REVIEWED
         self.logger.log('Testing getting the MD5 sum.', 'info')
-        self.upload_test_data_to_cloud()
+        self._upload_test_data_to_cloud()
         testFileMD5 = filter(lambda x: x['id'] == self.testDataFileID,
                              self.exporter.cloudFiles['items'])[0][
             'md5Checksum']
         self.assertEquals(len(testFileMD5), 32)
         self.assertTrue(re.match(r'[0-9A-Za-z]+', testFileMD5))
 
-    def testGetFileIDsForFilename(self):
-        """
-        Retrieve the matching file IDs for the given file name.
-        """
-
-        self.logger.log('Testing getting file IDs for a filename.')
-        self.logger.log("Uploading test data.")
-
-        filePath = "{}/{}".format(self.exportTestDataPath,
-                                  self.compressedTestFilename)
-
-        uploadResult = self.exporter.uploadFileToCloudStorage(filePath)
-
-        self.assertTrue(uploadResult)
-
-        self.logger.log('Testing getting the file ID for a filename.')
-
-        fileIDs = self.exporter.fileIDForFileName(self.compressedTestFilename)
-        self.logger.log("file ids = {}".format(fileIDs), 'info')
-
-        self.assertIsNotNone(fileIDs)
 
     def test_get_file_id_for_nonexistent_file(self):
         """
         Test getting a file ID for a nonexistent file.
         """
-
+        # @REVIEWED
         fileIDs = self.exporter.fileIDForFileName('nonexistent_file')
         self.logger.log("file ids = {}".format(fileIDs), 'info')
         self.assertIsNone(fileIDs)
@@ -209,50 +128,19 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         # @REVIEWED
 
-        self.upload_test_data_to_cloud()
+        self._upload_test_data_to_cloud()
         self.assertGreater(len(self.testDataFileID), 0)
         self.assertTrue(re.match(r'[0-9A-Za-z]+', self.testDataFileID))
 
-    def test_delete_out_dated_files(self):
-        """
-        The timestamp of an uploaded file should be set in the past to provide
-        the ability to test the deleting of outdated files.
-        """
 
-        # return
-
-        # @TO BE REVIEWED  Prevent deleting files uploaded today.
-        # @IMPORTANT Prevent deleting NON-testing files.
-        # Need to have a test file uploaded that has an explicitly set upload
-        # date.
-
-        self.logger.log("Test deleting outdated files.")
-
-        self.logger.log("Uploading test data.")
-
-        filePath = "%s/%s" % (
-            self.exportTestDataPath, self.compressedTestFilename)
-
-        uploadResult = self.exporter.uploadFileToCloudStorage(filePath)
-
-        cnt = self.exporter.deleteOutdatedFiles(
-            minAge = datetime.timedelta(days = 5),
-            maxAge = datetime.timedelta(days = 99999))
-        # self.assertGreater(cnt, 0)
-
-
-    def testAddingReaderPermissions(self):
+    def test_adding_reader_permissions(self):
         """
         Add reader permissions to a file that was uploaded.
-
-        @todo Needs update after cloud export restoration.
         """
-
+        # @REVIEWED
         self.logger.log("Testing adding reader permissions.")
-        self.logger.log("Uploading test data.")
-        filePath = "%s/%s" % (
-            self.exportTestDataPath, self.compressedTestFilename)
-        uploadResult = self.exporter.uploadFileToCloudStorage(filePath)
+        self._upload_test_data_to_cloud()
+
         email = self.configer.configOptionValue('Testing', 'tester_email')
         service = self.exporter.driveService
         try:
@@ -261,13 +149,12 @@ class MSGDBExporterTester(unittest.TestCase):
             print id_resp
 
         except errors.HttpError as detail:
-            print 'Exception while getting ID for email: %s' % detail
+            print 'Exception while getting ID for email: {}'.format(detail)
 
         new_permission = {'value': email, 'type': 'user', 'role': 'reader'}
         try:
             self.logger.log('Adding reader permission', 'INFO')
-            fileIDToAddTo = self.exporter.fileIDForFileName(
-                self.compressedTestFilename)
+            fileIDToAddTo = self.testDataFileID
 
             # The permission dict is being output to stdout here.
             resp = service.permissions().insert(fileId = fileIDToAddTo,
@@ -275,21 +162,38 @@ class MSGDBExporterTester(unittest.TestCase):
                                                 body = new_permission).execute()
         except errors.HttpError as detail:
             self.logger.log(
-                'Exception while adding reader permissions: %s' % detail,
+                'Exception while adding reader permissions: {}'.format(detail),
                 'error')
+
+        def permission_id(email):
+            try:
+                id_resp = service.permissions().getIdForEmail(
+                    email = email).execute()
+                return id_resp['id']
+            except errors.HttpError as error:
+                self.logger.log("HTTP error: {}".format(error))
+
+        permission = {}
+        try:
+            permission = service.permissions().get(fileId = self.testDataFileID,
+                                                   permissionId = permission_id(
+                                                       email)).execute()
+        except errors.HttpError as error:
+            self.logger.log("HTTP error: {}".format(error))
+
+        self.assertEquals(permission['role'], 'reader')
 
 
     def test_create_compressed_archived(self):
         """
-        * Copy test data to a temp directory.
+        * Copy test data to a temp directory (self.testDir).
         * Create a checksum for test data.
         * Create a gzip-compressed archive.
         * Extract gzip-compressed archive.
         * Create a checksum for the uncompressed data.
         * Compare the checksums.
-
-        @todo Needs update after cloud export restoration.
         """
+        # @REVIEWED
 
         self.logger.log('Testing verification of a compressed archive.')
 
@@ -328,15 +232,21 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         Perform a quick test of the DB export method using Testing Mode.
 
-        @todo This needs a static test database!
+        This requires sudo authorization to complete.
         """
+        # @REVIEWED
 
-        self.logger.log('Testing exportDB')
+        self.logger.log('Testing exportDB using the testing DB.')
+
+        # @todo handle case where testing db does not exist.
+
         dbs = ['test_meco']
-        success = self.exporter.exportDB(databases = dbs, toCloud = True,
-                                         localExport = True, numChunks = 4)
-        self.logger.log('Success: {}'.format(success))
-        self.assertTrue(success, "Export was not successful.")
+        ids = self.exporter.exportDBs(databases = dbs, toCloud = True,
+                                      localExport = True)
+        self.logger.log('Count of exports: {}'.format(len(ids)))
+        self.assertEquals(len(ids), 1, "Count of exported files is wrong.")
+
+        map(self.exporter.deleteFile, ids)
 
 
     def test_split_archive(self):
@@ -373,10 +283,13 @@ class MSGDBExporterTester(unittest.TestCase):
         """
         TBW
         """
-        self.exporter.sendDownloadableFiles()
+        pass
 
 
     def test_checksum_after_upload(self):
+        """
+        TBW
+        """
         pass
 
 
@@ -390,10 +303,6 @@ class MSGDBExporterTester(unittest.TestCase):
 
         if exclusions:
             self.assertEquals(type({}), type(exclusions))
-
-
-    def test_plaintext_downloadable_files(self):
-        print self.exporter.plaintextListOfDownloadableFiles()
 
 
     def test_move_to_final(self):
@@ -453,28 +362,49 @@ class MSGDBExporterTester(unittest.TestCase):
                                       'timestamp = to_timestamp(0)'))
         conn.commit()
 
+
     def test_metadata_of_file_id(self):
         """
         Test getting the metadata for a file ID.
         """
         # @REVIEWED
-        self.upload_test_data_to_cloud()
+        self._upload_test_data_to_cloud()
 
         self.logger.log('metadata: {}'.format(
             self.exporter.metadataOfFileID(self.testDataFileID)))
 
         self.assertTrue(re.match(r'[0-9A-Za-z]+', self.testDataFileID))
 
+
     def test_filename_for_file_id(self):
         """
         Test returning a file name given a file ID.
         """
         # @REVIEWED
-        self.upload_test_data_to_cloud()
+        self._upload_test_data_to_cloud()
         self.assertEquals(
             self.exporter.filenameForFileID(fileID = self.testDataFileID),
             self.compressedTestFilename)
 
+
+    def test_outdated_files(self):
+        # @REVIEWED
+        self._upload_test_data_to_cloud()
+        time.sleep(1)
+        self.logger.log("outdated:")
+
+        # For debugging:
+        for item in self.exporter.outdatedFiles(
+                daysBeforeOutdated = datetime.timedelta(days = -1)): self.logger.log(
+            "name: {}, created date: {}".format(item['originalFilename'],
+                                                item['createdDate']), 'debug')
+
+        # Get all the outdated files where outdated is equal to anything uploaded today or later.
+        self.assertTrue(self.exporter.outdatedFiles(
+            daysBeforeOutdated = datetime.timedelta(days = -1))[0][
+                            'id'] == self.testDataFileID)
+
+        self.logger.log('-----')
 
     def tearDown(self):
         """
@@ -484,6 +414,9 @@ class MSGDBExporterTester(unittest.TestCase):
         REMOVE_TEMPORARY_FILES = True
         if REMOVE_TEMPORARY_FILES:
             try:
+                self.logger.log("Removing local test files {}, {}.".format(
+                    self.uncompressedTestFilename, self.compressedTestFilename),
+                                'debug')
                 os.remove(os.path.join(os.getcwd(), self.testDir,
                                        self.uncompressedTestFilename))
                 os.remove(os.path.join(os.getcwd(), self.testDir,
@@ -514,20 +447,35 @@ class MSGDBExporterTester(unittest.TestCase):
                 'Exception while removing directory: {}'.format(detail),
                 'ERROR')
 
-        deleteSuccessful = True
-
-        # Keep deleting from the cloud until there is no more to delete.
-        while deleteSuccessful:
+        # Keep deleting from the cloud until there are no more to delete.
+        def deleteFromCloud():
+            self.logger.log("deleting from cloud", 'debug')
             try:
                 fileIDToDelete = self.exporter.fileIDForFileName(
                     self.compressedTestFilename)
+                if fileIDToDelete is None:
+                    return
                 self.logger.log("file ID to delete: {}".format(fileIDToDelete),
                                 'DEBUG')
                 self.exporter.driveService.files().delete(
-                    fileId = '%s' % fileIDToDelete).execute()
+                    fileId = '{}'.format(fileIDToDelete)).execute()
+                deleteFromCloud()
             except (TypeError, http.HttpError) as e:
-                self.logger.log('Delete not successful: {}'.format(e), 'SILENT')
-                break
+                self.logger.log('Delete not successful: {}'.format(e), 'DEBUG')
+
+        deleteFromCloud()
+
+
+    def test_list_of_downloadable_files(self):
+        """
+        Test the list of downloadable files used by the available files page.
+        """
+        # @REVIEWED
+        self._upload_test_data_to_cloud()
+        self.assertEquals(len(
+            filter(lambda row: row['id'] == self.testDataFileID,
+                   self.exporter.listOfDownloadableFiles())), 1,
+                          "Test file not present.")
 
 
 if __name__ == '__main__':
@@ -535,15 +483,24 @@ if __name__ == '__main__':
 
     if RUN_SELECTED_TESTS:
 
-        selected_tests = ['test_upload_test_data', 'test_log_successful_export',
-                          'test_metadata_of_file_id',
-                          'test_dump_exclusions_dictionary',
-                          'test_filename_for_file_id', 'test_move_to_final',
-                          'test_get_md5_sum_from_cloud', 'test_split_archive',
-                          'test_get_file_size']
+        sudo_tests = ['test_export_db']
+
+        nonsudo_tests = ['test_upload_test_data', 'test_log_successful_export',
+                         'test_metadata_of_file_id',
+                         'test_dump_exclusions_dictionary',
+                         'test_filename_for_file_id', 'test_move_to_final',
+                         'test_get_md5_sum_from_cloud', 'test_split_archive',
+                         'test_get_file_size',
+                         'test_get_file_id_for_nonexistent_file',
+                         'test_create_compressed_archived',
+                         'test_adding_reader_permissions',
+                         'test_markdown_list_of_downloadable_files',
+                         'test_outdated_files']
+
+        selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        # selected_tests = ['test_get_file_size']
+        # selected_tests = ['test_outdated_files']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:

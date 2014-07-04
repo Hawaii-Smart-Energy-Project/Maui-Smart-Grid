@@ -26,15 +26,17 @@ __license__ = 'https://raw.github' \
 import os
 import fnmatch
 import sys
-from msg_configer import MSGConfiger
 import re
-from msg_notifier import MSGNotifier
 import argparse
+import time
+import multiprocessing
+
+from msg_configer import MSGConfiger
+from msg_notifier import MSGNotifier
 from meco_plotting import MECOPlotting
 from insertSingleMECOEnergyDataFile import Inserter
-import time
 from msg_logger import MSGLogger
-import multiprocessing
+
 
 xmlGzCount = 0
 xmlCount = 0
