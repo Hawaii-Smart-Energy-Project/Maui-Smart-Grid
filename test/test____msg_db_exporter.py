@@ -500,7 +500,7 @@ if __name__ == '__main__':
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        selected_tests = ['test_outdated_files']
+        # selected_tests = ['test_outdated_files']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
