@@ -340,7 +340,7 @@ class MSGDBExporter(object):
                         if not self.addReaders(fileID,
                                                self.configer.configOptionValue(
                                                        'Export',
-                                                       'read_permission').split(
+                                                       'reader_permission_email_addresses').split(
                                                        ','), retryCount = int(
                                         self.configer.configOptionValue(
                                                 'Export',
