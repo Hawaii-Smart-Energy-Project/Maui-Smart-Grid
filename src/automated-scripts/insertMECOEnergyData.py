@@ -43,7 +43,7 @@ xmlCount = 0
 configer = MSGConfiger()
 logger = MSGLogger(__name__, 'info')
 binPath = MSGConfiger.configOptionValue(configer, "Executable Paths",
-                                        "bin_path")
+                                        "msg_bin_path")
 COMMAND_LINE_ARGS = None
 global msgBody
 notifier = MSGNotifier()
