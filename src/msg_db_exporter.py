@@ -268,8 +268,7 @@ class MSGDBExporter(object):
 
 
     def exportDBs(self, databases = None, toCloud = False, localExport = True,
-                  testing = False, chunkSize = 0, numChunks = 0,
-                  deleteOutdated = False):
+                  testing = False, chunkSize = 0, deleteOutdated = False):
         """
         Export a set of DBs to local storage.
 
@@ -281,7 +280,6 @@ class MSGDBExporter(object):
         :param testing: Boolean flag for testing mode. (@DEPRECATED)
         :param chunkSize: Integer size in bytes of chunk size used for
         splitting.
-        :param numChunks: (@DEPRECATED)
         :param deleteOutdated: Boolean indicating outdated files in the cloud
         should be removed.
         :returns: List of file IDs of uploaded files or None if there is an
