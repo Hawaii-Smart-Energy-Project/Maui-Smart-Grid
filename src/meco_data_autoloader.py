@@ -65,7 +65,7 @@ class MECODataAutoloader(object):
         autoloadPath = self.configer.configOptionValue('MECO Autoload',
                                                        'meco_autoload_data_path')
         command = self.configer.configOptionValue('MECO Autoload',
-                                                  'data_load_command')
+                                                  'meco_autoload_command')
         os.chdir(autoloadPath)
 
         try:
