@@ -81,7 +81,7 @@ class MSGNotifier(object):
         password = self.config.configOptionValue('Notifications',
                                                  'email_password')
         fromaddr = self.config.configOptionValue('Notifications',
-                                                 'email_fromaddr')
+                                                 'email_from_address')
 
         if testing:
             toaddr = self.config.configOptionValue('Notifications',
@@ -89,8 +89,8 @@ class MSGNotifier(object):
         else:
             toaddr = self.config.configOptionValue('Notifications',
                                                    'email_recipients')
-        server = smtplib.SMTP(
-            self.config.configOptionValue('Notifications', 'email_smtp_server'))
+        server = smtplib.SMTP(self.config.configOptionValue('Notifications',
+                                                            'smtp_server_and_port'))
 
         try:
             server.starttls()
@@ -161,7 +161,7 @@ class MSGNotifier(object):
                                                     'email_recipients')
 
         send_from = self.config.configOptionValue('Notifications',
-                                                  'email_fromaddr')
+                                                  'email_from_address')
 
         msg = MIMEMultipart()
         msg['From'] = send_from
@@ -180,8 +180,8 @@ class MSGNotifier(object):
                             'attachment; filename="%s"' % os.path.basename(f))
             msg.attach(part)
 
-        server = smtplib.SMTP(
-            self.config.configOptionValue('Notifications', 'email_smtp_server'))
+        server = smtplib.SMTP(self.config.configOptionValue('Notifications',
+                                                            'smtp_server_and_port'))
         try:
             server.starttls()
         except smtplib.SMTPException as detail:

@@ -40,22 +40,23 @@ class TestMECONotifier(unittest.TestCase):
         """
 
         errorOccurred = False
-        user = self.configer.configOptionValue('Notifications', 'email_username')
+        user = self.configer.configOptionValue('Notifications',
+                                               'email_username')
         password = self.configer.configOptionValue('Notifications',
-                                                 'email_password')
+                                                   'email_password')
 
-        server = smtplib.SMTP(
-            self.configer.configOptionValue('Notifications', 'email_smtp_server'))
+        server = smtplib.SMTP(self.configer.configOptionValue('Notifications',
+                                                              'smtp_server_and_port'))
 
         try:
             server.starttls()
-        except smtplib.SMTPException, e:
-            print "Exception = %s" % e
+        except smtplib.SMTPException as detail:
+            self.logger.log("Exception: {}".format(detail))
 
         try:
             server.login(user, password)
-        except smtplib.SMTPException, e:
-            print "Exception = %s" % e
+        except smtplib.SMTPException as detail:
+            self.logger.log("Exception: {}".format(detail))
 
         self.assertFalse(errorOccurred, "No errors occurred during SMTP setup.")
 
@@ -83,7 +84,8 @@ class TestMECONotifier(unittest.TestCase):
 
         if SEND_EMAIL:
             body = "Test message"
-            testDataPath = self.configer.configOptionValue('Testing', 'test_data_path')
+            testDataPath = self.configer.configOptionValue('Testing',
+                                                           'test_data_path')
             file = os.path.join(testDataPath, 'graph.png')
             success = self.notifier.sendMailWithAttachments(body, [file],
                                                             testing = True)
