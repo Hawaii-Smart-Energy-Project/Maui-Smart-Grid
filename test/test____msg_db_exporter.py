@@ -141,7 +141,8 @@ class MSGDBExporterTester(unittest.TestCase):
         self.logger.log("Testing adding reader permissions.")
         self._upload_test_data_to_cloud()
 
-        email = self.configer.configOptionValue('Testing', 'tester_email')
+        email = self.configer.configOptionValue('Testing',
+                                                'tester_email_address')
         service = self.exporter.driveService
         try:
             id_resp = service.permissions().getIdForEmail(
@@ -395,11 +396,13 @@ class MSGDBExporterTester(unittest.TestCase):
 
         # For debugging:
         for item in self.exporter.outdatedFiles(
-                daysBeforeOutdated = datetime.timedelta(days = -1)): self.logger.log(
+                daysBeforeOutdated = datetime.timedelta(
+                        days = -1)): self.logger.log(
             "name: {}, created date: {}".format(item['originalFilename'],
                                                 item['createdDate']), 'debug')
 
-        # Get all the outdated files where outdated is equal to anything uploaded today or later.
+        # Get all the outdated files where outdated is equal to anything
+        # uploaded today or later.
         self.assertTrue(self.exporter.outdatedFiles(
             daysBeforeOutdated = datetime.timedelta(days = -1))[0][
                             'id'] == self.testDataFileID)

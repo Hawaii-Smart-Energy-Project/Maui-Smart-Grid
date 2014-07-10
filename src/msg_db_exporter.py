@@ -378,7 +378,7 @@ class MSGDBExporter(object):
 
         if deleteOutdated:
             self.deleteOutdatedFiles(datetime.timedelta(days = int(
-                self.configer.configOptionValue('Export', 'days_to_keep'))))
+                self.configer.configOptionValue('Export', 'export_days_to_keep'))))
 
         return uploaded if noErrors else None
 
