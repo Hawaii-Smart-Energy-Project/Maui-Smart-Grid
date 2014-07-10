@@ -40,7 +40,7 @@ class MECODataAutoloader(object):
         """
 
         autoloadPath = self.configer.configOptionValue('MECO Autoload',
-                                                       'meco_autoload_data_path')
+                                                       'meco_autoload_new_data_path')
         if not self.fileUtil.validDirectory(autoloadPath):
             raise Exception('InvalidDirectory', '%s' % autoloadPath)
 
@@ -63,7 +63,7 @@ class MECODataAutoloader(object):
         """
 
         autoloadPath = self.configer.configOptionValue('MECO Autoload',
-                                                       'meco_autoload_data_path')
+                                                       'meco_autoload_new_data_path')
         command = self.configer.configOptionValue('MECO Autoload',
                                                   'meco_autoload_command')
         os.chdir(autoloadPath)
@@ -80,7 +80,7 @@ class MECODataAutoloader(object):
         """
 
         autoloadPath = self.configer.configOptionValue('MECO Autoload',
-                                                       'meco_autoload_data_path')
+                                                       'meco_autoload_new_data_path')
         archivePath = self.configer.configOptionValue('MECO Autoload',
                                                       'meco_autoload_archive_path')
         patterns = ['*.gz']
