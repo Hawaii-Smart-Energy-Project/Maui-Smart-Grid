@@ -247,8 +247,7 @@ class MSGDataAggregator(object):
                                                            self.tables[
                                                                aggDataType],
                                                            timeColumnName,
-                                                           self
-                                                           .lastAggregationEndpoint(
+                                                           self.lastAggregationEndpoint(
                                                                aggDataType,
                                                                timeColumnName)))])))])
 
@@ -652,6 +651,9 @@ class MSGDataAggregator(object):
         """
         Return first date and last date for the given **raw** data type for each
         month in the data's entire time range.
+
+        The end date is incremented by on aggregation period to account for
+        the data obtained at time 00:00.
 
         :param timeColumnName: string
         :param dataType: string
