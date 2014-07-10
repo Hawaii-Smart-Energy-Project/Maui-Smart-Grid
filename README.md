@@ -185,7 +185,7 @@ The reference template can be found in `config/sample-dot-msg-data-operations.cf
     plot_path = ${PLOT_PATH}
     
     [MECO Autoload]
-    meco_autoload_data_path = ${MECO_AUTOLOAD_DATA_PATH}
+    meco_autoload_new_data_path = ${MECO_AUTOLOAD_NEW_DATA_PATH}
     meco_autoload_archive_path = ${MECO_AUTOLOAD_ARCHIVE_PATH}
     meco_autoload_failures_path = ${MECO_AUTOLOAD_FAILURE_PATH}
 
