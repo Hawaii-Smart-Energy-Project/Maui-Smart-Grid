@@ -182,74 +182,90 @@ The reference template can be found in `config/sample-dot-msg-data-operations.cf
     
     [Data Paths]
     # Plot path is where plots will be saved.
-    plot_path=${PLOT_PATH}
+    plot_path = ${PLOT_PATH}
     
     [MECO Autoload]
-    # These are paths related to MECO data autoloading.
-    meco_new_data_path=${AUTOLOAD_DATA_PATH}
-    Example: /usr/local/smb-share/MECO-DATA-AUTOLOAD
+    meco_autoload_data_path = ${MECO_AUTOLOAD_DATA_PATH}
+    meco_autoload_archive_path = ${MECO_AUTOLOAD_ARCHIVE_PATH}
+    meco_autoload_failures_path = ${MECO_AUTOLOAD_FAILURE_PATH}
 
-    meco_autoload_archive_path=${AUTOLOAD_ARCHIVE_PATH}
-    ## Example: /usr/local/smb-share/.MECO-AUTOLOAD-ARCHIVE
-
-    meco_autoload_failures_path=${AUTOLOAD_FAILURE_PATH}
-    ## Example: /usr/local/smb-share/.MECO-AUTOLOAD-FAILURES
-
-    data_load_command=${COMMAND_USED_FOR_INSERTING_MECO_DATA}
-    ## Example: python ~/Maui-Smart-Grid-1.0.0/bin/insertMECOEnergyData.py --email > insert.log
+    ## Shell command. Example: python ~/Maui-Smart-Grid-1.0.0/bin/insertMECOEnergyData.py --email > insert.log
+    meco_autoload_command = ${MECO_AUTOLOAD_COMMAND}
 
     [Executable Paths]
-    bin_path=${MECO_BIN_DIR}
     ## Example: ~/Maui-Smart-Grid-1.0.0/bin
+    msg_bin_path = ${MSG_BIN_PATH}
     
     [Notifications]
-    email_fromaddr=${EMAIL_ADDRESS}
-    email_username=${EMAIL_USERNAME}
-    email_password=${EMAIL_PASSWORD}
-    email_recipients=${COMMA_SEPARATED_EMAIL_RECIPIENTS}
-    testing_email_recipients=${COMMA_SEPARATED_EMAIL_RECIPIENTS}
-    email_smtp_server=${SMTP_SERVER_AND_PORT}
+    email_from_address = ${EMAIL_FROM_ADDRESS}
+    email_username = ${EMAIL_USERNAME}
+    email_password = ${EMAIL_PASSWORD}
+
+    # Comma-separated lists:
+    email_recipients = ${EMAIL_RECIPIENTS}
+    testing_email_recipients = ${TESTING_EMAIL_RECIPIENTS}
+
+    smtp_server_and_port = ${SMTP_SERVER_AND_PORT}
     
     [Weather Data]
     
-    ## Example URL: http://cdo.ncdc.noaa.gov/qclcd_ascii/
-    weather_data_url=${WEATHER_DATA_URL}
+    ## URL. Example: http://cdo.ncdc.noaa.gov/qclcd_ascii/
+    weather_data_url = ${WEATHER_DATA_URL}
     
-    ## Example pattern: <A HREF=".*?">(QCLCD(201208|201209|201210|201211|201212|2013).*?)</A>
-    weather_data_pattern=${WEATHER_DATA_PATTERN}
+    ## Pattern. Example: <A HREF=".*?">(QCLCD(201208|201209|201210|201211|201212|2013|2014|2015).*?)</A>
+    weather_data_pattern = ${WEATHER_DATA_PATTERN}
     
-    weather_data_path=${WEATHER_DATA_PATH}
+    weather_data_path = ${WEATHER_DATA_PATH}
     
     [Export]
-    db_export_path=/home/daniel/msg-db-dumps
-    dbs_to_export=${DATABASE_NAME}
-    ## Example: meco_v3
+    db_export_work_path = ${DB_EXPORT_WORK_PATH}
+    db_export_final_path = ${DB_EXPORT_FINAL_PATH}
+    export_test_data_path = ${EXPORT_TEST_DATA_PATH}
 
-    google_api_client_id=${GOOGLE_CLIENT_ID}
-    google_api_client_secret=${GOOGLE_CLIENT_SECRET}
-    google_api_credentials_path=${GOOGLE_CLIENT_CREDENTIALS_PATH}
-    days_to_keep=${NUMBER_OF_DAYS_OF_EXPORTS_TO_KEEP}
-    read_permission=${EMAIL_ADDRESSES_TO_GRANT_READER_PERMISSION}
-    max_bytes_before_split=${NUM_BYTES}
-    num_split_sections=${NUM_FILES}
+    ## List of DBs. Example: meco_v3
+    dbs_to_export = ${DBS_TO_EXPORT}
+
+    google_api_client_id = ${GOOGLE_API_CLIENT_ID}
+    google_api_client_secret = ${GOOGLE_API_CLIENT_SECRET}
+    google_api_credentials_path = ${GOOGLE_API_CREDENTIALS_PATH}
+
+    # Int for number of days to keep before considered as outdated.
+    export_days_to_keep = ${EXPORT_DAYS_TO_KEEP}
+
+    reader_permission_email_addresses = ${READER_PERMISSION_EMAIL_ADDRESSES}
+    max_bytes_before_split = ${MAX_BYTES_BEFORE_SPLIT}
+    db_export_exclusions = ${DB_EXPORT_EXCLUSIONS}
+    export_history_table = ${EXPORT_HISTORY_TABLE}
+    export_retry_count = ${EXPORT_RETRY_COUNT}
+    export_list_post_url = ${EXPORT_LIST_POST_URL}
 
     [Database]
-    db_password=${PASSWORD}
-    db_host=${IP_ADDRESS_OR_HOSTNAME}
-    db_port=${DB_PORT}
-    db_username=${DB_USERNAME}
-
-    ## The name of the database that will be used by automated operations.
-    db_name=${DB_NAME}
+    db_password = ${DB_PASSWORD}
+    db_host = ${DB_HOST}
+    db_port = ${DB_PORT}
+    db_username = ${DB_USERNAME}
+    db_name = ${DB_NAME}
     
     ## The name of the databased used for testing operations.
-    testing_db_name=${TESTING_DB_NAME}
+    testing_db_name = ${TESTING_DB_NAME}
     
     [Hardware]
     multiprocessing_limit = ${MULTIPROCESSING_LIMIT}
 
     [Testing]
-    tester_email=${EMAIL_ADDRESS}
+    tester_email_address = ${TESTER_EMAIL_ADDRESS}
+    export_test_data_path = ${EXPORT_TEST_DATA_PATH}
+    test_data_path = ${TEST_DATA_PATH}
+
+    [Aggregation]
+    irradiance_table = ${IRRADIANCE_TABLE}
+    agg_irradiance_table = ${AGG_IRRADIANCE_TABLE}
+    weather_table = ${WEATHER_TABLE}
+    agg_weather_table = ${AGG_WEATHER_TABLE}
+    circuit_table = ${CIRCUIT_TABLE}
+    agg_circuit_table = ${AGG_CIRCUIT_TABLE}
+    egauge_table = ${EGAUGE_TABLE}
+    agg_egauge_table = ${AGG_EGAUGE_TABLE}
 
 ### MSG eGauge Service Configuration ###
 
