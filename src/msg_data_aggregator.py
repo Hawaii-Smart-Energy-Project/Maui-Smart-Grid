@@ -682,9 +682,6 @@ class MSGDataAggregator(object):
                                                23, 59, 59))))
             i += 1
 
-        for j in startEndDatesTransform:
-            print j
-
         return startEndDatesTransform
 
 

@@ -209,25 +209,28 @@ class MSGDataAggregatorTester(unittest.TestCase):
         @todo Parse the results to determine test success.
         """
 
-        # for myType in ['weather', 'egauge', 'circuit', 'irradiance']:
-        for myType in ['egauge']:
+        def test_starts(timeColName, dataType):
+
+            self.logger.log('testing {},{}'.format(timeColName, dataType))
+            # Take every other value from the unzipped pairs.
+            starts = [x for x in itertools.islice(
+                zip(*self.aggregator.monthStartsAndEnds(timeColName, dataType)),
+                0, None, 2)]
+
+            pprint(starts)
+
+            # Test on the flattened start values.
+            self.assertLessEqual(len(filter(
+                lambda x: x.time() != datetime.strptime('00:00',
+                                                        '%H:%M').time(),
+                list(itertools.chain.from_iterable(starts)))), 1)
+
+        for myType in ['weather', 'egauge', 'circuit', 'irradiance']:
+            # for myType in ['egauge']:
             if myType == 'egauge':
-
-                # Take every other value.
-                starts = [x for x in itertools.islice(zip(
-                    *self.aggregator.monthStartsAndEnds(
-                        timeColumnName = 'datetime', dataType = myType)), 0,
-                                                      None, 2)]
-
-                pprint(datetime.strptime('00:00', '%H:%M').time())
-
-                # Test on the flattened starts.
-                self.assertEquals(len(filter(
-                    lambda x: x.time() != datetime.strptime('00:00',
-                                                            '%H:%M').time(),
-                    list(itertools.chain.from_iterable(starts)))), 1)
+                test_starts('datetime', myType)
             else:
-                pass
+                test_starts('timestamp', myType)
 
 
     def testAggregateAllData(self):
