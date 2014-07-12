@@ -104,17 +104,18 @@ class MSGDataAggregator(object):
 
         # tables[datatype] gives the table name for datatype.
         self.tables = {
-            t: self.configer.configOptionValue(section, '%s_table' % t) for t in
-            tableList}
+            t: self.configer.configOptionValue(section, '{}_table'.format(t))
+            for t in tableList}
 
         for t in self.tables.keys():
-            self.logger.log('t:%s' % t, 'DEBUG')
+            self.logger.log('t:{}'.format(t), 'DEBUG')
             try:
                 self.columns[t] = self.dbUtil.columnsString(self.cursor,
                                                             self.tables[t])
             except TypeError as error:
-                self.logger.log('Ignoring missing table: Error is %s.' % error,
-                                'error')
+                self.logger.log(
+                    'Ignoring missing table: Error is {}.'.format(error),
+                    'error')
 
     def existingIntervals(self, aggDataType = '', timeColumnName = ''):
         """
@@ -307,7 +308,7 @@ class MSGDataAggregator(object):
         :returns: DB result set.
         """
 
-        self.logger.log('sql: %s' % sql, 'debug')
+        self.logger.log('sql: {}'.format(sql), 'debug')
         self.dbUtil.executeSQL(self.cursor, sql)
         return self.cursor.fetchall()
 
@@ -329,11 +330,10 @@ class MSGDataAggregator(object):
 
         orderBy = filter(None, orderBy)
 
-        return self.rows("""SELECT %s FROM "%s" WHERE %s BETWEEN '%s' AND
-        '%s' ORDER BY
-            %s""" % (
-            self.columns[dataType], self.tables[dataType], timestampCol,
-            startDate, endDate, ','.join(orderBy)))
+        return self.rows("""SELECT {} FROM "{}" WHERE {} BETWEEN '{}' AND
+        '{}' ORDER BY %s""".format(self.columns[dataType],
+                                   self.tables[dataType], timestampCol,
+                                   startDate, endDate, ','.join(orderBy)))
 
 
     def subkeys(self, dataType = '', timestampCol = '', subkeyCol = '',
@@ -352,11 +352,10 @@ class MSGDataAggregator(object):
         :returns: List of subkeys
         """
 
-        return [sk[0] for sk in self.rows("""SELECT DISTINCT(%s) FROM "%s"
-        WHERE %s BETWEEN '%s' AND '%s'
-            ORDER BY %s""" % (
-            subkeyCol, self.tables[dataType], timestampCol, startDate, endDate,
-            subkeyCol))]
+        return [sk[0] for sk in self.rows("""SELECT DISTINCT({}) FROM "{}"
+        WHERE {} BETWEEN '{}' AND '{}'
+            ORDER BY {}""".format(subkeyCol, self.tables[dataType],
+                                  timestampCol, startDate, endDate, subkeyCol))]
 
 
     def insertAggregatedData(self, agg = None):
@@ -370,8 +369,8 @@ class MSGDataAggregator(object):
         if not agg.data:
             raise Exception('agg data not defined.')
 
-        self.logger.log('agg data: %s' % agg.data)
-        self.logger.log('agg data type: %s' % type(agg.data))
+        self.logger.log('agg data: {}'.format(agg.data))
+        self.logger.log('agg data type: {}'.format(type(agg.data)))
 
         def __insertData(values = ''):
             """
@@ -382,7 +381,7 @@ class MSGDataAggregator(object):
             success = True
             sql = 'INSERT INTO "{0}" ({1}) VALUES( {2})'.format(
                 self.tables[agg.aggregationType], ','.join(agg.columns), values)
-            self.logger.log('sql: %s' % sql, 'debug')
+            self.logger.log('sql: {}'.format(sql), 'debug')
             success = self.dbUtil.executeSQL(self.cursor, sql,
                                              exitOnFail = self.exitOnError)
             if self.commitOnEveryInsert:
@@ -438,7 +437,7 @@ class MSGDataAggregator(object):
                     valCnt += 1
                 __insertData(values = values)
             else:
-                self.logger.log('row = %s' % row, 'error')
+                self.logger.log('row = {}'.format(row), 'error')
                 raise Exception('Row type not matched.')
 
         # End for row.
@@ -468,7 +467,7 @@ class MSGDataAggregator(object):
             myAvgs[subkey] = []
             sumIndex = 0
 
-            self.logger.log('key: %s' % subkey, 'debug')
+            self.logger.log('key: {}'.format(subkey), 'debug')
             # Iterate over sums.
             for s in sums[subkey]:
                 if sumIndex == timestampIndex:
@@ -479,8 +478,8 @@ class MSGDataAggregator(object):
                     if cnts[subkey][sumIndex] != 0:
                         if not reportedAgg:
                             self.logger.log(
-                                'Aggregating %d rows of data.' % cnts[subkey][
-                                    sumIndex], 'debug')
+                                'Aggregating {} rows of data.'.format(
+                                    cnts[subkey][sumIndex]), 'debug')
                             reportedAgg = True
 
                         myAvgs[subkey].append(s / cnts[subkey][sumIndex])
@@ -499,8 +498,8 @@ class MSGDataAggregator(object):
                     if cnts[sumIndex] != 0:
                         if not reportedAgg:
                             self.logger.log(
-                                'Aggregating %d rows of data.' % cnts[sumIndex],
-                                'debug')
+                                'Aggregating {} rows of data.'.format(
+                                    cnts[sumIndex]), 'debug')
                             reportedAgg = True
                         myAvgs.append(s / cnts[sumIndex])
                     else:
@@ -661,8 +660,11 @@ class MSGDataAggregator(object):
         """
 
         self.logger.log('datatype {}'.format(dataType), 'debug')
-        (start, end) = self.rows("""SELECT MIN(%s), MAX(%s) FROM \"%s\"""" % (
-            timeColumnName, timeColumnName, self.tables[dataType]))[0]
+        (start, end) = self.rows(
+            """SELECT MIN({}), MAX({}) FROM \"{}\"""".format(timeColumnName,
+                                                             timeColumnName,
+                                                             self.tables[
+                                                                 dataType]))[0]
         self.logger.log('start {}'.format(start))
         self.logger.log('end {}'.format(end))
 
@@ -716,7 +718,7 @@ class MSGDataAggregator(object):
                                      subkeyCol = subkeyColumnName,
                                      startDate = startDate, endDate = endDate)
 
-        self.logger.log('subkeys: %s' % mySubkeys, 'debug')
+        self.logger.log('subkeys: {}'.format(mySubkeys), 'debug')
 
         def __initSumAndCount(subkey = None, sums = None, cnts = None):
             """
@@ -766,7 +768,8 @@ class MSGDataAggregator(object):
             """
 
             subkeysToCheck = copy.copy(mySubkeys)
-            self.logger.log('subkeys to check: %s' % subkeysToCheck, 'debug')
+            self.logger.log('subkeys to check: {}'.format(subkeysToCheck),
+                            'debug')
 
             if mySubkeys:
                 for row in self.rawData(dataType = dataType,
@@ -800,7 +803,7 @@ class MSGDataAggregator(object):
                         else:
                             raise Exception(
                                 'Unable to determine next minute crossing')
-                        self.logger.log('next min crossing for %s = %s' % (
+                        self.logger.log('next min crossing for {} = {}'.format(
                             row[ci(subkeyColumnName)],
                             self.nextMinuteCrossing[row[ci(subkeyColumnName)]]),
                                         'debug')
@@ -829,7 +832,7 @@ class MSGDataAggregator(object):
                     else:
                         raise Exception(
                             'Unable to determine next minute crossing')
-                    self.logger.log('next min crossing = %s' % (
+                    self.logger.log('next min crossing = {}'.format(
                         self.nextMinuteCrossingWithoutSubkeys), 'debug')
                     rowCnt += 1
                     if rowCnt > 0:
@@ -857,14 +860,14 @@ class MSGDataAggregator(object):
 
                     # Perform aggregation on all of the previous data including
                     # the current data for the current subkey.
-                    self.logger.log('key: %s' % row[ci(subkeyColumnName)],
+                    self.logger.log('key: {}'.format(row[ci(subkeyColumnName)]),
                                     'debug')
                     aggData += [
                         self.intervalAverages(sum, cnt, row[ci(timeColumnName)],
                                               ci(timeColumnName),
                                               ci(subkeyColumnName),
                                               row[ci(subkeyColumnName)])]
-                    self.logger.log('minute crossed %d' % minuteCrossed,
+                    self.logger.log('minute crossed {}'.format(minuteCrossed),
                                     'DEBUG')
 
                     # Init current sum and cnt for subkey that has a completed
@@ -889,7 +892,7 @@ class MSGDataAggregator(object):
 
             rowCnt += 1
 
-        self.logger.log('aggdata = %s' % aggData, 'debug')
+        self.logger.log('aggdata = {}'.format(aggData), 'debug')
         return MSGAggregatedData(aggregationType = aggregationType,
                                  columns = self.columns[dataType].split(','),
                                  data = aggData)
