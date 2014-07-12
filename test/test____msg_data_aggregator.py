@@ -11,6 +11,8 @@ import unittest
 from msg_logger import MSGLogger
 from msg_data_aggregator import MSGDataAggregator
 from datetime import datetime
+import itertools
+from pprint import pprint
 
 
 class MSGDataAggregatorTester(unittest.TestCase):
@@ -195,20 +197,37 @@ class MSGDataAggregatorTester(unittest.TestCase):
         self.aggregator.insertAggregatedData(agg = agg)
 
 
-    def testMonthStartsAndEnds(self):
+    def test_month_starts_and_ends(self):
         """
         Test retrieving the list of start and end dates for each month in a
         given aggregation time period.
-        :return:
+
+        All starts except one should be at time 00:00.
+
+        Starts and ends appear in alternating order but are joined in a tuple.
+
+        @todo Parse the results to determine test success.
         """
 
-        for myType in ['weather', 'egauge', 'circuit', 'irradiance']:
+        # for myType in ['weather', 'egauge', 'circuit', 'irradiance']:
+        for myType in ['egauge']:
             if myType == 'egauge':
-                print self.aggregator.monthStartsAndEnds(
-                    timeColumnName = 'datetime', dataType = myType)
+
+                # Take every other value.
+                starts = [x for x in itertools.islice(zip(
+                    *self.aggregator.monthStartsAndEnds(
+                        timeColumnName = 'datetime', dataType = myType)), 0,
+                                                      None, 2)]
+
+                pprint(datetime.strptime('00:00', '%H:%M').time())
+
+                # Test on the flattened starts.
+                self.assertEquals(len(filter(
+                    lambda x: x.time() != datetime.strptime('00:00',
+                                                            '%H:%M').time(),
+                    list(itertools.chain.from_iterable(starts)))), 1)
             else:
-                print self.aggregator.monthStartsAndEnds(
-                    timeColumnName = 'timestamp', dataType = myType)
+                pass
 
 
     def testAggregateAllData(self):
@@ -299,7 +318,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
 
     def testAggregateNewData(self):
         """
-        @IMPORTANT Should not be run on live data if testing.
+        @IMPORTANT Should not be run on live data.
         :return:
         """
 
@@ -327,21 +346,7 @@ if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
-
-        selected_tests = ['testWeatherAggregation', 'testEgaugeAggregation',
-                          'testIrradianceAggregation',
-                          'testCircuitAggregation'], ['testExistingIntervals']
-        # selected_tests = ['testAggregateAllData']
-        selected_tests = ['testUnaggregatedIntervals1']
-        selected_tests = ['testUnaggregatedDataExists']
-        selected_tests = ['testAggregateNewData']
-        selected_tests = ['testLastUnaggregatedAndAggregatedEndpoints',
-                          'testAggregateNewData']
-        selected_tests = ['testMonthStartsAndEnds']
-        selected_tests = ['testAggregateNewData']
-        # selected_tests = ['test_endpoint_increment']
-        # selected_tests = ['testLastUnaggregatedAndAggregatedEndpoints']
-
+        selected_tests = ['test_month_starts_and_ends']
         mySuite = unittest.TestSuite()
 
         for t in selected_tests:
