@@ -202,35 +202,56 @@ class MSGDataAggregatorTester(unittest.TestCase):
         Test retrieving the list of start and end dates for each month in a
         given aggregation time period.
 
-        All starts except one should be at time 00:00.
+        All starts except one should be at time 00:00:00.
 
         Starts and ends appear in alternating order but are joined in a tuple.
-
-        @todo Parse the results to determine test success.
         """
+        # @REVIEWED
+        # @todo Optimize by combine start and end tests.
+
+        startCnt = 0
+        endCnt = 0
 
         def test_starts(timeColName, dataType):
-
+            global startCnt
             self.logger.log('testing {},{}'.format(timeColName, dataType))
+
             # Take every other value from the unzipped pairs.
             starts = [x for x in itertools.islice(
                 zip(*self.aggregator.monthStartsAndEnds(timeColName, dataType)),
                 0, None, 2)]
-
-            pprint(starts)
+            startCnt = len(starts)
 
             # Test on the flattened start values.
             self.assertLessEqual(len(filter(
-                lambda x: x.time() != datetime.strptime('00:00',
-                                                        '%H:%M').time(),
+                lambda x: x.time() != datetime.strptime('00:00:00',
+                                                        '%H:%M:%S').time(),
                 list(itertools.chain.from_iterable(starts)))), 1)
 
+        def test_ends(timeColName, dataType):
+            global endCnt
+            self.logger.log('testing {},{}'.format(timeColName, dataType))
+
+            # Take every other value from the unzipped pairs.
+            ends = [x for x in itertools.islice(
+                zip(*self.aggregator.monthStartsAndEnds(timeColName, dataType)),
+                1, None, 2)]
+            endCnt = len(ends)
+
+            # Test on the flattened end values.
+            self.assertLessEqual(len(filter(
+                lambda x: x.time() != self.aggregator.incrementEndpoint(
+                    datetime.strptime('23:59:59', '%H:%M:%S')).time(),
+                list(itertools.chain.from_iterable(ends)))), 1)
+
         for myType in ['weather', 'egauge', 'circuit', 'irradiance']:
-            # for myType in ['egauge']:
             if myType == 'egauge':
                 test_starts('datetime', myType)
+                test_ends('datetime', myType)
             else:
                 test_starts('timestamp', myType)
+                test_ends('timestamp', myType)
+            self.assertEquals(startCnt, endCnt)
 
 
     def testAggregateAllData(self):
