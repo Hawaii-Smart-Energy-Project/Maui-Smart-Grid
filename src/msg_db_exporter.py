@@ -597,6 +597,7 @@ class MSGDBExporter(object):
 
         outdated = self.outdatedFiles(maxAge)
 
+        """:type : dict"""
         for f in outdated:
             self.deleteFile(f['id'])
 
