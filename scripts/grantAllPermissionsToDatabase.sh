@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# @DEPRECATED in favor of grantAllPermissionsToDatabases.sh
+#
 # Grant permissions, to sepgroup and sepgroupreadonly, on a given database using the superuser role.
 #
 # Usage: grantAllPermissionsToDatabase.sh ${DATABASE_NAME}
