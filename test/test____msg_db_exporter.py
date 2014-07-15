@@ -409,6 +409,14 @@ class MSGDBExporterTester(unittest.TestCase):
 
         self.logger.log('-----')
 
+
+    def test_delete_outdated(self):
+        """
+        TBW
+        """
+        pass
+
+
     def tearDown(self):
         """
         Delete all test items.
@@ -503,7 +511,7 @@ if __name__ == '__main__':
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        # selected_tests = ['test_outdated_files']
+        # selected_tests = ['test_delete_outdated']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:

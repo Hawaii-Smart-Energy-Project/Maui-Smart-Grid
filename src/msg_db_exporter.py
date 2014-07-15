@@ -33,6 +33,7 @@ import sys
 from msg_python_util import MSGPythonUtil
 from msg_notifier import MSGNotifier
 
+
 NOTIFICATION_HISTORY_TYPE = 'MSG_DB_EXPORTER'
 
 
@@ -378,7 +379,8 @@ class MSGDBExporter(object):
 
         if deleteOutdated:
             self.deleteOutdatedFiles(datetime.timedelta(days = int(
-                self.configer.configOptionValue('Export', 'export_days_to_keep'))))
+                self.configer.configOptionValue('Export',
+                                                'export_days_to_keep'))))
 
         return uploaded if noErrors else None
 
@@ -592,8 +594,13 @@ class MSGDBExporter(object):
         """
 
         # @todo Return count of actual successfully deleted files.
-        map(self.deleteFile, self.outdatedFiles(maxAge))
-        return len(self.outdatedFiles(maxAge))
+
+        outdated = self.outdatedFiles(maxAge)
+
+        for f in outdated:
+            self.deleteFile(f['id'])
+
+        return len(outdated)
 
 
     def outdatedFiles(self,
@@ -606,8 +613,6 @@ class MSGDBExporter(object):
         Not sure why this isn't represented as zero. Perhaps to avoid a false
         evaluation of a predicate on a tdelta.
 
-        :param minAge: datetime.timedelta of the minimum age before a file is
-        considered outdated. (@DEPRECATED)
         :param daysBeforeOutdated: datetime.timedelta where the value
         indicates that outdated files that have an age greater than this
         parameter.
