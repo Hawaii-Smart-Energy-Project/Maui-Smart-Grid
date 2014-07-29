@@ -331,7 +331,7 @@ class MSGDataAggregator(object):
         orderBy = filter(None, orderBy)
 
         return self.rows("""SELECT {} FROM "{}" WHERE {} BETWEEN '{}' AND
-        '{}' ORDER BY %s""".format(self.columns[dataType],
+        '{}' ORDER BY {}""".format(self.columns[dataType],
                                    self.tables[dataType], timestampCol,
                                    startDate, endDate, ','.join(orderBy)))
 
