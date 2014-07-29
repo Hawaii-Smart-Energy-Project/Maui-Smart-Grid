@@ -20,8 +20,11 @@ class MSGTypesTester(unittest.TestCase):
     def setUp(self):
         self.logger = MSGLogger(__name__, 'DEBUG')
 
-    def test_types(self):
-        self.assertEquals(len(MSGAggregationTypes), 4)
+    def test_aggregation_types(self):
+        self.assertTrue(MSGAggregationTypes.weather in MSGAggregationTypes)
+        self.assertTrue(MSGAggregationTypes.egauge in MSGAggregationTypes)
+        self.assertTrue(MSGAggregationTypes.circuit in MSGAggregationTypes)
+        self.assertTrue(MSGAggregationTypes.irradiance in MSGAggregationTypes)
 
     def tearDown(self):
         pass
@@ -32,7 +35,7 @@ if __name__ == '__main__':
 
     if RUN_SELECTED_TESTS:
 
-        selected_tests = ['test_types']
+        selected_tests = ['test_aggregation_types']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
