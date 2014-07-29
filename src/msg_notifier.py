@@ -20,6 +20,7 @@ from email import Encoders
 from msg_logger import MSGLogger
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
+from msg_types import MSGNotificationHistoryTypes
 
 
 class MSGNotifier(object):
@@ -215,17 +216,22 @@ class MSGNotifier(object):
         return errorOccurred
 
 
-    def recordNotificationEvent(self, noticeType = ''):
+    def recordNotificationEvent(self, noticeType = None):
         """
         Save a notification event to the notification history.
         :param table: String
-        :param noticeType: String
+        :param noticeType: <enum 'MSGNotificationHistoryTypes'>
         :returns: Boolean
         """
 
+        if not noticeType:
+            return False
+        if not noticeType in MSGNotificationHistoryTypes:
+            return False
+
         cursor = self.cursor
         sql = """INSERT INTO "{}" ("notificationType", "notificationTime")
-        VALUES ('{}', NOW())""".format(self.noticeTable, noticeType)
+        VALUES ('{}', NOW())""".format(self.noticeTable, noticeType.name)
         success = self.dbUtil.executeSQL(cursor, sql)
         self.conn.commit()
         if not success:

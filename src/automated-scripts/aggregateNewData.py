@@ -12,8 +12,10 @@ from msg_data_aggregator import MSGDataAggregator
 from msg_notifier import MSGNotifier
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
+from msg_types import MSGNotificationHistoryTypes
 
 NOTIFICATION_HISTORY_TYPE = 'MSG_DATA_AGGREGATOR'
+
 
 class NewDataAggregator(object):
     """
@@ -69,7 +71,7 @@ class NewDataAggregator(object):
             msgBody += '\n\n'
         self.notifier.sendNotificationEmail(msgBody, testing = testing)
         self.notifier.recordNotificationEvent(
-            noticeType = NOTIFICATION_HISTORY_TYPE)
+            MSGNotificationHistoryTypes.msg_data_aggregator)
 
 
     def aggregateNewData(self):
