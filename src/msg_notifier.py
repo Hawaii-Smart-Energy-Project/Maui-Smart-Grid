@@ -238,19 +238,25 @@ class MSGNotifier(object):
             raise Exception('Exception while saving the notification time.')
         return success
 
-    def lastReportDate(self, notificationType = ''):
+    def lastReportDate(self, noticeType = None):
         """
         Get the last time a notification was reported for the given
-        notificationType.
+        noticeType.
 
-        :param notificationType: String indicating the type of the
+        :param noticeType: String indicating the type of the
         notification. It is stored in the event history.
         :returns: datetime of last report date.
         """
 
+        if not noticeType:
+            raise Exception('Invalid notice type.')
+        if not noticeType in MSGNotificationHistoryTypes:
+            raise Exception('Invalid notice type.')
+
         cursor = self.cursor
+        # @todo Verify dependendency on case for notice type when perform SELECT.
         sql = """SELECT MAX("notificationTime") FROM "{}" WHERE
-        "notificationType" = '{}'""".format(self.noticeTable, notificationType)
+        "noticeType" = '{}'""".format(self.noticeTable, noticeType.name)
 
         success = self.dbUtil.executeSQL(cursor, sql)
         if success:

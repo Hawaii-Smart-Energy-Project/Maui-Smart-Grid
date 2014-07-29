@@ -14,9 +14,6 @@ from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 from msg_types import MSGNotificationHistoryTypes
 
-NOTIFICATION_HISTORY_TYPE = 'MSG_DATA_AGGREGATOR'
-
-
 class NewDataAggregator(object):
     """
     Perform aggregation of new data for a set of predefined data types (self
@@ -49,7 +46,8 @@ class NewDataAggregator(object):
 
         self.logger.log('result {}'.format(result), 'debug')
 
-        lastReportDate = self.notifier.lastReportDate(NOTIFICATION_HISTORY_TYPE)
+        lastReportDate = self.notifier.lastReportDate(
+            MSGNotificationHistoryTypes.MSG_DATA_AGGREGATOR)
 
         if not lastReportDate:
             lastReportDate = "never"
@@ -71,7 +69,7 @@ class NewDataAggregator(object):
             msgBody += '\n\n'
         self.notifier.sendNotificationEmail(msgBody, testing = testing)
         self.notifier.recordNotificationEvent(
-            MSGNotificationHistoryTypes.msg_data_aggregator)
+            MSGNotificationHistoryTypes.MSG_DATA_AGGREGATOR)
 
 
     def aggregateNewData(self):
@@ -89,7 +87,7 @@ class NewDataAggregator(object):
 if __name__ == '__main__':
     aggregator = NewDataAggregator()
     logger = MSGLogger(__name__)
-    logger.log('Last report date {}'.format(
-        aggregator.notifier.lastReportDate(NOTIFICATION_HISTORY_TYPE)))
+    logger.log('Last report date {}'.format(aggregator.notifier.lastReportDate(
+        MSGNotificationHistoryTypes.MSG_DATA_AGGREGATOR)))
     result = aggregator.aggregateNewData()
     aggregator.sendNewDataNotification(result = result, testing = False)

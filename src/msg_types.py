@@ -24,6 +24,6 @@ class MSGNotificationHistoryTypes(Enum):
     """
     Types for the notification history.
     """
-    msg_db_exporter = 1
-    msg_data_aggregator = 2
-    msg_export_summary = 3
+    MSG_DB_EXPORTER = 1
+    MSG_DATA_AGGREGATOR = 2
+    MSG_EXPORT_SUMMARY = 3
