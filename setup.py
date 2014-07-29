@@ -80,7 +80,8 @@ setup(name = 'Maui-Smart-Grid', version = '1.0.0',
                     'msg_noaa_weather_data_util',
                     'msg_notifier',
                     'msg_python_util',
-                    'msg_time_util'
+                    'msg_time_util',
+                    'msg_types'
       ],
 
       scripts = [
