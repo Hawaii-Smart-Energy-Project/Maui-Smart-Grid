@@ -9,6 +9,7 @@ __license__ = 'https://raw.github' \
 
 from enum import Enum
 
+
 class MSGAggregationTypes(Enum):
     """
     Types for aggregation.
@@ -19,3 +20,10 @@ class MSGAggregationTypes(Enum):
     irradiance = 4
 
 
+class MSGNotificationHistoryTypes(Enum):
+    """
+    Types for the notification history.
+    """
+    msg_db_exporter = 1
+    msg_data_aggregator = 2
+    msg_export_summary = 3
