@@ -13,6 +13,8 @@ from msg_notifier import MSGNotifier
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 from msg_types import MSGNotificationHistoryTypes
+from msg_types import MSGAggregationTypes
+
 
 class NewDataAggregator(object):
     """
@@ -27,7 +29,7 @@ class NewDataAggregator(object):
         self.logger = MSGLogger(__name__, 'DEBUG')
         self.aggregator = MSGDataAggregator()
         self.notifier = MSGNotifier()
-        self.rawTypes = ['weather', 'egauge', 'circuit', 'irradiance']
+        self.rawTypes = [x.name for x in list(MSGAggregationTypes)]
         self.connector = MSGDBConnector()
         self.conn = self.connector.connectDB()
         self.cursor = self.conn.cursor()
