@@ -208,7 +208,8 @@ class MSGLogger(object):
                 # The recording buffer is a cumulative copy of the logging
                 # output. At each iteration, the buffer plus the new output is
                 # appended to the list.
-                self.recordingBuffer.append('%s' % (self.ioStream.getvalue()))
+                self.recordingBuffer.append(
+                    '{}'.format((self.ioStream.getvalue())))
                 self.recording = self.recordingBuffer[-1]
 
             for handler in self.logger.handlers:
