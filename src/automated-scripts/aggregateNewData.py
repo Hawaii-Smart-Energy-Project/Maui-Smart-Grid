@@ -13,7 +13,6 @@ from msg_notifier import MSGNotifier
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 
-NOTIFICATION_HISTORY_TABLE = "NotificationHistory"
 NOTIFICATION_HISTORY_TYPE = 'MSG_DATA_AGGREGATOR'
 
 class NewDataAggregator(object):
@@ -36,32 +35,6 @@ class NewDataAggregator(object):
         self.dbUtil = MSGDBUtil()
 
 
-    def lastReportDate(self, notificationType):
-        """
-        Get the last time a notification was reported.
-
-        :param notificationType: string indicating the type of the
-        notification. It is stored in the event history.
-        :returns: datetime of last report date.
-        """
-
-        cursor = self.cursor
-        sql = """SELECT MAX("notificationTime") FROM "{}" WHERE
-        "notificationType" = '{}'""".format(NOTIFICATION_HISTORY_TABLE,
-                                            notificationType)
-
-        success = self.dbUtil.executeSQL(cursor, sql)
-        if success:
-            rows = cursor.fetchall()
-
-            if not rows[0][0]:
-                return None
-            else:
-                return rows[0][0]
-        else:
-            raise Exception('Exception during getting last report date.')
-
-
     def sendNewDataNotification(self, result = None, testing = False):
         """
         Sending notification reporting on new data being available since the
@@ -74,7 +47,7 @@ class NewDataAggregator(object):
 
         self.logger.log('result {}'.format(result), 'debug')
 
-        lastReportDate = self.lastReportDate(NOTIFICATION_HISTORY_TYPE)
+        lastReportDate = self.notifier.lastReportDate(NOTIFICATION_HISTORY_TYPE)
 
         if not lastReportDate:
             lastReportDate = "never"
@@ -115,6 +88,6 @@ if __name__ == '__main__':
     aggregator = NewDataAggregator()
     logger = MSGLogger(__name__)
     logger.log('Last report date {}'.format(
-        aggregator.lastReportDate(NOTIFICATION_HISTORY_TYPE)))
+        aggregator.notifier.lastReportDate(NOTIFICATION_HISTORY_TYPE)))
     result = aggregator.aggregateNewData()
     aggregator.sendNewDataNotification(result = result, testing = False)

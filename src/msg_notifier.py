@@ -42,6 +42,9 @@ class MSGNotifier(object):
     sendMailWithAttachments(msgBody, files = None, testing = False)
         Send msgBody with files attached as a notification to the mailing
         list defined in the config file.
+
+    lastReportDate(notificationType):
+        The last date where a notification of the given type was reported.
     """
 
     def __init__(self):
@@ -228,3 +231,28 @@ class MSGNotifier(object):
         if not success:
             raise Exception('Exception while saving the notification time.')
         return success
+
+    def lastReportDate(self, notificationType = ''):
+        """
+        Get the last time a notification was reported for the given
+        notificationType.
+
+        :param notificationType: String indicating the type of the
+        notification. It is stored in the event history.
+        :returns: datetime of last report date.
+        """
+
+        cursor = self.cursor
+        sql = """SELECT MAX("notificationTime") FROM "{}" WHERE
+        "notificationType" = '{}'""".format(self.noticeTable, notificationType)
+
+        success = self.dbUtil.executeSQL(cursor, sql)
+        if success:
+            rows = cursor.fetchall()
+
+            if not rows[0][0]:
+                return None
+            else:
+                return rows[0][0]
+        else:
+            raise Exception('Exception during getting last report date.')
