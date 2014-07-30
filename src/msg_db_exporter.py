@@ -32,9 +32,7 @@ from msg_db_util import MSGDBUtil
 import sys
 from msg_python_util import MSGPythonUtil
 from msg_notifier import MSGNotifier
-
-
-NOTIFICATION_HISTORY_TYPE = 'MSG_DB_EXPORTER'
+from msg_types import MSGNotificationHistoryTypes
 
 
 class MSGDBExporter(object):
@@ -778,15 +776,25 @@ class MSGDBExporter(object):
         recipients.
         :return:
         """
-        pass
+        self.notifier.recordNotificationEvent(MSGNotificationHistoryTypes.msg_export_summary)
 
-    def recordNotice(self):
-        """
-        Record notification of export summaries.
-        :return:
-        """
-        sql = ''
 
+    def currentExportSummary(self):
+        """
+        Current summary of exports since the last summary report time.
+
+        Summaries are reported with identifier MSG_EXPORT_SUMMARY in the
+        NotificationHistory.
+
+        Includes:
+        * Number of databases exported
+        * Total number of files in the cloud.
+        * A report of available storage capacity.
+        * A link where exports can be accessed.
+
+        :return: String of summary text.
+        """
+        return ''
 
     def __verifyMD5Sum(self, localFilePath, remoteFileID):
         """
@@ -872,8 +880,8 @@ class MSGDBExporter(object):
     def addReaders(self, fileID = None, emailAddressList = None,
                    retryCount = 0):
         """
-        Add reader permission to an export file for the given list of email
-        addresses.
+        Add reader permission to an export file that has been uploaded to the
+        cloud for the given list of email addresses.
 
         Email notification is suppressed by default.
 
