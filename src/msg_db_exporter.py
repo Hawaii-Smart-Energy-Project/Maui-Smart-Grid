@@ -80,6 +80,7 @@ class MSGDBExporter(object):
         self.logger.log("Authorized.", 'info')
 
         self._driveService = build('drive', 'v2', http = http)
+
         return self._driveService
 
 
@@ -115,6 +116,7 @@ class MSGDBExporter(object):
         self._cloudFiles = None
         self.postAgent = 'Maui Smart Grid 1.0.0 DB Exporter'
         self.retryDelay = 10
+        self.availableFilesURL = ''
 
 
     def verifyExportChecksum(self, testing = False):
@@ -548,7 +550,7 @@ class MSGDBExporter(object):
         """
         Get free space from the drive service.
         :param driveService: Object for the drive service.
-        :returns: Int of free space (bytes) on the drive service.
+        :returns: Int of free space (bytes B) on the drive service.
         """
         aboutData = self.driveService.about().get().execute()
         return int(aboutData['quotaBytesTotal']) - int(
@@ -770,13 +772,16 @@ class MSGDBExporter(object):
         return result
 
 
-    def sendExportSummary(self):
+    def sendExportSummary(self, summary = ''):
         """
         Send a summary of exports via email to a preconfigured list of
         recipients.
+        :param summary: String of summary content.
         :return:
         """
-        self.notifier.recordNotificationEvent(MSGNotificationHistoryTypes.msg_export_summary)
+        if self.notifier.sendNotificationEmail(summary):
+            self.notifier.recordNotificationEvent(
+                MSGNotificationHistoryTypes.msg_export_summary)
 
 
     def currentExportSummary(self):
@@ -794,7 +799,45 @@ class MSGDBExporter(object):
 
         :return: String of summary text.
         """
+        lastTime = self.notifier.lastReportDate(
+            MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
+
         return ''
+
+
+    def countOfDBExports(self, since = None):
+        """
+        :param since: datetime indicating last trailing export datetime.
+        :return: Int of count of exports.
+        """
+        myDatetime = lambda x: time.strptime(x, '%Y-%m-%d %H:%S')
+        if not since:
+            since = myDatetime('1900-01-01 00:00')
+        self.logger.log(since.strftime('%Y-%m-%d %H:%M'), 'DEBUG')
+
+        sql = 'SELECT COUNT("public"."NotificationHistory"."notificationTime' \
+              '") FROM "public"."NotificationHistory" WHERE ' \
+              '"notificationTime" > \'{}\' AND "notificationType" = \'{' \
+              '}\''.format(since.strftime('%Y-%m-%d %H:%M'),
+                           MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY.name)
+
+        conn = MSGDBConnector().connectDB()
+        cursor = conn.cursor()
+        dbUtil = MSGDBUtil()
+        rows = None
+        if dbUtil.executeSQL(cursor, sql, exitOnFail = False):
+            rows = cursor.fetchall()
+        assert len(rows) == 1, 'Invalid return value.'
+        return rows[0][0]
+
+
+    def countOfCloudFiles(self):
+        """
+        :param since: datetime indicating last trailing export datetime.
+        :return: Int of count of exports.
+        """
+        return len(self.cloudFiles['items'])
+
 
     def __verifyMD5Sum(self, localFilePath, remoteFileID):
         """

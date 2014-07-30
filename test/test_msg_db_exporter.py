@@ -24,12 +24,14 @@ import re
 from msg_python_util import MSGPythonUtil
 import itertools
 import time
+from msg_time_util import MSGTimeUtil
 
 
 class MSGDBExporterTester(unittest.TestCase):
     """
     Unit tests for the MSG Cloud Exporter.
     """
+
 
     def setUp(self):
         self.logger = MSGLogger(__name__, 'DEBUG')
@@ -44,6 +46,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.fileChunks = []
         self.testDataFileID = ''
         self.pyUtil = MSGPythonUtil()
+        self.timeUtil = MSGTimeUtil()
 
         conn = None
         try:
@@ -62,6 +65,67 @@ class MSGDBExporterTester(unittest.TestCase):
             self.logger.log(
                 'Exception during creation of temp directory: %s' % detail,
                 'ERROR')
+
+
+    def tearDown(self):
+        """
+        Delete all test items.
+        """
+
+        REMOVE_TEMPORARY_FILES = True
+        if REMOVE_TEMPORARY_FILES:
+            try:
+                self.logger.log("Removing local test files {}, {}.".format(
+                    self.uncompressedTestFilename, self.compressedTestFilename),
+                                'debug')
+                os.remove(os.path.join(os.getcwd(), self.testDir,
+                                       self.uncompressedTestFilename))
+                os.remove(os.path.join(os.getcwd(), self.testDir,
+                                       self.compressedTestFilename))
+            except OSError as detail:
+                self.logger.log(
+                    'Exception while removing temporary files: {}'.format(
+                        detail), 'SILENT')
+            try:
+                os.remove(os.path.join(os.getcwd(), self.testDir,
+                                       self.compressedTestFilename))
+            except OSError as detail:
+                self.logger.log(
+                    'Exception while removing temporary files: {}'.format(
+                        detail), 'SILENT')
+            try:
+                for f in self.fileChunks:
+                    os.remove(f)
+            except OSError as detail:
+                self.logger.log(
+                    'Exception while removing temporary files: {}'.format(
+                        detail), 'DEBUG')
+
+        try:
+            os.rmdir(self.testDir)
+        except OSError as detail:
+            self.logger.log(
+                'Exception while removing directory: {}'.format(detail),
+                'ERROR')
+
+        # Keep deleting from the cloud until there are no more to delete.
+        def deleteFromCloud():
+            self.logger.log("deleting from cloud", 'debug')
+            try:
+                fileIDToDelete = self.exporter.fileIDForFileName(
+                    self.compressedTestFilename)
+                if fileIDToDelete is None:
+                    return
+                self.logger.log("file ID to delete: {}".format(fileIDToDelete),
+                                'DEBUG')
+                self.exporter.driveService.files().delete(
+                    fileId = '{}'.format(fileIDToDelete)).execute()
+                deleteFromCloud()
+            except (TypeError, http.HttpError) as e:
+                self.logger.log('Delete not successful: {}'.format(e), 'DEBUG')
+
+
+        deleteFromCloud()
 
 
     def _upload_test_data_to_cloud(self):
@@ -94,6 +158,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.assertEquals(len(filter(lambda x: self.testDataFileID in x,
                                      self.exporter.markdownListOfDownloadableFiles().splitlines())),
                           1)
+
 
     def test_get_md5_sum_from_cloud(self):
         """
@@ -166,6 +231,7 @@ class MSGDBExporterTester(unittest.TestCase):
                 'Exception while adding reader permissions: {}'.format(detail),
                 'error')
 
+
         def permission_id(email):
             try:
                 id_resp = service.permissions().getIdForEmail(
@@ -173,6 +239,7 @@ class MSGDBExporterTester(unittest.TestCase):
                 return id_resp['id']
             except errors.HttpError as error:
                 self.logger.log("HTTP error: {}".format(error))
+
 
         permission = {}
         try:
@@ -417,66 +484,6 @@ class MSGDBExporterTester(unittest.TestCase):
         pass
 
 
-    def tearDown(self):
-        """
-        Delete all test items.
-        """
-
-        REMOVE_TEMPORARY_FILES = True
-        if REMOVE_TEMPORARY_FILES:
-            try:
-                self.logger.log("Removing local test files {}, {}.".format(
-                    self.uncompressedTestFilename, self.compressedTestFilename),
-                                'debug')
-                os.remove(os.path.join(os.getcwd(), self.testDir,
-                                       self.uncompressedTestFilename))
-                os.remove(os.path.join(os.getcwd(), self.testDir,
-                                       self.compressedTestFilename))
-            except OSError as detail:
-                self.logger.log(
-                    'Exception while removing temporary files: {}'.format(
-                        detail), 'SILENT')
-            try:
-                os.remove(os.path.join(os.getcwd(), self.testDir,
-                                       self.compressedTestFilename))
-            except OSError as detail:
-                self.logger.log(
-                    'Exception while removing temporary files: {}'.format(
-                        detail), 'SILENT')
-            try:
-                for f in self.fileChunks:
-                    os.remove(f)
-            except OSError as detail:
-                self.logger.log(
-                    'Exception while removing temporary files: {}'.format(
-                        detail), 'DEBUG')
-
-        try:
-            os.rmdir(self.testDir)
-        except OSError as detail:
-            self.logger.log(
-                'Exception while removing directory: {}'.format(detail),
-                'ERROR')
-
-        # Keep deleting from the cloud until there are no more to delete.
-        def deleteFromCloud():
-            self.logger.log("deleting from cloud", 'debug')
-            try:
-                fileIDToDelete = self.exporter.fileIDForFileName(
-                    self.compressedTestFilename)
-                if fileIDToDelete is None:
-                    return
-                self.logger.log("file ID to delete: {}".format(fileIDToDelete),
-                                'DEBUG')
-                self.exporter.driveService.files().delete(
-                    fileId = '{}'.format(fileIDToDelete)).execute()
-                deleteFromCloud()
-            except (TypeError, http.HttpError) as e:
-                self.logger.log('Delete not successful: {}'.format(e), 'DEBUG')
-
-        deleteFromCloud()
-
-
     def test_list_of_downloadable_files(self):
         """
         Test the list of downloadable files used by the available files page.
@@ -487,6 +494,21 @@ class MSGDBExporterTester(unittest.TestCase):
             filter(lambda row: row['id'] == self.testDataFileID,
                    self.exporter.listOfDownloadableFiles())), 1,
                           "Test file not present.")
+
+
+    def test_count_of_db_exports(self):
+        count = self.exporter.countOfDBExports(
+            since = self.timeUtil.datetimeForString('2014-01-01 00:00'))
+        self.assertTrue(int(count) or int(count) == int(0))
+
+
+    def test_count_of_cloud_files(self):
+        count = self.exporter.countOfCloudFiles()
+        self.assertTrue(int(count) or int(count) == int(0))
+
+
+    def test_current_export_summary(self):
+        pass
 
 
 if __name__ == '__main__':
@@ -511,7 +533,7 @@ if __name__ == '__main__':
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        # selected_tests = ['test_delete_outdated']
+        selected_tests = ['test_count_of_cloud_files','test_count_of_db_exports']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
