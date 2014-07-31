@@ -789,6 +789,8 @@ class MSGDBExporter(object):
             self.notifier.recordNotificationEvent(
                 MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
 
+        # @todo Handle case where notification event fails to be recorded.
+
 
     def currentExportSummary(self):
         """
@@ -816,7 +818,8 @@ class MSGDBExporter(object):
         # @TO BE REVIEWED: Verify time zone adjustment.
         content += '{} databases have been exported since the last report ' \
                    'date.\n'.format(self.countOfDBExports(
-            lastReportDate + datetime.timedelta(hours = 10)))
+            lastReportDate + datetime.timedelta(
+                hours = 10)) if lastReportDate else self.countOfDBExports())
 
         content += '{} B free space is available.\n'.format(self.freeSpace())
         content += '\nCurrently available DBs:\n'
