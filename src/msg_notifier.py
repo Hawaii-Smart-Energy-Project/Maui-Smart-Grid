@@ -51,6 +51,7 @@ class MSGNotifier(object):
         Record an event in the notification history.
     """
 
+
     def __init__(self):
         """
         Constructor.
@@ -241,6 +242,7 @@ class MSGNotifier(object):
             raise Exception('Exception while saving the notification time.')
         return success
 
+
     def lastReportDate(self, noticeType = None):
         """
         Get the last time a notification was reported for the given
@@ -257,8 +259,8 @@ class MSGNotifier(object):
         cursor = self.cursor
 
         sql = 'SELECT MAX("notificationTime") FROM "{}" WHERE ' \
-              '"notificationType" = \'{}\''.format(
-            self.noticeTable, noticeType.name)
+              '"notificationType" = \'{}\''.format(self.noticeTable,
+                                                   noticeType.name)
 
         success = self.dbUtil.executeSQL(cursor, sql)
         if success:
