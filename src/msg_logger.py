@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Provides logging services for the MSG Data Operations Project.
+Provides logging services for the MSG Data Science Project.
 
 Setting self.shouldRecord=True provides a way of collecting all logging output
 for the instantiated logger into self.recording.
@@ -79,9 +79,9 @@ class MSGLogger(object):
         :param level: String for logger level in ('info', 'error', 'warning',
         'silent', 'debug', 'critical')
         :param useColor: Boolean if True, color output is used via colorlog.
-
-        @todo Provide enumeration type.
         """
+
+        # @todo Provide enumeration type instead of strings.
 
         self.logger = logging.getLogger(caller)
 
@@ -131,7 +131,7 @@ class MSGLogger(object):
         elif level == 'debug':
             self.loggerLevel = logging.DEBUG
         elif level == 'critical':
-            loggerLevel = logging.CRITICAL
+            self.loggerLevel = logging.CRITICAL
         else:
             self.loggerLevel = logging.INFO
 
@@ -208,7 +208,8 @@ class MSGLogger(object):
                 # The recording buffer is a cumulative copy of the logging
                 # output. At each iteration, the buffer plus the new output is
                 # appended to the list.
-                self.recordingBuffer.append('%s' % (self.ioStream.getvalue()))
+                self.recordingBuffer.append(
+                    '{}'.format((self.ioStream.getvalue())))
                 self.recording = self.recordingBuffer[-1]
 
             for handler in self.logger.handlers:

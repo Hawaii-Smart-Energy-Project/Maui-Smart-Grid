@@ -24,12 +24,17 @@ import re
 from msg_python_util import MSGPythonUtil
 import itertools
 import time
+from msg_time_util import MSGTimeUtil
+from msg_types import MSGNotificationHistoryTypes
+
+EARLIEST_DATE = MSGTimeUtil().datetimeForString('2011-01-01 00:00')
 
 
 class MSGDBExporterTester(unittest.TestCase):
     """
     Unit tests for the MSG Cloud Exporter.
     """
+
 
     def setUp(self):
         self.logger = MSGLogger(__name__, 'DEBUG')
@@ -44,6 +49,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.fileChunks = []
         self.testDataFileID = ''
         self.pyUtil = MSGPythonUtil()
+        self.timeUtil = MSGTimeUtil()
 
         conn = None
         try:
@@ -62,6 +68,67 @@ class MSGDBExporterTester(unittest.TestCase):
             self.logger.log(
                 'Exception during creation of temp directory: %s' % detail,
                 'ERROR')
+
+
+    def tearDown(self):
+        """
+        Delete all test items.
+        """
+
+        REMOVE_TEMPORARY_FILES = True
+        if REMOVE_TEMPORARY_FILES:
+            try:
+                self.logger.log("Removing local test files {}, {}.".format(
+                    self.uncompressedTestFilename, self.compressedTestFilename),
+                                'debug')
+                os.remove(os.path.join(os.getcwd(), self.testDir,
+                                       self.uncompressedTestFilename))
+                os.remove(os.path.join(os.getcwd(), self.testDir,
+                                       self.compressedTestFilename))
+            except OSError as detail:
+                self.logger.log(
+                    'Exception while removing temporary files: {}'.format(
+                        detail), 'SILENT')
+            try:
+                os.remove(os.path.join(os.getcwd(), self.testDir,
+                                       self.compressedTestFilename))
+            except OSError as detail:
+                self.logger.log(
+                    'Exception while removing temporary files: {}'.format(
+                        detail), 'SILENT')
+            try:
+                for f in self.fileChunks:
+                    os.remove(f)
+            except OSError as detail:
+                self.logger.log(
+                    'Exception while removing temporary files: {}'.format(
+                        detail), 'DEBUG')
+
+        try:
+            os.rmdir(self.testDir)
+        except OSError as detail:
+            self.logger.log(
+                'Exception while removing directory: {}'.format(detail),
+                'ERROR')
+
+        # Keep deleting from the cloud until there are no more to delete.
+        def deleteFromCloud():
+            self.logger.log("deleting from cloud", 'debug')
+            try:
+                fileIDToDelete = self.exporter.fileIDForFileName(
+                    self.compressedTestFilename)
+                if fileIDToDelete is None:
+                    return
+                self.logger.log("file ID to delete: {}".format(fileIDToDelete),
+                                'DEBUG')
+                self.exporter.driveService.files().delete(
+                    fileId = '{}'.format(fileIDToDelete)).execute()
+                deleteFromCloud()
+            except (TypeError, http.HttpError) as e:
+                self.logger.log('Delete not successful: {}'.format(e), 'DEBUG')
+
+
+        deleteFromCloud()
 
 
     def _upload_test_data_to_cloud(self):
@@ -94,6 +161,7 @@ class MSGDBExporterTester(unittest.TestCase):
         self.assertEquals(len(filter(lambda x: self.testDataFileID in x,
                                      self.exporter.markdownListOfDownloadableFiles().splitlines())),
                           1)
+
 
     def test_get_md5_sum_from_cloud(self):
         """
@@ -141,7 +209,8 @@ class MSGDBExporterTester(unittest.TestCase):
         self.logger.log("Testing adding reader permissions.")
         self._upload_test_data_to_cloud()
 
-        email = self.configer.configOptionValue('Testing', 'tester_email')
+        email = self.configer.configOptionValue('Testing',
+                                                'tester_email_address')
         service = self.exporter.driveService
         try:
             id_resp = service.permissions().getIdForEmail(
@@ -165,6 +234,7 @@ class MSGDBExporterTester(unittest.TestCase):
                 'Exception while adding reader permissions: {}'.format(detail),
                 'error')
 
+
         def permission_id(email):
             try:
                 id_resp = service.permissions().getIdForEmail(
@@ -172,6 +242,7 @@ class MSGDBExporterTester(unittest.TestCase):
                 return id_resp['id']
             except errors.HttpError as error:
                 self.logger.log("HTTP error: {}".format(error))
+
 
         permission = {}
         try:
@@ -395,75 +466,25 @@ class MSGDBExporterTester(unittest.TestCase):
 
         # For debugging:
         for item in self.exporter.outdatedFiles(
-                daysBeforeOutdated = datetime.timedelta(days = -1)): self.logger.log(
+                daysBeforeOutdated = datetime.timedelta(
+                        days = -1)): self.logger.log(
             "name: {}, created date: {}".format(item['originalFilename'],
                                                 item['createdDate']), 'debug')
 
-        # Get all the outdated files where outdated is equal to anything uploaded today or later.
+        # Get all the outdated files where outdated is equal to anything
+        # uploaded today or later.
         self.assertTrue(self.exporter.outdatedFiles(
             daysBeforeOutdated = datetime.timedelta(days = -1))[0][
                             'id'] == self.testDataFileID)
 
         self.logger.log('-----')
 
-    def tearDown(self):
+
+    def test_delete_outdated(self):
         """
-        Delete all test items.
+        TBW
         """
-
-        REMOVE_TEMPORARY_FILES = True
-        if REMOVE_TEMPORARY_FILES:
-            try:
-                self.logger.log("Removing local test files {}, {}.".format(
-                    self.uncompressedTestFilename, self.compressedTestFilename),
-                                'debug')
-                os.remove(os.path.join(os.getcwd(), self.testDir,
-                                       self.uncompressedTestFilename))
-                os.remove(os.path.join(os.getcwd(), self.testDir,
-                                       self.compressedTestFilename))
-            except OSError as detail:
-                self.logger.log(
-                    'Exception while removing temporary files: {}'.format(
-                        detail), 'SILENT')
-            try:
-                os.remove(os.path.join(os.getcwd(), self.testDir,
-                                       self.compressedTestFilename))
-            except OSError as detail:
-                self.logger.log(
-                    'Exception while removing temporary files: {}'.format(
-                        detail), 'SILENT')
-            try:
-                for f in self.fileChunks:
-                    os.remove(f)
-            except OSError as detail:
-                self.logger.log(
-                    'Exception while removing temporary files: {}'.format(
-                        detail), 'DEBUG')
-
-        try:
-            os.rmdir(self.testDir)
-        except OSError as detail:
-            self.logger.log(
-                'Exception while removing directory: {}'.format(detail),
-                'ERROR')
-
-        # Keep deleting from the cloud until there are no more to delete.
-        def deleteFromCloud():
-            self.logger.log("deleting from cloud", 'debug')
-            try:
-                fileIDToDelete = self.exporter.fileIDForFileName(
-                    self.compressedTestFilename)
-                if fileIDToDelete is None:
-                    return
-                self.logger.log("file ID to delete: {}".format(fileIDToDelete),
-                                'DEBUG')
-                self.exporter.driveService.files().delete(
-                    fileId = '{}'.format(fileIDToDelete)).execute()
-                deleteFromCloud()
-            except (TypeError, http.HttpError) as e:
-                self.logger.log('Delete not successful: {}'.format(e), 'DEBUG')
-
-        deleteFromCloud()
+        pass
 
 
     def test_list_of_downloadable_files(self):
@@ -476,6 +497,49 @@ class MSGDBExporterTester(unittest.TestCase):
             filter(lambda row: row['id'] == self.testDataFileID,
                    self.exporter.listOfDownloadableFiles())), 1,
                           "Test file not present.")
+
+
+    def test_count_of_db_exports(self):
+        count = self.exporter.countOfDBExports(EARLIEST_DATE)
+        self.logger.log(count,'DEBUG')
+        self.assertTrue(int(count) or int(count) == int(0))
+
+
+    def test_count_of_cloud_files(self):
+        count = self.exporter.countOfCloudFiles()
+        self.assertTrue(int(count) or int(count) == int(0))
+
+
+    def test_plaintext_list_of_downloadable_files(self):
+        """
+        This test handles content both with content links and without content
+        links.
+        """
+        content = self.exporter.plaintextListOfDownloadableFiles()
+        self.assertRegexpMatches(content,
+                                 '\d+-\d+-\d+.*\,'
+                                 '\s+\d+-\d+-\d+T\d+:\d+:\d+\.\d+Z\,\s+\d+\sB')
+
+
+    def test_last_report_date(self):
+        last_report = self.exporter.notifier.lastReportDate(
+            MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
+        self.assertTrue(
+            last_report is None or last_report >
+            self.timeUtil.datetimeForString(
+                EARLIEST_DATE))
+
+
+    def test_current_export_summary(self):
+        self.assertRegexpMatches(self.exporter.currentExportSummary(),
+                                 re.compile(
+                                     'last.*databases.*free.*currently.*accessed.*',
+                                     flags = re.IGNORECASE | re.DOTALL))
+
+
+    # def test_send_current_export_summary(self):
+    #     self.exporter.notifier.sendNotificationEmail(
+    #         self.exporter.currentExportSummary(), testing = True)
 
 
 if __name__ == '__main__':
@@ -495,12 +559,15 @@ if __name__ == '__main__':
                          'test_create_compressed_archived',
                          'test_adding_reader_permissions',
                          'test_markdown_list_of_downloadable_files',
-                         'test_outdated_files']
+                         'test_outdated_files', 'test_count_of_db_exports',
+                         'test_count_of_cloud_files',
+                         'test_plaintext_list_of_downloadable_files',
+                         'test_last_report_date', 'test_current_export_summary']
 
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        # selected_tests = ['test_outdated_files']
+        # selected_tests = ['test_count_of_db_exports']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:

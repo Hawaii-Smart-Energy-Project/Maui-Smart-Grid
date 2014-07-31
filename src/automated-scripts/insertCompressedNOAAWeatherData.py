@@ -11,7 +11,7 @@ This script only supports processing of *hourly.txt.gz files.
 """
 
 __author__ = 'Daniel Zhang (張道博)'
-__copyright__ = 'Copyright (c) 2013, University of Hawaii Smart Energy Project'
+__copyright__ = 'Copyright (c) 2014, University of Hawaii Smart Energy Project'
 __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
@@ -36,7 +36,7 @@ from msg_noaa_weather_data_util import MSGWeatherDataUtil
 configer = MSGConfiger()
 logger = MSGLogger(__name__, 'info')
 binPath = MSGConfiger.configOptionValue(configer, "Executable Paths",
-                                        "bin_path")
+                                        "msg_bin_path")
 COMMAND_LINE_ARGS = None
 msgBody = ''
 notifier = MSGNotifier()

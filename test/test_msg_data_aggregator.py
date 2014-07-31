@@ -11,6 +11,8 @@ import unittest
 from msg_logger import MSGLogger
 from msg_data_aggregator import MSGDataAggregator
 from datetime import datetime
+import itertools
+from pprint import pprint
 
 
 class MSGDataAggregatorTester(unittest.TestCase):
@@ -195,20 +197,61 @@ class MSGDataAggregatorTester(unittest.TestCase):
         self.aggregator.insertAggregatedData(agg = agg)
 
 
-    def testMonthStartsAndEnds(self):
+    def test_month_starts_and_ends(self):
         """
         Test retrieving the list of start and end dates for each month in a
         given aggregation time period.
-        :return:
+
+        All starts except one should be at time 00:00:00.
+
+        Starts and ends appear in alternating order but are joined in a tuple.
         """
+        # @REVIEWED
+        # @todo Optimize by combine start and end tests.
+
+        startCnt = 0
+        endCnt = 0
+
+        def test_starts(timeColName, dataType):
+            global startCnt
+            self.logger.log('testing {},{}'.format(timeColName, dataType))
+
+            # Take every other value from the unzipped pairs.
+            starts = [x for x in itertools.islice(
+                zip(*self.aggregator.monthStartsAndEnds(timeColName, dataType)),
+                0, None, 2)]
+            startCnt = len(starts)
+
+            # Test on the flattened start values.
+            self.assertLessEqual(len(filter(
+                lambda x: x.time() != datetime.strptime('00:00:00',
+                                                        '%H:%M:%S').time(),
+                list(itertools.chain.from_iterable(starts)))), 1)
+
+        def test_ends(timeColName, dataType):
+            global endCnt
+            self.logger.log('testing {},{}'.format(timeColName, dataType))
+
+            # Take every other value from the unzipped pairs.
+            ends = [x for x in itertools.islice(
+                zip(*self.aggregator.monthStartsAndEnds(timeColName, dataType)),
+                1, None, 2)]
+            endCnt = len(ends)
+
+            # Test on the flattened end values.
+            self.assertLessEqual(len(filter(
+                lambda x: x.time() != self.aggregator.incrementEndpoint(
+                    datetime.strptime('23:59:59', '%H:%M:%S')).time(),
+                list(itertools.chain.from_iterable(ends)))), 1)
 
         for myType in ['weather', 'egauge', 'circuit', 'irradiance']:
             if myType == 'egauge':
-                print self.aggregator.monthStartsAndEnds(
-                    timeColumnName = 'datetime', dataType = myType)
+                test_starts('datetime', myType)
+                test_ends('datetime', myType)
             else:
-                print self.aggregator.monthStartsAndEnds(
-                    timeColumnName = 'timestamp', dataType = myType)
+                test_starts('timestamp', myType)
+                test_ends('timestamp', myType)
+            self.assertEquals(startCnt, endCnt)
 
 
     def testAggregateAllData(self):
@@ -299,7 +342,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
 
     def testAggregateNewData(self):
         """
-        @IMPORTANT Should not be run on live data if testing.
+        @IMPORTANT Should not be run on live data.
         :return:
         """
 
@@ -327,21 +370,7 @@ if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
 
     if RUN_SELECTED_TESTS:
-
-        selected_tests = ['testWeatherAggregation', 'testEgaugeAggregation',
-                          'testIrradianceAggregation',
-                          'testCircuitAggregation'], ['testExistingIntervals']
-        # selected_tests = ['testAggregateAllData']
-        selected_tests = ['testUnaggregatedIntervals1']
-        selected_tests = ['testUnaggregatedDataExists']
-        selected_tests = ['testAggregateNewData']
-        selected_tests = ['testLastUnaggregatedAndAggregatedEndpoints',
-                          'testAggregateNewData']
-        selected_tests = ['testMonthStartsAndEnds']
-        selected_tests = ['testAggregateNewData']
-        # selected_tests = ['test_endpoint_increment']
-        # selected_tests = ['testLastUnaggregatedAndAggregatedEndpoints']
-
+        selected_tests = ['test_month_starts_and_ends']
         mySuite = unittest.TestSuite()
 
         for t in selected_tests:

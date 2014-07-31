@@ -12,9 +12,9 @@ from msg_data_aggregator import MSGDataAggregator
 from msg_notifier import MSGNotifier
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
+from msg_types import MSGNotificationHistoryTypes
+from msg_types import MSGAggregationTypes
 
-NOTIFICATION_HISTORY_TABLE = "NotificationHistory"
-NOTIFICATION_HISTORY_TYPE = 'MSG_DATA_AGGREGATOR'
 
 class NewDataAggregator(object):
     """
@@ -29,37 +29,11 @@ class NewDataAggregator(object):
         self.logger = MSGLogger(__name__, 'DEBUG')
         self.aggregator = MSGDataAggregator()
         self.notifier = MSGNotifier()
-        self.rawTypes = ['weather', 'egauge', 'circuit', 'irradiance']
+        self.rawTypes = [x.name for x in list(MSGAggregationTypes)]
         self.connector = MSGDBConnector()
         self.conn = self.connector.connectDB()
         self.cursor = self.conn.cursor()
         self.dbUtil = MSGDBUtil()
-
-
-    def lastReportDate(self, notificationType):
-        """
-        Get the last time a notification was reported.
-
-        :param notificationType: string indicating the type of the
-        notification. It is stored in the event history.
-        :returns: datetime of last report date.
-        """
-
-        cursor = self.cursor
-        sql = """SELECT MAX("notificationTime") FROM "{}" WHERE
-        "notificationType" = '{}'""".format(NOTIFICATION_HISTORY_TABLE,
-                                            notificationType)
-
-        success = self.dbUtil.executeSQL(cursor, sql)
-        if success:
-            rows = cursor.fetchall()
-
-            if not rows[0][0]:
-                return None
-            else:
-                return rows[0][0]
-        else:
-            raise Exception('Exception during getting last report date.')
 
 
     def sendNewDataNotification(self, result = None, testing = False):
@@ -74,7 +48,8 @@ class NewDataAggregator(object):
 
         self.logger.log('result {}'.format(result), 'debug')
 
-        lastReportDate = self.lastReportDate(NOTIFICATION_HISTORY_TYPE)
+        lastReportDate = self.notifier.lastReportDate(
+            MSGNotificationHistoryTypes.MSG_DATA_AGGREGATOR)
 
         if not lastReportDate:
             lastReportDate = "never"
@@ -96,7 +71,7 @@ class NewDataAggregator(object):
             msgBody += '\n\n'
         self.notifier.sendNotificationEmail(msgBody, testing = testing)
         self.notifier.recordNotificationEvent(
-            noticeType = NOTIFICATION_HISTORY_TYPE)
+            MSGNotificationHistoryTypes.MSG_DATA_AGGREGATOR)
 
 
     def aggregateNewData(self):
@@ -114,7 +89,7 @@ class NewDataAggregator(object):
 if __name__ == '__main__':
     aggregator = NewDataAggregator()
     logger = MSGLogger(__name__)
-    logger.log('Last report date {}'.format(
-        aggregator.lastReportDate(NOTIFICATION_HISTORY_TYPE)))
+    logger.log('Last report date {}'.format(aggregator.notifier.lastReportDate(
+        MSGNotificationHistoryTypes.MSG_DATA_AGGREGATOR)))
     result = aggregator.aggregateNewData()
     aggregator.sendNewDataNotification(result = result, testing = False)

@@ -18,12 +18,14 @@ class MSGTimeUtil(object):
     Utilities for working with time.
     """
 
+
     def __init__(self):
         """
         Constructor.
         """
 
         self.logger = MSGLogger(__name__, 'debug')
+
 
     def reportOfDays(self, datetimes = None):
         """
@@ -33,7 +35,7 @@ class MSGTimeUtil(object):
         :returns: Report of processing as a string.
         """
 
-        #  @todo Verify datetimes is a Set.
+        # @todo Verify datetimes is a Set.
 
         # self.logger.log("datetimes = %s" % datetimes, 'debug')
 
@@ -57,6 +59,7 @@ class MSGTimeUtil(object):
         else:
             return "Processed %s days between %s to %s, inclusive." % (
                 countOfDays, firstDay, lastDay)
+
 
     def conciseNow(self):
         """
@@ -124,12 +127,10 @@ class MSGTimeUtil(object):
             endDates), 'Mismatch of start and end dates.'
         return zip(startDates, endDates)
 
-# For debugging:
-# timeUtil = MSGTimeUtil()
 
-# testDays = set()
-# testDays.add(dt.datetime.strptime("2003-01-01 00:00", "%Y-%m-%d %H:%M"))
-# testDays.add(dt.datetime.strptime("2003-01-02 00:00", "%Y-%m-%d %H:%M"))
-# testDays.add(dt.datetime.strptime("2003-01-01 00:00", "%Y-%m-%d %H:%M"))
-
-# print timeUtil.reportOfDays(testDays)
+    def datetimeForString(self, datetimeString):
+        """
+        :param datetimeString: String
+        :return: datetime of string in Y-m-d H:S format.
+        """
+        return dt.strptime(datetimeString, '%Y-%m-%d %H:%S')

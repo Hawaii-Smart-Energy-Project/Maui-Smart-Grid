@@ -20,6 +20,7 @@ from email import Encoders
 from msg_logger import MSGLogger
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
+from msg_types import MSGNotificationHistoryTypes
 
 
 class MSGNotifier(object):
@@ -42,7 +43,14 @@ class MSGNotifier(object):
     sendMailWithAttachments(msgBody, files = None, testing = False)
         Send msgBody with files attached as a notification to the mailing
         list defined in the config file.
+
+    lastReportDate(noticeType):
+        The last date where a notification of the given type was reported.
+
+    recordNotificationEvent(noticeType):
+        Record an event in the notification history.
     """
+
 
     def __init__(self):
         """
@@ -60,10 +68,12 @@ class MSGNotifier(object):
                                   "Energy Project MSG Project notification " \
                                   "system.\n\n"
 
-        self.noReplyNotice = """\n\nThis email account is not monitored. No
-        replies will originate from this account.\n\nYou are receiving this
-        message because you are on the recipient list for notifications for
-        the Hawaii Smart Energy Project."""
+        self.noReplyNotice = '\n\nThis email account is not monitored. No ' \
+                             'replies will originate from this ' \
+                             'account.\n\nYou are receiving this message ' \
+                             'because you are on the recipient list for ' \
+                             'notifications for the Hawaii Smart Energy ' \
+                             'Project.'
 
 
     def sendNotificationEmail(self, msgBody, testing = False):
@@ -81,7 +91,7 @@ class MSGNotifier(object):
         password = self.config.configOptionValue('Notifications',
                                                  'email_password')
         fromaddr = self.config.configOptionValue('Notifications',
-                                                 'email_fromaddr')
+                                                 'email_from_address')
 
         if testing:
             toaddr = self.config.configOptionValue('Notifications',
@@ -89,8 +99,8 @@ class MSGNotifier(object):
         else:
             toaddr = self.config.configOptionValue('Notifications',
                                                    'email_recipients')
-        server = smtplib.SMTP(
-            self.config.configOptionValue('Notifications', 'email_smtp_server'))
+        server = smtplib.SMTP(self.config.configOptionValue('Notifications',
+                                                            'smtp_server_and_port'))
 
         try:
             server.starttls()
@@ -161,7 +171,7 @@ class MSGNotifier(object):
                                                     'email_recipients')
 
         send_from = self.config.configOptionValue('Notifications',
-                                                  'email_fromaddr')
+                                                  'email_from_address')
 
         msg = MIMEMultipart()
         msg['From'] = send_from
@@ -180,8 +190,8 @@ class MSGNotifier(object):
                             'attachment; filename="%s"' % os.path.basename(f))
             msg.attach(part)
 
-        server = smtplib.SMTP(
-            self.config.configOptionValue('Notifications', 'email_smtp_server'))
+        server = smtplib.SMTP(self.config.configOptionValue('Notifications',
+                                                            'smtp_server_and_port'))
         try:
             server.starttls()
         except smtplib.SMTPException as detail:
@@ -212,19 +222,55 @@ class MSGNotifier(object):
         return errorOccurred
 
 
-    def recordNotificationEvent(self, noticeType = ''):
+    def recordNotificationEvent(self, noticeType = None):
         """
         Save a notification event to the notification history.
         :param table: String
-        :param noticeType: String
+        :param noticeType: <enum 'MSGNotificationHistoryTypes'>
         :returns: Boolean
         """
 
+        if not noticeType:
+            return False
+        if not noticeType in MSGNotificationHistoryTypes:
+            return False
+
         cursor = self.cursor
         sql = """INSERT INTO "{}" ("notificationType", "notificationTime")
-        VALUES ('{}', NOW())""".format(self.noticeTable, noticeType)
+        VALUES ('{}', NOW())""".format(self.noticeTable, noticeType.name)
         success = self.dbUtil.executeSQL(cursor, sql)
         self.conn.commit()
         if not success:
             raise Exception('Exception while saving the notification time.')
         return success
+
+
+    def lastReportDate(self, noticeType = None):
+        """
+        Get the last time a notification was reported for the given
+        noticeType.
+
+        :param noticeType: String indicating the type of the
+        notification. It is stored in the event history.
+        :returns: datetime of last report date.
+        """
+
+        if not noticeType or (not noticeType in MSGNotificationHistoryTypes):
+            raise Exception('Invalid notice type.')
+
+        cursor = self.cursor
+
+        sql = 'SELECT MAX("notificationTime") FROM "{}" WHERE ' \
+              '"notificationType" = \'{}\''.format(self.noticeTable,
+                                                   noticeType.name)
+
+        success = self.dbUtil.executeSQL(cursor, sql)
+        if success:
+            rows = cursor.fetchall()
+
+            if not rows[0][0]:
+                return None
+            else:
+                return rows[0][0]
+        else:
+            raise Exception('Exception during getting last report date.')

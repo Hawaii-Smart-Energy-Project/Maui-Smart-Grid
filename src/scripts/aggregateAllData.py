@@ -38,10 +38,6 @@ from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 
 
-NOTIFICATION_HISTORY_TABLE = "NotificationHistory"
-NOTIFICATION_HISTORY_TYPE = 'MSG_DATA_AGGREGATOR'
-
-
 class AllDataAggregator(object):
     """
     Perform aggregation of all data for a set of predefined data types.
@@ -58,6 +54,7 @@ class AllDataAggregator(object):
         self.aggregator = MSGDataAggregator(exitOnError = False,
                                             commitOnEveryInsert = True)
         self.notifier = MSGNotifier()
+
         # Available types are in ['weather', 'egauge', 'circuit', 'irradiance'].
         self.rawTypes = ['']
         self.connector = MSGDBConnector()

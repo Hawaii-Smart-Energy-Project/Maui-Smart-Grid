@@ -5,16 +5,18 @@ __author__ = 'Daniel Zhang (張道博)'
 
 import unittest
 from msg_logger import MSGLogger
+
+# @todo Replace strings with enumeration types.
 from logging import INFO
 from logging import DEBUG
 from logging import ERROR
+
 import re
 
 
 class MSGLoggerTester(unittest.TestCase):
 
     def setUp(self):
-        #print "Initializing logger."
         self.logger = MSGLogger(__name__, level='DEBUG')
         print 'logger level: %s' % self.logger.loggerLevel
 

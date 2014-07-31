@@ -32,8 +32,7 @@ from msg_db_util import MSGDBUtil
 import sys
 from msg_python_util import MSGPythonUtil
 from msg_notifier import MSGNotifier
-
-NOTIFICATION_HISTORY_TYPE = 'MSG_DB_EXPORTER'
+from msg_types import MSGNotificationHistoryTypes
 
 
 class MSGDBExporter(object):
@@ -81,6 +80,7 @@ class MSGDBExporter(object):
         self.logger.log("Authorized.", 'info')
 
         self._driveService = build('drive', 'v2', http = http)
+
         return self._driveService
 
 
@@ -116,6 +116,7 @@ class MSGDBExporter(object):
         self._cloudFiles = None
         self.postAgent = 'Maui Smart Grid 1.0.0 DB Exporter'
         self.retryDelay = 10
+        self.availableFilesURL = ''
 
 
     def verifyExportChecksum(self, testing = False):
@@ -268,8 +269,7 @@ class MSGDBExporter(object):
 
 
     def exportDBs(self, databases = None, toCloud = False, localExport = True,
-                  testing = False, chunkSize = 0, numChunks = 0,
-                  deleteOutdated = False):
+                  testing = False, chunkSize = 0, deleteOutdated = False):
         """
         Export a set of DBs to local storage.
 
@@ -281,7 +281,6 @@ class MSGDBExporter(object):
         :param testing: Boolean flag for testing mode. (@DEPRECATED)
         :param chunkSize: Integer size in bytes of chunk size used for
         splitting.
-        :param numChunks: (@DEPRECATED)
         :param deleteOutdated: Boolean indicating outdated files in the cloud
         should be removed.
         :returns: List of file IDs of uploaded files or None if there is an
@@ -340,7 +339,7 @@ class MSGDBExporter(object):
                         if not self.addReaders(fileID,
                                                self.configer.configOptionValue(
                                                        'Export',
-                                                       'read_permission').split(
+                                                       'reader_permission_email_addresses').split(
                                                        ','), retryCount = int(
                                         self.configer.configOptionValue(
                                                 'Export',
@@ -380,7 +379,8 @@ class MSGDBExporter(object):
 
         if deleteOutdated:
             self.deleteOutdatedFiles(datetime.timedelta(days = int(
-                self.configer.configOptionValue('Export', 'days_to_keep'))))
+                self.configer.configOptionValue('Export',
+                                                'export_days_to_keep'))))
 
         return uploaded if noErrors else None
 
@@ -550,7 +550,7 @@ class MSGDBExporter(object):
         """
         Get free space from the drive service.
         :param driveService: Object for the drive service.
-        :returns: Int of free space (bytes) on the drive service.
+        :returns: Int of free space (bytes B) on the drive service.
         """
         aboutData = self.driveService.about().get().execute()
         return int(aboutData['quotaBytesTotal']) - int(
@@ -594,8 +594,14 @@ class MSGDBExporter(object):
         """
 
         # @todo Return count of actual successfully deleted files.
-        map(self.deleteFile, self.outdatedFiles(maxAge))
-        return len(self.outdatedFiles(maxAge))
+
+        outdated = self.outdatedFiles(maxAge)
+
+        """:type : dict"""
+        for f in outdated:
+            self.deleteFile(f['id'])
+
+        return len(outdated)
 
 
     def outdatedFiles(self,
@@ -608,8 +614,6 @@ class MSGDBExporter(object):
         Not sure why this isn't represented as zero. Perhaps to avoid a false
         evaluation of a predicate on a tdelta.
 
-        :param minAge: datetime.timedelta of the minimum age before a file is
-        considered outdated. (@DEPRECATED)
         :param daysBeforeOutdated: datetime.timedelta where the value
         indicates that outdated files that have an age greater than this
         parameter.
@@ -711,6 +715,7 @@ class MSGDBExporter(object):
         # self.logger.log('content: {}'.format(content))
         return content
 
+
     def plaintextListOfDownloadableFiles(self):
         """
         Generate content containing a list of downloadable files in plaintext
@@ -719,15 +724,20 @@ class MSGDBExporter(object):
         :returns: String content as plaintext.
         """
         content = ''
-        for i in self.listOfDownloadableFiles():
-            content += "{}, {}, {}, {} B\n".format(i['title'],
-                                                   i['webContentLink'],
-                                                   i['createdDate'],
+        includeLink = False
+        for i in reversed(sorted(self.cloudFiles['items'],
+                                 key = lambda k: k['createdDate'])):
+            if includeLink:
+                content += "{}, {}, {}, {} B\n".format(i['title'],
+                                                       i['webContentLink'],
+                                                       i['createdDate'],
+                                                       int(i['fileSize']))
+            else:
+                content += "{}, {}, {} B\n".format(i['title'], i['createdDate'],
                                                    int(i['fileSize']))
 
-        self.logger.log('content: {}'.format(content))
-
         return content
+
 
     def logSuccessfulExport(self, name = '', url = '', datetime = 0, size = 0):
         """
@@ -768,20 +778,90 @@ class MSGDBExporter(object):
         return result
 
 
-    def sendExportSummary(self):
+    def sendExportSummary(self, summary = ''):
         """
         Send a summary of exports via email to a preconfigured list of
         recipients.
+        :param summary: String of summary content.
         :return:
         """
-        pass
+        try:
+            if self.notifier.sendNotificationEmail(summary, testing = False):
+                self.notifier.recordNotificationEvent(
+                    MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
+        except Exception as detail:
+            self.logger.log('Exception occurred: {}'.format(detail), 'ERROR')
 
-    def recordNotice(self):
+
+    def currentExportSummary(self):
         """
-        Record notification of export summaries.
-        :return:
+        Current summary of exports since the last summary report time.
+
+        Summaries are reported with identifier MSG_EXPORT_SUMMARY in the
+        NotificationHistory.
+
+        Includes:
+        * Number of databases exported
+        * Total number of files in the cloud.
+        * A report of available storage capacity.
+        * A list of available DBs.
+        * A link where exports can be accessed.
+
+        :return: String of summary text.
         """
-        sql = ''
+        availableFilesURL = self.configer.configOptionValue('Export',
+                                                            'export_list_url')
+        lastReportDate = self.notifier.lastReportDate(
+            MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
+        content = 'Cloud Export Summary:\n\n'
+        content += 'Last report date: {}\n'.format(lastReportDate)
+
+        # @TO BE REVIEWED: Verify time zone adjustment.
+        content += '{} databases have been exported since the last report ' \
+                   'date.\n'.format(self.countOfDBExports(
+            lastReportDate + datetime.timedelta(
+                hours = 10)) if lastReportDate else self.countOfDBExports())
+
+        content += '{} B free space is available.\n'.format(self.freeSpace())
+        content += '\nCurrently available DBs:\n'
+        content += self.plaintextListOfDownloadableFiles()
+        content += '\n{} files can be accessed through Google Drive (' \
+                   'https://drive.google.com) or at {}.'.format(
+            self.countOfCloudFiles(), availableFilesURL)
+
+        return content
+
+
+    def countOfDBExports(self, since = None):
+        """
+        :param since: datetime indicating last export datetime.
+        :return: Int of count of exports.
+        """
+        myDatetime = lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%S')
+        if not since:
+            since = myDatetime('1900-01-01 00:00')
+        self.logger.log(since.strftime('%Y-%m-%d %H:%M'), 'DEBUG')
+
+        sql = 'SELECT COUNT("public"."ExportHistory"."timestamp") FROM ' \
+              '"public"."ExportHistory" WHERE "timestamp" > \'{}\''.format(
+            since.strftime('%Y-%m-%d %H:%M'))
+
+        conn = MSGDBConnector().connectDB()
+        cursor = conn.cursor()
+        dbUtil = MSGDBUtil()
+        rows = None
+        if dbUtil.executeSQL(cursor, sql, exitOnFail = False):
+            rows = cursor.fetchall()
+        assert len(rows) == 1, 'Invalid return value.'
+        return rows[0][0]
+
+
+    def countOfCloudFiles(self):
+        """
+        :param since: datetime indicating last trailing export datetime.
+        :return: Int of count of exports.
+        """
+        return len(self.cloudFiles['items'])
 
 
     def __verifyMD5Sum(self, localFilePath, remoteFileID):
@@ -868,8 +948,8 @@ class MSGDBExporter(object):
     def addReaders(self, fileID = None, emailAddressList = None,
                    retryCount = 0):
         """
-        Add reader permission to an export file for the given list of email
-        addresses.
+        Add reader permission to an export file that has been uploaded to the
+        cloud for the given list of email addresses.
 
         Email notification is suppressed by default.
 
