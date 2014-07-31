@@ -785,7 +785,7 @@ class MSGDBExporter(object):
         :param summary: String of summary content.
         :return:
         """
-        if self.notifier.sendNotificationEmail(summary, testing = True):
+        if self.notifier.sendNotificationEmail(summary, testing = False):
             self.notifier.recordNotificationEvent(
                 MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
 
