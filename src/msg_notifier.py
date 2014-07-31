@@ -248,9 +248,7 @@ class MSGNotifier(object):
         :returns: datetime of last report date.
         """
 
-        if not noticeType:
-            raise Exception('Invalid notice type.')
-        if not noticeType in MSGNotificationHistoryTypes:
+        if not noticeType or (not noticeType in MSGNotificationHistoryTypes):
             raise Exception('Invalid notice type.')
 
         cursor = self.cursor
