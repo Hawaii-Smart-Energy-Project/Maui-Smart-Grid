@@ -724,7 +724,7 @@ class MSGDBExporter(object):
         :returns: String content as plaintext.
         """
         content = ''
-        includeLink = True
+        includeLink = False
         for i in reversed(sorted(self.cloudFiles['items'],
                                  key = lambda k: k['createdDate'])):
             if includeLink:
@@ -801,14 +801,28 @@ class MSGDBExporter(object):
         * Number of databases exported
         * Total number of files in the cloud.
         * A report of available storage capacity.
+        * A list of available DBs.
         * A link where exports can be accessed.
 
         :return: String of summary text.
         """
         lastTime = self.notifier.lastReportDate(
             MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
+        availableFilesURL = self.configer.configOptionValue('Export',
+                                                            'export_list_url')
+        content = ''
+        content += 'Last report date: {}\n'.format(self.notifier.lastReportDate(
+            MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY))
+        content += '{} databases have been exported.\n'.format(
+            self.countOfDBExports())
+        content += '{} B free space is available.\n'.format(self.freeSpace())
+        content += '\nCurrently available DBs:\n'
+        content += self.plaintextListOfDownloadableFiles()
+        content += '\nFiles can be accessed through Google Drive or at {' \
+                   '}.'.format(
+            availableFilesURL)
 
-        return ''
+        return content
 
 
     def countOfDBExports(self, since = None):
@@ -816,7 +830,7 @@ class MSGDBExporter(object):
         :param since: datetime indicating last trailing export datetime.
         :return: Int of count of exports.
         """
-        myDatetime = lambda x: time.strptime(x, '%Y-%m-%d %H:%S')
+        myDatetime = lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%S')
         if not since:
             since = myDatetime('1900-01-01 00:00')
         self.logger.log(since.strftime('%Y-%m-%d %H:%M'), 'DEBUG')

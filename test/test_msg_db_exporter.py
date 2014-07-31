@@ -509,10 +509,6 @@ class MSGDBExporterTester(unittest.TestCase):
         self.assertTrue(int(count) or int(count) == int(0))
 
 
-    def test_current_export_summary(self):
-        pass
-
-
     def test_plaintext_list_of_downloadable_files(self):
         """
         This test handles content both with content links and without content links.
@@ -529,6 +525,12 @@ class MSGDBExporterTester(unittest.TestCase):
             last_report is None or last_report > self.timeUtil.datetimeForString(
                 EARLIEST_DATE))
 
+
+    def test_current_export_summary(self):
+        self.assertRegexpMatches(self.exporter.currentExportSummary(),
+                                 re.compile(
+                                     'last.*databases.*free.*currently.*accessed.*',
+                                     flags = re.IGNORECASE | re.DOTALL))
 
 if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
@@ -554,7 +556,7 @@ if __name__ == '__main__':
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        selected_tests = ['test_last_report_date']
+        selected_tests = ['test_current_export_summary']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
