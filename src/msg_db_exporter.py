@@ -785,11 +785,12 @@ class MSGDBExporter(object):
         :param summary: String of summary content.
         :return:
         """
-        if self.notifier.sendNotificationEmail(summary, testing = False):
-            self.notifier.recordNotificationEvent(
-                MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
-
-        # @todo Handle case where notification event fails to be recorded.
+        try:
+            if self.notifier.sendNotificationEmail(summary, testing = False):
+                self.notifier.recordNotificationEvent(
+                    MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
+        except Exception as detail:
+            self.logger.log('Exception occurred: {}'.format(detail), 'ERROR')
 
 
     def currentExportSummary(self):
