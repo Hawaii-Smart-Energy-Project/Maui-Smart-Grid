@@ -812,9 +812,12 @@ class MSGDBExporter(object):
             MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
         content = 'Cloud Export Summary:\n\n'
         content += 'Last report date: {}\n'.format(lastReportDate)
+
+        # @TO BE REVIEWED: Verify time zone adjustment.
         content += '{} databases have been exported.\n'.format(
             self.countOfDBExports(
                 lastReportDate + datetime.timedelta(hours = 10)))
+
         content += '{} B free space is available.\n'.format(self.freeSpace())
         content += '\nCurrently available DBs:\n'
         content += self.plaintextListOfDownloadableFiles()
