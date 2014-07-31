@@ -124,6 +124,13 @@ class MSGTimeUtil(object):
             endDates), 'Mismatch of start and end dates.'
         return zip(startDates, endDates)
 
+    def datetimeForString(self, datetimeString):
+        """
+        :param datetimeString: String
+        :return: datetime of string in Y-m-d H:S format.
+        """
+        return dt.strptime(datetimeString, '%Y-%m-%d %H:%S')
+
 # For debugging:
 # timeUtil = MSGTimeUtil()
 
