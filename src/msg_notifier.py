@@ -68,10 +68,12 @@ class MSGNotifier(object):
                                   "Energy Project MSG Project notification " \
                                   "system.\n\n"
 
-        self.noReplyNotice = """\n\nThis email account is not monitored. No
-        replies will originate from this account.\n\nYou are receiving this
-        message because you are on the recipient list for notifications for
-        the Hawaii Smart Energy Project."""
+        self.noReplyNotice = '\n\nThis email account is not monitored. No; ' \
+                             'replies will originate from this ' \
+                             'account.\n\nYou are receiving this; message ' \
+                             'because you are on the recipient list for ' \
+                             'notifications for; the Hawaii Smart Energy ' \
+                             'Project.'
 
 
     def sendNotificationEmail(self, msgBody, testing = False):
