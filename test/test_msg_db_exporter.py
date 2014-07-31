@@ -25,7 +25,9 @@ from msg_python_util import MSGPythonUtil
 import itertools
 import time
 from msg_time_util import MSGTimeUtil
+from msg_types import MSGNotificationHistoryTypes
 
+EARLIEST_DATE = MSGTimeUtil().datetimeForString('2011-01-01 00:00')
 
 class MSGDBExporterTester(unittest.TestCase):
     """
@@ -498,7 +500,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
     def test_count_of_db_exports(self):
         count = self.exporter.countOfDBExports(
-            since = self.timeUtil.datetimeForString('2014-01-01 00:00'))
+            since = self.timeUtil.datetimeForString(EARLIEST_DATE))
         self.assertTrue(int(count) or int(count) == int(0))
 
 
@@ -518,6 +520,14 @@ class MSGDBExporterTester(unittest.TestCase):
         content = self.exporter.plaintextListOfDownloadableFiles()
         self.assertRegexpMatches(content,
                                  '\d+-\d+-\d+.*\,\s+\d+-\d+-\d+T\d+:\d+:\d+\.\d+Z\,\s+\d+\sB')
+
+
+    def test_last_report_date(self):
+        last_report = self.exporter.notifier.lastReportDate(
+            MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
+        self.assertTrue(
+            last_report is None or last_report > self.timeUtil.datetimeForString(
+                EARLIEST_DATE))
 
 
 if __name__ == '__main__':
@@ -544,7 +554,7 @@ if __name__ == '__main__':
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        # selected_tests = ['test_plaintext_list_of_downloadable_files']
+        selected_tests = ['test_last_report_date']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:

@@ -44,8 +44,11 @@ class MSGNotifier(object):
         Send msgBody with files attached as a notification to the mailing
         list defined in the config file.
 
-    lastReportDate(notificationType):
+    lastReportDate(noticeType):
         The last date where a notification of the given type was reported.
+
+    recordNotificationEvent(noticeType):
+        Record an event in the notification history.
     """
 
     def __init__(self):
@@ -252,9 +255,10 @@ class MSGNotifier(object):
             raise Exception('Invalid notice type.')
 
         cursor = self.cursor
-        # @todo Verify dependendency on case for notice type when perform SELECT.
-        sql = """SELECT MAX("notificationTime") FROM "{}" WHERE
-        "noticeType" = '{}'""".format(self.noticeTable, noticeType.name)
+
+        sql = 'SELECT MAX("notificationTime") FROM "{}" WHERE ' \
+              '"notificationType" = \'{}\''.format(
+            self.noticeTable, noticeType.name)
 
         success = self.dbUtil.executeSQL(cursor, sql)
         if success:
