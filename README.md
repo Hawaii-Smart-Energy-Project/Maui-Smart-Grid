@@ -101,6 +101,7 @@ The software has the following dependencies and they can be satisfied through va
 
 * colorlog
 * dateutil
+* enum34
 * google-api-python-client
 * httplib2
 * matplotlib
