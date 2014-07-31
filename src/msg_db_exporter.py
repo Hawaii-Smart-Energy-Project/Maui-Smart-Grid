@@ -806,20 +806,20 @@ class MSGDBExporter(object):
 
         :return: String of summary text.
         """
-        lastTime = self.notifier.lastReportDate(
-            MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
         availableFilesURL = self.configer.configOptionValue('Export',
                                                             'export_list_url')
-        content = ''
-        content += 'Last report date: {}\n'.format(self.notifier.lastReportDate(
-            MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY))
+        lastReportDate = self.notifier.lastReportDate(
+            MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
+        content = 'Cloud Export Summary:\n\n'
+        content += 'Last report date: {}\n'.format(lastReportDate)
         content += '{} databases have been exported.\n'.format(
-            self.countOfDBExports())
+            self.countOfDBExports(
+                lastReportDate + datetime.timedelta(hours = 10)))
         content += '{} B free space is available.\n'.format(self.freeSpace())
         content += '\nCurrently available DBs:\n'
         content += self.plaintextListOfDownloadableFiles()
-        content += '\nFiles can be accessed through Google Drive or at {' \
-                   '}.'.format(
+        content += '\nFiles can be accessed through Google Drive (' \
+                   'https://drive.google.com) or at {}.'.format(
             availableFilesURL)
 
         return content
@@ -840,6 +840,7 @@ class MSGDBExporter(object):
               '"notificationTime" > \'{}\' AND "notificationType" = \'{' \
               '}\''.format(since.strftime('%Y-%m-%d %H:%M'),
                            MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY.name)
+        self.logger.log(sql,'DEBUG')
 
         conn = MSGDBConnector().connectDB()
         cursor = conn.cursor()

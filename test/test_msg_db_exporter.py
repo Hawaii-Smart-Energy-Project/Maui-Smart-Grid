@@ -29,6 +29,7 @@ from msg_types import MSGNotificationHistoryTypes
 
 EARLIEST_DATE = MSGTimeUtil().datetimeForString('2011-01-01 00:00')
 
+
 class MSGDBExporterTester(unittest.TestCase):
     """
     Unit tests for the MSG Cloud Exporter.
@@ -511,18 +512,21 @@ class MSGDBExporterTester(unittest.TestCase):
 
     def test_plaintext_list_of_downloadable_files(self):
         """
-        This test handles content both with content links and without content links.
+        This test handles content both with content links and without content
+        links.
         """
         content = self.exporter.plaintextListOfDownloadableFiles()
         self.assertRegexpMatches(content,
-                                 '\d+-\d+-\d+.*\,\s+\d+-\d+-\d+T\d+:\d+:\d+\.\d+Z\,\s+\d+\sB')
+                                 '\d+-\d+-\d+.*\,'
+                                 '\s+\d+-\d+-\d+T\d+:\d+:\d+\.\d+Z\,\s+\d+\sB')
 
 
     def test_last_report_date(self):
         last_report = self.exporter.notifier.lastReportDate(
             MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
         self.assertTrue(
-            last_report is None or last_report > self.timeUtil.datetimeForString(
+            last_report is None or last_report >
+            self.timeUtil.datetimeForString(
                 EARLIEST_DATE))
 
 
@@ -531,6 +535,12 @@ class MSGDBExporterTester(unittest.TestCase):
                                  re.compile(
                                      'last.*databases.*free.*currently.*accessed.*',
                                      flags = re.IGNORECASE | re.DOTALL))
+
+
+    # def test_send_current_export_summary(self):
+    #     self.exporter.notifier.sendNotificationEmail(
+    #         self.exporter.currentExportSummary(), testing = True)
+
 
 if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
@@ -551,12 +561,13 @@ if __name__ == '__main__':
                          'test_markdown_list_of_downloadable_files',
                          'test_outdated_files', 'test_count_of_db_exports',
                          'test_count_of_cloud_files',
-                         'test_plaintext_list_of_downloadable_files']
+                         'test_plaintext_list_of_downloadable_files',
+                         'test_last_report_date', 'test_current_export_summary']
 
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        selected_tests = ['test_current_export_summary']
+        # selected_tests = ['test_send_current_export_summary']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:
