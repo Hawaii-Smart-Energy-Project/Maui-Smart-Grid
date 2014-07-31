@@ -500,8 +500,8 @@ class MSGDBExporterTester(unittest.TestCase):
 
 
     def test_count_of_db_exports(self):
-        count = self.exporter.countOfDBExports(
-            since = self.timeUtil.datetimeForString(EARLIEST_DATE))
+        count = self.exporter.countOfDBExports(EARLIEST_DATE)
+        self.logger.log(count,'DEBUG')
         self.assertTrue(int(count) or int(count) == int(0))
 
 
@@ -567,7 +567,7 @@ if __name__ == '__main__':
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        # selected_tests = ['test_send_current_export_summary']
+        # selected_tests = ['test_count_of_db_exports']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:

@@ -814,23 +814,23 @@ class MSGDBExporter(object):
         content += 'Last report date: {}\n'.format(lastReportDate)
 
         # @TO BE REVIEWED: Verify time zone adjustment.
-        content += '{} databases have been exported.\n'.format(
-            self.countOfDBExports(
-                lastReportDate + datetime.timedelta(hours = 10)))
+        content += '{} databases have been exported since the last report ' \
+                   'date.\n'.format(self.countOfDBExports(
+            lastReportDate + datetime.timedelta(hours = 10)))
 
         content += '{} B free space is available.\n'.format(self.freeSpace())
         content += '\nCurrently available DBs:\n'
         content += self.plaintextListOfDownloadableFiles()
-        content += '\nFiles can be accessed through Google Drive (' \
+        content += '\n{} files can be accessed through Google Drive (' \
                    'https://drive.google.com) or at {}.'.format(
-            availableFilesURL)
+            self.countOfCloudFiles(), availableFilesURL)
 
         return content
 
 
     def countOfDBExports(self, since = None):
         """
-        :param since: datetime indicating last trailing export datetime.
+        :param since: datetime indicating last export datetime.
         :return: Int of count of exports.
         """
         myDatetime = lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%S')
@@ -838,12 +838,9 @@ class MSGDBExporter(object):
             since = myDatetime('1900-01-01 00:00')
         self.logger.log(since.strftime('%Y-%m-%d %H:%M'), 'DEBUG')
 
-        sql = 'SELECT COUNT("public"."NotificationHistory"."notificationTime' \
-              '") FROM "public"."NotificationHistory" WHERE ' \
-              '"notificationTime" > \'{}\' AND "notificationType" = \'{' \
-              '}\''.format(since.strftime('%Y-%m-%d %H:%M'),
-                           MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY.name)
-        self.logger.log(sql,'DEBUG')
+        sql = 'SELECT COUNT("public"."ExportHistory"."timestamp") FROM ' \
+              '"public"."ExportHistory" WHERE "timestamp" > \'{}\''.format(
+            since.strftime('%Y-%m-%d %H:%M'))
 
         conn = MSGDBConnector().connectDB()
         cursor = conn.cursor()
