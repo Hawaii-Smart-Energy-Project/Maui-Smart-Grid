@@ -511,6 +511,15 @@ class MSGDBExporterTester(unittest.TestCase):
         pass
 
 
+    def test_plaintext_list_of_downloadable_files(self):
+        """
+        This test handles content both with content links and without content links.
+        """
+        content = self.exporter.plaintextListOfDownloadableFiles()
+        self.assertRegexpMatches(content,
+                                 '\d+-\d+-\d+.*\,\s+\d+-\d+-\d+T\d+:\d+:\d+\.\d+Z\,\s+\d+\sB')
+
+
 if __name__ == '__main__':
     RUN_SELECTED_TESTS = True
 
@@ -528,12 +537,14 @@ if __name__ == '__main__':
                          'test_create_compressed_archived',
                          'test_adding_reader_permissions',
                          'test_markdown_list_of_downloadable_files',
-                         'test_outdated_files']
+                         'test_outdated_files', 'test_count_of_db_exports',
+                         'test_count_of_cloud_files',
+                         'test_plaintext_list_of_downloadable_files']
 
         selected_tests = [x for x in itertools.chain(sudo_tests, nonsudo_tests)]
 
         # For testing:
-        selected_tests = ['test_count_of_cloud_files','test_count_of_db_exports']
+        # selected_tests = ['test_plaintext_list_of_downloadable_files']
 
         mySuite = unittest.TestSuite()
         for t in selected_tests:

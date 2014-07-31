@@ -715,6 +715,7 @@ class MSGDBExporter(object):
         # self.logger.log('content: {}'.format(content))
         return content
 
+
     def plaintextListOfDownloadableFiles(self):
         """
         Generate content containing a list of downloadable files in plaintext
@@ -723,15 +724,20 @@ class MSGDBExporter(object):
         :returns: String content as plaintext.
         """
         content = ''
-        for i in self.listOfDownloadableFiles():
-            content += "{}, {}, {}, {} B\n".format(i['title'],
-                                                   i['webContentLink'],
-                                                   i['createdDate'],
+        includeLink = True
+        for i in reversed(sorted(self.cloudFiles['items'],
+                                 key = lambda k: k['createdDate'])):
+            if includeLink:
+                content += "{}, {}, {}, {} B\n".format(i['title'],
+                                                       i['webContentLink'],
+                                                       i['createdDate'],
+                                                       int(i['fileSize']))
+            else:
+                content += "{}, {}, {} B\n".format(i['title'], i['createdDate'],
                                                    int(i['fileSize']))
 
-        self.logger.log('content: {}'.format(content))
-
         return content
+
 
     def logSuccessfulExport(self, name = '', url = '', datetime = 0, size = 0):
         """
