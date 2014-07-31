@@ -131,12 +131,3 @@ class MSGTimeUtil(object):
         """
         return dt.strptime(datetimeString, '%Y-%m-%d %H:%S')
 
-# For debugging:
-# timeUtil = MSGTimeUtil()
-
-# testDays = set()
-# testDays.add(dt.datetime.strptime("2003-01-01 00:00", "%Y-%m-%d %H:%M"))
-# testDays.add(dt.datetime.strptime("2003-01-02 00:00", "%Y-%m-%d %H:%M"))
-# testDays.add(dt.datetime.strptime("2003-01-01 00:00", "%Y-%m-%d %H:%M"))
-
-# print timeUtil.reportOfDays(testDays)
