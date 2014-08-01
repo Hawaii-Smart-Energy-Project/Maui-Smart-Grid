@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Compilation of types for the Maui Smart Grid defined as Enum (enum34) values.
+"""
+
 __author__ = 'Daniel Zhang (張道博)'
 __copyright__ = 'Copyright (c) 2014, University of Hawaii Smart Energy Project'
 __license__ = 'https://raw.github' \
