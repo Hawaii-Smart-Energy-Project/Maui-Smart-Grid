@@ -7,7 +7,7 @@ __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
 
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from msg_db_util import MSGDBUtil
 
 
@@ -25,7 +25,7 @@ class MSGWeatherDataDupeChecker(object):
         :param testing: Flag for testing mode.
         """
 
-        self.logger = MSGLogger(__name__, 'debug')
+        self.logger = SEKLogger(__name__, 'debug')
         self.dbUtil = MSGDBUtil()
 
 

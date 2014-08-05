@@ -10,7 +10,7 @@ __license__ = 'https://raw.github' \
 import urllib2
 import re
 from msg_db_util import MSGDBUtil
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from msg_configer import MSGConfiger
 import datetime as dt
 import calendar
@@ -33,7 +33,7 @@ class MSGWeatherDataUtil(object):
         TESTING MODE.
         """
 
-        self.logger = MSGLogger(__name__, 'info')
+        self.logger = SEKLogger(__name__, 'info')
         self.configer = MSGConfiger()
         self.url = self.configer.configOptionValue('Weather Data',
                                                    'weather_data_url')

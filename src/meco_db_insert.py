@@ -10,7 +10,7 @@ __license__ = 'https://raw.github' \
 from meco_mapper import MECOMapper
 from meco_dupe_check import MECODupeChecker
 from msg_db_util import MSGDBUtil
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 
 VISUALIZE_DATA = 1
 DEBUG = 1
@@ -26,7 +26,7 @@ class MECODBInserter(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__, 'debug')
+        self.logger = SEKLogger(__name__, 'debug')
         self.mapper = MECOMapper()
         self.dupeChecker = MECODupeChecker()
         self.dbUtil = MSGDBUtil()

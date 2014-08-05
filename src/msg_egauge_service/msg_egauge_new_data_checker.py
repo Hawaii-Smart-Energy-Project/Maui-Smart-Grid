@@ -11,7 +11,7 @@ from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 from msg_configer import MSGConfiger
 from msg_notifier import MSGNotifier
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 
 
 NOTIFICATION_HISTORY_TABLE = "NotificationHistory"
@@ -30,7 +30,7 @@ class MSGEgaugeNewDataChecker(object):
         """
 
         print __name__
-        self.logger = MSGLogger(__name__)
+        self.logger = SEKLogger(__name__)
         self.connector = MSGDBConnector()
         self.dbUtil = MSGDBUtil()
         self.notifier = MSGNotifier()

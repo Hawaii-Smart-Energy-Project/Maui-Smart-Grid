@@ -9,17 +9,16 @@ __license__ = 'https://raw.github' \
 
 import unittest
 from msg_noaa_weather_data_util import MSGWeatherDataUtil
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from msg_db_connector import MSGDBConnector
 import re
-from msg_logger import MSGLogger
 from msg_configer import MSGConfiger
 
 
 class WeatherDataLoadingTester(unittest.TestCase):
     def setUp(self):
         self.weatherUtil = MSGWeatherDataUtil()
-        self.logger = MSGLogger(__name__, 'DEBUG')
+        self.logger = SEKLogger(__name__, 'DEBUG')
         self.dbConnector = MSGDBConnector()
         self.cursor = self.dbConnector.conn.cursor()
         self.configer = MSGConfiger()

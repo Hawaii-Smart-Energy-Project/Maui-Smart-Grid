@@ -22,11 +22,11 @@ from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 from msg_notifier import MSGNotifier
 from msg_configer import MSGConfiger
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 import argparse
 
 COMMAND_LINE_ARGS = None
-logger = MSGLogger(__name__, 'debug')
+logger = SEKLogger(__name__, 'debug')
 
 def processCommandLineArguments():
     global argParser, COMMAND_LINE_ARGS, filename

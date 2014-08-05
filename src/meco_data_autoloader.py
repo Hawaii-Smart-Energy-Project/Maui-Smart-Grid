@@ -8,7 +8,7 @@ __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
 
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from msg_configer import MSGConfiger
 import os
 import fnmatch
@@ -27,7 +27,7 @@ class MECODataAutoloader(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__)
+        self.logger = SEKLogger(__name__)
         self.configer = MSGConfiger()
         self.fileUtil = MSGFileUtil()
 

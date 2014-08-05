@@ -7,7 +7,7 @@ __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
 
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 import calendar
@@ -26,7 +26,7 @@ class MSGDataVerifier(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__, 'DEBUG')
+        self.logger = SEKLogger(__name__, 'DEBUG')
         self.cursor = MSGDBConnector().connectDB().cursor()
         self.dbUtil = MSGDBUtil()
 

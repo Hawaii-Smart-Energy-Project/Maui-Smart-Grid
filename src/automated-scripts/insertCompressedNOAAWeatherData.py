@@ -24,7 +24,7 @@ import fnmatch
 from msg_configer import MSGConfiger
 from msg_notifier import MSGNotifier
 import argparse
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 import gzip
 from msg_noaa_weather_data_parser import MSGNOAAWeatherDataParser
 from msg_noaa_weather_data_inserter import MSGNOAAWeatherDataInserter
@@ -34,7 +34,7 @@ from msg_noaa_weather_data_util import MSGWeatherDataUtil
 
 
 configer = MSGConfiger()
-logger = MSGLogger(__name__, 'info')
+logger = SEKLogger(__name__, 'info')
 binPath = MSGConfiger.configOptionValue(configer, "Executable Paths",
                                         "msg_bin_path")
 COMMAND_LINE_ARGS = None

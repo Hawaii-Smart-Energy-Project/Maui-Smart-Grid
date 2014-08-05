@@ -29,7 +29,7 @@ __license__ = 'https://raw.github' \
 
 import pycurl
 from msg_configer import MSGConfiger
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 import multiprocessing
 import zipfile
 import os.path
@@ -322,7 +322,7 @@ if __name__ == '__main__':
     MSG_BODY += '%s\n' % msg
 
     global logger
-    logger = MSGLogger(__name__)
+    logger = SEKLogger(__name__)
     weatherDataURL = configer.configOptionValue('Weather Data',
                                                 'weather_data_url')
 

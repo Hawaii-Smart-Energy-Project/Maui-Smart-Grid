@@ -9,7 +9,7 @@ __license__ = 'https://raw.github' \
 
 from msg_configer import MSGConfiger
 from msg_db_util import MSGDBUtil
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 
 
 class MECODupeChecker(object):
@@ -22,7 +22,7 @@ class MECODupeChecker(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__, 'debug')
+        self.logger = SEKLogger(__name__, 'debug')
         self.mecoConfig = MSGConfiger()
         self.currentReadingID = 0
         self.dbUtil = MSGDBUtil()

@@ -7,7 +7,7 @@ __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
 
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from msg_time_util import MSGTimeUtil
 import subprocess
 from msg_configer import MSGConfiger
@@ -89,7 +89,7 @@ class MSGDBExporter(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__, 'DEBUG', useColor = False)
+        self.logger = SEKLogger(__name__, 'DEBUG', useColor = False)
         self.timeUtil = MSGTimeUtil()
         self.configer = MSGConfiger()
         self.fileUtil = MSGFileUtil()

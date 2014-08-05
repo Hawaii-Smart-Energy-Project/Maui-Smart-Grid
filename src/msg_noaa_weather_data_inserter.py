@@ -9,7 +9,7 @@ __license__ = 'https://raw.github' \
 
 from msg_noaa_weather_data_dupe_checker import MSGWeatherDataDupeChecker
 from msg_db_util import MSGDBUtil
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 import sys
 import datetime as dt
 
@@ -25,7 +25,7 @@ class MSGNOAAWeatherDataInserter(object):
         :param testing: True if testing mode is being used.
         """
 
-        self.logger = MSGLogger(__name__, 'info')
+        self.logger = SEKLogger(__name__, 'info')
         self.dbUtil = MSGDBUtil()
         self.dupeChecker = MSGWeatherDataDupeChecker()
 

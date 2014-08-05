@@ -4,7 +4,7 @@
 __author__ = 'Daniel Zhang (張道博)'
 
 import unittest
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 
 # @todo Replace strings with enumeration types.
 from logging import INFO
@@ -17,7 +17,7 @@ import re
 class MSGLoggerTester(unittest.TestCase):
 
     def setUp(self):
-        self.logger = MSGLogger(__name__, level='DEBUG')
+        self.logger = SEKLogger(__name__, level='DEBUG')
         print 'logger level: %s' % self.logger.loggerLevel
 
     def testInit(self):

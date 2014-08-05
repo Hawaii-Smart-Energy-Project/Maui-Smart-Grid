@@ -20,7 +20,7 @@ __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
 
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from msg_notifier import MSGNotifier
 from msg_db_exporter import MSGDBExporter
 import argparse
@@ -47,7 +47,7 @@ def processCommandLineArguments():
 
 
 if __name__ == '__main__':
-    logger = MSGLogger(__name__, 'INFO')
+    logger = SEKLogger(__name__, 'INFO')
 
     logger.log("Exporting DBs to cloud.")
     processCommandLineArguments()

@@ -8,7 +8,7 @@ __license__ = 'https://raw.github' \
               '-LICENSE.txt'
 
 import unittest
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from msg_db_exporter import MSGDBExporter
 from apiclient import http
 import datetime
@@ -37,7 +37,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
 
     def setUp(self):
-        self.logger = MSGLogger(__name__, 'DEBUG')
+        self.logger = SEKLogger(__name__, 'DEBUG')
         self.configer = MSGConfiger()
         self.exporter = MSGDBExporter()
         self.testDir = 'db_exporter_test'

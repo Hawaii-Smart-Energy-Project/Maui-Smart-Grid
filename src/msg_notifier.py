@@ -17,7 +17,7 @@ from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email.utils import formatdate
 from email import Encoders
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 from msg_types import MSGNotificationHistoryTypes
@@ -58,7 +58,7 @@ class MSGNotifier(object):
         """
 
         self.config = MSGConfiger()
-        self.logger = MSGLogger(__name__, 'info')
+        self.logger = SEKLogger(__name__, 'info')
         self.connector = MSGDBConnector()
         self.conn = self.connector.connectDB()
         self.cursor = self.conn.cursor()

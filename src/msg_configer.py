@@ -11,7 +11,7 @@ import ConfigParser
 import os
 import stat
 import sys
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 
 class MSGConfiger(object):
     """
@@ -30,7 +30,7 @@ class MSGConfiger(object):
         """
 
         self._config = ConfigParser.ConfigParser()
-        self.logger = MSGLogger(__name__, 'INFO')
+        self.logger = SEKLogger(__name__, 'INFO')
 
         # Define tables that will have data inserted. Data will only be inserted
         # to tables that are defined here.

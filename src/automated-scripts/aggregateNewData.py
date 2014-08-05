@@ -7,7 +7,7 @@ __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
 
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from msg_data_aggregator import MSGDataAggregator
 from msg_notifier import MSGNotifier
 from msg_db_connector import MSGDBConnector
@@ -26,7 +26,7 @@ class NewDataAggregator(object):
         """
         Constructor.
         """
-        self.logger = MSGLogger(__name__, 'DEBUG')
+        self.logger = SEKLogger(__name__, 'DEBUG')
         self.aggregator = MSGDataAggregator()
         self.notifier = MSGNotifier()
         self.rawTypes = [x.name for x in list(MSGAggregationTypes)]
@@ -88,7 +88,7 @@ class NewDataAggregator(object):
 
 if __name__ == '__main__':
     aggregator = NewDataAggregator()
-    logger = MSGLogger(__name__)
+    logger = SEKLogger(__name__)
     logger.log('Last report date {}'.format(aggregator.notifier.lastReportDate(
         MSGNotificationHistoryTypes.MSG_DATA_AGGREGATOR)))
     result = aggregator.aggregateNewData()

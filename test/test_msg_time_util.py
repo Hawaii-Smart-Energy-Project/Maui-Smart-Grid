@@ -10,13 +10,13 @@ __license__ = 'https://raw.github' \
 import unittest
 from msg_time_util import MSGTimeUtil
 import re
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from datetime import datetime as dt
 
 
 class MSGTimeUtilTester(unittest.TestCase):
     def setUp(self):
-        self.logger = MSGLogger(__name__, 'debug')
+        self.logger = SEKLogger(__name__, 'debug')
         self.timeUtil = MSGTimeUtil()
 
     def test_concise_now(self):

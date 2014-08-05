@@ -7,7 +7,7 @@ __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
 
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 import hashlib
 from functools import partial
 import gzip
@@ -23,7 +23,7 @@ class MSGFileUtil(object):
         """
         Constructor.
         """
-        self.logger = MSGLogger(__name__, 'DEBUG')
+        self.logger = SEKLogger(__name__, 'DEBUG')
 
 
     def validDirectory(self, path):

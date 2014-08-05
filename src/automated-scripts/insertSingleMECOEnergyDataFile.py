@@ -24,7 +24,7 @@ import sys
 import argparse
 import os
 from filelock import FileLock
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 
 
 USE_SCRIPT_METHOD = False
@@ -43,7 +43,7 @@ class Inserter(object):
         :param testing: Flag indicating if testing mode is on.
         """
 
-        self.logger = MSGLogger(__name__)
+        self.logger = SEKLogger(__name__)
         self.parser = MECOXMLParser(testing)
         self.configer = MSGConfiger()
 

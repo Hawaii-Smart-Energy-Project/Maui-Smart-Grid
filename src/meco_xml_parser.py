@@ -18,7 +18,7 @@ from meco_fk import MECOFKDeterminer
 import sys
 from itertools import tee, islice, izip_longest
 from meco_dupe_check import MECODupeChecker
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 
 
 class MECOXMLParser(object):
@@ -35,7 +35,7 @@ class MECOXMLParser(object):
         :param testing: (optional) Boolean indicating if Testing Mode is on.
         """
 
-        self.logger = MSGLogger(__name__, 'silent')
+        self.logger = SEKLogger(__name__, 'silent')
 
         if (testing):
             self.logger.log("Testing Mode is ON.", 'info')
