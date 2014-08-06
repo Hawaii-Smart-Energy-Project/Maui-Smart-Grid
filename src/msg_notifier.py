@@ -21,6 +21,7 @@ from sek.logger import SEKLogger
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 from msg_types import MSGNotificationHistoryTypes
+import warnings
 
 
 class MSGNotifier(object):
@@ -56,6 +57,10 @@ class MSGNotifier(object):
         """
         Constructor.
         """
+
+        warnings.simplefilter('default')
+        warnings.warn("This module is deprecated in favor of SEKNotifier.",
+                      DeprecationWarning)
 
         self.config = MSGConfiger()
         self.logger = SEKLogger(__name__, 'info')
