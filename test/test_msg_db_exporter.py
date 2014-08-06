@@ -523,12 +523,9 @@ class MSGDBExporterTester(unittest.TestCase):
 
     def test_last_report_date(self):
         last_report = self.exporter.notifier.lastReportDate(
-            MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
-        self.assertTrue(
-            last_report is None or last_report >
-            self.timeUtil.datetimeForString(
-                EARLIEST_DATE))
-
+            types = MSGNotificationHistoryTypes,
+            noticeType = MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
+        self.assertTrue(last_report is None or last_report > EARLIEST_DATE)
 
     def test_current_export_summary(self):
         self.assertRegexpMatches(self.exporter.currentExportSummary(),
