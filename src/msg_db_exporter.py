@@ -31,7 +31,7 @@ from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 import sys
 from msg_python_util import MSGPythonUtil
-from msg_notifier import MSGNotifier
+from sek.notifier import SEKNotifier
 from msg_types import MSGNotificationHistoryTypes
 
 
@@ -94,7 +94,28 @@ class MSGDBExporter(object):
         self.configer = MSGConfiger()
         self.fileUtil = MSGFileUtil()
         self.pythonUtil = MSGPythonUtil()  # for debugging
-        self.notifier = MSGNotifier()
+        self.connector = MSGDBConnector()
+        self.conn = self.connector.connectDB()
+        self.cursor = self.conn.cursor()
+        self.dbUtil = MSGDBUtil()
+        self.notifier = SEKNotifier(connector = self.connector,
+                                    dbUtil = self.dbUtil,
+                                    user = self.configer.configOptionValue(
+                                        'Notifications', 'email_username'),
+                                    password = self.configer.configOptionValue(
+                                        'Notifications', 'email_password'),
+                                    fromaddr = self.configer.configOptionValue(
+                                        'Notifications', 'email_from_address'),
+                                    toaddr = self.configer.configOptionValue(
+                                        'Notifications', 'email_recipients'),
+                                    testing_toaddr =
+                                    self.configer.configOptionValue(
+                                        'Notifications',
+                                        'testing_email_recipients'),
+                                    smtp_server_and_port =
+                                    self.configer.configOptionValue(
+                                        'Notifications',
+                                        'smtp_server_and_port'))
 
         # Google Drive parameters.
         self.clientID = self.configer.configOptionValue('Export',
@@ -788,7 +809,8 @@ class MSGDBExporter(object):
         try:
             if self.notifier.sendNotificationEmail(summary, testing = False):
                 self.notifier.recordNotificationEvent(
-                    MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
+                    types = MSGNotificationHistoryTypes,
+                    noticeType = MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
         except Exception as detail:
             self.logger.log('Exception occurred: {}'.format(detail), 'ERROR')
 
