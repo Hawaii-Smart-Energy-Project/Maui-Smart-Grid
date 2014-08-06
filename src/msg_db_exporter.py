@@ -834,7 +834,8 @@ class MSGDBExporter(object):
         availableFilesURL = self.configer.configOptionValue('Export',
                                                             'export_list_url')
         lastReportDate = self.notifier.lastReportDate(
-            MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
+            types = MSGNotificationHistoryTypes,
+            noticeType = MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
         content = 'Cloud Export Summary:\n\n'
         content += 'Last report date: {}\n'.format(lastReportDate)
 
