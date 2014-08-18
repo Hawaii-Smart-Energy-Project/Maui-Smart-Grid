@@ -378,12 +378,13 @@ class MSGDataAggregator(object):
             :param values: String containing values to be inserted.
             :return Nothing.
             """
-            success = True
             sql = 'INSERT INTO "{0}" ({1}) VALUES( {2})'.format(
                 self.tables[agg.aggregationType], ','.join(agg.columns), values)
             self.logger.log('sql: {}'.format(sql), 'debug')
             success = self.dbUtil.executeSQL(self.cursor, sql,
                                              exitOnFail = self.exitOnError)
+
+            # Used for a special case where data is reloaded.
             if self.commitOnEveryInsert:
                 self.conn.commit()
             if not success and self.exitOnError:
