@@ -42,12 +42,11 @@ msgBody = ''
 notifier = MSGNotifier()
 dataParser = MSGNOAAWeatherDataParser()
 inserter = MSGNOAAWeatherDataInserter()
-
 timeUtil = MSGTimeUtil()
 
 
 def processCommandLineArguments():
-    global argParser, COMMAND_LINE_ARGS
+    global COMMAND_LINE_ARGS
     argParser = argparse.ArgumentParser(
         description = 'Perform recursive insertion of compressed weather data'
                       ' contained in the current directory to the MECO '
@@ -65,7 +64,7 @@ def processCommandLineArguments():
                                   'processing the latest data. Processing '
                                   'only the latest data is the default '
                                   'behavior.')
-    commandLineArgs = argParser.parse_args()
+    COMMAND_LINE_ARGS = argParser.parse_args()
 
 
 def previousRetrievalResults():

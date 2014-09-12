@@ -65,10 +65,8 @@ class MSGNOAAWeatherDataInserter(object):
                     # Except for NULL values.
                     vals.append("%s" % row[col])
 
-            #sql = 'INSERT INTO "' + tableName + '" (' + ','.join(cols) + ')'
-            # + ' VALUES (' + ','.join(vals) + ')'
             sql = """INSERT INTO "%s" (%s) VALUES (%s)""" % (
-            tableName, ','.join(cols), ','.join(vals))
+                tableName, ','.join(cols), ','.join(vals))
 
             if self.dupeChecker.duplicateExists(cur, row['wban'],
                                                 row['datetime'],

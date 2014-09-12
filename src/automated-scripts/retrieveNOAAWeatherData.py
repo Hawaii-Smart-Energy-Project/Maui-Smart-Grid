@@ -29,10 +29,9 @@ __license__ = 'https://raw.github' \
 
 import pycurl
 from msg_configer import MSGConfiger
-from sek.logger import SEKLogger
+from sek.logger import SEKLogger, CRITICAL, ERROR, WARNING, INFO, DEBUG, SILENT
 import multiprocessing
 import zipfile
-import os.path
 import os
 import gzip
 from msg_noaa_weather_data_util import MSGWeatherDataUtil
@@ -46,6 +45,7 @@ downloadCount = 0
 
 WEATHER_DATA_PATH = ''
 MSG_BODY = ''
+WEATHER_DATA = 'Weather Data'
 
 # @todo Remove use of global weather data path.
 
@@ -66,14 +66,14 @@ class MSGWeatherDataRetriever(object):
         self.weatherUtil = MSGWeatherDataUtil()
 
         global weatherDataPath
-        weatherDataPath = self.configer.configOptionValue('Weather Data',
+        weatherDataPath = self.configer.configOptionValue(WEATHER_DATA,
                                                           'weather_data_path')
         global weatherDataURL
-        weatherDataURL = self.configer.configOptionValue('Weather Data',
+        weatherDataURL = self.configer.configOptionValue(WEATHER_DATA,
                                                          'weather_data_url')
 
         global weatherDataPattern
-        weatherDataPattern = self.configer.configOptionValue('Weather Data',
+        weatherDataPattern = self.configer.configOptionValue(WEATHER_DATA,
                                                              'weather_data_pattern')
 
 
@@ -97,8 +97,8 @@ def fileExists(filename):
         with open(filename):
             return True
 
-    except IOError, e:
-        logger.log("%s" % e, 'info')
+    except IOError as detail:
+        logger.log('Exception: {}'.format(detail), SILENT)
         return False
 
     return False
@@ -200,8 +200,8 @@ def performDownloading(filename, forceDownload = False):
     Perform downloading of weather data file with a given filename.
     Existing files will not be retrieved.
 
-    :param filename
-    :param forceDownload
+    :param filename: String
+    :param forceDownload: Boolean
     :returns: True for success, False otherwise.
     """
     global MSG_BODY
@@ -322,10 +322,14 @@ if __name__ == '__main__':
     MSG_BODY += '%s\n' % msg
 
     global logger
+
+    # @todo verify this usage
     logger = SEKLogger(__name__)
+
     weatherDataURL = configer.configOptionValue('Weather Data',
                                                 'weather_data_url')
 
+    # @todo consider removing redundant use of retriever
     retriever.fileList = retriever.weatherUtil.fileList
     retriever.dateList = retriever.weatherUtil.dateList
 
@@ -370,11 +374,10 @@ if __name__ == '__main__':
             print msg
             MSG_BODY += '%s\n' % msg
 
-
-    # Just retrieve the last set if nothing else was retrieved.
     if downloadCount == 0:
-        # Retrieve last dated set if nothing else was retrieved.
+        # Retrieve the last dated set if nothing else was retrieved.
         retriever.dateList.sort()
+        logger.log('filelist {}'.format(retriever.fileList), INFO)
         performDownloading(retriever.fileList[-1], forceDownload = True)
 
     msg = "downloadCount = %s." % downloadCount

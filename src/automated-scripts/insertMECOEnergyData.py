@@ -252,8 +252,8 @@ if __name__ == '__main__':
             sys.stderr.write("\n")
             msgBody += returnDict[key]
 
-    except Exception, e:
-        msg = "\nAn exception occurred: %s\n" % e
+    except Exception as detail:
+        msg = "\nAn exception occurred: {}\n".format(detail)
         logger.log(msg, 'error')
         msgBody += msg
 
