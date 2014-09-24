@@ -9,7 +9,6 @@ __license__ = 'https://raw.github' \
 
 import ConfigParser
 import os
-import stat
 import sys
 from sek.logger import SEKLogger
 from sek.file_util import SEKFileUtil

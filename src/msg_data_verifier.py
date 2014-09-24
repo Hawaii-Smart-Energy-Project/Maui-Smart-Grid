@@ -13,7 +13,7 @@ from msg_db_util import MSGDBUtil
 import calendar
 
 
-YEARS = [2012, 2013, 2014]
+YEARS = [2012, 2013, 2014, 2015]
 
 
 class MSGDataVerifier(object):
