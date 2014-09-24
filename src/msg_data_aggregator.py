@@ -7,7 +7,7 @@ __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
 
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from msg_db_connector import MSGDBConnector
 from msg_db_util import MSGDBUtil
 from msg_notifier import MSGNotifier
@@ -80,7 +80,7 @@ class MSGDataAggregator(object):
         the production DB.
         """
 
-        self.logger = MSGLogger(__name__, 'info')
+        self.logger = SEKLogger(__name__, 'info')
         self.configer = MSGConfiger()
         self.conn = MSGDBConnector().connectDB()
         self.cursor = self.conn.cursor()
@@ -378,12 +378,13 @@ class MSGDataAggregator(object):
             :param values: String containing values to be inserted.
             :return Nothing.
             """
-            success = True
             sql = 'INSERT INTO "{0}" ({1}) VALUES( {2})'.format(
                 self.tables[agg.aggregationType], ','.join(agg.columns), values)
             self.logger.log('sql: {}'.format(sql), 'debug')
             success = self.dbUtil.executeSQL(self.cursor, sql,
                                              exitOnFail = self.exitOnError)
+
+            # Used for a special case where data is reloaded.
             if self.commitOnEveryInsert:
                 self.conn.commit()
             if not success and self.exitOnError:

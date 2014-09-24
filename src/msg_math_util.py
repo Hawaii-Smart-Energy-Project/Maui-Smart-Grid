@@ -7,7 +7,7 @@ __license__ = 'https://raw.github' \
               '.com/Hawaii-Smart-Energy-Project/Maui-Smart-Grid/master/BSD' \
               '-LICENSE.txt'
 
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 
 
 class MSGMathUtil(object):
@@ -19,7 +19,7 @@ class MSGMathUtil(object):
         """
         Constructor.
         """
-        self.logger = MSGLogger(__name__)
+        self.logger = SEKLogger(__name__)
 
     def isNumber(self, s):
         try:

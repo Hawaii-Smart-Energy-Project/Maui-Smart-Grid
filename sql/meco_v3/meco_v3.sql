@@ -81,6 +81,38 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
 
+--
+-- Name: plpythonu; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpythonu WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpythonu; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpythonu IS 'PL/PythonU untrusted procedural language';
+
+
+SET search_path = dz, pg_catalog;
+
+--
+-- Name: meco_readings_dupe_count(); Type: FUNCTION; Schema: dz; Owner: postgres
+--
+
+CREATE FUNCTION meco_readings_dupe_count() RETURNS integer
+    LANGUAGE plpythonu
+    AS $$
+	from sys import path
+	path.append('/home/daniel/fork-of-github-maui-smart-grid/src')
+	from msg_data_verifier import MSGDataVerifier
+	return MSGDataVerifier().mecoReadingDupes()
+$$;
+
+
+ALTER FUNCTION dz.meco_readings_dupe_count() OWNER TO postgres;
+
 SET search_path = public, pg_catalog;
 
 --
@@ -112,80 +144,63 @@ CREATE FUNCTION zero_to_null(double precision) RETURNS double precision
 
 ALTER FUNCTION public.zero_to_null(double precision) OWNER TO postgres;
 
+SET search_path = dw, pg_catalog;
+
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: Event; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+-- Name: MeterLocationHistory_deprecated; Type: TABLE; Schema: dw; Owner: dave; Tablespace: 
 --
 
-CREATE TABLE "Event" (
-    event_name character varying,
-    event_time timestamp without time zone,
-    event_text character varying,
-    event_data_id bigint,
-    event_id bigint NOT NULL
+CREATE TABLE "MeterLocationHistory_deprecated" (
+    meter_name character varying,
+    mac_address character varying,
+    installed timestamp(6) without time zone,
+    uninstalled timestamp(6) without time zone,
+    location character varying,
+    address character varying,
+    city character varying,
+    latitude double precision,
+    longitude double precision,
+    old_service_point_id character varying,
+    service_point_height double precision,
+    service_point_latitude double precision,
+    service_point_longitude double precision,
+    notes character varying,
+    service_point_id character varying
 );
 
 
-ALTER TABLE public."Event" OWNER TO sepgroup;
+ALTER TABLE dw."MeterLocationHistory_deprecated" OWNER TO dave;
+
+SET search_path = public, pg_catalog;
 
 --
--- Name: EventData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+-- Name: MeterProgramChanges; Type: TABLE; Schema: public; Owner: dave; Tablespace: 
 --
 
-CREATE TABLE "EventData" (
-    end_time timestamp without time zone,
-    number_events smallint,
-    start_time timestamp without time zone,
-    meter_data_id bigint,
-    event_data_id bigint NOT NULL
+CREATE TABLE "MeterProgramChanges" (
+    meter_name character varying NOT NULL,
+    date_changed timestamp without time zone NOT NULL,
+    program_id integer NOT NULL
 );
 
 
-ALTER TABLE public."EventData" OWNER TO sepgroup;
+ALTER TABLE public."MeterProgramChanges" OWNER TO dave;
+
+SET search_path = dw, pg_catalog;
 
 --
--- Name: MeterData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+-- Name: MeterProgramHistory_backup; Type: VIEW; Schema: dw; Owner: dave
 --
 
-CREATE TABLE "MeterData" (
-    meter_data_id bigint NOT NULL,
-    mac_id character(23) NOT NULL,
-    meter_name character(8) NOT NULL,
-    util_device_id character(8) NOT NULL,
-    created timestamp without time zone
-);
+CREATE VIEW "MeterProgramHistory_backup" AS
+    SELECT "MeterProgramChanges".meter_name, "MeterProgramChanges".date_changed, "MeterProgramChanges".program_id FROM public."MeterProgramChanges";
 
 
-ALTER TABLE public."MeterData" OWNER TO sepgroup;
-
---
--- Name: TABLE "MeterData"; Type: COMMENT; Schema: public; Owner: sepgroup
---
-
-COMMENT ON TABLE "MeterData" IS 'Root table for MECO energy data. This table is set to cascade delete so that deletions here are propagated through the MECO energy data branches. --Daniel Zhang (張道博)';
-
-
---
--- Name: COLUMN "MeterData".created; Type: COMMENT; Schema: public; Owner: sepgroup
---
-
-COMMENT ON COLUMN "MeterData".created IS 'timestamp for when data is inserted';
-
-
-SET search_path = dz, pg_catalog;
-
---
--- Name: count_of_event_duplicates; Type: VIEW; Schema: dz; Owner: daniel
---
-
-CREATE VIEW count_of_event_duplicates AS
-    SELECT "Event".event_time, "MeterData".meter_data_id, "EventData".event_data_id, (count(*) - 1) AS "Duplicate Count" FROM ((public."MeterData" JOIN public."EventData" ON (("MeterData".meter_data_id = "EventData".meter_data_id))) JOIN public."Event" ON (("EventData".event_data_id = "Event".event_data_id))) GROUP BY "Event".event_time, "MeterData".meter_data_id, "EventData".event_data_id HAVING ((count(*) - 1) > 0) ORDER BY "Event".event_time;
-
-
-ALTER TABLE dz.count_of_event_duplicates OWNER TO daniel;
+ALTER TABLE dw."MeterProgramHistory_backup" OWNER TO dave;
 
 SET search_path = public, pg_catalog;
 
@@ -236,6 +251,35 @@ COMMENT ON TABLE "IntervalReadData" IS 'Part of the Reading branch for MECO ener
 
 
 --
+-- Name: MeterData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "MeterData" (
+    meter_data_id bigint NOT NULL,
+    mac_id character(23) NOT NULL,
+    meter_name character(8) NOT NULL,
+    util_device_id character(8) NOT NULL,
+    created timestamp without time zone
+);
+
+
+ALTER TABLE public."MeterData" OWNER TO sepgroup;
+
+--
+-- Name: TABLE "MeterData"; Type: COMMENT; Schema: public; Owner: sepgroup
+--
+
+COMMENT ON TABLE "MeterData" IS 'Root table for MECO energy data. This table is set to cascade delete so that deletions here are propagated through the MECO energy data branches. --Daniel Zhang (張道博)';
+
+
+--
+-- Name: COLUMN "MeterData".created; Type: COMMENT; Schema: public; Owner: sepgroup
+--
+
+COMMENT ON COLUMN "MeterData".created IS 'timestamp for when data is inserted';
+
+
+--
 -- Name: MeterLocationHistory; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -268,6 +312,49 @@ COMMENT ON TABLE "MeterLocationHistory" IS 'Links meters to service points and p
 
 
 --
+-- Name: PVServicePointIDs; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "PVServicePointIDs" (
+    old_pv_service_point_id character varying,
+    old_house_service_point_id character varying,
+    "PV_Mod_size_kW" double precision,
+    inverter_model character varying,
+    "size_kW" real,
+    "system_cap_kW" real,
+    bat character varying,
+    sub character varying,
+    circuit smallint,
+    date_uploaded timestamp without time zone DEFAULT '2014-01-19 19:53:55.497375'::timestamp without time zone,
+    has_meter smallint,
+    has_separate_pv_meter smallint,
+    "add_cap_kW" real,
+    upgraded_total_kw real,
+    street character varying,
+    city character varying,
+    state character varying,
+    zip integer,
+    month_installed integer,
+    year_installed integer,
+    notes character varying,
+    pv_service_point_id character varying,
+    house_service_point_id character varying,
+    new_spid character varying(50),
+    new_spid_pv character varying(50),
+    nem_agreement_date date
+);
+
+
+ALTER TABLE public."PVServicePointIDs" OWNER TO sepgroup;
+
+--
+-- Name: TABLE "PVServicePointIDs"; Type: COMMENT; Schema: public; Owner: sepgroup
+--
+
+COMMENT ON TABLE "PVServicePointIDs" IS 'Contains service point data for one-meter and two-meter PV installations. --Daniel Zhang (張道博)';
+
+
+--
 -- Name: Reading; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -291,7 +378,110 @@ ALTER TABLE public."Reading" OWNER TO sepgroup;
 COMMENT ON TABLE "Reading" IS 'Part of the Reading branch for MECO energy data. --Daniel Zhang (張道博)';
 
 
+--
+-- Name: nonpv_service_point_ids; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW nonpv_service_point_ids AS
+    SELECT "MeterLocationHistory".service_point_id, "MeterLocationHistory".meter_name, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled FROM "MeterLocationHistory" WHERE ((NOT (EXISTS (SELECT "PVServicePointIDs".pv_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".pv_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text)))) OR (NOT (EXISTS (SELECT "PVServicePointIDs".house_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".house_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text)))));
+
+
+ALTER TABLE public.nonpv_service_point_ids OWNER TO postgres;
+
+--
+-- Name: VIEW nonpv_service_point_ids; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW nonpv_service_point_ids IS 'Service Point IDs, in the MLH,  that are not PV Service Point IDs. @author Daniel Zhang (張道博)';
+
+
+--
+-- Name: readings_by_meter_location_history; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW readings_by_meter_location_history AS
+    SELECT "MeterLocationHistory".meter_name, "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".location, "MeterLocationHistory".address, "MeterLocationHistory".latitude, "MeterLocationHistory".longitude, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "Interval".end_time, "MeterData".meter_data_id FROM (((("MeterLocationHistory" JOIN "MeterData" ON ((("MeterLocationHistory".meter_name)::bpchar = "MeterData".meter_name))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (((("Interval".interval_id = "Reading".interval_id) AND ("Interval".end_time >= "MeterLocationHistory".installed)) AND CASE WHEN ("MeterLocationHistory".uninstalled IS NULL) THEN true ELSE ("Interval".end_time < "MeterLocationHistory".uninstalled) END)));
+
+
+ALTER TABLE public.readings_by_meter_location_history OWNER TO eileen;
+
+SET search_path = dw, pg_catalog;
+
+--
+-- Name: test_monthly_energy_summary_for_nonpv_service_points; Type: VIEW; Schema: dw; Owner: dave
+--
+
+CREATE VIEW test_monthly_energy_summary_for_nonpv_service_points AS
+    SELECT max((readings_by_meter_location_history.service_point_id)::text) AS service_point_id, sum(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_energy_to_house_kwh, sum(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_energy_from_house_kwh, sum(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_net_energy_kwh, avg(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS avg, to_char(date_trunc('month'::text, readings_by_meter_location_history.end_time), 'yyyy-mm'::text) AS service_month, max(readings_by_meter_location_history.service_point_latitude) AS sp_latitude, max(readings_by_meter_location_history.service_point_longitude) AS sp_longitude, max((readings_by_meter_location_history.location)::text) AS location_id, max((readings_by_meter_location_history.address)::text) AS address, max(readings_by_meter_location_history.latitude) AS location_latitude, max(readings_by_meter_location_history.longitude) AS location_longitude, ((count(readings_by_meter_location_history.end_time) / 4) / 24) AS count_day FROM ((public.readings_by_meter_location_history JOIN public.nonpv_service_point_ids ON (((readings_by_meter_location_history.service_point_id)::text = (nonpv_service_point_ids.service_point_id)::text))) JOIN public."MeterProgramChanges" ON ((((readings_by_meter_location_history.meter_name)::text = ("MeterProgramChanges".meter_name)::text) AND (date_trunc('month'::text, readings_by_meter_location_history.end_time) = date_trunc('month'::text, "MeterProgramChanges".date_changed))))) GROUP BY readings_by_meter_location_history.service_point_id, to_char(date_trunc('month'::text, readings_by_meter_location_history.end_time), 'yyyy-mm'::text);
+
+
+ALTER TABLE dw.test_monthly_energy_summary_for_nonpv_service_points OWNER TO dave;
+
 SET search_path = dz, pg_catalog;
+
+--
+-- Name: _IrradianceFifteenMinIntervals; Type: TABLE; Schema: dz; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE "_IrradianceFifteenMinIntervals" (
+    sensor_id integer,
+    start_time timestamp without time zone,
+    end_time timestamp without time zone
+);
+
+
+ALTER TABLE dz."_IrradianceFifteenMinIntervals" OWNER TO postgres;
+
+--
+-- Name: TABLE "_IrradianceFifteenMinIntervals"; Type: COMMENT; Schema: dz; Owner: postgres
+--
+
+COMMENT ON TABLE "_IrradianceFifteenMinIntervals" IS 'Used by the 15-min aggregation scripts. --Daniel Zhang (張道博)';
+
+
+SET search_path = public, pg_catalog;
+
+--
+-- Name: Event; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "Event" (
+    event_name character varying,
+    event_time timestamp without time zone,
+    event_text character varying,
+    event_data_id bigint,
+    event_id bigint NOT NULL
+);
+
+
+ALTER TABLE public."Event" OWNER TO sepgroup;
+
+--
+-- Name: EventData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "EventData" (
+    end_time timestamp without time zone,
+    number_events smallint,
+    start_time timestamp without time zone,
+    meter_data_id bigint,
+    event_data_id bigint NOT NULL
+);
+
+
+ALTER TABLE public."EventData" OWNER TO sepgroup;
+
+SET search_path = dz, pg_catalog;
+
+--
+-- Name: count_of_event_duplicates; Type: VIEW; Schema: dz; Owner: daniel
+--
+
+CREATE VIEW count_of_event_duplicates AS
+    SELECT "Event".event_time, "MeterData".meter_data_id, "EventData".event_data_id, (count(*) - 1) AS "Duplicate Count" FROM ((public."MeterData" JOIN public."EventData" ON (("MeterData".meter_data_id = "EventData".meter_data_id))) JOIN public."Event" ON (("EventData".event_data_id = "Event".event_data_id))) GROUP BY "Event".event_time, "MeterData".meter_data_id, "EventData".event_data_id HAVING ((count(*) - 1) > 0) ORDER BY "Event".event_time;
+
+
+ALTER TABLE dz.count_of_event_duplicates OWNER TO daniel;
 
 --
 -- Name: readings_by_meter_location_history; Type: VIEW; Schema: dz; Owner: daniel
@@ -320,138 +510,7 @@ ALTER TABLE dz.deprecated_readings_by_mlh_transposed_columns_opt1 OWNER TO danie
 COMMENT ON VIEW deprecated_readings_by_mlh_transposed_columns_opt1 IS 'NEEDS GROUP BY END TIME. Invalid optimization 1 for readings by MLH. Channels are transposed to columns. End time sorting is removed.';
 
 
---
--- Name: readings_by_mlh_new_spid_for_ashkan_from_2013-07-01; Type: VIEW; Schema: dz; Owner: daniel
---
-
-CREATE VIEW "readings_by_mlh_new_spid_for_ashkan_from_2013-07-01" AS
-    SELECT readings_by_meter_location_history.service_point_id, max(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy to House kwH", max(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy from House kwH(rec)", max(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Net Energy to House KwH", max(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "voltage at house", max((readings_by_meter_location_history.address)::text) AS address, readings_by_meter_location_history.end_time FROM readings_by_meter_location_history WHERE ((readings_by_meter_location_history.end_time >= '2013-07-01 00:00:00'::timestamp without time zone) AND (readings_by_meter_location_history.end_time <= '2014-02-01 00:00:00'::timestamp without time zone)) GROUP BY readings_by_meter_location_history.service_point_id, readings_by_meter_location_history.end_time;
-
-
-ALTER TABLE dz."readings_by_mlh_new_spid_for_ashkan_from_2013-07-01" OWNER TO daniel;
-
---
--- Name: readings_unfiltered; Type: VIEW; Schema: dz; Owner: daniel
---
-
-CREATE VIEW readings_unfiltered AS
-    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time, "MeterData".meter_data_id, "Reading".interval_id FROM (((public."MeterData" JOIN public."IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN public."Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN public."Reading" ON (("Interval".interval_id = "Reading".interval_id)));
-
-
-ALTER TABLE dz.readings_unfiltered OWNER TO daniel;
-
 SET search_path = public, pg_catalog;
-
---
--- Name: AsBuilt; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
---
-
-CREATE TABLE "AsBuilt" (
-    owner character(100),
-    address character(200),
-    spid integer NOT NULL,
-    ihd character(125),
-    pct character(125),
-    load_control character(125),
-    repeater character(125)
-);
-
-
-ALTER TABLE public."AsBuilt" OWNER TO sepgroup;
-
---
--- Name: AverageFifteenMinIrradianceData; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE "AverageFifteenMinIrradianceData" (
-    sensor_id integer NOT NULL,
-    irradiance_w_per_m2 double precision,
-    "timestamp" timestamp without time zone NOT NULL
-);
-
-
-ALTER TABLE public."AverageFifteenMinIrradianceData" OWNER TO postgres;
-
---
--- Name: TABLE "AverageFifteenMinIrradianceData"; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON TABLE "AverageFifteenMinIrradianceData" IS 'Static table generated by aggregate-irradiance-data.sh. --Daniel Zhang (張道博)';
-
-
---
--- Name: AverageFifteenMinKiheiSCADATemperatureHumidity; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE "AverageFifteenMinKiheiSCADATemperatureHumidity" (
-    "timestamp" timestamp without time zone NOT NULL,
-    met_air_temp_degf double precision,
-    met_rel_humid_pct double precision
-);
-
-
-ALTER TABLE public."AverageFifteenMinKiheiSCADATemperatureHumidity" OWNER TO postgres;
-
---
--- Name: BatteryWailea; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
---
-
-CREATE TABLE "BatteryWailea" (
-    datetime timestamp without time zone,
-    kvar double precision,
-    kw double precision,
-    soc double precision,
-    pwr_ref_volt double precision
-);
-
-
-ALTER TABLE public."BatteryWailea" OWNER TO sepgroup;
-
---
--- Name: TABLE "BatteryWailea"; Type: COMMENT; Schema: public; Owner: sepgroup
---
-
-COMMENT ON TABLE "BatteryWailea" IS 'KVAR – This is the var output of the battery system (- is absorbing vars, + is discharging vars)
-KW – This is the kilowatt output of the battery system (- is absorbing kW, + is discharging kW)
-SOC – This is the state of charge for the battery system (100% is full charged, 0% is fully discharged)
-PWR_REF/VOLT – This is the measurement of voltage (volts) at the protection relay for circuit breaker 1517.';
-
-
---
--- Name: CircuitData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
---
-
-CREATE TABLE "CircuitData" (
-    circuit integer NOT NULL,
-    "timestamp" timestamp without time zone NOT NULL,
-    amp_a integer,
-    amp_b integer,
-    amp_c integer,
-    mvar double precision,
-    mw double precision,
-    upload_date date DEFAULT now()
-);
-
-
-ALTER TABLE public."CircuitData" OWNER TO sepgroup;
-
---
--- Name: CircuitDataCopy; Type: TABLE; Schema: public; Owner: dave; Tablespace: 
---
-
-CREATE TABLE "CircuitDataCopy" (
-    circuit integer,
-    "timestamp" timestamp without time zone,
-    amp_a integer,
-    amp_b integer,
-    amp_c integer,
-    mvar double precision,
-    mw double precision,
-    upload_date date
-);
-
-
-ALTER TABLE public."CircuitDataCopy" OWNER TO dave;
 
 --
 -- Name: EgaugeEnergyAutoload; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
@@ -492,7 +551,9 @@ CREATE TABLE "EgaugeEnergyAutoload" (
     house_kw double precision,
     shop_kw double precision,
     addition_kw double precision,
-    dhw_load_control double precision
+    dhw_load_control double precision,
+    pv_system_kw double precision,
+    solar_plus_kw double precision
 );
 
 
@@ -504,6 +565,352 @@ ALTER TABLE public."EgaugeEnergyAutoload" OWNER TO sepgroup;
 
 COMMENT ON TABLE "EgaugeEnergyAutoload" IS 'Data that is autoloaded by the MSG eGauge Service. @author Daniel Zhang (張道博)';
 
+
+SET search_path = dz, pg_catalog;
+
+--
+-- Name: outlier_test; Type: VIEW; Schema: dz; Owner: postgres
+--
+
+CREATE VIEW outlier_test AS
+    SELECT "EgaugeEnergyAutoload".egauge_id, "EgaugeEnergyAutoload".datetime, "EgaugeEnergyAutoload".use_kw AS "use_kw (whole house)", "EgaugeEnergyAutoload".ac_kw, "EgaugeEnergyAutoload".addition_kw, "EgaugeEnergyAutoload".clotheswasher_kw, "EgaugeEnergyAutoload".dhw_load_control, "EgaugeEnergyAutoload".dryer_kw, "EgaugeEnergyAutoload".garage_ac_kw, "EgaugeEnergyAutoload".gen_kw, "EgaugeEnergyAutoload".large_ac_kw, "EgaugeEnergyAutoload".oven_and_microwave_kw, "EgaugeEnergyAutoload".oven_kw, "EgaugeEnergyAutoload".range_kw, "EgaugeEnergyAutoload".refrigerator_usage_kw, "EgaugeEnergyAutoload".shop_kw, "EgaugeEnergyAutoload".stove_kw FROM public."EgaugeEnergyAutoload" WHERE ((((((((((((((("EgaugeEnergyAutoload".use_kw IS NULL) OR ("EgaugeEnergyAutoload".use_kw < (20)::double precision)) AND (("EgaugeEnergyAutoload".ac_kw IS NULL) OR ("EgaugeEnergyAutoload".ac_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".addition_kw IS NULL) OR ("EgaugeEnergyAutoload".addition_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".clotheswasher_kw IS NULL) OR ("EgaugeEnergyAutoload".clotheswasher_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".dhw_load_control IS NULL) OR ("EgaugeEnergyAutoload".dhw_load_control < (10)::double precision))) AND (("EgaugeEnergyAutoload".dryer_kw IS NULL) OR ("EgaugeEnergyAutoload".dryer_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".garage_ac_kw IS NULL) OR ("EgaugeEnergyAutoload".garage_ac_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".large_ac_kw IS NULL) OR ("EgaugeEnergyAutoload".large_ac_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".oven_and_microwave_kw IS NULL) OR ("EgaugeEnergyAutoload".oven_and_microwave_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".oven_kw IS NULL) OR ("EgaugeEnergyAutoload".oven_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".range_kw IS NULL) OR ("EgaugeEnergyAutoload".range_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".refrigerator_usage_kw IS NULL) OR ("EgaugeEnergyAutoload".refrigerator_usage_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".shop_kw IS NULL) OR ("EgaugeEnergyAutoload".shop_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".shop_kw IS NULL) OR ("EgaugeEnergyAutoload".shop_kw < (10)::double precision)));
+
+
+ALTER TABLE dz.outlier_test OWNER TO postgres;
+
+--
+-- Name: reading_dupes; Type: VIEW; Schema: dz; Owner: daniel
+--
+
+CREATE VIEW reading_dupes AS
+    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, (count(*) - 1) AS dupe_cnt FROM (((public."MeterData" JOIN public."IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN public."Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN public."Reading" ON (("Interval".interval_id = "Reading".interval_id))) GROUP BY "MeterData".meter_name, "Interval".end_time, "Reading".channel;
+
+
+ALTER TABLE dz.reading_dupes OWNER TO daniel;
+
+--
+-- Name: readings_by_mlh_new_spid_for_ashkan_from_2013-07-01; Type: VIEW; Schema: dz; Owner: daniel
+--
+
+CREATE VIEW "readings_by_mlh_new_spid_for_ashkan_from_2013-07-01" AS
+    SELECT readings_by_meter_location_history.service_point_id, max(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy to House kwH", max(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Energy from House kwH(rec)", max(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "Net Energy to House KwH", max(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS "voltage at house", max((readings_by_meter_location_history.address)::text) AS address, readings_by_meter_location_history.end_time FROM readings_by_meter_location_history WHERE ((readings_by_meter_location_history.end_time >= '2013-07-01 00:00:00'::timestamp without time zone) AND (readings_by_meter_location_history.end_time <= '2014-02-01 00:00:00'::timestamp without time zone)) GROUP BY readings_by_meter_location_history.service_point_id, readings_by_meter_location_history.end_time;
+
+
+ALTER TABLE dz."readings_by_mlh_new_spid_for_ashkan_from_2013-07-01" OWNER TO daniel;
+
+SET search_path = public, pg_catalog;
+
+--
+-- Name: readings_unfiltered; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW readings_unfiltered AS
+    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time, "MeterData".meter_data_id, "Reading".interval_id FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id)));
+
+
+ALTER TABLE public.readings_unfiltered OWNER TO postgres;
+
+--
+-- Name: VIEW readings_unfiltered; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON VIEW readings_unfiltered IS 'All readings along with their end times by meter. @author Daniel Zhang (張道博)';
+
+
+SET search_path = dz, pg_catalog;
+
+--
+-- Name: readings_not_referenced_by_mlh_deprecated; Type: VIEW; Schema: dz; Owner: postgres
+--
+
+CREATE VIEW readings_not_referenced_by_mlh_deprecated AS
+    SELECT readings_by_meter_location_history_new_spid_2.meter_name AS mlh_meter_name, readings_with_meter_data_id_unfiltered.meter_name AS full_meter_name, readings_by_meter_location_history_new_spid_2.channel AS mlh_channel, readings_by_meter_location_history_new_spid_2.value AS mlh_value, readings_with_meter_data_id_unfiltered.channel AS full_channel, readings_with_meter_data_id_unfiltered.value AS full_value, readings_by_meter_location_history_new_spid_2.end_time AS mlh_end_time, readings_with_meter_data_id_unfiltered.end_time AS full_end_time, readings_with_meter_data_id_unfiltered.meter_data_id AS full_meter_data_id FROM (public.readings_unfiltered readings_with_meter_data_id_unfiltered LEFT JOIN public.readings_by_meter_location_history readings_by_meter_location_history_new_spid_2 ON ((readings_with_meter_data_id_unfiltered.meter_data_id = readings_by_meter_location_history_new_spid_2.meter_data_id))) WHERE (readings_by_meter_location_history_new_spid_2.meter_data_id IS NULL);
+
+
+ALTER TABLE dz.readings_not_referenced_by_mlh_deprecated OWNER TO postgres;
+
+--
+-- Name: VIEW readings_not_referenced_by_mlh_deprecated; Type: COMMENT; Schema: dz; Owner: postgres
+--
+
+COMMENT ON VIEW readings_not_referenced_by_mlh_deprecated IS 'Readings that are present in the DB but are not referenced by the Meter Location History. @author Daniel Zhang (張道博)';
+
+
+--
+-- Name: readings_unfiltered; Type: VIEW; Schema: dz; Owner: daniel
+--
+
+CREATE VIEW readings_unfiltered AS
+    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time, "MeterData".meter_data_id, "Reading".interval_id FROM (((public."MeterData" JOIN public."IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN public."Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN public."Reading" ON (("Interval".interval_id = "Reading".interval_id)));
+
+
+ALTER TABLE dz.readings_unfiltered OWNER TO daniel;
+
+--
+-- Name: readings_with_pv_service_point_id_deprecated; Type: VIEW; Schema: dz; Owner: postgres
+--
+
+CREATE VIEW readings_with_pv_service_point_id_deprecated AS
+    SELECT readings_by_meter_location_history_new_spid.meter_name, readings_by_meter_location_history_new_spid.end_time, max((readings_by_meter_location_history_new_spid.location)::text) AS location_id, max(("PVServicePointIDs".old_pv_service_point_id)::text) AS pv_service_point_id, max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (1)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS pv_channel_1, max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (2)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS pv_channel_2, max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (3)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS pv_channel_3, public.zero_to_null(max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (4)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END)) AS pv_channel_4_voltage FROM (public."PVServicePointIDs" JOIN public.readings_by_meter_location_history readings_by_meter_location_history_new_spid ON ((("PVServicePointIDs".old_pv_service_point_id)::text = (readings_by_meter_location_history_new_spid.service_point_id)::text))) GROUP BY readings_by_meter_location_history_new_spid.meter_name, readings_by_meter_location_history_new_spid.end_time;
+
+
+ALTER TABLE dz.readings_with_pv_service_point_id_deprecated OWNER TO postgres;
+
+--
+-- Name: VIEW readings_with_pv_service_point_id_deprecated; Type: COMMENT; Schema: dz; Owner: postgres
+--
+
+COMMENT ON VIEW readings_with_pv_service_point_id_deprecated IS 'Readings that have an associated PV Service Point ID. @author Daniel Zhang (張道博)';
+
+
+--
+-- Name: test_readings_by_meter_location_history; Type: VIEW; Schema: dz; Owner: daniel
+--
+
+CREATE VIEW test_readings_by_meter_location_history AS
+    SELECT "MeterLocationHistory".meter_name, "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".location, "MeterLocationHistory".address, "MeterLocationHistory".latitude, "MeterLocationHistory".longitude, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "Interval".end_time, "MeterData".meter_data_id FROM ((((public."MeterLocationHistory" JOIN public."MeterData" ON ((("MeterLocationHistory".meter_name)::bpchar = "MeterData".meter_name))) JOIN public."IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN public."Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN public."Reading" ON (((("Interval".interval_id = "Reading".interval_id) AND ("Interval".end_time >= "MeterLocationHistory".installed)) AND CASE WHEN ("MeterLocationHistory".uninstalled IS NULL) THEN true ELSE ("Interval".end_time < "MeterLocationHistory".uninstalled) END)));
+
+
+ALTER TABLE dz.test_readings_by_meter_location_history OWNER TO daniel;
+
+SET search_path = public, pg_catalog;
+
+--
+-- Name: raw_meter_readings; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW raw_meter_readings AS
+    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "MeterData".util_device_id FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
+
+
+ALTER TABLE public.raw_meter_readings OWNER TO postgres;
+
+SET search_path = ep, pg_catalog;
+
+--
+-- Name: dates_raw_meter_readings; Type: VIEW; Schema: ep; Owner: eileen
+--
+
+CREATE VIEW dates_raw_meter_readings AS
+    SELECT min(raw_meter_readings.end_time) AS min, max(raw_meter_readings.end_time) AS max, raw_meter_readings.meter_name, raw_meter_readings.util_device_id FROM public.raw_meter_readings GROUP BY raw_meter_readings.meter_name, raw_meter_readings.util_device_id;
+
+
+ALTER TABLE ep.dates_raw_meter_readings OWNER TO eileen;
+
+--
+-- Name: egauge4913; Type: VIEW; Schema: ep; Owner: eileen
+--
+
+CREATE VIEW egauge4913 AS
+    SELECT "EgaugeEnergyAutoload".egauge_id, "EgaugeEnergyAutoload".datetime, "EgaugeEnergyAutoload".use_kw, "EgaugeEnergyAutoload".gen_kw, "EgaugeEnergyAutoload".dryer_kw, "EgaugeEnergyAutoload".dryer_usage_kw, "EgaugeEnergyAutoload".clotheswasher_usage_kw, "EgaugeEnergyAutoload".clotheswasher_kw FROM public."EgaugeEnergyAutoload" WHERE (("EgaugeEnergyAutoload".egauge_id = 4913) AND ("EgaugeEnergyAutoload".datetime > '2014-04-01 00:00:00'::timestamp without time zone));
+
+
+ALTER TABLE ep.egauge4913 OWNER TO eileen;
+
+--
+-- Name: meter115651channel2; Type: VIEW; Schema: ep; Owner: eileen
+--
+
+CREATE VIEW meter115651channel2 AS
+    SELECT raw_meter_readings.end_time, raw_meter_readings.meter_name, raw_meter_readings.channel, raw_meter_readings.value FROM public.raw_meter_readings WHERE (raw_meter_readings.channel = 2);
+
+
+ALTER TABLE ep.meter115651channel2 OWNER TO eileen;
+
+SET search_path = public, pg_catalog;
+
+--
+-- Name: readings_unfiltered_columns; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW readings_unfiltered_columns AS
+    SELECT readings_unfiltered.meter_name, readings_unfiltered.end_time, max(CASE WHEN (readings_unfiltered.channel = (1)::smallint) THEN readings_unfiltered.value ELSE NULL::real END) AS energy_tohouse_kwh, max(CASE WHEN (readings_unfiltered.channel = (2)::smallint) THEN readings_unfiltered.value ELSE NULL::real END) AS energy_fromhouse_kwh, max(CASE WHEN (readings_unfiltered.channel = (3)::smallint) THEN readings_unfiltered.value ELSE NULL::real END) AS net_energy_kwh, max(CASE WHEN (readings_unfiltered.channel = (4)::smallint) THEN readings_unfiltered.value ELSE NULL::real END) AS voltage FROM readings_unfiltered GROUP BY readings_unfiltered.meter_name, readings_unfiltered.end_time;
+
+
+ALTER TABLE public.readings_unfiltered_columns OWNER TO eileen;
+
+SET search_path = ep, pg_catalog;
+
+--
+-- Name: readings_meter_changes; Type: VIEW; Schema: ep; Owner: eileen
+--
+
+CREATE VIEW readings_meter_changes AS
+    SELECT "MeterProgramChanges".meter_name, "MeterProgramChanges".date_changed, "MeterProgramChanges".program_id, readings_unfiltered_columns.end_time, readings_unfiltered_columns.energy_tohouse_kwh, readings_unfiltered_columns.energy_fromhouse_kwh, readings_unfiltered_columns.net_energy_kwh, readings_unfiltered_columns.voltage FROM (public."MeterProgramChanges" JOIN public.readings_unfiltered_columns ON ((("MeterProgramChanges".meter_name)::bpchar = readings_unfiltered_columns.meter_name))) WHERE (readings_unfiltered_columns.end_time > '2014-02-01 00:00:00'::timestamp without time zone);
+
+
+ALTER TABLE ep.readings_meter_changes OWNER TO eileen;
+
+--
+-- Name: voltage_data_for_lesson_Mel_3D; Type: VIEW; Schema: ep; Owner: eileen
+--
+
+CREATE VIEW "voltage_data_for_lesson_Mel_3D" AS
+    SELECT readings_by_meter_location_history.service_point_id, readings_by_meter_location_history.end_time, readings_by_meter_location_history.address, readings_by_meter_location_history.value, readings_by_meter_location_history.latitude, readings_by_meter_location_history.longitude FROM public.readings_by_meter_location_history WHERE (((readings_by_meter_location_history.channel = 4) AND (readings_by_meter_location_history.end_time > '2013-11-30 23:59:00'::timestamp without time zone)) AND (readings_by_meter_location_history.end_time < '2013-12-15 01:01:00'::timestamp without time zone));
+
+
+ALTER TABLE ep."voltage_data_for_lesson_Mel_3D" OWNER TO eileen;
+
+SET search_path = public, pg_catalog;
+
+--
+-- Name: AsBuilt; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "AsBuilt" (
+    owner character(100),
+    address character(200),
+    spid integer NOT NULL,
+    ihd character(125),
+    pct character(125),
+    load_control character(125),
+    repeater character(125)
+);
+
+
+ALTER TABLE public."AsBuilt" OWNER TO sepgroup;
+
+--
+-- Name: AverageFifteenMinCircuitData; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE "AverageFifteenMinCircuitData" (
+    circuit integer NOT NULL,
+    "timestamp" timestamp without time zone NOT NULL,
+    amp_a integer,
+    amp_b integer,
+    amp_c integer,
+    mvar double precision,
+    mw double precision,
+    upload_date date
+);
+
+
+ALTER TABLE public."AverageFifteenMinCircuitData" OWNER TO postgres;
+
+--
+-- Name: AverageFifteenMinEgaugeEnergyAutoload; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE "AverageFifteenMinEgaugeEnergyAutoload" (
+    egauge_id integer NOT NULL,
+    datetime timestamp(6) without time zone NOT NULL,
+    use_kw double precision,
+    gen_kw double precision,
+    grid_kw double precision,
+    ac_kw double precision,
+    acplus_kw double precision,
+    clotheswasher_kw double precision,
+    clotheswasher_usage_kw double precision,
+    dhw_kw double precision,
+    dishwasher_kw double precision,
+    dryer_kw double precision,
+    dryer_usage_kw double precision,
+    fan_kw double precision,
+    garage_ac_kw double precision,
+    garage_ac_usage_kw double precision,
+    large_ac_kw double precision,
+    large_ac_usage_kw double precision,
+    microwave_kw double precision,
+    oven_kw double precision,
+    oven_usage_kw double precision,
+    range_kw double precision,
+    range_usage_kw double precision,
+    refrigerator_kw double precision,
+    refrigerator_usage_kw double precision,
+    rest_of_house_usage_kw double precision,
+    solarpump_kw double precision,
+    stove_kw double precision,
+    upload_date timestamp(6) without time zone,
+    oven_and_microwave_kw double precision,
+    oven_and_microwave_plus_kw double precision,
+    house_kw double precision,
+    shop_kw double precision,
+    addition_kw double precision,
+    dhw_load_control double precision,
+    pv_system_kw double precision,
+    solar_plus_kw double precision
+);
+
+
+ALTER TABLE public."AverageFifteenMinEgaugeEnergyAutoload" OWNER TO postgres;
+
+--
+-- Name: AverageFifteenMinIrradianceData; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE "AverageFifteenMinIrradianceData" (
+    sensor_id integer NOT NULL,
+    irradiance_w_per_m2 double precision,
+    "timestamp" timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public."AverageFifteenMinIrradianceData" OWNER TO postgres;
+
+--
+-- Name: TABLE "AverageFifteenMinIrradianceData"; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE "AverageFifteenMinIrradianceData" IS 'Static table generated by aggregate-irradiance-data.sh. --Daniel Zhang (張道博)';
+
+
+--
+-- Name: AverageFifteenMinKiheiSCADATemperatureHumidity; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE "AverageFifteenMinKiheiSCADATemperatureHumidity" (
+    "timestamp" timestamp without time zone NOT NULL,
+    met_air_temp_degf double precision,
+    met_rel_humid_pct double precision
+);
+
+
+ALTER TABLE public."AverageFifteenMinKiheiSCADATemperatureHumidity" OWNER TO postgres;
+
+--
+-- Name: BatteryWailea; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "BatteryWailea" (
+    "timestamp" timestamp without time zone,
+    kvar double precision,
+    kw double precision,
+    soc double precision,
+    pwr_ref_volt double precision,
+    upload_date timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE public."BatteryWailea" OWNER TO sepgroup;
+
+--
+-- Name: TABLE "BatteryWailea"; Type: COMMENT; Schema: public; Owner: sepgroup
+--
+
+COMMENT ON TABLE "BatteryWailea" IS 'KVAR – This is the var output of the battery system (- is absorbing vars, + is discharging vars)
+KW – This is the kilowatt output of the battery system (- is absorbing kW, + is discharging kW)
+SOC – This is the state of charge for the battery system (100% is full charged, 0% is fully discharged)
+PWR_REF/VOLT – This is the measurement of voltage (volts) at the protection relay for circuit breaker 1517.';
+
+
+--
+-- Name: CircuitData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "CircuitData" (
+    circuit integer NOT NULL,
+    "timestamp" timestamp without time zone NOT NULL,
+    amp_a integer,
+    amp_b integer,
+    amp_c integer,
+    mvar double precision,
+    mw double precision,
+    upload_date date DEFAULT now()
+);
+
+
+ALTER TABLE public."CircuitData" OWNER TO sepgroup;
 
 --
 -- Name: EgaugeInfo; Type: TABLE; Schema: public; Owner: eileen; Tablespace: 
@@ -518,6 +925,27 @@ CREATE TABLE "EgaugeInfo" (
 
 
 ALTER TABLE public."EgaugeInfo" OWNER TO eileen;
+
+--
+-- Name: ExportHistory; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE "ExportHistory" (
+    "timestamp" timestamp without time zone NOT NULL,
+    name text,
+    url text,
+    size integer
+);
+
+
+ALTER TABLE public."ExportHistory" OWNER TO postgres;
+
+--
+-- Name: TABLE "ExportHistory"; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON TABLE "ExportHistory" IS 'Used for keeping track of DB exports.';
+
 
 --
 -- Name: IrradianceData; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
@@ -812,49 +1240,6 @@ COMMENT ON TABLE "NotificationHistory" IS 'Used for tracking automatic notificat
 
 
 --
--- Name: PVServicePointIDs; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
---
-
-CREATE TABLE "PVServicePointIDs" (
-    old_pv_service_point_id character varying,
-    old_house_service_point_id character varying,
-    "PV_Mod_size_kW" double precision,
-    inverter_model character varying,
-    "size_kW" real,
-    "system_cap_kW" real,
-    bat character varying,
-    sub character varying,
-    circuit smallint,
-    date_uploaded timestamp without time zone DEFAULT '2014-01-19 19:53:55.497375'::timestamp without time zone,
-    has_meter smallint,
-    has_separate_pv_meter smallint,
-    "add_cap_kW" real,
-    upgraded_total_kw real,
-    street character varying,
-    city character varying,
-    state character varying,
-    zip integer,
-    month_installed integer,
-    year_installed integer,
-    notes character varying,
-    pv_service_point_id character varying,
-    house_service_point_id character varying,
-    new_spid character varying(50),
-    new_spid_pv character varying(50),
-    nem_agreement_date date
-);
-
-
-ALTER TABLE public."PVServicePointIDs" OWNER TO sepgroup;
-
---
--- Name: TABLE "PVServicePointIDs"; Type: COMMENT; Schema: public; Owner: sepgroup
---
-
-COMMENT ON TABLE "PVServicePointIDs" IS 'Contains service point data for one-meter and two-meter PV installations. --Daniel Zhang (張道博)';
-
-
---
 -- Name: PowerMeterEvents; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
 --
 
@@ -993,6 +1378,91 @@ vlt_a, vlt_b, and vlt_c = kV (1,000 volts) measured phase to neutral
 volt (e.g. 121.5) = reference voltage measurement (measured in volts) for the load tap changer
 ';
 
+
+--
+-- Name: TransformerDataNREL; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "TransformerDataNREL" (
+    "timestamp" timestamp without time zone NOT NULL,
+    quality character varying,
+    v1_phasor_magnitude double precision,
+    v1_phase_angle double precision,
+    v2_phasor_magnitude double precision,
+    v2_phase_angle double precision,
+    v12_phasor_magnitude double precision,
+    v12_phase_angle double precision,
+    i1_phasor_magnitude double precision,
+    i1_phase_angle double precision,
+    i2_phasor_magnitude double precision,
+    i2_phase_angle double precision,
+    in_phasor_magnitude double precision,
+    in_phase_angle double precision,
+    frequency double precision,
+    v1_rms double precision,
+    v2_rms double precision,
+    v12_rms double precision,
+    i1_rms double precision,
+    i2_rms double precision,
+    in_rms double precision,
+    apparent_power_magnitude_s double precision,
+    real_power_p double precision,
+    reactive_power_q double precision,
+    power_factor double precision,
+    meter_internal_temperature double precision,
+    transformer_housing_temperature double precision,
+    device_name character varying NOT NULL
+);
+
+
+ALTER TABLE public."TransformerDataNREL" OWNER TO sepgroup;
+
+--
+-- Name: TransformerDataNRELST; Type: TABLE; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE TABLE "TransformerDataNRELST" (
+    "timestamp" timestamp without time zone NOT NULL,
+    quality character varying,
+    va_phasor_magnitude double precision,
+    va_phasor_angle double precision,
+    vb_phasor_magnitude double precision,
+    vb_phasor_angle double precision,
+    vc_phasor_magnitude double precision,
+    vc_phasor_angle double precision,
+    ia_phasor_magnitude double precision,
+    ia_phasor_angle double precision,
+    ib_phasor_magnitude double precision,
+    ib_phasor_angle double precision,
+    ic_phasor_magnitude double precision,
+    ic_phasor_angle double precision,
+    frequency double precision,
+    va_rms double precision,
+    vb_rms double precision,
+    vc_rms double precision,
+    ia_rms double precision,
+    ib_rms double precision,
+    ic_rms double precision,
+    apparent_power_magnitude_s double precision,
+    phase_a_apparent_power_magnitude_s double precision,
+    phase_b_apparent_power_magnitude_s double precision,
+    phase_c_apparent_power_magnitude_s double precision,
+    real_power_p double precision,
+    phase_a_real_power_p double precision,
+    phase_b_real_power_p double precision,
+    phase_c_real_power_p double precision,
+    reactive_power_q double precision,
+    phase_a_reactive_power_q double precision,
+    phase_b_reactive_power_q double precision,
+    phase_c_reactive_power_q double precision,
+    power_factor double precision,
+    meter_internal_temperature double precision,
+    transformer_housing_temperature double precision,
+    device_name character varying NOT NULL
+);
+
+
+ALTER TABLE public."TransformerDataNRELST" OWNER TO sepgroup;
 
 --
 -- Name: WeatherNOAA; Type: TABLE; Schema: public; Owner: daniel; Tablespace: 
@@ -1136,16 +1606,6 @@ CREATE VIEW az_noaa_weather_data AS
 ALTER TABLE public.az_noaa_weather_data OWNER TO eileen;
 
 --
--- Name: readings_by_meter_location_history; Type: VIEW; Schema: public; Owner: eileen
---
-
-CREATE VIEW readings_by_meter_location_history AS
-    SELECT "MeterLocationHistory".meter_name, "MeterLocationHistory".service_point_id, "MeterLocationHistory".service_point_latitude, "MeterLocationHistory".service_point_longitude, "MeterLocationHistory".location, "MeterLocationHistory".address, "MeterLocationHistory".latitude, "MeterLocationHistory".longitude, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "Interval".end_time, "MeterData".meter_data_id FROM (((("MeterLocationHistory" JOIN "MeterData" ON ((("MeterLocationHistory".meter_name)::bpchar = "MeterData".meter_name))) JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (((("Interval".interval_id = "Reading".interval_id) AND ("Interval".end_time >= "MeterLocationHistory".installed)) AND CASE WHEN ("MeterLocationHistory".uninstalled IS NULL) THEN true ELSE ("Interval".end_time < "MeterLocationHistory".uninstalled) END)));
-
-
-ALTER TABLE public.readings_by_meter_location_history OWNER TO eileen;
-
---
 -- Name: cd_readings_channel_as_columns_by_service_point; Type: VIEW; Schema: public; Owner: eileen
 --
 
@@ -1186,6 +1646,26 @@ CREATE VIEW az_readings_channels_as_columns_new_spid AS
 ALTER TABLE public.az_readings_channels_as_columns_new_spid OWNER TO eileen;
 
 --
+-- Name: az_transformer_and_pumping_station; Type: VIEW; Schema: public; Owner: dave
+--
+
+CREATE VIEW az_transformer_and_pumping_station AS
+    SELECT i.sensor_id, i.irradiance_w_per_m2, td."timestamp", td.real_power_p, td.reactive_power_q, td.device_name FROM ("TransformerDataNREL" td JOIN "IrradianceData" i ON (((td."timestamp" = i."timestamp") AND (i.sensor_id = ANY (ARRAY[2])))));
+
+
+ALTER TABLE public.az_transformer_and_pumping_station OWNER TO dave;
+
+--
+-- Name: az_transformer_only; Type: VIEW; Schema: public; Owner: dave
+--
+
+CREATE VIEW az_transformer_only AS
+    SELECT "TransformerDataNREL".real_power_p, "TransformerDataNREL".reactive_power_q, "TransformerDataNREL".device_name, "TransformerDataNREL"."timestamp" FROM "TransformerDataNREL";
+
+
+ALTER TABLE public.az_transformer_only OWNER TO dave;
+
+--
 -- Name: cd_20130706-20130711; Type: VIEW; Schema: public; Owner: eileen
 --
 
@@ -1214,23 +1694,6 @@ CREATE VIEW cd_meter_ids_for_houses_with_pv_with_locations AS
 
 
 ALTER TABLE public.cd_meter_ids_for_houses_with_pv_with_locations OWNER TO eileen;
-
---
--- Name: readings_unfiltered; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW readings_unfiltered AS
-    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "IntervalReadData".start_time, "IntervalReadData".end_time AS ird_end_time, "MeterData".meter_data_id, "Reading".interval_id FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id)));
-
-
-ALTER TABLE public.readings_unfiltered OWNER TO postgres;
-
---
--- Name: VIEW readings_unfiltered; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON VIEW readings_unfiltered IS 'All readings along with their end times by meter. @author Daniel Zhang (張道博)';
-
 
 --
 -- Name: cd_energy_voltages_for_houses_with_pv; Type: VIEW; Schema: public; Owner: postgres
@@ -1412,14 +1875,14 @@ CREATE VIEW dates_kihei_scada_temp_hum AS
 ALTER TABLE public.dates_kihei_scada_temp_hum OWNER TO eileen;
 
 --
--- Name: dates_meter_read; Type: VIEW; Schema: public; Owner: eileen
+-- Name: dates_meter_read_with_uninstall; Type: VIEW; Schema: public; Owner: dave
 --
 
-CREATE VIEW dates_meter_read AS
-    SELECT "MeterData".util_device_id, min("Interval".end_time) AS earliest_date, max("IntervalReadData".end_time) AS latest_date FROM (("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) GROUP BY "MeterData".util_device_id;
+CREATE VIEW dates_meter_read_with_uninstall AS
+    SELECT DISTINCT "MeterData".util_device_id, min("Interval".end_time) AS earliest_date, max("IntervalReadData".end_time) AS latest_date, CASE WHEN (max("MeterLocationHistory".uninstalled) > max("MeterLocationHistory".installed)) THEN "MeterLocationHistory".uninstalled ELSE NULL::timestamp without time zone END AS "Max Uninstalled > Max Installed", CASE WHEN ((max("IntervalReadData".end_time) > max("MeterLocationHistory".uninstalled)) AND (NOT (max("MeterLocationHistory".uninstalled) > max("MeterLocationHistory".installed)))) THEN 'Problem.'::text ELSE NULL::text END AS "Max latest_date > Max Uninstalled" FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "MeterLocationHistory" ON (("MeterData".util_device_id = ("MeterLocationHistory".meter_name)::bpchar))) GROUP BY "MeterData".util_device_id, "MeterLocationHistory".uninstalled;
 
 
-ALTER TABLE public.dates_meter_read OWNER TO eileen;
+ALTER TABLE public.dates_meter_read_with_uninstall OWNER TO dave;
 
 --
 -- Name: dates_powermeterevents; Type: VIEW; Schema: public; Owner: eileen
@@ -1557,23 +2020,6 @@ COMMENT ON VIEW dz_monthly_energy_summary_double_pv_meter IS 'Monthly energy sum
 
 
 --
--- Name: nonpv_service_point_ids; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW nonpv_service_point_ids AS
-    SELECT "MeterLocationHistory".service_point_id, "MeterLocationHistory".meter_name, "MeterLocationHistory".installed, "MeterLocationHistory".uninstalled FROM "MeterLocationHistory" WHERE ((NOT (EXISTS (SELECT "PVServicePointIDs".pv_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".pv_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text)))) OR (NOT (EXISTS (SELECT "PVServicePointIDs".house_service_point_id FROM "PVServicePointIDs" WHERE (("PVServicePointIDs".house_service_point_id)::text = ("MeterLocationHistory".service_point_id)::text)))));
-
-
-ALTER TABLE public.nonpv_service_point_ids OWNER TO postgres;
-
---
--- Name: VIEW nonpv_service_point_ids; Type: COMMENT; Schema: public; Owner: postgres
---
-
-COMMENT ON VIEW nonpv_service_point_ids IS 'Service Point IDs, in the MLH,  that are not PV Service Point IDs. @author Daniel Zhang (張道博)';
-
-
---
 -- Name: dz_monthly_energy_summary_for_nonpv_service_points; Type: VIEW; Schema: public; Owner: postgres
 --
 
@@ -1686,14 +2132,24 @@ COMMENT ON VIEW dz_summary_pv_readings_in_nonpv_mlh IS 'Summary of service point
 
 
 --
--- Name: eGauge_view_with_filters; Type: VIEW; Schema: public; Owner: eileen
+-- Name: egauge_15min_find_outliers; Type: VIEW; Schema: public; Owner: eileen
 --
 
-CREATE VIEW "eGauge_view_with_filters" AS
-    SELECT "EgaugeEnergyAutoload".egauge_id AS "eGauge ID", "EgaugeEnergyAutoload".use_kw, "EgaugeEnergyAutoload".ac_kw, "EgaugeEnergyAutoload".clotheswasher_kw, "EgaugeEnergyAutoload".dryer_kw, "EgaugeEnergyAutoload".garage_ac_kw, "EgaugeEnergyAutoload".large_ac_kw, "EgaugeEnergyAutoload".large_ac_usage_kw, "EgaugeEnergyAutoload".oven_kw, "EgaugeEnergyAutoload".range_kw, "EgaugeEnergyAutoload".refrigerator_kw, "EgaugeEnergyAutoload".rest_of_house_usage_kw AS rest_of_house_kw, "EgaugeEnergyAutoload".stove_kw, "EgaugeEnergyAutoload".oven_and_microwave_kw AS oven_and_microwave, "EgaugeEnergyAutoload".shop_kw, "EgaugeEnergyAutoload".addition_kw, "EgaugeEnergyAutoload".dhw_load_control, "EgaugeEnergyAutoload".datetime FROM "EgaugeEnergyAutoload" WHERE (((((("EgaugeEnergyAutoload".use_kw < (20)::double precision) OR ("EgaugeEnergyAutoload".clotheswasher_kw < (7)::double precision)) OR ("EgaugeEnergyAutoload".dryer_kw < (7)::double precision)) OR ("EgaugeEnergyAutoload".ac_kw < (6)::double precision)) OR ("EgaugeEnergyAutoload".large_ac_kw < (6)::double precision)) OR ("EgaugeEnergyAutoload".garage_ac_kw < (6)::double precision));
+CREATE VIEW egauge_15min_find_outliers AS
+    SELECT "AverageFifteenMinEgaugeEnergyAutoload".egauge_id, "AverageFifteenMinEgaugeEnergyAutoload".datetime, "AverageFifteenMinEgaugeEnergyAutoload".use_kw, "AverageFifteenMinEgaugeEnergyAutoload".gen_kw, "AverageFifteenMinEgaugeEnergyAutoload".ac_kw, "AverageFifteenMinEgaugeEnergyAutoload".addition_kw, "AverageFifteenMinEgaugeEnergyAutoload".clotheswasher_kw, "AverageFifteenMinEgaugeEnergyAutoload".dhw_load_control, "AverageFifteenMinEgaugeEnergyAutoload".dryer_kw, "AverageFifteenMinEgaugeEnergyAutoload".garage_ac_kw, "AverageFifteenMinEgaugeEnergyAutoload".large_ac_kw, "AverageFifteenMinEgaugeEnergyAutoload".oven_and_microwave_kw, "AverageFifteenMinEgaugeEnergyAutoload".oven_kw, "AverageFifteenMinEgaugeEnergyAutoload".range_kw, "AverageFifteenMinEgaugeEnergyAutoload".refrigerator_kw, "AverageFifteenMinEgaugeEnergyAutoload".stove_kw, "AverageFifteenMinEgaugeEnergyAutoload".shop_kw, "AverageFifteenMinEgaugeEnergyAutoload".refrigerator_usage_kw FROM "AverageFifteenMinEgaugeEnergyAutoload" WHERE (((((((((((((((("AverageFifteenMinEgaugeEnergyAutoload".use_kw > (20)::double precision) OR ("AverageFifteenMinEgaugeEnergyAutoload".gen_kw > (10)::double precision)) OR ("AverageFifteenMinEgaugeEnergyAutoload".ac_kw > (10)::double precision)) OR ("AverageFifteenMinEgaugeEnergyAutoload".addition_kw > (10)::double precision)) OR ("AverageFifteenMinEgaugeEnergyAutoload".clotheswasher_kw > (10)::double precision)) OR ("AverageFifteenMinEgaugeEnergyAutoload".dhw_load_control > (10)::double precision)) OR ("AverageFifteenMinEgaugeEnergyAutoload".dryer_kw > (10)::double precision)) OR ("AverageFifteenMinEgaugeEnergyAutoload".garage_ac_kw > (10)::double precision)) OR ("AverageFifteenMinEgaugeEnergyAutoload".large_ac_kw > (10)::double precision)) OR ("AverageFifteenMinEgaugeEnergyAutoload".oven_and_microwave_kw > (10)::double precision)) OR ("AverageFifteenMinEgaugeEnergyAutoload".oven_kw > (10)::double precision)) OR ("AverageFifteenMinEgaugeEnergyAutoload".range_kw > (10)::double precision)) OR ("AverageFifteenMinEgaugeEnergyAutoload".refrigerator_kw > (10)::double precision)) OR ("AverageFifteenMinEgaugeEnergyAutoload".refrigerator_usage_kw > (10)::double precision)) OR ("AverageFifteenMinEgaugeEnergyAutoload".stove_kw > (10)::double precision)) OR ("AverageFifteenMinEgaugeEnergyAutoload".shop_kw > (10)::double precision));
 
 
-ALTER TABLE public."eGauge_view_with_filters" OWNER TO eileen;
+ALTER TABLE public.egauge_15min_find_outliers OWNER TO eileen;
+
+--
+-- Name: egauge_energy_15min_with_filter_for_outliers; Type: VIEW; Schema: public; Owner: sepgroup
+--
+
+CREATE VIEW egauge_energy_15min_with_filter_for_outliers AS
+    SELECT "AverageFifteenMinEgaugeEnergyAutoload".egauge_id, "AverageFifteenMinEgaugeEnergyAutoload".datetime, "AverageFifteenMinEgaugeEnergyAutoload".use_kw AS use_kw_whole_house, "AverageFifteenMinEgaugeEnergyAutoload".ac_kw, "AverageFifteenMinEgaugeEnergyAutoload".addition_kw, "AverageFifteenMinEgaugeEnergyAutoload".clotheswasher_kw, "AverageFifteenMinEgaugeEnergyAutoload".dhw_load_control, "AverageFifteenMinEgaugeEnergyAutoload".dryer_kw, "AverageFifteenMinEgaugeEnergyAutoload".garage_ac_kw, "AverageFifteenMinEgaugeEnergyAutoload".gen_kw, "AverageFifteenMinEgaugeEnergyAutoload".large_ac_kw, "AverageFifteenMinEgaugeEnergyAutoload".oven_and_microwave_kw, "AverageFifteenMinEgaugeEnergyAutoload".oven_kw, "AverageFifteenMinEgaugeEnergyAutoload".range_kw, CASE WHEN ((("AverageFifteenMinEgaugeEnergyAutoload".refrigerator_kw IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".refrigerator_kw > (10)::double precision)) AND (("AverageFifteenMinEgaugeEnergyAutoload".refrigerator_usage_kw IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".refrigerator_usage_kw > (10)::double precision))) THEN NULL::double precision WHEN ((("AverageFifteenMinEgaugeEnergyAutoload".refrigerator_kw IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".refrigerator_kw > (10)::double precision)) AND (("AverageFifteenMinEgaugeEnergyAutoload".refrigerator_usage_kw IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".refrigerator_usage_kw <= (10)::double precision))) THEN "AverageFifteenMinEgaugeEnergyAutoload".refrigerator_usage_kw ELSE "AverageFifteenMinEgaugeEnergyAutoload".refrigerator_kw END AS refrigerator_kw, "AverageFifteenMinEgaugeEnergyAutoload".shop_kw, "AverageFifteenMinEgaugeEnergyAutoload".stove_kw FROM "AverageFifteenMinEgaugeEnergyAutoload" WHERE ((((((((((((((("AverageFifteenMinEgaugeEnergyAutoload".use_kw IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".use_kw < (20)::double precision)) AND (("AverageFifteenMinEgaugeEnergyAutoload".ac_kw IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".ac_kw < (10)::double precision))) AND (("AverageFifteenMinEgaugeEnergyAutoload".addition_kw IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".addition_kw < (10)::double precision))) AND (("AverageFifteenMinEgaugeEnergyAutoload".clotheswasher_kw IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".clotheswasher_kw < (10)::double precision))) AND (("AverageFifteenMinEgaugeEnergyAutoload".dhw_load_control IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".dhw_load_control < (10)::double precision))) AND (("AverageFifteenMinEgaugeEnergyAutoload".dryer_kw IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".dryer_kw < (10)::double precision))) AND (("AverageFifteenMinEgaugeEnergyAutoload".garage_ac_kw IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".garage_ac_kw < (10)::double precision))) AND (("AverageFifteenMinEgaugeEnergyAutoload".large_ac_kw IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".large_ac_kw < (10)::double precision))) AND (("AverageFifteenMinEgaugeEnergyAutoload".oven_and_microwave_kw IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".oven_and_microwave_kw < (10)::double precision))) AND (("AverageFifteenMinEgaugeEnergyAutoload".oven_kw IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".oven_kw < (10)::double precision))) AND (("AverageFifteenMinEgaugeEnergyAutoload".range_kw IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".range_kw < (10)::double precision))) AND (((("AverageFifteenMinEgaugeEnergyAutoload".refrigerator_kw IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".refrigerator_kw < (10)::double precision)) OR ("AverageFifteenMinEgaugeEnergyAutoload".refrigerator_usage_kw IS NULL)) OR ("AverageFifteenMinEgaugeEnergyAutoload".refrigerator_usage_kw < (10)::double precision))) AND (("AverageFifteenMinEgaugeEnergyAutoload".shop_kw IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".shop_kw < (10)::double precision))) AND (("AverageFifteenMinEgaugeEnergyAutoload".shop_kw IS NULL) OR ("AverageFifteenMinEgaugeEnergyAutoload".shop_kw < (10)::double precision)));
+
+
+ALTER TABLE public.egauge_energy_15min_with_filter_for_outliers OWNER TO sepgroup;
 
 --
 -- Name: egauge_energy_autoload_dates; Type: VIEW; Schema: public; Owner: postgres
@@ -1711,6 +2167,36 @@ ALTER TABLE public.egauge_energy_autoload_dates OWNER TO postgres;
 
 COMMENT ON VIEW egauge_energy_autoload_dates IS 'Used by the MSG eGauge Service. @author Daniel Zhang (張道博)';
 
+
+--
+-- Name: egauge_energy_autoload_with_outlier_filter; Type: VIEW; Schema: public; Owner: dave
+--
+
+CREATE VIEW egauge_energy_autoload_with_outlier_filter AS
+    SELECT "EgaugeEnergyAutoload".egauge_id, "EgaugeEnergyAutoload".datetime, "EgaugeEnergyAutoload".use_kw AS use_kw_whole_house, "EgaugeEnergyAutoload".ac_kw, "EgaugeEnergyAutoload".addition_kw, "EgaugeEnergyAutoload".clotheswasher_kw, "EgaugeEnergyAutoload".dhw_load_control, "EgaugeEnergyAutoload".dryer_kw, "EgaugeEnergyAutoload".garage_ac_kw, "EgaugeEnergyAutoload".gen_kw, "EgaugeEnergyAutoload".large_ac_kw, "EgaugeEnergyAutoload".oven_and_microwave_kw, "EgaugeEnergyAutoload".oven_kw, "EgaugeEnergyAutoload".range_kw, CASE WHEN ((("EgaugeEnergyAutoload".refrigerator_kw IS NULL) OR ("EgaugeEnergyAutoload".refrigerator_kw > (10)::double precision)) AND (("EgaugeEnergyAutoload".refrigerator_usage_kw IS NULL) OR ("EgaugeEnergyAutoload".refrigerator_usage_kw > (10)::double precision))) THEN NULL::double precision WHEN ((("EgaugeEnergyAutoload".refrigerator_kw IS NULL) OR ("EgaugeEnergyAutoload".refrigerator_kw > (10)::double precision)) AND (("EgaugeEnergyAutoload".refrigerator_usage_kw IS NULL) OR ("EgaugeEnergyAutoload".refrigerator_usage_kw <= (10)::double precision))) THEN "EgaugeEnergyAutoload".refrigerator_usage_kw ELSE "EgaugeEnergyAutoload".refrigerator_kw END AS refrigerator_kw, "EgaugeEnergyAutoload".shop_kw, "EgaugeEnergyAutoload".stove_kw FROM "EgaugeEnergyAutoload" WHERE ((((((((((((((("EgaugeEnergyAutoload".use_kw IS NULL) OR ("EgaugeEnergyAutoload".use_kw < (20)::double precision)) AND (("EgaugeEnergyAutoload".ac_kw IS NULL) OR ("EgaugeEnergyAutoload".ac_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".addition_kw IS NULL) OR ("EgaugeEnergyAutoload".addition_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".clotheswasher_kw IS NULL) OR ("EgaugeEnergyAutoload".clotheswasher_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".dhw_load_control IS NULL) OR ("EgaugeEnergyAutoload".dhw_load_control < (10)::double precision))) AND (("EgaugeEnergyAutoload".dryer_kw IS NULL) OR ("EgaugeEnergyAutoload".dryer_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".garage_ac_kw IS NULL) OR ("EgaugeEnergyAutoload".garage_ac_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".large_ac_kw IS NULL) OR ("EgaugeEnergyAutoload".large_ac_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".oven_and_microwave_kw IS NULL) OR ("EgaugeEnergyAutoload".oven_and_microwave_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".oven_kw IS NULL) OR ("EgaugeEnergyAutoload".oven_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".range_kw IS NULL) OR ("EgaugeEnergyAutoload".range_kw < (10)::double precision))) AND (((("EgaugeEnergyAutoload".refrigerator_kw IS NULL) OR ("EgaugeEnergyAutoload".refrigerator_kw < (10)::double precision)) OR ("EgaugeEnergyAutoload".refrigerator_usage_kw IS NULL)) OR ("EgaugeEnergyAutoload".refrigerator_usage_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".shop_kw IS NULL) OR ("EgaugeEnergyAutoload".shop_kw < (10)::double precision))) AND (("EgaugeEnergyAutoload".shop_kw IS NULL) OR ("EgaugeEnergyAutoload".shop_kw < (10)::double precision)));
+
+
+ALTER TABLE public.egauge_energy_autoload_with_outlier_filter OWNER TO dave;
+
+--
+-- Name: egauge_view; Type: VIEW; Schema: public; Owner: sepgroup
+--
+
+CREATE VIEW egauge_view AS
+    SELECT "EgaugeEnergyAutoload".egauge_id, "EgaugeEnergyAutoload".use_kw AS "use_kw whole house", "EgaugeEnergyAutoload".datetime, "EgaugeEnergyAutoload".ac_kw, "EgaugeEnergyAutoload".addition_kw, "EgaugeEnergyAutoload".clotheswasher_kw, "EgaugeEnergyAutoload".dhw_load_control, "EgaugeEnergyAutoload".dryer_kw, "EgaugeEnergyAutoload".garage_ac_kw, "EgaugeEnergyAutoload".gen_kw, "EgaugeEnergyAutoload".large_ac_kw, "EgaugeEnergyAutoload".oven_and_microwave_kw, "EgaugeEnergyAutoload".oven_kw, "EgaugeEnergyAutoload".range_kw, "EgaugeEnergyAutoload".refrigerator_usage_kw, "EgaugeEnergyAutoload".shop_kw, "EgaugeEnergyAutoload".stove_kw FROM "EgaugeEnergyAutoload" WHERE ((((((((((((((("EgaugeEnergyAutoload".use_kw < (20)::double precision) AND ("EgaugeEnergyAutoload".ac_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".addition_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".clotheswasher_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".dhw_load_control < (10)::double precision)) AND ("EgaugeEnergyAutoload".dryer_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".garage_ac_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".gen_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".large_ac_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".oven_and_microwave_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".oven_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".range_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".refrigerator_usage_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".shop_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".stove_kw < (10)::double precision));
+
+
+ALTER TABLE public.egauge_view OWNER TO sepgroup;
+
+--
+-- Name: egauge_view_since_aug1; Type: VIEW; Schema: public; Owner: sepgroup
+--
+
+CREATE VIEW egauge_view_since_aug1 AS
+    SELECT "EgaugeEnergyAutoload".egauge_id, "EgaugeEnergyAutoload".use_kw AS "use_kw whole house", "EgaugeEnergyAutoload".datetime, "EgaugeEnergyAutoload".ac_kw, "EgaugeEnergyAutoload".addition_kw, "EgaugeEnergyAutoload".clotheswasher_kw, "EgaugeEnergyAutoload".dhw_load_control, "EgaugeEnergyAutoload".dryer_kw, "EgaugeEnergyAutoload".garage_ac_kw, "EgaugeEnergyAutoload".gen_kw, "EgaugeEnergyAutoload".large_ac_kw, "EgaugeEnergyAutoload".oven_and_microwave_kw, "EgaugeEnergyAutoload".oven_kw, "EgaugeEnergyAutoload".range_kw, "EgaugeEnergyAutoload".refrigerator_usage_kw, "EgaugeEnergyAutoload".shop_kw, "EgaugeEnergyAutoload".stove_kw FROM "EgaugeEnergyAutoload" WHERE (((((((((((((((("EgaugeEnergyAutoload".use_kw < (20)::double precision) AND ("EgaugeEnergyAutoload".ac_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".addition_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".clotheswasher_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".dhw_load_control < (10)::double precision)) AND ("EgaugeEnergyAutoload".dryer_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".garage_ac_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".gen_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".large_ac_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".oven_and_microwave_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".oven_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".range_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".refrigerator_usage_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".shop_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".stove_kw < (10)::double precision)) AND ("EgaugeEnergyAutoload".datetime > '2014-08-01 00:00:00'::timestamp without time zone));
+
+
+ALTER TABLE public.egauge_view_since_aug1 OWNER TO sepgroup;
 
 --
 -- Name: event_data_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
@@ -1892,6 +2378,46 @@ CREATE VIEW monthly_energy_summary_all_meters AS
 ALTER TABLE public.monthly_energy_summary_all_meters OWNER TO eileen;
 
 --
+-- Name: readings_by_meter_location_history_old_program; Type: VIEW; Schema: public; Owner: dave
+--
+
+CREATE VIEW readings_by_meter_location_history_old_program AS
+    SELECT readings_by_meter_location_history.meter_name, readings_by_meter_location_history.service_point_id, readings_by_meter_location_history.service_point_latitude, readings_by_meter_location_history.service_point_longitude, readings_by_meter_location_history.location, readings_by_meter_location_history.address, readings_by_meter_location_history.latitude, readings_by_meter_location_history.longitude, readings_by_meter_location_history.installed, readings_by_meter_location_history.uninstalled, readings_by_meter_location_history.channel, readings_by_meter_location_history.raw_value, readings_by_meter_location_history.value, readings_by_meter_location_history.uom, readings_by_meter_location_history.end_time, readings_by_meter_location_history.meter_data_id FROM (readings_by_meter_location_history JOIN "MeterProgramChanges" ON ((("MeterProgramChanges".meter_name)::text = (readings_by_meter_location_history.meter_name)::text))) WHERE (NOT (((readings_by_meter_location_history.meter_name)::text IN (SELECT DISTINCT "MeterProgramChanges".meter_name FROM "MeterProgramChanges")) AND (readings_by_meter_location_history.end_time > "MeterProgramChanges".date_changed)));
+
+
+ALTER TABLE public.readings_by_meter_location_history_old_program OWNER TO dave;
+
+--
+-- Name: monthly_energy_summary_double_pv_meter; Type: VIEW; Schema: public; Owner: dave
+--
+
+CREATE VIEW monthly_energy_summary_double_pv_meter AS
+    SELECT max((readings_by_meter_location_history.service_point_id)::text) AS service_point_id, sum(CASE WHEN (readings_by_meter_location_history.channel = (1)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_energy_to_house_kwh, sum(CASE WHEN (readings_by_meter_location_history.channel = (2)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_energy_from_house_kwh, sum(CASE WHEN (readings_by_meter_location_history.channel = (3)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS total_net_energy_kwh, avg(CASE WHEN (readings_by_meter_location_history.channel = (4)::smallint) THEN readings_by_meter_location_history.value ELSE NULL::real END) AS avg, to_char(date_trunc('month'::text, readings_by_meter_location_history.end_time), 'yyyy-mm'::text) AS service_month, max(readings_by_meter_location_history.service_point_latitude) AS sp_latitude, max(readings_by_meter_location_history.service_point_longitude) AS sp_longitude, max((readings_by_meter_location_history.location)::text) AS location_id, max((readings_by_meter_location_history.address)::text) AS address, max(readings_by_meter_location_history.latitude) AS location_latitude, max(readings_by_meter_location_history.longitude) AS location_longitude, ((count(readings_by_meter_location_history.end_time) / 4) / 24) AS count_day FROM (readings_by_meter_location_history_old_program readings_by_meter_location_history JOIN "PVServicePointIDs" ON ((((readings_by_meter_location_history.service_point_id)::text = ("PVServicePointIDs".old_house_service_point_id)::text) OR ((readings_by_meter_location_history.service_point_id)::text = ("PVServicePointIDs".old_pv_service_point_id)::text)))) WHERE ("PVServicePointIDs".old_pv_service_point_id IS NOT NULL) GROUP BY readings_by_meter_location_history.service_point_id, to_char(date_trunc('month'::text, readings_by_meter_location_history.end_time), 'yyyy-mm'::text);
+
+
+ALTER TABLE public.monthly_energy_summary_double_pv_meter OWNER TO dave;
+
+--
+-- Name: readings_by_meter_location_history_new_program; Type: VIEW; Schema: public; Owner: dave
+--
+
+CREATE VIEW readings_by_meter_location_history_new_program AS
+    SELECT readings_by_meter_location_history.meter_name, readings_by_meter_location_history.service_point_id, readings_by_meter_location_history.service_point_latitude, readings_by_meter_location_history.service_point_longitude, readings_by_meter_location_history.location, readings_by_meter_location_history.address, readings_by_meter_location_history.latitude, readings_by_meter_location_history.longitude, readings_by_meter_location_history.installed, readings_by_meter_location_history.uninstalled, readings_by_meter_location_history.channel, readings_by_meter_location_history.raw_value, readings_by_meter_location_history.value, readings_by_meter_location_history.uom, readings_by_meter_location_history.end_time, readings_by_meter_location_history.meter_data_id FROM (readings_by_meter_location_history JOIN "MeterProgramChanges" ON ((("MeterProgramChanges".meter_name)::text = (readings_by_meter_location_history.meter_name)::text))) WHERE (NOT (((readings_by_meter_location_history.meter_name)::text IN (SELECT DISTINCT "MeterProgramChanges".meter_name FROM "MeterProgramChanges")) AND (readings_by_meter_location_history.end_time < "MeterProgramChanges".date_changed)));
+
+
+ALTER TABLE public.readings_by_meter_location_history_new_program OWNER TO dave;
+
+--
+-- Name: monthly_energy_summary_double_pv_meter_program_2; Type: VIEW; Schema: public; Owner: dave
+--
+
+CREATE VIEW monthly_energy_summary_double_pv_meter_program_2 AS
+    SELECT max((readings_by_meter_location_history_new_program.service_point_id)::text) AS service_point_id, sum(CASE WHEN (readings_by_meter_location_history_new_program.channel = (1)::smallint) THEN readings_by_meter_location_history_new_program.value ELSE NULL::real END) AS max_voltage, sum(CASE WHEN (readings_by_meter_location_history_new_program.channel = (2)::smallint) THEN readings_by_meter_location_history_new_program.value ELSE NULL::real END) AS energy_delivered_kwh, sum(CASE WHEN (readings_by_meter_location_history_new_program.channel = (3)::smallint) THEN readings_by_meter_location_history_new_program.value ELSE NULL::real END) AS avg_voltage, avg(CASE WHEN (readings_by_meter_location_history_new_program.channel = (4)::smallint) THEN readings_by_meter_location_history_new_program.value ELSE NULL::real END) AS min_voltage, to_char(date_trunc('month'::text, readings_by_meter_location_history_new_program.end_time), 'yyyy-mm'::text) AS service_month, max(readings_by_meter_location_history_new_program.service_point_latitude) AS sp_latitude, max(readings_by_meter_location_history_new_program.service_point_longitude) AS sp_longitude, max((readings_by_meter_location_history_new_program.location)::text) AS location_id, max((readings_by_meter_location_history_new_program.address)::text) AS address, max(readings_by_meter_location_history_new_program.latitude) AS location_latitude, max(readings_by_meter_location_history_new_program.longitude) AS location_longitude, ((count(readings_by_meter_location_history_new_program.end_time) / 4) / 24) AS count_day FROM (readings_by_meter_location_history_new_program JOIN "PVServicePointIDs" ON ((((readings_by_meter_location_history_new_program.service_point_id)::text = ("PVServicePointIDs".old_house_service_point_id)::text) OR ((readings_by_meter_location_history_new_program.service_point_id)::text = ("PVServicePointIDs".old_pv_service_point_id)::text)))) WHERE ("PVServicePointIDs".old_pv_service_point_id IS NOT NULL) GROUP BY readings_by_meter_location_history_new_program.service_point_id, to_char(date_trunc('month'::text, readings_by_meter_location_history_new_program.end_time), 'yyyy-mm'::text);
+
+
+ALTER TABLE public.monthly_energy_summary_double_pv_meter_program_2 OWNER TO dave;
+
+--
 -- Name: monthly_energy_summary_houses_with_pv; Type: VIEW; Schema: public; Owner: eileen
 --
 
@@ -1900,6 +2426,16 @@ CREATE VIEW monthly_energy_summary_houses_with_pv AS
 
 
 ALTER TABLE public.monthly_energy_summary_houses_with_pv OWNER TO eileen;
+
+--
+-- Name: monthly_energy_summary_single_pv_meter; Type: VIEW; Schema: public; Owner: dave
+--
+
+CREATE VIEW monthly_energy_summary_single_pv_meter AS
+    SELECT max((readings_by_meter_location_history_new_spid.service_point_id)::text) AS service_point_id, sum(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (1)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS total_energy_to_house_kwh, sum(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (2)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS total_energy_from_house_kwh, sum(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (3)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS total_net_energy_kwh, avg(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (4)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS avg, to_char(date_trunc('month'::text, readings_by_meter_location_history_new_spid.end_time), 'yyyy-mm'::text) AS service_month, max(readings_by_meter_location_history_new_spid.service_point_latitude) AS sp_latitude, max(readings_by_meter_location_history_new_spid.service_point_longitude) AS sp_longitude, max((readings_by_meter_location_history_new_spid.location)::text) AS location_id, max((readings_by_meter_location_history_new_spid.address)::text) AS address, max(readings_by_meter_location_history_new_spid.latitude) AS location_latitude, max(readings_by_meter_location_history_new_spid.longitude) AS location_longitude, ((count(readings_by_meter_location_history_new_spid.end_time) / 4) / 24) AS count_day FROM (readings_by_meter_location_history readings_by_meter_location_history_new_spid JOIN "PVServicePointIDs" ON (((readings_by_meter_location_history_new_spid.service_point_id)::text = ("PVServicePointIDs".old_house_service_point_id)::text))) WHERE ("PVServicePointIDs".old_pv_service_point_id IS NULL) GROUP BY readings_by_meter_location_history_new_spid.service_point_id, to_char(date_trunc('month'::text, readings_by_meter_location_history_new_spid.end_time), 'yyyy-mm'::text);
+
+
+ALTER TABLE public.monthly_energy_summary_single_pv_meter OWNER TO dave;
 
 --
 -- Name: name_address_service_point_id; Type: VIEW; Schema: public; Owner: eileen
@@ -1922,41 +2458,6 @@ CREATE VIEW power_meter_events_with_spid AS
 ALTER TABLE public.power_meter_events_with_spid OWNER TO dave;
 
 --
--- Name: pv_backup; Type: TABLE; Schema: public; Owner: dave; Tablespace: 
---
-
-CREATE TABLE pv_backup (
-    old_pv_service_point_id character varying,
-    old_house_service_point_id character varying,
-    "PV_Mod_size_kW" double precision,
-    inverter_model character varying,
-    "size_kW" real,
-    "system_cap_kW" real,
-    bat character varying,
-    sub character varying,
-    circuit smallint,
-    date_uploaded timestamp without time zone,
-    has_meter smallint,
-    has_separate_pv_meter smallint,
-    "add_cap_kW" real,
-    upgraded_total_kw real,
-    street character varying,
-    city character varying,
-    state character varying,
-    zip integer,
-    month_installed integer,
-    year_installed integer,
-    notes character varying,
-    pv_service_point_id character varying,
-    house_service_point_id character varying,
-    new_spid character varying(50),
-    new_spid_pv character varying(50)
-);
-
-
-ALTER TABLE public.pv_backup OWNER TO dave;
-
---
 -- Name: pv_service_points_specifications_view; Type: VIEW; Schema: public; Owner: eileen
 --
 
@@ -1965,16 +2466,6 @@ CREATE VIEW pv_service_points_specifications_view AS
 
 
 ALTER TABLE public.pv_service_points_specifications_view OWNER TO eileen;
-
---
--- Name: raw_meter_readings; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW raw_meter_readings AS
-    SELECT "Interval".end_time, "MeterData".meter_name, "Reading".channel, "Reading".raw_value, "Reading".value, "Reading".uom, "MeterData".util_device_id FROM ((("MeterData" JOIN "IntervalReadData" ON (("MeterData".meter_data_id = "IntervalReadData".meter_data_id))) JOIN "Interval" ON (("IntervalReadData".interval_read_data_id = "Interval".interval_read_data_id))) JOIN "Reading" ON (("Interval".interval_id = "Reading".interval_id))) ORDER BY "Interval".end_time, "MeterData".meter_name, "Reading".channel;
-
-
-ALTER TABLE public.raw_meter_readings OWNER TO postgres;
 
 --
 -- Name: reading_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
@@ -1998,38 +2489,54 @@ ALTER SEQUENCE reading_id_seq OWNED BY "Reading".reading_id;
 
 
 --
--- Name: readings_not_referenced_by_mlh; Type: VIEW; Schema: public; Owner: postgres
+-- Name: readings_channel_as_columns_by_new_program; Type: VIEW; Schema: public; Owner: dave
+--
+
+CREATE VIEW readings_channel_as_columns_by_new_program AS
+    SELECT readings_by_meter_location_history_new_program.service_point_id, max(CASE WHEN (readings_by_meter_location_history_new_program.channel = (1)::smallint) THEN readings_by_meter_location_history_new_program.value ELSE NULL::real END) AS max_voltage_in_interval, max(CASE WHEN (readings_by_meter_location_history_new_program.channel = (2)::smallint) THEN readings_by_meter_location_history_new_program.value ELSE NULL::real END) AS energy_delivered_kwh, max(CASE WHEN (readings_by_meter_location_history_new_program.channel = (3)::smallint) THEN readings_by_meter_location_history_new_program.value ELSE NULL::real END) AS avg_voltage_in_interval, max(CASE WHEN (readings_by_meter_location_history_new_program.channel = (4)::smallint) THEN readings_by_meter_location_history_new_program.value ELSE NULL::real END) AS min_voltage_in_interval, readings_by_meter_location_history_new_program.end_time, max(readings_by_meter_location_history_new_program.service_point_latitude) AS service_point_latitude, max(readings_by_meter_location_history_new_program.service_point_longitude) AS service_point_longitude, max((readings_by_meter_location_history_new_program.location)::text) AS "location_ID", max((readings_by_meter_location_history_new_program.address)::text) AS address, max(readings_by_meter_location_history_new_program.latitude) AS location_latitude, max(readings_by_meter_location_history_new_program.longitude) AS location_longitude FROM readings_by_meter_location_history_new_program GROUP BY readings_by_meter_location_history_new_program.service_point_id, readings_by_meter_location_history_new_program.end_time;
+
+
+ALTER TABLE public.readings_channel_as_columns_by_new_program OWNER TO dave;
+
+--
+-- Name: readings_channel_as_columns_by_old_program; Type: VIEW; Schema: public; Owner: dave
+--
+
+CREATE VIEW readings_channel_as_columns_by_old_program AS
+    SELECT readings_by_meter_location_history_old_program.service_point_id, max(CASE WHEN (readings_by_meter_location_history_old_program.channel = (1)::smallint) THEN readings_by_meter_location_history_old_program.value ELSE NULL::real END) AS "Energy to House kwH", max(CASE WHEN (readings_by_meter_location_history_old_program.channel = (2)::smallint) THEN readings_by_meter_location_history_old_program.value ELSE NULL::real END) AS "Energy from House kwH(rec)", max(CASE WHEN (readings_by_meter_location_history_old_program.channel = (3)::smallint) THEN readings_by_meter_location_history_old_program.value ELSE NULL::real END) AS "Net Energy to House KwH", max(CASE WHEN (readings_by_meter_location_history_old_program.channel = (4)::smallint) THEN readings_by_meter_location_history_old_program.value ELSE NULL::real END) AS "voltage at house", readings_by_meter_location_history_old_program.end_time, max(readings_by_meter_location_history_old_program.service_point_latitude) AS service_point_latitude, max(readings_by_meter_location_history_old_program.service_point_longitude) AS service_point_longitude, max((readings_by_meter_location_history_old_program.location)::text) AS "location_ID", max((readings_by_meter_location_history_old_program.address)::text) AS address, max(readings_by_meter_location_history_old_program.latitude) AS location_latitude, max(readings_by_meter_location_history_old_program.longitude) AS location_longitude FROM readings_by_meter_location_history_old_program GROUP BY readings_by_meter_location_history_old_program.service_point_id, readings_by_meter_location_history_old_program.end_time;
+
+
+ALTER TABLE public.readings_channel_as_columns_by_old_program OWNER TO dave;
+
+--
+-- Name: readings_not_referenced_by_mlh; Type: VIEW; Schema: public; Owner: dave
 --
 
 CREATE VIEW readings_not_referenced_by_mlh AS
     SELECT readings_by_meter_location_history_new_spid_2.meter_name AS mlh_meter_name, readings_with_meter_data_id_unfiltered.meter_name AS full_meter_name, readings_by_meter_location_history_new_spid_2.channel AS mlh_channel, readings_by_meter_location_history_new_spid_2.value AS mlh_value, readings_with_meter_data_id_unfiltered.channel AS full_channel, readings_with_meter_data_id_unfiltered.value AS full_value, readings_by_meter_location_history_new_spid_2.end_time AS mlh_end_time, readings_with_meter_data_id_unfiltered.end_time AS full_end_time, readings_with_meter_data_id_unfiltered.meter_data_id AS full_meter_data_id FROM (readings_unfiltered readings_with_meter_data_id_unfiltered LEFT JOIN readings_by_meter_location_history readings_by_meter_location_history_new_spid_2 ON ((readings_with_meter_data_id_unfiltered.meter_data_id = readings_by_meter_location_history_new_spid_2.meter_data_id))) WHERE (readings_by_meter_location_history_new_spid_2.meter_data_id IS NULL);
 
 
-ALTER TABLE public.readings_not_referenced_by_mlh OWNER TO postgres;
+ALTER TABLE public.readings_not_referenced_by_mlh OWNER TO dave;
 
 --
--- Name: VIEW readings_not_referenced_by_mlh; Type: COMMENT; Schema: public; Owner: postgres
+-- Name: readings_with_pv_service_point_id_new_program; Type: VIEW; Schema: public; Owner: dave
 --
 
-COMMENT ON VIEW readings_not_referenced_by_mlh IS 'Readings that are present in the DB but are not referenced by the Meter Location History. @author Daniel Zhang (張道博)';
+CREATE VIEW readings_with_pv_service_point_id_new_program AS
+    SELECT readings_by_meter_location_history_new_program.meter_name, readings_by_meter_location_history_new_program.end_time, max((readings_by_meter_location_history_new_program.location)::text) AS location_id, max(("PVServicePointIDs".old_pv_service_point_id)::text) AS pv_service_point_id, max(CASE WHEN (readings_by_meter_location_history_new_program.channel = (1)::smallint) THEN readings_by_meter_location_history_new_program.value ELSE NULL::real END) AS pv_channel_1, max(CASE WHEN (readings_by_meter_location_history_new_program.channel = (2)::smallint) THEN readings_by_meter_location_history_new_program.value ELSE NULL::real END) AS pv_channel_2, max(CASE WHEN (readings_by_meter_location_history_new_program.channel = (3)::smallint) THEN readings_by_meter_location_history_new_program.value ELSE NULL::real END) AS pv_channel_3, zero_to_null(max(CASE WHEN (readings_by_meter_location_history_new_program.channel = (4)::smallint) THEN readings_by_meter_location_history_new_program.value ELSE NULL::real END)) AS pv_channel_4_voltage FROM ("PVServicePointIDs" JOIN readings_by_meter_location_history readings_by_meter_location_history_new_program ON ((("PVServicePointIDs".old_pv_service_point_id)::text = (readings_by_meter_location_history_new_program.service_point_id)::text))) GROUP BY readings_by_meter_location_history_new_program.meter_name, readings_by_meter_location_history_new_program.end_time;
 
 
---
--- Name: readings_with_pv_service_point_id; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW readings_with_pv_service_point_id AS
-    SELECT readings_by_meter_location_history_new_spid.meter_name, readings_by_meter_location_history_new_spid.end_time, max((readings_by_meter_location_history_new_spid.location)::text) AS location_id, max(("PVServicePointIDs".old_pv_service_point_id)::text) AS pv_service_point_id, max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (1)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS pv_channel_1, max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (2)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS pv_channel_2, max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (3)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END) AS pv_channel_3, zero_to_null(max(CASE WHEN (readings_by_meter_location_history_new_spid.channel = (4)::smallint) THEN readings_by_meter_location_history_new_spid.value ELSE NULL::real END)) AS pv_channel_4_voltage FROM ("PVServicePointIDs" JOIN readings_by_meter_location_history readings_by_meter_location_history_new_spid ON ((("PVServicePointIDs".old_pv_service_point_id)::text = (readings_by_meter_location_history_new_spid.service_point_id)::text))) GROUP BY readings_by_meter_location_history_new_spid.meter_name, readings_by_meter_location_history_new_spid.end_time;
-
-
-ALTER TABLE public.readings_with_pv_service_point_id OWNER TO postgres;
+ALTER TABLE public.readings_with_pv_service_point_id_new_program OWNER TO dave;
 
 --
--- Name: VIEW readings_with_pv_service_point_id; Type: COMMENT; Schema: public; Owner: postgres
+-- Name: readings_with_pv_service_point_id_old_program; Type: VIEW; Schema: public; Owner: dave
 --
 
-COMMENT ON VIEW readings_with_pv_service_point_id IS 'Readings that have an associated PV Service Point ID. @author Daniel Zhang (張道博)';
+CREATE VIEW readings_with_pv_service_point_id_old_program AS
+    SELECT readings_by_meter_location_history_old_program.meter_name, readings_by_meter_location_history_old_program.end_time, max((readings_by_meter_location_history_old_program.location)::text) AS location_id, max(("PVServicePointIDs".old_pv_service_point_id)::text) AS pv_service_point_id, max(CASE WHEN (readings_by_meter_location_history_old_program.channel = (1)::smallint) THEN readings_by_meter_location_history_old_program.value ELSE NULL::real END) AS pv_channel_1, max(CASE WHEN (readings_by_meter_location_history_old_program.channel = (2)::smallint) THEN readings_by_meter_location_history_old_program.value ELSE NULL::real END) AS pv_channel_2, max(CASE WHEN (readings_by_meter_location_history_old_program.channel = (3)::smallint) THEN readings_by_meter_location_history_old_program.value ELSE NULL::real END) AS pv_channel_3, zero_to_null(max(CASE WHEN (readings_by_meter_location_history_old_program.channel = (4)::smallint) THEN readings_by_meter_location_history_old_program.value ELSE NULL::real END)) AS pv_channel_4_voltage FROM ("PVServicePointIDs" JOIN readings_by_meter_location_history readings_by_meter_location_history_old_program ON ((("PVServicePointIDs".old_pv_service_point_id)::text = (readings_by_meter_location_history_old_program.service_point_id)::text))) GROUP BY readings_by_meter_location_history_old_program.meter_name, readings_by_meter_location_history_old_program.end_time;
 
+
+ALTER TABLE public.readings_with_pv_service_point_id_old_program OWNER TO dave;
 
 --
 -- Name: register_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
@@ -2112,19 +2619,6 @@ COMMENT ON VIEW registers IS 'This is being used for development. @author Daniel
 
 
 --
--- Name: test_AverageFifteenMinKiheiSCADATemperatureHumidity; Type: TABLE; Schema: public; Owner: daniel; Tablespace: 
---
-
-CREATE TABLE "test_AverageFifteenMinKiheiSCADATemperatureHumidity" (
-    "timestamp" timestamp without time zone NOT NULL,
-    met_air_temp_degf double precision,
-    met_rel_humid_pct double precision
-);
-
-
-ALTER TABLE public."test_AverageFifteenMinKiheiSCADATemperatureHumidity" OWNER TO daniel;
-
---
 -- Name: tier_id_seq; Type: SEQUENCE; Schema: public; Owner: sepgroup
 --
 
@@ -2144,6 +2638,26 @@ ALTER TABLE public.tier_id_seq OWNER TO sepgroup;
 
 ALTER SEQUENCE tier_id_seq OWNED BY "Tier".tier_id;
 
+
+--
+-- Name: transformer_view_test; Type: VIEW; Schema: public; Owner: sepgroup
+--
+
+CREATE VIEW transformer_view_test AS
+    SELECT "TransformerDataNREL"."timestamp", "TransformerDataNREL".device_name, "TransformerDataNREL".frequency, "TransformerDataNREL".apparent_power_magnitude_s, "TransformerDataNREL".real_power_p, "TransformerDataNREL".reactive_power_q, "TransformerDataNREL".power_factor, "IrradianceData".sensor_id AS irradiance_sensor_id, "IrradianceData".irradiance_w_per_m2 FROM ("TransformerDataNREL" JOIN "IrradianceData" ON (("IrradianceData"."timestamp" = "TransformerDataNREL"."timestamp"))) WHERE ((("TransformerDataNREL".device_name)::text = '13976'::text) OR ("IrradianceData".irradiance_w_per_m2 = ANY (ARRAY[(2)::double precision, (3)::double precision, (4)::double precision])));
+
+
+ALTER TABLE public.transformer_view_test OWNER TO sepgroup;
+
+--
+-- Name: view_meter_program_changes; Type: VIEW; Schema: public; Owner: eileen
+--
+
+CREATE VIEW view_meter_program_changes AS
+    SELECT "MeterProgramChanges".meter_name, "MeterProgramChanges".date_changed, "MeterProgramChanges".program_id, raw_meter_readings.end_time, raw_meter_readings.channel, raw_meter_readings.value, raw_meter_readings.uom FROM ("MeterProgramChanges" JOIN raw_meter_readings ON ((("MeterProgramChanges".meter_name)::bpchar = raw_meter_readings.meter_name))) WHERE (raw_meter_readings.end_time > '2014-02-01 00:00:00'::timestamp without time zone);
+
+
+ALTER TABLE public.view_meter_program_changes OWNER TO eileen;
 
 --
 -- Name: event_id; Type: DEFAULT; Schema: public; Owner: sepgroup
@@ -2216,11 +2730,11 @@ ALTER TABLE ONLY "Tier" ALTER COLUMN tier_id SET DEFAULT nextval('tier_id_seq'::
 
 
 --
--- Name: AverageFifteenMinKiheiSCADATemperatureHumidity_copy_pkey; Type: CONSTRAINT; Schema: public; Owner: daniel; Tablespace: 
+-- Name: CircuitData_copy_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
-ALTER TABLE ONLY "test_AverageFifteenMinKiheiSCADATemperatureHumidity"
-    ADD CONSTRAINT "AverageFifteenMinKiheiSCADATemperatureHumidity_copy_pkey" PRIMARY KEY ("timestamp");
+ALTER TABLE ONLY "AverageFifteenMinCircuitData"
+    ADD CONSTRAINT "CircuitData_copy_pkey" PRIMARY KEY (circuit, "timestamp");
 
 
 --
@@ -2229,6 +2743,14 @@ ALTER TABLE ONLY "test_AverageFifteenMinKiheiSCADATemperatureHumidity"
 
 ALTER TABLE ONLY "CircuitData"
     ADD CONSTRAINT "CircuitData_pkey1" PRIMARY KEY (circuit, "timestamp");
+
+
+--
+-- Name: EgaugeEnergyAutoload_copy_pkey1; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY "AverageFifteenMinEgaugeEnergyAutoload"
+    ADD CONSTRAINT "EgaugeEnergyAutoload_copy_pkey1" PRIMARY KEY (egauge_id, datetime);
 
 
 --
@@ -2253,6 +2775,14 @@ ALTER TABLE ONLY "EventData"
 
 ALTER TABLE ONLY "Event"
     ADD CONSTRAINT "Event_pkey" PRIMARY KEY (event_id);
+
+
+--
+-- Name: ExportHistory_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY "ExportHistory"
+    ADD CONSTRAINT "ExportHistory_pkey" PRIMARY KEY ("timestamp");
 
 
 --
@@ -2309,6 +2839,14 @@ ALTER TABLE ONLY "LocationRecords"
 
 ALTER TABLE ONLY "MeterLocationHistory"
     ADD CONSTRAINT "MeterLocationHistory_pkey" PRIMARY KEY (meter_name, installed);
+
+
+--
+-- Name: MeterProgramChangesLookupTable_pkey; Type: CONSTRAINT; Schema: public; Owner: dave; Tablespace: 
+--
+
+ALTER TABLE ONLY "MeterProgramChanges"
+    ADD CONSTRAINT "MeterProgramChangesLookupTable_pkey" PRIMARY KEY (meter_name, date_changed);
 
 
 --
@@ -2373,6 +2911,22 @@ ALTER TABLE ONLY "Register"
 
 ALTER TABLE ONLY "Tier"
     ADD CONSTRAINT "Tier_pkey" PRIMARY KEY (tier_id);
+
+
+--
+-- Name: TransformerDataNRELST_pkey; Type: CONSTRAINT; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+ALTER TABLE ONLY "TransformerDataNRELST"
+    ADD CONSTRAINT "TransformerDataNRELST_pkey" PRIMARY KEY ("timestamp", device_name);
+
+
+--
+-- Name: TransformerDataNREL_pkey; Type: CONSTRAINT; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+ALTER TABLE ONLY "TransformerDataNREL"
+    ADD CONSTRAINT "TransformerDataNREL_pkey" PRIMARY KEY ("timestamp", device_name);
 
 
 --
@@ -2463,6 +3017,13 @@ CREATE UNIQUE INDEX "MeterData_meter_data_id_key" ON "MeterData" USING btree (me
 --
 
 CREATE INDEX "MeterData_meter_name_idx" ON "MeterData" USING btree (meter_name);
+
+
+--
+-- Name: PVServicePointIDs_new_spid_new_spid_pv_key; Type: INDEX; Schema: public; Owner: sepgroup; Tablespace: 
+--
+
+CREATE UNIQUE INDEX "PVServicePointIDs_new_spid_new_spid_pv_key" ON "PVServicePointIDs" USING btree (new_spid, new_spid_pv);
 
 
 --
@@ -2678,6 +3239,25 @@ ALTER TABLE ONLY "Tier"
 
 
 --
+-- Name: az; Type: ACL; Schema: -; Owner: ashkan
+--
+
+REVOKE ALL ON SCHEMA az FROM PUBLIC;
+REVOKE ALL ON SCHEMA az FROM ashkan;
+GRANT ALL ON SCHEMA az TO ashkan;
+
+
+--
+-- Name: dw; Type: ACL; Schema: -; Owner: dave
+--
+
+REVOKE ALL ON SCHEMA dw FROM PUBLIC;
+REVOKE ALL ON SCHEMA dw FROM dave;
+GRANT ALL ON SCHEMA dw TO dave;
+GRANT ALL ON SCHEMA dw TO ashkan;
+
+
+--
 -- Name: public; Type: ACL; Schema: -; Owner: postgres
 --
 
@@ -2686,6 +3266,22 @@ REVOKE ALL ON SCHEMA public FROM postgres;
 GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
+
+SET search_path = dz, pg_catalog;
+
+--
+-- Name: meco_readings_dupe_count(); Type: ACL; Schema: dz; Owner: postgres
+--
+
+REVOKE ALL ON FUNCTION meco_readings_dupe_count() FROM PUBLIC;
+REVOKE ALL ON FUNCTION meco_readings_dupe_count() FROM postgres;
+GRANT ALL ON FUNCTION meco_readings_dupe_count() TO postgres;
+GRANT ALL ON FUNCTION meco_readings_dupe_count() TO PUBLIC;
+GRANT ALL ON FUNCTION meco_readings_dupe_count() TO sepgroup;
+GRANT ALL ON FUNCTION meco_readings_dupe_count() TO sepgroupreadonly;
+
+
+SET search_path = public, pg_catalog;
 
 --
 -- Name: zero_to_null(real); Type: ACL; Schema: public; Owner: daniel
@@ -2712,47 +3308,44 @@ GRANT ALL ON FUNCTION zero_to_null(double precision) TO sepgroup_nonmsg;
 GRANT ALL ON FUNCTION zero_to_null(double precision) TO sepgroupreadonly;
 
 
---
--- Name: Event; Type: ACL; Schema: public; Owner: sepgroup
---
-
-REVOKE ALL ON TABLE "Event" FROM PUBLIC;
-REVOKE ALL ON TABLE "Event" FROM sepgroup;
-GRANT ALL ON TABLE "Event" TO sepgroup;
-GRANT SELECT ON TABLE "Event" TO sepgroupreadonly;
-
+SET search_path = dw, pg_catalog;
 
 --
--- Name: EventData; Type: ACL; Schema: public; Owner: sepgroup
+-- Name: MeterLocationHistory_deprecated; Type: ACL; Schema: dw; Owner: dave
 --
 
-REVOKE ALL ON TABLE "EventData" FROM PUBLIC;
-REVOKE ALL ON TABLE "EventData" FROM sepgroup;
-GRANT ALL ON TABLE "EventData" TO sepgroup;
-GRANT SELECT ON TABLE "EventData" TO sepgroupreadonly;
+REVOKE ALL ON TABLE "MeterLocationHistory_deprecated" FROM PUBLIC;
+REVOKE ALL ON TABLE "MeterLocationHistory_deprecated" FROM dave;
+GRANT ALL ON TABLE "MeterLocationHistory_deprecated" TO dave;
+GRANT ALL ON TABLE "MeterLocationHistory_deprecated" TO sepgroup;
+GRANT SELECT ON TABLE "MeterLocationHistory_deprecated" TO sepgroupreadonly;
+GRANT SELECT ON TABLE "MeterLocationHistory_deprecated" TO daniel;
 
 
---
--- Name: MeterData; Type: ACL; Schema: public; Owner: sepgroup
---
-
-REVOKE ALL ON TABLE "MeterData" FROM PUBLIC;
-REVOKE ALL ON TABLE "MeterData" FROM sepgroup;
-GRANT ALL ON TABLE "MeterData" TO sepgroup;
-GRANT SELECT ON TABLE "MeterData" TO sepgroupreadonly;
-
-
-SET search_path = dz, pg_catalog;
+SET search_path = public, pg_catalog;
 
 --
--- Name: count_of_event_duplicates; Type: ACL; Schema: dz; Owner: daniel
+-- Name: MeterProgramChanges; Type: ACL; Schema: public; Owner: dave
 --
 
-REVOKE ALL ON TABLE count_of_event_duplicates FROM PUBLIC;
-REVOKE ALL ON TABLE count_of_event_duplicates FROM daniel;
-GRANT ALL ON TABLE count_of_event_duplicates TO daniel;
-GRANT ALL ON TABLE count_of_event_duplicates TO sepgroup;
-GRANT SELECT ON TABLE count_of_event_duplicates TO sepgroupreadonly;
+REVOKE ALL ON TABLE "MeterProgramChanges" FROM PUBLIC;
+REVOKE ALL ON TABLE "MeterProgramChanges" FROM dave;
+GRANT ALL ON TABLE "MeterProgramChanges" TO dave;
+GRANT ALL ON TABLE "MeterProgramChanges" TO sepgroup;
+GRANT SELECT ON TABLE "MeterProgramChanges" TO sepgroupreadonly;
+
+
+SET search_path = dw, pg_catalog;
+
+--
+-- Name: MeterProgramHistory_backup; Type: ACL; Schema: dw; Owner: dave
+--
+
+REVOKE ALL ON TABLE "MeterProgramHistory_backup" FROM PUBLIC;
+REVOKE ALL ON TABLE "MeterProgramHistory_backup" FROM dave;
+GRANT ALL ON TABLE "MeterProgramHistory_backup" TO dave;
+GRANT ALL ON TABLE "MeterProgramHistory_backup" TO sepgroup;
+GRANT SELECT ON TABLE "MeterProgramHistory_backup" TO sepgroupreadonly;
 
 
 SET search_path = public, pg_catalog;
@@ -2778,6 +3371,16 @@ GRANT SELECT ON TABLE "IntervalReadData" TO sepgroupreadonly;
 
 
 --
+-- Name: MeterData; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE "MeterData" FROM PUBLIC;
+REVOKE ALL ON TABLE "MeterData" FROM sepgroup;
+GRANT ALL ON TABLE "MeterData" TO sepgroup;
+GRANT SELECT ON TABLE "MeterData" TO sepgroupreadonly;
+
+
+--
 -- Name: MeterLocationHistory; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -2785,6 +3388,16 @@ REVOKE ALL ON TABLE "MeterLocationHistory" FROM PUBLIC;
 REVOKE ALL ON TABLE "MeterLocationHistory" FROM sepgroup;
 GRANT ALL ON TABLE "MeterLocationHistory" TO sepgroup;
 GRANT SELECT ON TABLE "MeterLocationHistory" TO sepgroupreadonly;
+
+
+--
+-- Name: PVServicePointIDs; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE "PVServicePointIDs" FROM PUBLIC;
+REVOKE ALL ON TABLE "PVServicePointIDs" FROM sepgroup;
+GRANT ALL ON TABLE "PVServicePointIDs" TO sepgroup;
+GRANT SELECT ON TABLE "PVServicePointIDs" TO sepgroupreadonly;
 
 
 --
@@ -2797,7 +3410,88 @@ GRANT ALL ON TABLE "Reading" TO sepgroup;
 GRANT SELECT ON TABLE "Reading" TO sepgroupreadonly;
 
 
+--
+-- Name: nonpv_service_point_ids; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE nonpv_service_point_ids FROM PUBLIC;
+REVOKE ALL ON TABLE nonpv_service_point_ids FROM postgres;
+GRANT ALL ON TABLE nonpv_service_point_ids TO postgres;
+GRANT ALL ON TABLE nonpv_service_point_ids TO sepgroup;
+GRANT SELECT ON TABLE nonpv_service_point_ids TO sepgroupreadonly;
+
+
+--
+-- Name: readings_by_meter_location_history; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE readings_by_meter_location_history FROM PUBLIC;
+REVOKE ALL ON TABLE readings_by_meter_location_history FROM eileen;
+GRANT ALL ON TABLE readings_by_meter_location_history TO eileen;
+GRANT ALL ON TABLE readings_by_meter_location_history TO sepgroup;
+GRANT SELECT ON TABLE readings_by_meter_location_history TO sepgroupreadonly;
+
+
+SET search_path = dw, pg_catalog;
+
+--
+-- Name: test_monthly_energy_summary_for_nonpv_service_points; Type: ACL; Schema: dw; Owner: dave
+--
+
+REVOKE ALL ON TABLE test_monthly_energy_summary_for_nonpv_service_points FROM PUBLIC;
+REVOKE ALL ON TABLE test_monthly_energy_summary_for_nonpv_service_points FROM dave;
+GRANT ALL ON TABLE test_monthly_energy_summary_for_nonpv_service_points TO dave;
+GRANT ALL ON TABLE test_monthly_energy_summary_for_nonpv_service_points TO sepgroup;
+GRANT SELECT ON TABLE test_monthly_energy_summary_for_nonpv_service_points TO sepgroupreadonly;
+
+
 SET search_path = dz, pg_catalog;
+
+--
+-- Name: _IrradianceFifteenMinIntervals; Type: ACL; Schema: dz; Owner: postgres
+--
+
+REVOKE ALL ON TABLE "_IrradianceFifteenMinIntervals" FROM PUBLIC;
+REVOKE ALL ON TABLE "_IrradianceFifteenMinIntervals" FROM postgres;
+GRANT ALL ON TABLE "_IrradianceFifteenMinIntervals" TO postgres;
+GRANT ALL ON TABLE "_IrradianceFifteenMinIntervals" TO sepgroup;
+GRANT SELECT ON TABLE "_IrradianceFifteenMinIntervals" TO sepgroupreadonly;
+
+
+SET search_path = public, pg_catalog;
+
+--
+-- Name: Event; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE "Event" FROM PUBLIC;
+REVOKE ALL ON TABLE "Event" FROM sepgroup;
+GRANT ALL ON TABLE "Event" TO sepgroup;
+GRANT SELECT ON TABLE "Event" TO sepgroupreadonly;
+
+
+--
+-- Name: EventData; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE "EventData" FROM PUBLIC;
+REVOKE ALL ON TABLE "EventData" FROM sepgroup;
+GRANT ALL ON TABLE "EventData" TO sepgroup;
+GRANT SELECT ON TABLE "EventData" TO sepgroupreadonly;
+
+
+SET search_path = dz, pg_catalog;
+
+--
+-- Name: count_of_event_duplicates; Type: ACL; Schema: dz; Owner: daniel
+--
+
+REVOKE ALL ON TABLE count_of_event_duplicates FROM PUBLIC;
+REVOKE ALL ON TABLE count_of_event_duplicates FROM daniel;
+GRANT ALL ON TABLE count_of_event_duplicates TO daniel;
+GRANT ALL ON TABLE count_of_event_duplicates TO sepgroup;
+GRANT SELECT ON TABLE count_of_event_duplicates TO sepgroupreadonly;
+
 
 --
 -- Name: readings_by_meter_location_history; Type: ACL; Schema: dz; Owner: daniel
@@ -2821,6 +3515,42 @@ GRANT ALL ON TABLE deprecated_readings_by_mlh_transposed_columns_opt1 TO sepgrou
 GRANT SELECT ON TABLE deprecated_readings_by_mlh_transposed_columns_opt1 TO sepgroupreadonly;
 
 
+SET search_path = public, pg_catalog;
+
+--
+-- Name: EgaugeEnergyAutoload; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE "EgaugeEnergyAutoload" FROM PUBLIC;
+REVOKE ALL ON TABLE "EgaugeEnergyAutoload" FROM sepgroup;
+GRANT ALL ON TABLE "EgaugeEnergyAutoload" TO sepgroup;
+GRANT SELECT ON TABLE "EgaugeEnergyAutoload" TO sepgroupreadonly;
+
+
+SET search_path = dz, pg_catalog;
+
+--
+-- Name: outlier_test; Type: ACL; Schema: dz; Owner: postgres
+--
+
+REVOKE ALL ON TABLE outlier_test FROM PUBLIC;
+REVOKE ALL ON TABLE outlier_test FROM postgres;
+GRANT ALL ON TABLE outlier_test TO postgres;
+GRANT ALL ON TABLE outlier_test TO sepgroup;
+GRANT SELECT ON TABLE outlier_test TO sepgroupreadonly;
+
+
+--
+-- Name: reading_dupes; Type: ACL; Schema: dz; Owner: daniel
+--
+
+REVOKE ALL ON TABLE reading_dupes FROM PUBLIC;
+REVOKE ALL ON TABLE reading_dupes FROM daniel;
+GRANT ALL ON TABLE reading_dupes TO daniel;
+GRANT ALL ON TABLE reading_dupes TO sepgroup;
+GRANT SELECT ON TABLE reading_dupes TO sepgroupreadonly;
+
+
 --
 -- Name: readings_by_mlh_new_spid_for_ashkan_from_2013-07-01; Type: ACL; Schema: dz; Owner: daniel
 --
@@ -2830,6 +3560,32 @@ REVOKE ALL ON TABLE "readings_by_mlh_new_spid_for_ashkan_from_2013-07-01" FROM d
 GRANT ALL ON TABLE "readings_by_mlh_new_spid_for_ashkan_from_2013-07-01" TO daniel;
 GRANT ALL ON TABLE "readings_by_mlh_new_spid_for_ashkan_from_2013-07-01" TO sepgroup;
 GRANT SELECT ON TABLE "readings_by_mlh_new_spid_for_ashkan_from_2013-07-01" TO sepgroupreadonly;
+
+
+SET search_path = public, pg_catalog;
+
+--
+-- Name: readings_unfiltered; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE readings_unfiltered FROM PUBLIC;
+REVOKE ALL ON TABLE readings_unfiltered FROM postgres;
+GRANT ALL ON TABLE readings_unfiltered TO postgres;
+GRANT ALL ON TABLE readings_unfiltered TO sepgroup;
+GRANT SELECT ON TABLE readings_unfiltered TO sepgroupreadonly;
+
+
+SET search_path = dz, pg_catalog;
+
+--
+-- Name: readings_not_referenced_by_mlh_deprecated; Type: ACL; Schema: dz; Owner: postgres
+--
+
+REVOKE ALL ON TABLE readings_not_referenced_by_mlh_deprecated FROM PUBLIC;
+REVOKE ALL ON TABLE readings_not_referenced_by_mlh_deprecated FROM postgres;
+GRANT ALL ON TABLE readings_not_referenced_by_mlh_deprecated TO postgres;
+GRANT ALL ON TABLE readings_not_referenced_by_mlh_deprecated TO sepgroup;
+GRANT SELECT ON TABLE readings_not_referenced_by_mlh_deprecated TO sepgroupreadonly;
 
 
 --
@@ -2843,6 +3599,113 @@ GRANT ALL ON TABLE readings_unfiltered TO sepgroup;
 GRANT SELECT ON TABLE readings_unfiltered TO sepgroupreadonly;
 
 
+--
+-- Name: readings_with_pv_service_point_id_deprecated; Type: ACL; Schema: dz; Owner: postgres
+--
+
+REVOKE ALL ON TABLE readings_with_pv_service_point_id_deprecated FROM PUBLIC;
+REVOKE ALL ON TABLE readings_with_pv_service_point_id_deprecated FROM postgres;
+GRANT ALL ON TABLE readings_with_pv_service_point_id_deprecated TO postgres;
+GRANT ALL ON TABLE readings_with_pv_service_point_id_deprecated TO sepgroup;
+GRANT SELECT ON TABLE readings_with_pv_service_point_id_deprecated TO sepgroupreadonly;
+
+
+--
+-- Name: test_readings_by_meter_location_history; Type: ACL; Schema: dz; Owner: daniel
+--
+
+REVOKE ALL ON TABLE test_readings_by_meter_location_history FROM PUBLIC;
+REVOKE ALL ON TABLE test_readings_by_meter_location_history FROM daniel;
+GRANT ALL ON TABLE test_readings_by_meter_location_history TO daniel;
+GRANT ALL ON TABLE test_readings_by_meter_location_history TO sepgroup;
+GRANT SELECT ON TABLE test_readings_by_meter_location_history TO sepgroupreadonly;
+
+
+SET search_path = public, pg_catalog;
+
+--
+-- Name: raw_meter_readings; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE raw_meter_readings FROM PUBLIC;
+REVOKE ALL ON TABLE raw_meter_readings FROM postgres;
+GRANT ALL ON TABLE raw_meter_readings TO postgres;
+GRANT ALL ON TABLE raw_meter_readings TO sepgroup;
+GRANT SELECT ON TABLE raw_meter_readings TO sepgroupreadonly;
+
+
+SET search_path = ep, pg_catalog;
+
+--
+-- Name: dates_raw_meter_readings; Type: ACL; Schema: ep; Owner: eileen
+--
+
+REVOKE ALL ON TABLE dates_raw_meter_readings FROM PUBLIC;
+REVOKE ALL ON TABLE dates_raw_meter_readings FROM eileen;
+GRANT ALL ON TABLE dates_raw_meter_readings TO eileen;
+GRANT ALL ON TABLE dates_raw_meter_readings TO sepgroup;
+GRANT SELECT ON TABLE dates_raw_meter_readings TO sepgroupreadonly;
+
+
+--
+-- Name: egauge4913; Type: ACL; Schema: ep; Owner: eileen
+--
+
+REVOKE ALL ON TABLE egauge4913 FROM PUBLIC;
+REVOKE ALL ON TABLE egauge4913 FROM eileen;
+GRANT ALL ON TABLE egauge4913 TO eileen;
+GRANT ALL ON TABLE egauge4913 TO sepgroup;
+GRANT SELECT ON TABLE egauge4913 TO sepgroupreadonly;
+
+
+--
+-- Name: meter115651channel2; Type: ACL; Schema: ep; Owner: eileen
+--
+
+REVOKE ALL ON TABLE meter115651channel2 FROM PUBLIC;
+REVOKE ALL ON TABLE meter115651channel2 FROM eileen;
+GRANT ALL ON TABLE meter115651channel2 TO eileen;
+GRANT ALL ON TABLE meter115651channel2 TO sepgroup;
+GRANT SELECT ON TABLE meter115651channel2 TO sepgroupreadonly;
+
+
+SET search_path = public, pg_catalog;
+
+--
+-- Name: readings_unfiltered_columns; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE readings_unfiltered_columns FROM PUBLIC;
+REVOKE ALL ON TABLE readings_unfiltered_columns FROM eileen;
+GRANT ALL ON TABLE readings_unfiltered_columns TO eileen;
+GRANT ALL ON TABLE readings_unfiltered_columns TO sepgroup;
+GRANT SELECT ON TABLE readings_unfiltered_columns TO sepgroupreadonly;
+
+
+SET search_path = ep, pg_catalog;
+
+--
+-- Name: readings_meter_changes; Type: ACL; Schema: ep; Owner: eileen
+--
+
+REVOKE ALL ON TABLE readings_meter_changes FROM PUBLIC;
+REVOKE ALL ON TABLE readings_meter_changes FROM eileen;
+GRANT ALL ON TABLE readings_meter_changes TO eileen;
+GRANT ALL ON TABLE readings_meter_changes TO sepgroup;
+GRANT SELECT ON TABLE readings_meter_changes TO sepgroupreadonly;
+
+
+--
+-- Name: voltage_data_for_lesson_Mel_3D; Type: ACL; Schema: ep; Owner: eileen
+--
+
+REVOKE ALL ON TABLE "voltage_data_for_lesson_Mel_3D" FROM PUBLIC;
+REVOKE ALL ON TABLE "voltage_data_for_lesson_Mel_3D" FROM eileen;
+GRANT ALL ON TABLE "voltage_data_for_lesson_Mel_3D" TO eileen;
+GRANT ALL ON TABLE "voltage_data_for_lesson_Mel_3D" TO sepgroup;
+GRANT SELECT ON TABLE "voltage_data_for_lesson_Mel_3D" TO sepgroupreadonly;
+
+
 SET search_path = public, pg_catalog;
 
 --
@@ -2853,6 +3716,28 @@ REVOKE ALL ON TABLE "AsBuilt" FROM PUBLIC;
 REVOKE ALL ON TABLE "AsBuilt" FROM sepgroup;
 GRANT ALL ON TABLE "AsBuilt" TO sepgroup;
 GRANT SELECT ON TABLE "AsBuilt" TO sepgroupreadonly;
+
+
+--
+-- Name: AverageFifteenMinCircuitData; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE "AverageFifteenMinCircuitData" FROM PUBLIC;
+REVOKE ALL ON TABLE "AverageFifteenMinCircuitData" FROM postgres;
+GRANT ALL ON TABLE "AverageFifteenMinCircuitData" TO postgres;
+GRANT ALL ON TABLE "AverageFifteenMinCircuitData" TO sepgroup;
+GRANT SELECT ON TABLE "AverageFifteenMinCircuitData" TO sepgroupreadonly;
+
+
+--
+-- Name: AverageFifteenMinEgaugeEnergyAutoload; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE "AverageFifteenMinEgaugeEnergyAutoload" FROM PUBLIC;
+REVOKE ALL ON TABLE "AverageFifteenMinEgaugeEnergyAutoload" FROM postgres;
+GRANT ALL ON TABLE "AverageFifteenMinEgaugeEnergyAutoload" TO postgres;
+GRANT ALL ON TABLE "AverageFifteenMinEgaugeEnergyAutoload" TO sepgroup;
+GRANT SELECT ON TABLE "AverageFifteenMinEgaugeEnergyAutoload" TO sepgroupreadonly;
 
 
 --
@@ -2898,27 +3783,6 @@ GRANT SELECT ON TABLE "CircuitData" TO sepgroupreadonly;
 
 
 --
--- Name: CircuitDataCopy; Type: ACL; Schema: public; Owner: dave
---
-
-REVOKE ALL ON TABLE "CircuitDataCopy" FROM PUBLIC;
-REVOKE ALL ON TABLE "CircuitDataCopy" FROM dave;
-GRANT ALL ON TABLE "CircuitDataCopy" TO dave;
-GRANT ALL ON TABLE "CircuitDataCopy" TO sepgroup;
-GRANT SELECT ON TABLE "CircuitDataCopy" TO sepgroupreadonly;
-
-
---
--- Name: EgaugeEnergyAutoload; Type: ACL; Schema: public; Owner: sepgroup
---
-
-REVOKE ALL ON TABLE "EgaugeEnergyAutoload" FROM PUBLIC;
-REVOKE ALL ON TABLE "EgaugeEnergyAutoload" FROM sepgroup;
-GRANT ALL ON TABLE "EgaugeEnergyAutoload" TO sepgroup;
-GRANT SELECT ON TABLE "EgaugeEnergyAutoload" TO sepgroupreadonly;
-
-
---
 -- Name: EgaugeInfo; Type: ACL; Schema: public; Owner: eileen
 --
 
@@ -2927,6 +3791,17 @@ REVOKE ALL ON TABLE "EgaugeInfo" FROM eileen;
 GRANT ALL ON TABLE "EgaugeInfo" TO eileen;
 GRANT ALL ON TABLE "EgaugeInfo" TO sepgroup;
 GRANT SELECT ON TABLE "EgaugeInfo" TO sepgroupreadonly;
+
+
+--
+-- Name: ExportHistory; Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON TABLE "ExportHistory" FROM PUBLIC;
+REVOKE ALL ON TABLE "ExportHistory" FROM postgres;
+GRANT ALL ON TABLE "ExportHistory" TO postgres;
+GRANT ALL ON TABLE "ExportHistory" TO sepgroup;
+GRANT SELECT ON TABLE "ExportHistory" TO sepgroupreadonly;
 
 
 --
@@ -3003,16 +3878,6 @@ GRANT SELECT ON TABLE "NotificationHistory" TO sepgroupreadonly;
 
 
 --
--- Name: PVServicePointIDs; Type: ACL; Schema: public; Owner: sepgroup
---
-
-REVOKE ALL ON TABLE "PVServicePointIDs" FROM PUBLIC;
-REVOKE ALL ON TABLE "PVServicePointIDs" FROM sepgroup;
-GRANT ALL ON TABLE "PVServicePointIDs" TO sepgroup;
-GRANT SELECT ON TABLE "PVServicePointIDs" TO sepgroupreadonly;
-
-
---
 -- Name: PowerMeterEvents; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -3080,6 +3945,28 @@ REVOKE ALL ON TABLE "TransformerData" FROM PUBLIC;
 REVOKE ALL ON TABLE "TransformerData" FROM sepgroup;
 GRANT ALL ON TABLE "TransformerData" TO sepgroup;
 GRANT SELECT ON TABLE "TransformerData" TO sepgroupreadonly;
+
+
+--
+-- Name: TransformerDataNREL; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE "TransformerDataNREL" FROM PUBLIC;
+REVOKE ALL ON TABLE "TransformerDataNREL" FROM sepgroup;
+GRANT ALL ON TABLE "TransformerDataNREL" TO sepgroup;
+GRANT SELECT ON TABLE "TransformerDataNREL" TO sepgroupreadonly;
+GRANT ALL ON TABLE "TransformerDataNREL" TO ashkan;
+
+
+--
+-- Name: TransformerDataNRELST; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE "TransformerDataNRELST" FROM PUBLIC;
+REVOKE ALL ON TABLE "TransformerDataNRELST" FROM sepgroup;
+GRANT ALL ON TABLE "TransformerDataNRELST" TO sepgroup;
+GRANT SELECT ON TABLE "TransformerDataNRELST" TO sepgroupreadonly;
+GRANT ALL ON TABLE "TransformerDataNRELST" TO ashkan;
 
 
 --
@@ -3171,17 +4058,6 @@ GRANT SELECT ON TABLE az_noaa_weather_data TO sepgroupreadonly;
 
 
 --
--- Name: readings_by_meter_location_history; Type: ACL; Schema: public; Owner: eileen
---
-
-REVOKE ALL ON TABLE readings_by_meter_location_history FROM PUBLIC;
-REVOKE ALL ON TABLE readings_by_meter_location_history FROM eileen;
-GRANT ALL ON TABLE readings_by_meter_location_history TO eileen;
-GRANT ALL ON TABLE readings_by_meter_location_history TO sepgroup;
-GRANT SELECT ON TABLE readings_by_meter_location_history TO sepgroupreadonly;
-
-
---
 -- Name: cd_readings_channel_as_columns_by_service_point; Type: ACL; Schema: public; Owner: eileen
 --
 
@@ -3226,6 +4102,28 @@ GRANT SELECT ON TABLE az_readings_channels_as_columns_new_spid TO sepgroupreadon
 
 
 --
+-- Name: az_transformer_and_pumping_station; Type: ACL; Schema: public; Owner: dave
+--
+
+REVOKE ALL ON TABLE az_transformer_and_pumping_station FROM PUBLIC;
+REVOKE ALL ON TABLE az_transformer_and_pumping_station FROM dave;
+GRANT ALL ON TABLE az_transformer_and_pumping_station TO dave;
+GRANT ALL ON TABLE az_transformer_and_pumping_station TO sepgroup;
+GRANT SELECT ON TABLE az_transformer_and_pumping_station TO sepgroupreadonly;
+
+
+--
+-- Name: az_transformer_only; Type: ACL; Schema: public; Owner: dave
+--
+
+REVOKE ALL ON TABLE az_transformer_only FROM PUBLIC;
+REVOKE ALL ON TABLE az_transformer_only FROM dave;
+GRANT ALL ON TABLE az_transformer_only TO dave;
+GRANT ALL ON TABLE az_transformer_only TO sepgroup;
+GRANT SELECT ON TABLE az_transformer_only TO sepgroupreadonly;
+
+
+--
 -- Name: cd_20130706-20130711; Type: ACL; Schema: public; Owner: eileen
 --
 
@@ -3256,17 +4154,6 @@ REVOKE ALL ON TABLE cd_meter_ids_for_houses_with_pv_with_locations FROM eileen;
 GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE ON TABLE cd_meter_ids_for_houses_with_pv_with_locations TO eileen;
 GRANT ALL ON TABLE cd_meter_ids_for_houses_with_pv_with_locations TO sepgroup;
 GRANT SELECT ON TABLE cd_meter_ids_for_houses_with_pv_with_locations TO sepgroupreadonly;
-
-
---
--- Name: readings_unfiltered; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE readings_unfiltered FROM PUBLIC;
-REVOKE ALL ON TABLE readings_unfiltered FROM postgres;
-GRANT ALL ON TABLE readings_unfiltered TO postgres;
-GRANT ALL ON TABLE readings_unfiltered TO sepgroup;
-GRANT SELECT ON TABLE readings_unfiltered TO sepgroupreadonly;
 
 
 --
@@ -3413,14 +4300,14 @@ GRANT SELECT ON TABLE dates_kihei_scada_temp_hum TO sepgroupreadonly;
 
 
 --
--- Name: dates_meter_read; Type: ACL; Schema: public; Owner: eileen
+-- Name: dates_meter_read_with_uninstall; Type: ACL; Schema: public; Owner: dave
 --
 
-REVOKE ALL ON TABLE dates_meter_read FROM PUBLIC;
-REVOKE ALL ON TABLE dates_meter_read FROM eileen;
-GRANT ALL ON TABLE dates_meter_read TO eileen;
-GRANT ALL ON TABLE dates_meter_read TO sepgroup;
-GRANT SELECT ON TABLE dates_meter_read TO sepgroupreadonly;
+REVOKE ALL ON TABLE dates_meter_read_with_uninstall FROM PUBLIC;
+REVOKE ALL ON TABLE dates_meter_read_with_uninstall FROM dave;
+GRANT ALL ON TABLE dates_meter_read_with_uninstall TO dave;
+GRANT ALL ON TABLE dates_meter_read_with_uninstall TO sepgroup;
+GRANT SELECT ON TABLE dates_meter_read_with_uninstall TO sepgroupreadonly;
 
 
 --
@@ -3534,17 +4421,6 @@ GRANT SELECT ON TABLE dz_monthly_energy_summary_double_pv_meter TO sepgroupreado
 
 
 --
--- Name: nonpv_service_point_ids; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE nonpv_service_point_ids FROM PUBLIC;
-REVOKE ALL ON TABLE nonpv_service_point_ids FROM postgres;
-GRANT ALL ON TABLE nonpv_service_point_ids TO postgres;
-GRANT ALL ON TABLE nonpv_service_point_ids TO sepgroup;
-GRANT SELECT ON TABLE nonpv_service_point_ids TO sepgroupreadonly;
-
-
---
 -- Name: dz_monthly_energy_summary_for_nonpv_service_points; Type: ACL; Schema: public; Owner: postgres
 --
 
@@ -3622,14 +4498,25 @@ GRANT SELECT ON TABLE dz_summary_pv_readings_in_nonpv_mlh TO sepgroupreadonly;
 
 
 --
--- Name: eGauge_view_with_filters; Type: ACL; Schema: public; Owner: eileen
+-- Name: egauge_15min_find_outliers; Type: ACL; Schema: public; Owner: eileen
 --
 
-REVOKE ALL ON TABLE "eGauge_view_with_filters" FROM PUBLIC;
-REVOKE ALL ON TABLE "eGauge_view_with_filters" FROM eileen;
-GRANT ALL ON TABLE "eGauge_view_with_filters" TO eileen;
-GRANT ALL ON TABLE "eGauge_view_with_filters" TO sepgroup;
-GRANT SELECT ON TABLE "eGauge_view_with_filters" TO sepgroupreadonly;
+REVOKE ALL ON TABLE egauge_15min_find_outliers FROM PUBLIC;
+REVOKE ALL ON TABLE egauge_15min_find_outliers FROM eileen;
+GRANT ALL ON TABLE egauge_15min_find_outliers TO eileen;
+GRANT ALL ON TABLE egauge_15min_find_outliers TO sepgroup;
+GRANT SELECT ON TABLE egauge_15min_find_outliers TO sepgroupreadonly;
+
+
+--
+-- Name: egauge_energy_15min_with_filter_for_outliers; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE egauge_energy_15min_with_filter_for_outliers FROM PUBLIC;
+REVOKE ALL ON TABLE egauge_energy_15min_with_filter_for_outliers FROM sepgroup;
+GRANT ALL ON TABLE egauge_energy_15min_with_filter_for_outliers TO sepgroup;
+GRANT ALL ON TABLE egauge_energy_15min_with_filter_for_outliers TO eileen;
+GRANT SELECT ON TABLE egauge_energy_15min_with_filter_for_outliers TO sepgroupreadonly;
 
 
 --
@@ -3641,6 +4528,38 @@ REVOKE ALL ON TABLE egauge_energy_autoload_dates FROM postgres;
 GRANT ALL ON TABLE egauge_energy_autoload_dates TO postgres;
 GRANT ALL ON TABLE egauge_energy_autoload_dates TO sepgroup;
 GRANT SELECT ON TABLE egauge_energy_autoload_dates TO sepgroupreadonly;
+
+
+--
+-- Name: egauge_energy_autoload_with_outlier_filter; Type: ACL; Schema: public; Owner: dave
+--
+
+REVOKE ALL ON TABLE egauge_energy_autoload_with_outlier_filter FROM PUBLIC;
+REVOKE ALL ON TABLE egauge_energy_autoload_with_outlier_filter FROM dave;
+GRANT ALL ON TABLE egauge_energy_autoload_with_outlier_filter TO dave;
+GRANT ALL ON TABLE egauge_energy_autoload_with_outlier_filter TO eileen;
+GRANT ALL ON TABLE egauge_energy_autoload_with_outlier_filter TO sepgroup;
+GRANT SELECT ON TABLE egauge_energy_autoload_with_outlier_filter TO sepgroupreadonly;
+
+
+--
+-- Name: egauge_view; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE egauge_view FROM PUBLIC;
+REVOKE ALL ON TABLE egauge_view FROM sepgroup;
+GRANT ALL ON TABLE egauge_view TO sepgroup;
+GRANT SELECT ON TABLE egauge_view TO sepgroupreadonly;
+
+
+--
+-- Name: egauge_view_since_aug1; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE egauge_view_since_aug1 FROM PUBLIC;
+REVOKE ALL ON TABLE egauge_view_since_aug1 FROM sepgroup;
+GRANT ALL ON TABLE egauge_view_since_aug1 TO sepgroup;
+GRANT SELECT ON TABLE egauge_view_since_aug1 TO sepgroupreadonly;
 
 
 --
@@ -3760,6 +4679,50 @@ GRANT SELECT ON TABLE monthly_energy_summary_all_meters TO sepgroupreadonly;
 
 
 --
+-- Name: readings_by_meter_location_history_old_program; Type: ACL; Schema: public; Owner: dave
+--
+
+REVOKE ALL ON TABLE readings_by_meter_location_history_old_program FROM PUBLIC;
+REVOKE ALL ON TABLE readings_by_meter_location_history_old_program FROM dave;
+GRANT ALL ON TABLE readings_by_meter_location_history_old_program TO dave;
+GRANT ALL ON TABLE readings_by_meter_location_history_old_program TO sepgroup;
+GRANT SELECT ON TABLE readings_by_meter_location_history_old_program TO sepgroupreadonly;
+
+
+--
+-- Name: monthly_energy_summary_double_pv_meter; Type: ACL; Schema: public; Owner: dave
+--
+
+REVOKE ALL ON TABLE monthly_energy_summary_double_pv_meter FROM PUBLIC;
+REVOKE ALL ON TABLE monthly_energy_summary_double_pv_meter FROM dave;
+GRANT ALL ON TABLE monthly_energy_summary_double_pv_meter TO dave;
+GRANT ALL ON TABLE monthly_energy_summary_double_pv_meter TO sepgroup;
+GRANT SELECT ON TABLE monthly_energy_summary_double_pv_meter TO sepgroupreadonly;
+
+
+--
+-- Name: readings_by_meter_location_history_new_program; Type: ACL; Schema: public; Owner: dave
+--
+
+REVOKE ALL ON TABLE readings_by_meter_location_history_new_program FROM PUBLIC;
+REVOKE ALL ON TABLE readings_by_meter_location_history_new_program FROM dave;
+GRANT ALL ON TABLE readings_by_meter_location_history_new_program TO dave;
+GRANT ALL ON TABLE readings_by_meter_location_history_new_program TO sepgroup;
+GRANT SELECT ON TABLE readings_by_meter_location_history_new_program TO sepgroupreadonly;
+
+
+--
+-- Name: monthly_energy_summary_double_pv_meter_program_2; Type: ACL; Schema: public; Owner: dave
+--
+
+REVOKE ALL ON TABLE monthly_energy_summary_double_pv_meter_program_2 FROM PUBLIC;
+REVOKE ALL ON TABLE monthly_energy_summary_double_pv_meter_program_2 FROM dave;
+GRANT ALL ON TABLE monthly_energy_summary_double_pv_meter_program_2 TO dave;
+GRANT ALL ON TABLE monthly_energy_summary_double_pv_meter_program_2 TO sepgroup;
+GRANT SELECT ON TABLE monthly_energy_summary_double_pv_meter_program_2 TO sepgroupreadonly;
+
+
+--
 -- Name: monthly_energy_summary_houses_with_pv; Type: ACL; Schema: public; Owner: eileen
 --
 
@@ -3768,6 +4731,17 @@ REVOKE ALL ON TABLE monthly_energy_summary_houses_with_pv FROM eileen;
 GRANT ALL ON TABLE monthly_energy_summary_houses_with_pv TO eileen;
 GRANT ALL ON TABLE monthly_energy_summary_houses_with_pv TO sepgroup;
 GRANT SELECT ON TABLE monthly_energy_summary_houses_with_pv TO sepgroupreadonly;
+
+
+--
+-- Name: monthly_energy_summary_single_pv_meter; Type: ACL; Schema: public; Owner: dave
+--
+
+REVOKE ALL ON TABLE monthly_energy_summary_single_pv_meter FROM PUBLIC;
+REVOKE ALL ON TABLE monthly_energy_summary_single_pv_meter FROM dave;
+GRANT ALL ON TABLE monthly_energy_summary_single_pv_meter TO dave;
+GRANT ALL ON TABLE monthly_energy_summary_single_pv_meter TO sepgroup;
+GRANT SELECT ON TABLE monthly_energy_summary_single_pv_meter TO sepgroupreadonly;
 
 
 --
@@ -3793,17 +4767,6 @@ GRANT SELECT ON TABLE power_meter_events_with_spid TO sepgroupreadonly;
 
 
 --
--- Name: pv_backup; Type: ACL; Schema: public; Owner: dave
---
-
-REVOKE ALL ON TABLE pv_backup FROM PUBLIC;
-REVOKE ALL ON TABLE pv_backup FROM dave;
-GRANT ALL ON TABLE pv_backup TO dave;
-GRANT ALL ON TABLE pv_backup TO sepgroup;
-GRANT SELECT ON TABLE pv_backup TO sepgroupreadonly;
-
-
---
 -- Name: pv_service_points_specifications_view; Type: ACL; Schema: public; Owner: eileen
 --
 
@@ -3812,17 +4775,6 @@ REVOKE ALL ON TABLE pv_service_points_specifications_view FROM eileen;
 GRANT ALL ON TABLE pv_service_points_specifications_view TO eileen;
 GRANT ALL ON TABLE pv_service_points_specifications_view TO sepgroup;
 GRANT SELECT ON TABLE pv_service_points_specifications_view TO sepgroupreadonly;
-
-
---
--- Name: raw_meter_readings; Type: ACL; Schema: public; Owner: postgres
---
-
-REVOKE ALL ON TABLE raw_meter_readings FROM PUBLIC;
-REVOKE ALL ON TABLE raw_meter_readings FROM postgres;
-GRANT ALL ON TABLE raw_meter_readings TO postgres;
-GRANT ALL ON TABLE raw_meter_readings TO sepgroup;
-GRANT SELECT ON TABLE raw_meter_readings TO sepgroupreadonly;
 
 
 --
@@ -3836,25 +4788,58 @@ GRANT SELECT ON SEQUENCE reading_id_seq TO sepgroupreadonly;
 
 
 --
--- Name: readings_not_referenced_by_mlh; Type: ACL; Schema: public; Owner: postgres
+-- Name: readings_channel_as_columns_by_new_program; Type: ACL; Schema: public; Owner: dave
+--
+
+REVOKE ALL ON TABLE readings_channel_as_columns_by_new_program FROM PUBLIC;
+REVOKE ALL ON TABLE readings_channel_as_columns_by_new_program FROM dave;
+GRANT ALL ON TABLE readings_channel_as_columns_by_new_program TO dave;
+GRANT ALL ON TABLE readings_channel_as_columns_by_new_program TO sepgroup;
+GRANT SELECT ON TABLE readings_channel_as_columns_by_new_program TO sepgroupreadonly;
+
+
+--
+-- Name: readings_channel_as_columns_by_old_program; Type: ACL; Schema: public; Owner: dave
+--
+
+REVOKE ALL ON TABLE readings_channel_as_columns_by_old_program FROM PUBLIC;
+REVOKE ALL ON TABLE readings_channel_as_columns_by_old_program FROM dave;
+GRANT ALL ON TABLE readings_channel_as_columns_by_old_program TO dave;
+GRANT ALL ON TABLE readings_channel_as_columns_by_old_program TO sepgroup;
+GRANT SELECT ON TABLE readings_channel_as_columns_by_old_program TO sepgroupreadonly;
+
+
+--
+-- Name: readings_not_referenced_by_mlh; Type: ACL; Schema: public; Owner: dave
 --
 
 REVOKE ALL ON TABLE readings_not_referenced_by_mlh FROM PUBLIC;
-REVOKE ALL ON TABLE readings_not_referenced_by_mlh FROM postgres;
-GRANT ALL ON TABLE readings_not_referenced_by_mlh TO postgres;
+REVOKE ALL ON TABLE readings_not_referenced_by_mlh FROM dave;
+GRANT ALL ON TABLE readings_not_referenced_by_mlh TO dave;
 GRANT ALL ON TABLE readings_not_referenced_by_mlh TO sepgroup;
 GRANT SELECT ON TABLE readings_not_referenced_by_mlh TO sepgroupreadonly;
 
 
 --
--- Name: readings_with_pv_service_point_id; Type: ACL; Schema: public; Owner: postgres
+-- Name: readings_with_pv_service_point_id_new_program; Type: ACL; Schema: public; Owner: dave
 --
 
-REVOKE ALL ON TABLE readings_with_pv_service_point_id FROM PUBLIC;
-REVOKE ALL ON TABLE readings_with_pv_service_point_id FROM postgres;
-GRANT ALL ON TABLE readings_with_pv_service_point_id TO postgres;
-GRANT ALL ON TABLE readings_with_pv_service_point_id TO sepgroup;
-GRANT SELECT ON TABLE readings_with_pv_service_point_id TO sepgroupreadonly;
+REVOKE ALL ON TABLE readings_with_pv_service_point_id_new_program FROM PUBLIC;
+REVOKE ALL ON TABLE readings_with_pv_service_point_id_new_program FROM dave;
+GRANT ALL ON TABLE readings_with_pv_service_point_id_new_program TO dave;
+GRANT ALL ON TABLE readings_with_pv_service_point_id_new_program TO sepgroup;
+GRANT SELECT ON TABLE readings_with_pv_service_point_id_new_program TO sepgroupreadonly;
+
+
+--
+-- Name: readings_with_pv_service_point_id_old_program; Type: ACL; Schema: public; Owner: dave
+--
+
+REVOKE ALL ON TABLE readings_with_pv_service_point_id_old_program FROM PUBLIC;
+REVOKE ALL ON TABLE readings_with_pv_service_point_id_old_program FROM dave;
+GRANT ALL ON TABLE readings_with_pv_service_point_id_old_program TO dave;
+GRANT ALL ON TABLE readings_with_pv_service_point_id_old_program TO sepgroup;
+GRANT SELECT ON TABLE readings_with_pv_service_point_id_old_program TO sepgroupreadonly;
 
 
 --
@@ -3899,17 +4884,6 @@ GRANT SELECT ON TABLE registers TO sepgroupreadonly;
 
 
 --
--- Name: test_AverageFifteenMinKiheiSCADATemperatureHumidity; Type: ACL; Schema: public; Owner: daniel
---
-
-REVOKE ALL ON TABLE "test_AverageFifteenMinKiheiSCADATemperatureHumidity" FROM PUBLIC;
-REVOKE ALL ON TABLE "test_AverageFifteenMinKiheiSCADATemperatureHumidity" FROM daniel;
-GRANT ALL ON TABLE "test_AverageFifteenMinKiheiSCADATemperatureHumidity" TO daniel;
-GRANT ALL ON TABLE "test_AverageFifteenMinKiheiSCADATemperatureHumidity" TO sepgroup;
-GRANT SELECT ON TABLE "test_AverageFifteenMinKiheiSCADATemperatureHumidity" TO sepgroupreadonly;
-
-
---
 -- Name: tier_id_seq; Type: ACL; Schema: public; Owner: sepgroup
 --
 
@@ -3917,6 +4891,28 @@ REVOKE ALL ON SEQUENCE tier_id_seq FROM PUBLIC;
 REVOKE ALL ON SEQUENCE tier_id_seq FROM sepgroup;
 GRANT ALL ON SEQUENCE tier_id_seq TO sepgroup;
 GRANT SELECT ON SEQUENCE tier_id_seq TO sepgroupreadonly;
+
+
+--
+-- Name: transformer_view_test; Type: ACL; Schema: public; Owner: sepgroup
+--
+
+REVOKE ALL ON TABLE transformer_view_test FROM PUBLIC;
+REVOKE ALL ON TABLE transformer_view_test FROM sepgroup;
+GRANT ALL ON TABLE transformer_view_test TO sepgroup;
+GRANT SELECT ON TABLE transformer_view_test TO sepgroupreadonly;
+GRANT ALL ON TABLE transformer_view_test TO ashkan;
+
+
+--
+-- Name: view_meter_program_changes; Type: ACL; Schema: public; Owner: eileen
+--
+
+REVOKE ALL ON TABLE view_meter_program_changes FROM PUBLIC;
+REVOKE ALL ON TABLE view_meter_program_changes FROM eileen;
+GRANT ALL ON TABLE view_meter_program_changes TO eileen;
+GRANT ALL ON TABLE view_meter_program_changes TO sepgroup;
+GRANT SELECT ON TABLE view_meter_program_changes TO sepgroupreadonly;
 
 
 --

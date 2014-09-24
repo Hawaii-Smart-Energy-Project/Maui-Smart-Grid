@@ -13,7 +13,7 @@ from meco_db_insert import MECODBInserter
 from msg_db_connector import MSGDBConnector
 from meco_db_delete import MECODBDeleter
 from msg_configer import MSGConfiger
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 
 
 class MSGDBUtilTester(unittest.TestCase):
@@ -38,7 +38,7 @@ class MSGDBUtilTester(unittest.TestCase):
         self.tableName = 'MeterData'
         self.columnName = 'meter_data_id'
         self.configer = MSGConfiger()
-        self.logger = MSGLogger(__name__, 'debug')
+        self.logger = SEKLogger(__name__, 'debug')
         self.dbUtil = MSGDBUtil()
 
     def testMECODBUtilCanBeInited(self):

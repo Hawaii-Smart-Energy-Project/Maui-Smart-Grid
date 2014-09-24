@@ -11,7 +11,7 @@ import unittest
 from msg_notifier import MSGNotifier
 import smtplib
 from msg_configer import MSGConfiger
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 import os
 
 SEND_EMAIL = False
@@ -23,7 +23,7 @@ class TestMECONotifier(unittest.TestCase):
     """
 
     def setUp(self):
-        self.logger = MSGLogger(__name__)
+        self.logger = SEKLogger(__name__)
         self.notifier = MSGNotifier()
         self.configer = MSGConfiger()
 

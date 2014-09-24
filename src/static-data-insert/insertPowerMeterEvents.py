@@ -24,7 +24,7 @@ import re
 import os
 import fnmatch
 import xlrd
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 import datetime
 
 cols = ['dtype', 'id', 'event_category', 'el_epoch_num', 'el_seq_num',
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     conn = connector.connectDB()
     dbUtil = MSGDBUtil()
     cursor = conn.cursor()
-    logger = MSGLogger(__name__)
+    logger = SEKLogger(__name__)
 
     paths = []
     patterns = ['*.xlsx']

@@ -8,7 +8,7 @@ __license__ = 'https://raw.github' \
               '-LICENSE.txt'
 
 import unittest
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from msg_types import MSGAggregationTypes
 
 
@@ -18,7 +18,7 @@ class MSGTypesTester(unittest.TestCase):
     """
 
     def setUp(self):
-        self.logger = MSGLogger(__name__, 'DEBUG')
+        self.logger = SEKLogger(__name__, 'DEBUG')
 
     def test_aggregation_types(self):
         self.assertTrue(MSGAggregationTypes.weather in MSGAggregationTypes)

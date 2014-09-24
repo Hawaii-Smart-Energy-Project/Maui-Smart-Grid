@@ -35,13 +35,13 @@ from msg_configer import MSGConfiger
 from msg_notifier import MSGNotifier
 from meco_plotting import MECOPlotting
 from insertSingleMECOEnergyDataFile import Inserter
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 
 
 xmlGzCount = 0
 xmlCount = 0
 configer = MSGConfiger()
-logger = MSGLogger(__name__, 'info')
+logger = SEKLogger(__name__, 'info')
 binPath = MSGConfiger.configOptionValue(configer, "Executable Paths",
                                         "msg_bin_path")
 COMMAND_LINE_ARGS = None
@@ -252,8 +252,8 @@ if __name__ == '__main__':
             sys.stderr.write("\n")
             msgBody += returnDict[key]
 
-    except Exception, e:
-        msg = "\nAn exception occurred: %s\n" % e
+    except Exception as detail:
+        msg = "\nAn exception occurred: {}\n".format(detail)
         logger.log(msg, 'error')
         msgBody += msg
 

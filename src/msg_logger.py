@@ -56,6 +56,7 @@ import sys
 import logging
 from io import StringIO
 from colorlog import ColoredFormatter
+import warnings
 
 
 def enum(**enums):
@@ -82,6 +83,10 @@ class MSGLogger(object):
         """
 
         # @todo Provide enumeration type instead of strings.
+
+        warnings.simplefilter('default')
+        warnings.warn("This module is deprecated in favor of SEKLogger.",
+                      DeprecationWarning)
 
         self.logger = logging.getLogger(caller)
 

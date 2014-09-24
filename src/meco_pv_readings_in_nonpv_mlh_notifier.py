@@ -15,7 +15,7 @@ __license__ = 'https://raw.github' \
               '-LICENSE.txt'
 
 from datetime import datetime as dt
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from msg_notifier import MSGNotifier
 from msg_db_connector import MSGDBConnector
 
@@ -26,7 +26,7 @@ class MECONonPVinMLHNotifier(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__)
+        self.logger = SEKLogger(__name__)
         self.viewPVReadingsinNonMLH = ''
         self.lastDateProcessed = None
         self.connector = MSGDBConnector()

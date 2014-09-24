@@ -15,12 +15,12 @@ __license__ = 'https://raw.github' \
               '-LICENSE.txt'
 
 
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from meco_data_autoloader import MECODataAutoloader
 
 SUPPRESS_OUTPUT_FOR_NO_DATA = True
 
-logger = MSGLogger(__name__)
+logger = SEKLogger(__name__)
 autoloader = MECODataAutoloader()
 
 if autoloader.newDataExists():

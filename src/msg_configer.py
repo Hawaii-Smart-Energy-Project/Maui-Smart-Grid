@@ -9,9 +9,9 @@ __license__ = 'https://raw.github' \
 
 import ConfigParser
 import os
-import stat
 import sys
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
+from sek.file_util import SEKFileUtil
 
 class MSGConfiger(object):
     """
@@ -30,7 +30,8 @@ class MSGConfiger(object):
         """
 
         self._config = ConfigParser.ConfigParser()
-        self.logger = MSGLogger(__name__, 'INFO')
+        self.logger = SEKLogger(__name__, 'INFO')
+        self.fileUtil = SEKFileUtil()
 
         # Define tables that will have data inserted. Data will only be inserted
         # to tables that are defined here.
@@ -43,7 +44,7 @@ class MSGConfiger(object):
 
         configFilePath = '~/.msg-data-operations.cfg'
 
-        if self.isMoreThanOwnerReadableAndWritable(
+        if self.fileUtil.isMoreThanOwnerReadableAndWritable(
                 os.path.expanduser(configFilePath)):
             self.logger.log(
                 "Configuration file permissions are too permissive. Operation "
@@ -82,24 +83,3 @@ class MSGConfiger(object):
             sys.exit(-1)
 
 
-    def isMoreThanOwnerReadableAndWritable(self, filePath):
-        """
-        Determines if a file has greater permissions than owner read/write.
-        :param filePath: String for path to the file being tested.
-        :returns: Boolean True if the permissions are greater than owner
-        read/write, otherwise return False.
-        """
-
-        st = os.stat(filePath)
-
-        # Permissions are too permissive if group or others can read,
-        # write or execute.
-        if bool(st.st_mode & stat.S_IRGRP) or bool(
-                        st.st_mode & stat.S_IROTH) or bool(
-                        st.st_mode & stat.S_IWGRP) or bool(
-                        st.st_mode & stat.S_IWOTH) or bool(
-                        st.st_mode & stat.S_IXGRP) or bool(
-                        st.st_mode & stat.S_IXOTH):
-            return True
-        else:
-            return False

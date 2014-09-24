@@ -8,7 +8,7 @@ __license__ = 'https://raw.github' \
               '-LICENSE.txt'
 
 import unittest
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from msg_data_aggregator import MSGDataAggregator
 from datetime import datetime
 import itertools
@@ -25,7 +25,7 @@ class MSGDataAggregatorTester(unittest.TestCase):
         """
         Constructor.
         """
-        self.logger = MSGLogger(__name__, 'DEBUG')
+        self.logger = SEKLogger(__name__, 'DEBUG')
         self.aggregator = MSGDataAggregator()
         self.testStart = '2014-01-02 11:59'
         self.testEnd = '2014-01-02 12:14'

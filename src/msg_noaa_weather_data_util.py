@@ -10,7 +10,7 @@ __license__ = 'https://raw.github' \
 import urllib2
 import re
 from msg_db_util import MSGDBUtil
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger, CRITICAL, ERROR, WARNING, INFO, DEBUG, SILENT
 from msg_configer import MSGConfiger
 import datetime as dt
 import calendar
@@ -29,11 +29,10 @@ class MSGWeatherDataUtil(object):
         Constructor.
 
         A database connection is not maintained here to keep this class
-        lightweight. This results in the class not having a parameter for
-        TESTING MODE.
+        lightweight.
         """
 
-        self.logger = MSGLogger(__name__, 'info')
+        self.logger = SEKLogger(__name__, DEBUG)
         self.configer = MSGConfiger()
         self.url = self.configer.configOptionValue('Weather Data',
                                                    'weather_data_url')
@@ -53,18 +52,21 @@ class MSGWeatherDataUtil(object):
 
         response = urllib2.urlopen(self.url).read()
 
+        self.logger.log('Filling file list:', DEBUG)
         for filename in re.findall(self.pattern, response):
+            # Only examine first match group in the filename match.
+            self.logger.log('filename {}'.format(filename[0]), DEBUG)
             self.fileList.append(filename[0])
-            self.dateList.append(self.datePart(filename = filename[0]))
+            self.dateList.append(self.datePart(filename[0]))
 
 
     def datePart(self, filename = None, datetime = None):
         """
         Return the date part of a NOAA weather data filename.
 
-        :param: The filename.
-        :param: A datetime object.
-        :returns: The date part of the given parameter.
+        :param: String of the filename.
+        :param: datetime object.
+        :returns: String of the date part of the given parameter.
         """
 
         assert filename == None or datetime == None, "One argument is allowed."
@@ -74,6 +76,7 @@ class MSGWeatherDataUtil(object):
             return newName
         if datetime:
             return datetime.strftime('%Y-%m-%d')
+
 
     def getLastDateLoaded(self, cursor):
         """

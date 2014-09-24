@@ -10,7 +10,7 @@ __license__ = 'https://raw.github' \
 import psycopg2
 import psycopg2.extras
 from msg_configer import MSGConfiger
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 
 
 class MSGDBConnector(object):
@@ -34,7 +34,7 @@ class MSGDBConnector(object):
         :param logLevel
         """
 
-        self.logger = MSGLogger(__name__, logLevel)
+        self.logger = SEKLogger(__name__, logLevel)
 
         if testing:
             self.logger.log("Testing Mode is ON.")

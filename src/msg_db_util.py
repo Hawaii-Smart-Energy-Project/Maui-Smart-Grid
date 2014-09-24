@@ -11,7 +11,7 @@ import sys
 from msg_configer import MSGConfiger
 from msg_db_connector import MSGDBConnector
 import psycopg2
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 
 DEBUG = 1
 
@@ -38,7 +38,7 @@ class MSGDBUtil(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__, 'DEBUG')
+        self.logger = SEKLogger(__name__, 'DEBUG')
         self.configer = MSGConfiger()
 
     def getLastSequenceID(self, conn, tableName, columnName):

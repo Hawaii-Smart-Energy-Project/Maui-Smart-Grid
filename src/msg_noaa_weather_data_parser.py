@@ -9,7 +9,7 @@ __license__ = 'https://raw.github' \
 
 import csv
 import re
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 
 
 class MSGNOAAWeatherDataParser(object):
@@ -22,7 +22,7 @@ class MSGNOAAWeatherDataParser(object):
         """
         Constructor.
         """
-        self.logger = MSGLogger(__name__, 'debug')
+        self.logger = SEKLogger(__name__, 'debug')
 
         self.cols = ["wban", "datetime", "datetime", "station_type",
                      "sky_condition", "sky_condition_flag", "visibility",

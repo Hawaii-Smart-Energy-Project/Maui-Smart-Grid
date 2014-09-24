@@ -8,7 +8,7 @@ __license__ = 'https://raw.github' \
               '-LICENSE.txt'
 
 from datetime import datetime as dt
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from dateutil import rrule
 import calendar
 
@@ -24,7 +24,7 @@ class MSGTimeUtil(object):
         Constructor.
         """
 
-        self.logger = MSGLogger(__name__, 'debug')
+        self.logger = SEKLogger(__name__, 'debug')
 
 
     def reportOfDays(self, datetimes = None):

@@ -8,7 +8,7 @@ __license__ = 'https://raw.github' \
               '-LICENSE.txt'
 
 import unittest
-from msg_logger import MSGLogger
+from sek.logger import SEKLogger
 from msg_db_exporter import MSGDBExporter
 from apiclient import http
 import datetime
@@ -37,7 +37,7 @@ class MSGDBExporterTester(unittest.TestCase):
 
 
     def setUp(self):
-        self.logger = MSGLogger(__name__, 'DEBUG')
+        self.logger = SEKLogger(__name__, 'DEBUG')
         self.configer = MSGConfiger()
         self.exporter = MSGDBExporter()
         self.testDir = 'db_exporter_test'
@@ -523,12 +523,9 @@ class MSGDBExporterTester(unittest.TestCase):
 
     def test_last_report_date(self):
         last_report = self.exporter.notifier.lastReportDate(
-            MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
-        self.assertTrue(
-            last_report is None or last_report >
-            self.timeUtil.datetimeForString(
-                EARLIEST_DATE))
-
+            types = MSGNotificationHistoryTypes,
+            noticeType = MSGNotificationHistoryTypes.MSG_EXPORT_SUMMARY)
+        self.assertTrue(last_report is None or last_report > EARLIEST_DATE)
 
     def test_current_export_summary(self):
         self.assertRegexpMatches(self.exporter.currentExportSummary(),
