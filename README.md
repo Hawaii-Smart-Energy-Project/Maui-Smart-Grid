@@ -101,6 +101,7 @@ The Smart Energy Kit is required to be installed separately.
 
 #### External Python Modules Not in the Standard Library ####
 
+##### Install by pip
 * colorlog
 * dateutil
 * enum34
@@ -114,6 +115,7 @@ The Smart Energy Kit is required to be installed separately.
 * requests
 * xlrd
 
+##### Manual Install 
 * sek: [Smart Energy Kit](https://github.com/Hawaii-Smart-Energy-Project/Smart-Energy-Kit)
 
 ### Python-Based Scripts and Modules ###
