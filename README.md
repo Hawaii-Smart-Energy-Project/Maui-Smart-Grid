@@ -97,6 +97,8 @@ The software distribution archive is managed by `distutils` and is in tar gz for
 
 The software has the following dependencies and they can be satisfied through various methods. During development, `pip` was used to install third-party modules. Other options exist for installing the necessary dependencies.
 
+The Smart Energy Kit is required to be installed separately.
+
 #### External Python Modules Not in the Standard Library ####
 
 * colorlog
@@ -111,6 +113,8 @@ The software has the following dependencies and they can be satisfied through va
 * pylab
 * requests
 * xlrd
+
+* sek: [Smart Energy Kit](https://github.com/Hawaii-Smart-Energy-Project/Smart-Energy-Kit)
 
 ### Python-Based Scripts and Modules ###
 
@@ -162,9 +166,9 @@ A database with the equivalent structure of the production database is maintaine
 
 ## Configuration ##
 
-All of the site-specific options are intended to be held in text-based configuration files.
+All of the site-specific options are intended to be held in text-based configuration files. 
 
-The software is configured through a text configuration file contained in the user's home directory. The file is named `~/.msg-data-operations.cfg`. Permissions should be limited to owner read/write only. It is read by the `ConfigParser` module.
+The software is configured through a text configuration file contained in the user's home directory. The file is named `~/.msg-data-operations.cfg`. Permissions should be limited to owner read/write only. It is read by the `ConfigParser` module. 
 
 In summary, the configuration files are:
 
@@ -180,11 +184,11 @@ The reference template can be found in `config/sample-dot-msg-data-operations.cf
     [Debugging]
     debug=False
     limit_commits=False
-
+    
     [Data Paths]
     # Plot path is where plots will be saved.
     plot_path = ${PLOT_PATH}
-
+    
     [MECO Autoload]
     meco_autoload_new_data_path = ${MECO_AUTOLOAD_NEW_DATA_PATH}
     meco_autoload_archive_path = ${MECO_AUTOLOAD_ARCHIVE_PATH}
@@ -196,7 +200,7 @@ The reference template can be found in `config/sample-dot-msg-data-operations.cf
     [Executable Paths]
     ## Example: ~/Maui-Smart-Grid-1.0.0/bin
     msg_bin_path = ${MSG_BIN_PATH}
-
+    
     [Notifications]
     email_from_address = ${EMAIL_FROM_ADDRESS}
     email_username = ${EMAIL_USERNAME}
@@ -207,17 +211,17 @@ The reference template can be found in `config/sample-dot-msg-data-operations.cf
     testing_email_recipients = ${TESTING_EMAIL_RECIPIENTS}
 
     smtp_server_and_port = ${SMTP_SERVER_AND_PORT}
-
+    
     [Weather Data]
-
+    
     ## URL. Example: http://cdo.ncdc.noaa.gov/qclcd_ascii/
     weather_data_url = ${WEATHER_DATA_URL}
-
+    
     ## Pattern. Example: <A HREF=".*?">(QCLCD(201208|201209|201210|201211|201212|2013|2014|2015).*?)</A>
     weather_data_pattern = ${WEATHER_DATA_PATTERN}
-
+    
     weather_data_path = ${WEATHER_DATA_PATH}
-
+    
     [Export]
     db_export_work_path = ${DB_EXPORT_WORK_PATH}
     db_export_final_path = ${DB_EXPORT_FINAL_PATH}
@@ -246,10 +250,10 @@ The reference template can be found in `config/sample-dot-msg-data-operations.cf
     db_port = ${DB_PORT}
     db_username = ${DB_USERNAME}
     db_name = ${DB_NAME}
-
+    
     ## The name of the databased used for testing operations.
     testing_db_name = ${TESTING_DB_NAME}
-
+    
     [Hardware]
     multiprocessing_limit = ${MULTIPROCESSING_LIMIT}
 
@@ -281,10 +285,10 @@ The following is an example of the configuration file used for configuring the M
     db_user = "${DB_USERNAME}"
     db_host = "${DB_HOST}"
     db_port = "${DB_PORT}"
-
+    
     egauge_user = "${EGAUGE_USERNAME}"
     egauge_password = "${EGAUGE_PASSWORD}"
-
+    
     egauge = ${EGAUGE_ID_1}
     egauge = ${EGAUGE_ID_2}
     egauge = ${EGAUGE_ID_3}
@@ -320,19 +324,19 @@ The following represents an example crontab configuration that can be installed 
 The exported XML data files contain the energy data. Insertion to the database is performed by running
 
     $ time python -u ${PATH_TO_SCRIPT}/insertMECOEnergyData.py --email > insert-log.txt
-
+    
 in the directory where the data files are contained. The use of `time` is for informational purposes only and is not necessary. Redirecting to `insert-log.txt` is also unneeded but reduces the output to the short form.
 
 #### Sample Output of Data Insertion ####
 
 MECO data is inserted using
 
-    $ insertMECOEnergyData.py --email > insert-run.log
+    $ insertMECOEnergyData.py --email > insert-run.log 
 
 The output looks like the following and is the concise log output for data loading.
-
+    
     Inserting data to database meco_v3.
-
+    
     3:{0rd,0re,0ev}(0)[3440]<2688rd,56re,0ev,3440,3440>*3:{0rd,0re,0ev}(1)[6880]<2688rd,56re,0ev,
     3440,6880>*3:{0rd,0re,0ev}(2)[10320]<2688rd,56re,0ev,3440,10320>*3:{0rd,0re,0ev}(3)[13760]<2688rd,
     56re,0ev,3440,13760>*3:{0rd,0re,0ev}(4)[20651]<5376rd,112re,10ev,6891,20651>*3:{0rd,0re,0ev}(5)
@@ -342,7 +346,7 @@ The output looks like the following and is the concise log output for data loadi
     ...
     ---3:{0rd,0re,0ev}(44)[166400]<129024rd,2891re,1019ev,NA,166400>*
 
-Individual processes are denoted by a number and a colon. The numbers in brackets correspond to {dropped duplicates in the reading branch, register branch or the event branch)}, (reading group index), and [element count]. The duplicate count is discrete by group. The element count is cumulative over the data set.
+Individual processes are denoted by a number and a colon. The numbers in brackets correspond to {dropped duplicates in the reading branch, register branch or the event branch)}, (reading group index), and [element count]. The duplicate count is discrete by group. The element count is cumulative over the data set. 
 
 Dropped reading duplicates are the duplicate entries---determined by meter name, interval end time, and channel number---that are present in the source data. The reading group index is an integer count of the distinct groups of energy readings (MeterData record sets) in the source data. The element count refers to the individual elements within the source data.
 
@@ -355,7 +359,7 @@ A final summary report follows the `---` symbol.
 Parallel data loading is supported since loading is performed atomically, database commits are made after data verification including taking duplicate records into account. The default data loading mode is parallel loading of multiple files. Duplicate files can be problematic because of this and should, therefore, be eliminated prior to passing data to the autoload.
 
 
-
+  
 ### Testing Mode
 The database insertion scripts have a separate testing mode that can be activated using the `--testing` command-line option. When testing mode is enabled, database operations will be performed on the testing database as defined in the site configuration file. Additionally, operations such as notifications will be directed to their appropriate testing mode settings. For example, email notifications will be delivered to testing mode recipients instead of the primary distribution list.
 
@@ -366,7 +370,7 @@ Location and meter records are stored in separate tab-separated files and are in
     $ insertLocationRecords.py ${FILENAME}
 
     $ insertMeterRecords.py ${FILENAME}
-
+    
 These scripts and their associated data are deprecated in favor of the Meter Location History (MLH).
 
 ### Inserting NOAA Weather Data (Kahului Airport Station WBAN 22516) ###
@@ -376,11 +380,11 @@ Weather data loading is a two-stage process involving retrieval and insertion.
 Retrieval is performed using
 
     $ retrieveNOAAWeatherData.py
-
+     
 Insertion is performed using
 
     $ insertCompressedNOAAWeatherData.py --email
-
+    
 and supports recursive data processing of a set of files from the current directory. Weather data loading supports notifications.
 
 ### MSG eGauge Service Operation ###
@@ -429,28 +433,28 @@ Notification of the results of data processing events is provided by the **MSG N
     Recursively inserting data to the database named meco_v3.
     Starting in /msg-data/2013_07_10
     insertScript = insertMECOEnergyData.py
-
+    
     ./20130710-99bb8b2b-12a1-4db5-8a1c-7312277cf404-1-1.xml.gz
-
+    
     Inserting data to database meco_v3.
-
+    
     Parsing XML in ./20130710-99bb8b2b-12a1-4db5-8a1c-7312277cf404-1-1.xml.gz.
     {0rd,0re,0ev}(0)[8869]<6912rd,144re,24ev,8869,8869>*{0rd,0re,0ev}(1)[13291]<3456rd,72re,0ev,4422,13291>*{0rd,0re,0ev}(2)[17713]<3456rd,72re,0ev,4422,17713>*{0rd,0re,0ev}(3)[26566]<6912rd,144re,8ev,8853,26566>*{0rd,0re,0ev}  ...  ---{0rd,0re,0ev}(37)[191467]<0rd,0re,0ev,0,191459>*
-
+    
     Wall time = 512.54 seconds.
-
+    
     Log Legend: {} = dupes, () = element group, [] = process for insert elements, <> = <reading insert count, register insert count, event insert count, group insert count,total insert count>, * = commit
     rd = reading, re = register, ev = event
-
+    
     Processed file count is 1.
-
+    
     Plot is attached.
-
+    
 The final group, after the `---`, is a summary report of the operations performed.
 
 ## License ##
 
-Copyright (c) 2014, University of Hawaii Smart Energy Project
+Copyright (c) 2014, University of Hawaii Smart Energy Project  
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
