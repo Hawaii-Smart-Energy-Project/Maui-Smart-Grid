@@ -120,8 +120,6 @@ The Smart Energy Kit is required to be installed separately.
 
 ### Python-Based Scripts and Modules ###
 
-> __WARNING: The Python-based installer is not yet fully working.__
-
 The Python-based scripts and modules have their installer implemented through `distutils`. They can be installed using
 
 	$ cd dist/MauiSmartGrid-1.0.0
